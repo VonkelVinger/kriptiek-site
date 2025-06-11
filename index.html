@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="af">
 <head>
@@ -20,6 +21,7 @@
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
       background-color: white;
     }
+
     .crossword-grid {
       display: grid;
       grid-template-columns: repeat(8, minmax(40px, 1fr));
@@ -27,6 +29,7 @@
       position: relative;
       z-index: 10;
     }
+
     .letter-box {
       width: 50px;
       height: 50px;
@@ -42,7 +45,11 @@
       text-transform: uppercase;
       box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
     }
-    .flipped-k { transform: scaleX(-1); }
+
+    .flipped-k {
+      transform: scaleX(-1);
+    }
+
     .background-crossword {
       position: absolute;
       top: 0;
@@ -56,6 +63,7 @@
       z-index: 5;
       pointer-events: none;
     }
+
     .bg-letter-box {
       display: flex;
       justify-content: center;
@@ -67,21 +75,43 @@
       background-color: transparent;
       user-select: none;
     }
+
     @media (max-width: 768px) {
-      .letter-box { width: 40px; height: 40px; font-size: 1.5rem; }
-      .crossword-grid { gap: 3px; }
-      .logo-container { padding: 1rem; }
-      .bg-letter-box { font-size: 1rem; }
+      .letter-box {
+        width: 40px;
+        height: 40px;
+        font-size: 1.5rem;
+      }
+      .crossword-grid {
+        gap: 3px;
+      }
+      .logo-container {
+        padding: 1rem;
+      }
+      .bg-letter-box {
+        font-size: 1rem;
+      }
     }
+
     @media (max-width: 480px) {
-      .letter-box { width: 35px; height: 35px; font-size: 1.2rem; }
-      .crossword-grid { gap: 2px; }
-      .logo-container { padding: 0.75rem; }
-      .bg-letter-box { font-size: 0.9rem; }
+      .letter-box {
+        width: 35px;
+        height: 35px;
+        font-size: 1.2rem;
+      }
+      .crossword-grid {
+        gap: 2px;
+      }
+      .logo-container {
+        padding: 0.75rem;
+      }
+      .bg-letter-box {
+        font-size: 0.9rem;
+      }
     }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
-<!-- This is a clean snapshot — modal and content continues in the deployed version -->
+<!-- content trimmed to focus on fixing style and rendering -->
 </body>
 </html>
