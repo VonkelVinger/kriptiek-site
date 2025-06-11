@@ -111,7 +111,19 @@
   <div class="bg-white p-6 max-w-xl mx-4 rounded-lg shadow-lg font-sans text-sm leading-relaxed text-gray-800 relative overflow-y-auto max-h-[90vh] whitespace-pre-wrap">
     <button id="close-modal" class="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-xl">&times;</button>
     
-<div class="logo-container mx-auto mb-4">
+<div class="logo-container mx-auto mt-0 mb-4 relative">
+  <div class="background-crossword" style="position:absolute; inset:0; opacity:0.08; z-index:1;"></div>
+  <div class="crossword-grid relative z-10">
+    <div class="letter-box flipped-k">K</div>
+    <div class="letter-box">R</div>
+    <div class="letter-box">I</div>
+    <div class="letter-box">P</div>
+    <div class="letter-box">T</div>
+    <div class="letter-box">I</div>
+    <div class="letter-box">E</div>
+    <div class="letter-box">K</div>
+  </div>
+</div>
   <div class="crossword-grid">
     <div class="letter-box flipped-k">K</div>
     <div class="letter-box">R</div>
@@ -137,21 +149,21 @@
     const userTier = localStorage.getItem('userTier');
     const greetings = {
       eerste: {
-        message: Hierdie is jou EERSTE BESOEK aan Kriptiek, welkom! Om voort te gaan moet jy GRATIS REGISTREER deur 'n Noemnaam en 'n geldige e-posadres te verskaf. Wanneer jou e-pos geverifieer is, sal jy met jou Noemnaam en e-posadres en met enige toestel (byvoorbeeld jou foon of rekenaar) op die webwerf kan aanmeld as 'n GRATIS GEBRUIKER met beperkte toegang tot Kriptiek. Sodra jy gereed is vir volle toegang tot al ons speletjies, raaisels, ranglyste en inligting oor jou speel-geskiedenis, asook om kommentaar te kan lewer, gaan na MY REKENING regs bo en kliek op Subskripsie. Jy sal daar kan kies watter soort subskripsie jy wil uitneem en hoe jy daarvoor wil betaal. As 'n betalende intekenaar word jy dan 'n KRIPTIKUS.,
+        message: `Hierdie is jou EERSTE BESOEK aan Kriptiek, welkom! Om voort te gaan moet jy GRATIS REGISTREER deur 'n Noemnaam en 'n geldige e-posadres te verskaf. Wanneer jou e-pos geverifieer is, sal jy met jou Noemnaam en e-posadres en met enige toestel (byvoorbeeld jou foon of rekenaar) op die webwerf kan aanmeld as 'n GRATIS GEBRUIKER met beperkte toegang tot Kriptiek. Sodra jy gereed is vir volle toegang tot al ons speletjies, raaisels, ranglyste en inligting oor jou speel-geskiedenis, asook om kommentaar te kan lewer, gaan na MY REKENING regs bo en kliek op Subskripsie. Jy sal daar kan kies watter soort subskripsie jy wil uitneem en hoe jy daarvoor wil betaal. As 'n betalende intekenaar word jy dan 'n KRIPTIKUS. KLIEK HIER OM GRATIS TE REGISTREER. is jou EERSTE BESOEK aan Kriptiek...`,
         buttons: [
           { label: "KLIEK HIER OM GRATIS TE REGISTREER", link: "/register.html" },
           { label: "SLUIT", action: "close" }
         ]
       },
       terug: {
-        message: WELKOM TERUG by Kriptiek, maar jy het nie met jou vorige besoek geregistreer nie en het dus nog nie toegang nie. Jy kan steeds GRATIS REGISTREER deur 'n Noemnaam en 'n geldige e-posadres te verskaf. Wanneer jou e-pos geverifieer is, sal jy met jou Noemnaam en e-posadres en met enige toestel (byvoorbeeld jou foon of rekenaar) op die webwerf kan aanmeld as 'n GRATIS GEBRUIKER met beperkte toegang tot Kriptiek. Sodra jy gereed is vir volle toegang tot al ons speletjies, raaisels, ranglyste en inligting oor jou speel-geskiedenis, asook om kommentaar te kan lewer, gaan na MY REKENING regs bo en kliek op Subskripsie. Jy sal daar kan kies watter soort subskripsie jy wil uitneem en hoe jy daarvoor wil betaal. As 'n betalende intekenaar word jy dan 'n KRIPTIKUS.,
+        message: `WELKOM TERUG by Kriptiek, maar jy het nie met jou vorige besoek geregistreer nie en het dus nog nie toegang nie. Jy kan steeds GRATIS REGISTREER deur 'n Noemnaam en 'n geldige e-posadres te verskaf. Wanneer jou e-pos geverifieer is, sal jy met jou Noemnaam en e-posadres en met enige toestel (byvoorbeeld jou foon of rekenaar) op die webwerf kan aanmeld as 'n GRATIS GEBRUIKER met beperkte toegang tot Kriptiek. Sodra jy gereed is vir volle toegang tot al ons speletjies, raaisels, ranglyste en inligting oor jou speel-geskiedenis, asook om kommentaar te kan lewer, gaan na MY REKENING regs bo en kliek op Subskripsie. Jy sal daar kan kies watter soort subskripsie jy wil uitneem en hoe jy daarvoor wil betaal. As 'n betalende intekenaar word jy dan 'n KRIPTIKUS. KLIEK HIER OM GRATIS TE REGISTREER. TERUG by Kriptiek...`,
         buttons: [
           { label: "KLIEK HIER OM GRATIS TE REGISTREER", link: "/register.html" },
           { label: "SLUIT", action: "close" }
         ]
       },
       gratis: {
-        message: Welkom terug as 'n GRATIS GEBRUIKER met beperkte toegang tot Kriptiek. Vir volle toegang tot al ons speletjies, raaisels, ranglyste en inligting oor jou speel-geskiedenis, asook om kommentaar te kan lewer, gaan na MY REKENING regs bo en kliek op Subskripsie. Jy sal daar kan kies watter soort subskripsie jy wil uitneem en hoe jy daarvoor wil betaal. As 'n betalende intekenaar word jy dan 'n KRIPTIKUS. As jy nog as 'n GRATIS GEBRUIKER wil voortgaan, kliek onder op GAAN VOORT.,
+        message: `Welkom terug as 'n GRATIS GEBRUIKER met beperkte toegang tot Kriptiek. Vir volle toegang tot al ons speletjies, raaisels, ranglyste en inligting oor jou speel-geskiedenis, asook om kommentaar te kan lewer, gaan na MY REKENING regs bo en kliek op Subskripsie. Jy sal daar kan kies watter soort subskripsie jy wil uitneem en hoe jy daarvoor wil betaal. As 'n betalende intekenaar word jy dan 'n KRIPTIKUS. As jy nog as 'n GRATIS GEBRUIKER wil voortgaan, kliek net op GAAN VOORT.`,
         buttons: [
           { label: "GAAN VOORT", link: "/" },
           { label: "WORD ’N KRIPTIKUS", link: "/subscription.html" },
@@ -159,7 +171,7 @@
         ]
       },
       kriptikus: {
-        message: Welkom terug, KRIPTIKUS, en dankie vir jou subskripsie!,
+        message: `Welkom terug, KRIPTIKUS, en dankie vir jou subskripsie!`,
         buttons: [
           { label: "GAAN VOORT", link: "/" },
           { label: "SLUIT", action: "close" }
@@ -213,4 +225,4 @@
 </script>
 
 </body>
-</html> 
+</html>
