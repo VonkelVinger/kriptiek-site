@@ -11,29 +11,52 @@
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
+
+  <!-- ✅ Header with Logo Placeholder -->
   <header class="bg-white shadow p-4">
-    <h1 class="text-3xl font-bold text-center text-gray-800">KRIPTIEK</h1>
+    <div class="flex justify-center gap-1">
+  <span class="text-white text-2xl font-bold bg-blue-700 px-2 py-1 rounded">K</span>
+  <span class="text-white text-2xl font-bold bg-red-600 px-2 py-1 rounded">R</span>
+  <span class="text-white text-2xl font-bold bg-yellow-500 px-2 py-1 rounded">I</span>
+  <span class="text-white text-2xl font-bold bg-green-600 px-2 py-1 rounded">P</span>
+  <span class="text-white text-2xl font-bold bg-purple-700 px-2 py-1 rounded">T</span>
+  <span class="text-white text-2xl font-bold bg-pink-600 px-2 py-1 rounded">I</span>
+  <span class="text-white text-2xl font-bold bg-gray-800 px-2 py-1 rounded">E</span>
+  <span class="text-white text-2xl font-bold bg-black px-2 py-1 rounded">K</span>
+</div>
   </header>
+
+  <!-- ✅ Main Content Area -->
   <main class="flex-grow p-6">
     <p class="text-center text-gray-600">Welkom by Kriptiek! Hier kom jou speletjies, inhoud of roetekaart.</p>
   </main>
+
+  <!-- ✅ Footer Placeholder -->
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
     &copy; 2025 Kriptiek. Alle regte voorbehou.
   </footer>
+
+  <!-- ✅ Greeting Modal -->
   <div id="greeting-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
     <div class="bg-white p-6 max-w-xl mx-4 rounded-lg shadow-lg font-sans text-sm leading-relaxed text-gray-800 relative">
       <button id="close-modal" class="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-xl">&times;</button>
       <div id="greeting-message" class="mb-6"></div>
-      <div id="modal-buttons" class="flex flex-col gap-3 text-center"></div>
+      <div id="modal-buttons" class="flex flex-col gap-3 text-center">
+        <!-- Buttons inserted dynamically -->
+      </div>
     </div>
   </div>
+
+  <!-- ✅ Modal Logic Script -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const modal = document.getElementById('greeting-modal');
       const messageContainer = document.getElementById('greeting-message');
       const buttonContainer = document.getElementById('modal-buttons');
       const closeModalBtn = document.getElementById('close-modal');
-      const userTier = localStorage.getItem('userTier');
+
+      const userTier = localStorage.getItem('userTier'); // 'eerste', 'terug', 'gratis', 'kriptikus'
+
       const greetings = {
         eerste: {
           message: `Hierdie is jou EERSTE BESOEK aan Kriptiek, welkom! Om voort te gaan moet jy GRATIS REGISTREER deur 'n Noemnaam en 'n geldige e-posadres te verskaf. Wanneer jou e-pos geverifieer is, sal jy met jou Noemnaam en e-posadres en met enige toestel (byvoorbeeld jou foon of rekenaar) op die webwerf kan aanmeld as 'n GRATIS GEBRUIKER met beperkte toegang tot Kriptiek. Sodra jy gereed is vir volle toegang tot al ons speletjies, raaisels, ranglyste en inligting oor jou speel-geskiedenis, asook om kommentaar te kan lewer, gaan na MY REKENING regs bo en kliek op Subskripsie. Jy sal daar kan kies watter soort subskripsie jy wil uitneem en hoe jy daarvoor wil betaal. As 'n betalende intekenaar word jy dan 'n KRIPTIKUS.`,
@@ -65,24 +88,30 @@
           ]
         }
       };
+
       if (userTier && greetings[userTier]) {
         const { message, buttons } = greetings[userTier];
         messageContainer.innerHTML = message;
         buttonContainer.innerHTML = '';
+
         buttons.forEach(btn => {
           const element = document.createElement('button');
           element.textContent = btn.label;
           element.className = 'bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800';
+
           if (btn.action === 'close') {
             element.addEventListener('click', () => modal.classList.add('hidden'));
           } else {
             element.onclick = () => window.location.href = btn.link;
           }
+
           buttonContainer.appendChild(element);
         });
+
         modal.classList.remove('hidden');
         modal.classList.add('flex');
       }
+
       closeModalBtn.addEventListener('click', () => {
         modal.classList.add('hidden');
       });
