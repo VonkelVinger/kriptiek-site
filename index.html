@@ -108,7 +108,7 @@
 </footer>
 
 <div id="greeting-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
-  <div class="bg-white p-6 max-w-xl mx-4 rounded-lg shadow-lg font-sans text-sm leading-relaxed text-gray-800 relative">
+  <div class="bg-white p-6 max-w-xl mx-4 rounded-lg shadow-lg font-sans text-sm leading-relaxed text-gray-800 relative overflow-y-auto max-h-[90vh] whitespace-pre-wrap">
     <button id="close-modal" class="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-xl">&times;</button>
     <div id="greeting-message" class="mb-6"></div>
     <div id="modal-buttons" class="flex flex-col gap-3 text-center"></div>
@@ -124,21 +124,21 @@
     const userTier = localStorage.getItem('userTier');
     const greetings = {
       eerste: {
-        message: `Hierdie is jou EERSTE BESOEK aan Kriptiek...`,
+        message: `Hierdie is jou EERSTE BESOEK aan Kriptiek, welkom! Om voort te gaan moet jy GRATIS REGISTREER deur 'n Noemnaam en 'n geldige e-posadres te verskaf. Wanneer jou e-pos geverifieer is, sal jy met jou Noemnaam en e-posadres en met enige toestel (byvoorbeeld jou foon of rekenaar) op die webwerf kan aanmeld as 'n GRATIS GEBRUIKER met beperkte toegang tot Kriptiek. Sodra jy gereed is vir volle toegang tot al ons speletjies, raaisels, ranglyste en inligting oor jou speel-geskiedenis, asook om kommentaar te kan lewer, gaan na MY REKENING regs bo en kliek op Subskripsie. Jy sal daar kan kies watter soort subskripsie jy wil uitneem en hoe jy daarvoor wil betaal. As 'n betalende intekenaar word jy dan 'n KRIPTIKUS. KLIEK HIER OM GRATIS TE REGISTREER. is jou EERSTE BESOEK aan Kriptiek...`,
         buttons: [
           { label: "KLIEK HIER OM GRATIS TE REGISTREER", link: "/register.html" },
           { label: "SLUIT", action: "close" }
         ]
       },
       terug: {
-        message: `WELKOM TERUG by Kriptiek...`,
+        message: `WELKOM TERUG by Kriptiek, maar jy het nie met jou vorige besoek geregistreer nie en het dus nog nie toegang nie. Jy kan steeds GRATIS REGISTREER deur 'n Noemnaam en 'n geldige e-posadres te verskaf. Wanneer jou e-pos geverifieer is, sal jy met jou Noemnaam en e-posadres en met enige toestel (byvoorbeeld jou foon of rekenaar) op die webwerf kan aanmeld as 'n GRATIS GEBRUIKER met beperkte toegang tot Kriptiek. Sodra jy gereed is vir volle toegang tot al ons speletjies, raaisels, ranglyste en inligting oor jou speel-geskiedenis, asook om kommentaar te kan lewer, gaan na MY REKENING regs bo en kliek op Subskripsie. Jy sal daar kan kies watter soort subskripsie jy wil uitneem en hoe jy daarvoor wil betaal. As 'n betalende intekenaar word jy dan 'n KRIPTIKUS. KLIEK HIER OM GRATIS TE REGISTREER. TERUG by Kriptiek...`,
         buttons: [
           { label: "KLIEK HIER OM GRATIS TE REGISTREER", link: "/register.html" },
           { label: "SLUIT", action: "close" }
         ]
       },
       gratis: {
-        message: `Welkom terug as 'n GRATIS GEBRUIKER...`,
+        message: `Welkom terug, KRIPTIKUS, en dankie vir jou subskripsie! GAAN VOORT terug as 'n GRATIS GEBRUIKER met beperkte toegang tot Kriptiek. GAAN VOORT. Vir volle toegang tot al ons speletjies, raaisels, ranglyste en inligting oor jou speel-geskiedenis, asook om kommentaar te kan lewer, gaan na MY REKENING regs bo en kliek op Subskripsie. Jy sal daar kan kies watter soort subskripsie jy wil uitneem en hoe jy daarvoor wil betaal. As 'n betalende intekenaar word jy dan 'n KRIPTIKUS. As jy nog as 'n GRATIS GEBRUIKER wil voortgaan, kliek net op GAAN VOORT. terug as 'n GRATIS GEBRUIKER...`,
         buttons: [
           { label: "GAAN VOORT", link: "/" },
           { label: "WORD ’N KRIPTIKUS", link: "/subscription.html" },
@@ -146,7 +146,7 @@
         ]
       },
       kriptikus: {
-        message: `Welkom terug, KRIPTIKUS...`,
+        message: `Welkom terug, KRIPTIKUS, en dankie vir jou subskripsie! GAAN VOORT terug as 'n GRATIS GEBRUIKER met beperkte toegang tot Kriptiek. GAAN VOORT. Vir volle toegang tot al ons speletjies, raaisels, ranglyste en inligting oor jou speel-geskiedenis, asook om kommentaar te kan lewer, gaan na MY REKENING regs bo en kliek op Subskripsie. Jy sal daar kan kies watter soort subskripsie jy wil uitneem en hoe jy daarvoor wil betaal. As 'n betalende intekenaar word jy dan 'n KRIPTIKUS. As jy nog as 'n GRATIS GEBRUIKER wil voortgaan, kliek net op GAAN VOORT. terug, KRIPTIKUS...`,
         buttons: [
           { label: "GAAN VOORT", link: "/" },
           { label: "SLUIT", action: "close" }
