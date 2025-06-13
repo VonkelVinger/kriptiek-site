@@ -43,41 +43,11 @@
       box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
     }
     .flipped-k { transform: scaleX(-1); }
-    .background-crossword {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
-      grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
-      opacity: 0.25;
-      z-index: 5;
-      pointer-events: none;
-    }
-    .bg-letter-box {
+    .test-buttons {
       display: flex;
+      gap: 1rem;
       justify-content: center;
-      align-items: center;
-      font-size: 1.2rem;
-      font-weight: bold;
-      color: #6b7280;
-      border: 1px solid #9ca3af;
-      background-color: transparent;
-      user-select: none;
-    }
-    @media (max-width: 768px) {
-      .letter-box { width: 40px; height: 40px; font-size: 1.5rem; }
-      .crossword-grid { gap: 3px; }
-      .logo-container { padding: 1rem; }
-      .bg-letter-box { font-size: 1rem; }
-    }
-    @media (max-width: 480px) {
-      .letter-box { width: 35px; height: 35px; font-size: 1.2rem; }
-      .crossword-grid { gap: 2px; }
-      .logo-container { padding: 0.75rem; }
-      .bg-letter-box { font-size: 0.9rem; }
+      margin-top: 1.5rem;
     }
   </style>
 </head>
@@ -85,7 +55,6 @@
 
 <header class="bg-white shadow p-4">
   <div class="logo-container mx-auto">
-    <div id="backgroundCrossword" class="background-crossword"></div>
     <div class="crossword-grid">
       <div class="letter-box flipped-k">K</div>
       <div class="letter-box">R</div>
@@ -99,19 +68,102 @@
   </div>
 </header>
 
-<main class="flex-grow p-6 text-center">
-  <p class="text-gray-600 mb-6">Welkom by Kriptiek! Hier kom jou speletjies, inhoud of roetekaart.</p>
-  <div class="space-x-2">
-    <button onclick="localStorage.setItem('userTier', 'eerste'); location.reload()" class="px-4 py-2 bg-blue-500 text-white rounded">Toets: Eerste besoek</button>
-    <button onclick="localStorage.setItem('userTier', 'terug'); location.reload()" class="px-4 py-2 bg-blue-500 text-white rounded">Toets: Welkom terug</button>
-    <button onclick="localStorage.setItem('userTier', 'gratis'); location.reload()" class="px-4 py-2 bg-blue-500 text-white rounded">Toets: Gratis gebruiker</button>
-    <button onclick="localStorage.setItem('userTier', 'kriptikus'); location.reload()" class="px-4 py-2 bg-blue-500 text-white rounded">Toets: KRIPTIKUS</button>
+<main class="flex-grow p-6">
+  <p class="text-center text-gray-600">Welkom by Kriptiek! Hier kom jou speletjies, inhoud of roetekaart.</p>
+  <div class="test-buttons">
+    <button onclick="testTier('eerste')" class="bg-blue-600 text-white px-3 py-1 rounded">Toets: Eerste besoek</button>
+    <button onclick="testTier('terug')" class="bg-blue-600 text-white px-3 py-1 rounded">Toets: Welkom terug</button>
+    <button onclick="testTier('gratis')" class="bg-blue-600 text-white px-3 py-1 rounded">Toets: Gratis gebruiker</button>
+    <button onclick="testTier('kriptikus')" class="bg-blue-600 text-white px-3 py-1 rounded">Toets: KRIPTIKUS</button>
   </div>
 </main>
 
-<footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
-  &copy; 2025 Kriptiek. Alle regte voorbehou.
-</footer>
+<div id="greeting-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
+  <div class="bg-white p-6 max-w-xl mx-4 rounded-lg shadow-lg font-sans text-sm leading-relaxed text-gray-800 relative">
+    <button id="close-modal" class="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-xl">&times;</button>
+    <div class="logo-container mx-auto mb-4">
+      <div class="crossword-grid">
+        <div class="letter-box flipped-k">K</div>
+        <div class="letter-box">R</div>
+        <div class="letter-box">I</div>
+        <div class="letter-box">P</div>
+        <div class="letter-box">T</div>
+        <div class="letter-box">I</div>
+        <div class="letter-box">E</div>
+        <div class="letter-box">K</div>
+      </div>
+    </div>
+    <div id="greeting-message" class="mb-6 whitespace-pre-wrap"></div>
+    <div id="modal-buttons" class="flex flex-col gap-3 text-center"></div>
+  </div>
+</div>
 
-<!-- Modal structure will be reused from stored version -->
-<!-- Shortened for this cell - content comes from previously confirmed version -->
+<script>
+  function testTier(tier) {
+    localStorage.setItem('userTier', tier);
+    location.reload();
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const modal = document.getElementById('greeting-modal');
+    const messageContainer = document.getElementById('greeting-message');
+    const buttonContainer = document.getElementById('modal-buttons');
+    const closeModalBtn = document.getElementById('close-modal');
+    const userTier = localStorage.getItem('userTier');
+    const greetings = {
+      eerste: {
+        message: `Hierdie is jou EERSTE BESOEK aan Kriptiek...`,
+        buttons: [
+          { label: "KLIEK HIER OM GRATIS TE REGISTREER", link: "/register.html" },
+          { label: "SLUIT", action: "close" }
+        ]
+      },
+      terug: {
+        message: `WELKOM TERUG by Kriptiek...`,
+        buttons: [
+          { label: "KLIEK HIER OM GRATIS TE REGISTREER", link: "/register.html" },
+          { label: "SLUIT", action: "close" }
+        ]
+      },
+      gratis: {
+        message: `Welkom terug as 'n GRATIS GEBRUIKER...`,
+        buttons: [
+          { label: "GAAN VOORT", link: "/" },
+          { label: "WORD ’N KRIPTIKUS", link: "/subscription.html" },
+          { label: "SLUIT", action: "close" }
+        ]
+      },
+      kriptikus: {
+        message: `Welkom terug, KRIPTIKUS, en dankie vir jou subskripsie!`,
+        buttons: [
+          { label: "GAAN VOORT", link: "/" },
+          { label: "SLUIT", action: "close" }
+        ]
+      }
+    };
+    if (userTier && greetings[userTier]) {
+      const { message, buttons } = greetings[userTier];
+      messageContainer.innerHTML = message;
+      buttonContainer.innerHTML = '';
+      buttons.forEach(btn => {
+        const element = document.createElement('button');
+        element.textContent = btn.label;
+        element.className = 'bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800';
+        if (btn.action === 'close') {
+          element.addEventListener('click', () => modal.classList.add('hidden'));
+        } else {
+          element.onclick = () => window.location.href = btn.link;
+        }
+        buttonContainer.appendChild(element);
+      });
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+    closeModalBtn.addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+  });
+</script>
+
+</body>
+</html>
