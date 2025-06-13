@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="af">
 <head>
@@ -130,8 +129,7 @@
         buttons: [
           { label: "EK WIL VIR EERS VOORTGAAN AS 'N GRATIS GEBRUIKER", link: "/" },
           { label: "VERTEL MY MEER OOR DIE VOORDELE VAN 'N SUBSKRIPSIE", link: "/subsbenefits.html" },
-          { label: "EK IS GEREED OM 'N SUBSKRIPSIE UIT TE NEEM", link: "/subscription.html" },
-   
+          { label: "EK IS GEREED OM 'N SUBSKRIPSIE UIT TE NEEM", link: "/subscription.html" }
         ]
       },
       kriptikus: {
@@ -152,6 +150,8 @@
         element.className = 'bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800';
         if (btn.action === 'close') {
           element.addEventListener('click', () => modal.classList.add('hidden'));
+        } else if (btn.action === 'contact') {
+          element.onclick = () => window.location.href = "/contact.html";
         } else {
           element.onclick = () => window.location.href = btn.link;
         }
