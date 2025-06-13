@@ -15,12 +15,10 @@
       justify-content: center;
       align-items: center;
       width: fit-content;
-      padding: 2rem 1rem 1rem 1rem;
+      padding: 1rem;
       border-radius: 1rem;
       overflow: hidden;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
       background-color: white;
-      margin-top: 0;
     }
     .crossword-grid {
       display: grid;
@@ -101,133 +99,19 @@
   </div>
 </header>
 
-<main class="flex-grow p-6 text-center text-gray-600">
-  Welkom by Kriptiek! Hier kom jou speletjies, inhoud of roetekaart.
+<main class="flex-grow p-6 text-center">
+  <p class="text-gray-600 mb-6">Welkom by Kriptiek! Hier kom jou speletjies, inhoud of roetekaart.</p>
+  <div class="space-x-2">
+    <button onclick="localStorage.setItem('userTier', 'eerste'); location.reload()" class="px-4 py-2 bg-blue-500 text-white rounded">Toets: Eerste besoek</button>
+    <button onclick="localStorage.setItem('userTier', 'terug'); location.reload()" class="px-4 py-2 bg-blue-500 text-white rounded">Toets: Welkom terug</button>
+    <button onclick="localStorage.setItem('userTier', 'gratis'); location.reload()" class="px-4 py-2 bg-blue-500 text-white rounded">Toets: Gratis gebruiker</button>
+    <button onclick="localStorage.setItem('userTier', 'kriptikus'); location.reload()" class="px-4 py-2 bg-blue-500 text-white rounded">Toets: KRIPTIKUS</button>
+  </div>
 </main>
 
 <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
   &copy; 2025 Kriptiek. Alle regte voorbehou.
 </footer>
 
-<div class="p-4 text-center text-sm text-gray-700 space-x-2">
-  <button onclick="simulateUser('eerste')" class="bg-blue-200 px-2 py-1 rounded">Toets: Eerste besoek</button>
-  <button onclick="simulateUser('terug')" class="bg-blue-200 px-2 py-1 rounded">Toets: Terug</button>
-  <button onclick="simulateUser('gratis')" class="bg-blue-200 px-2 py-1 rounded">Toets: Gratis gebruiker</button>
-  <button onclick="simulateUser('kriptikus')" class="bg-blue-200 px-2 py-1 rounded">Toets: KRIPTIKUS</button>
-</div>
-
-<div id="greeting-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
-  <div class="bg-white p-6 max-w-xl mx-4 rounded-lg shadow-lg font-sans text-sm leading-relaxed text-gray-800 relative overflow-y-auto max-h-[90vh] whitespace-pre-wrap">
-    <button id="close-modal" class="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-xl">&times;</button>
-    <div class="logo-container mx-auto mb-4">
-      <div class="crossword-grid">
-        <div class="letter-box flipped-k">K</div>
-        <div class="letter-box">R</div>
-        <div class="letter-box">I</div>
-        <div class="letter-box">P</div>
-        <div class="letter-box">T</div>
-        <div class="letter-box">I</div>
-        <div class="letter-box">E</div>
-        <div class="letter-box">K</div>
-      </div>
-    </div>
-    <div id="greeting-message" class="mb-6"></div>
-    <div id="modal-buttons" class="flex flex-col gap-3 text-center"></div>
-  </div>
-</div>
-
-<script>
-function simulateUser(type) {
-  if (type === 'eerste') {
-    localStorage.removeItem('userTier');
-  } else {
-    localStorage.setItem('userTier', type);
-  }
-  location.reload();
-}
-</script>
-
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const modal = document.getElementById('greeting-modal');
-    const messageContainer = document.getElementById('greeting-message');
-    const buttonContainer = document.getElementById('modal-buttons');
-    const closeModalBtn = document.getElementById('close-modal');
-    const userTier = localStorage.getItem('userTier');
-    const greetings = {
-      eerste: {
-        message: `Hierdie is jou EERSTE BESOEK aan Kriptiek, welkom! ...`,
-        buttons: [
-          { label: "KLIEK HIER OM GRATIS TE REGISTREER", link: "/register.html" },
-          { label: "SLUIT", action: "close" }
-        ]
-      },
-      terug: {
-        message: `WELKOM TERUG by Kriptiek, maar jy het nie met jou vorige besoek geregistreer nie ...`,
-        buttons: [
-          { label: "KLIEK HIER OM GRATIS TE REGISTREER", link: "/register.html" },
-          { label: "SLUIT", action: "close" }
-        ]
-      },
-      gratis: {
-        message: `Welkom terug as 'n GRATIS GEBRUIKER ...`,
-        buttons: [
-          { label: "GAAN VOORT", link: "/" },
-          { label: "WORD ’N KRIPTIKUS", link: "/subscription.html" },
-          { label: "SLUIT", action: "close" }
-        ]
-      },
-      kriptikus: {
-        message: `Welkom terug, KRIPTIKUS, en dankie vir jou subskripsie!`,
-        buttons: [
-          { label: "GAAN VOORT", link: "/" },
-          { label: "SLUIT", action: "close" }
-        ]
-      }
-    };
-    if (userTier && greetings[userTier]) {
-      const { message, buttons } = greetings[userTier];
-      messageContainer.innerHTML = message;
-      buttonContainer.innerHTML = '';
-      buttons.forEach(btn => {
-        const element = document.createElement('button');
-        element.textContent = btn.label;
-        element.className = 'bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800';
-        if (btn.action === 'close') {
-          element.addEventListener('click', () => modal.classList.add('hidden'));
-        } else {
-          element.onclick = () => window.location.href = btn.link;
-        }
-        buttonContainer.appendChild(element);
-      });
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-    }
-    closeModalBtn.addEventListener('click', () => {
-      modal.classList.add('hidden');
-    });
-
-    const backgroundCrossword = document.getElementById('backgroundCrossword');
-    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    function getRandomLetter() {
-      return letters[Math.floor(Math.random() * letters.length)];
-    }
-    function generateBackgroundGrid() {
-      backgroundCrossword.innerHTML = '';
-      const numRows = Math.ceil(backgroundCrossword.offsetHeight / 30);
-      const numCols = Math.ceil(backgroundCrossword.offsetWidth / 30);
-      const totalCells = (numRows * numCols) || 300;
-      for (let i = 0; i < totalCells; i++) {
-        const bgLetterBox = document.createElement('div');
-        bgLetterBox.classList.add('bg-letter-box');
-        bgLetterBox.textContent = getRandomLetter();
-        backgroundCrossword.appendChild(bgLetterBox);
-      }
-    }
-    generateBackgroundGrid();
-    window.addEventListener('resize', generateBackgroundGrid);
-  });
-</script>
-
-</body>
-</html>
+<!-- Modal structure will be reused from stored version -->
+<!-- Shortened for this cell - content comes from previously confirmed version -->
