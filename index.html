@@ -115,22 +115,23 @@
         message: `Welkom by Kriptiek! Kies onder of jy gratis wil registreer sodat jy kan begin speel, of eers net wil kyk wat ons bied.`,
         buttons: [
           { label: "JA, EK WIL GRATIS REGISTREER", link: "/register.html" },
-          { label: "NEE, EK EERS NET RONDKYK", action: "close" }
+          { label: "NEE, EK WIL EERS NET RONDKYK", action: "close" }
         ]
       },
       terug: {
-        message: `WELKOM TERUG by Kriptiek...`,
+        message: `Welkom terug! Dit lyk of jy nie met jou vorige besoek suksesvol geregistreer het nie. Kies onder of jy nou wil registreer, of kontak ons as daar 'n probleem was met jou vorige poging om te registreer.`,
         buttons: [
-          { label: "KLIEK HIER OM GRATIS TE REGISTREER", link: "/register.html" },
-          { label: "SLUIT", action: "close" }
+          { label: "JA, EK WIL NOU GRATIS REGISTREER", link: "/register.html" },
+          { label: "EK KRY NIE GEREGISTREER NIE, HELP ASSEBLIEF", action: "contact" }
         ]
       },
       gratis: {
-        message: `Welkom terug as 'n GRATIS GEBRUIKER...`,
+        message: `Welkom terug! Kies onder of jy wil voortgaan as 'n gratis gebruiker, of eers meer wil weet oor die bykomende voordele van 'n betaalde subskripsie, of as jy gereed is om 'n subskripsie uit te neem.`,
         buttons: [
-          { label: "GAAN VOORT", link: "/" },
-          { label: "WORD ’N KRIPTIKUS", link: "/subscription.html" },
-          { label: "SLUIT", action: "close" }
+          { label: "EK WIL VIR EERS VOORTGAAN AS 'N GRATIS GEBRUIKER", link: "/" },
+          { label: "VERTEL MY MEER OOR DIE VOORDELE VAN 'N SUBSKRIPSIE", link: "/subsbenefits.html" },
+          { label: "EK IS GEREED OM 'N SUBSKRIPSIE UIT TE NEEM", link: "/subscription.html" },
+   
         ]
       },
       kriptikus: {
