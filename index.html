@@ -4,7 +4,82 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kriptiek</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com">
+function testTier(tier) {
+  localStorage.setItem('userTier', tier);
+  location.reload();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const userTier = localStorage.getItem('userTier');
+  const modal = document.createElement('div');
+  modal.id = 'modal-popup';
+  modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center';
+  modal.style.display = 'none';
+  modal.innerHTML = `
+    <div class="bg-white p-6 rounded shadow max-w-xl w-full text-center relative">
+      <button onclick="document.getElementById('modal-popup').style.display='none'" class="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-xl">&times;</button>
+      <div id="modal-content" class="text-gray-800 text-sm whitespace-pre-wrap leading-relaxed mt-4"></div>
+      <div id="modal-buttons" class="flex flex-col gap-2 mt-4"></div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  const messages = {
+    eerste: {
+      text: `Welkom by Kriptiek! Kies onder of jy gratis wil registreer sodat jy kan begin speel, of eers net wil kyk wat ons bied.`,
+      buttons: [
+        { label: "JA, EK WIL GRATIS REGISTREER", link: "/register.html" },
+        { label: "NEE, EK WIL EERS NET RONDKYK", action: "close" }
+      ]
+    },
+    terug: {
+      text: `Welkom terug! Dit lyk of jy nie met jou vorige besoek suksesvol geregistreer het nie. Kies onder of jy nou wil registreer, of kontak ons as daar 'n probleem was met jou vorige poging.`,
+      buttons: [
+        { label: "JA, EK WIL NOU GRATIS REGISTREER", link: "/register.html" },
+        { label: "EK KRY NIE GEREGISTREER NIE, HELP ASSEBLIEF", action: "contact" }
+      ]
+    },
+    gratis: {
+      text: `Welkom terug! Jy is 'n GRATIS gebruiker. Kies onder of jy wil voortgaan, meer wil weet oor subskripsie, of inteken.`,
+      buttons: [
+        { label: "EK WIL VOORTGAAN AS GRATIS GEBRUIKER", link: "/" },
+        { label: "VERTEL MY MEER OOR SUBSKRIPSIE", link: "/subsbenefits.html" },
+        { label: "EK IS GEREED OM TE INTEKEN", link: "/subscription.html" }
+      ]
+    },
+    kriptikus: {
+      text: `Welkom terug, KRIPTIKUS! Dankie vir jou subskripsie.`,
+      buttons: [
+        { label: "GAAN VOORT", link: "/" },
+        { label: "EK HET 'N PROBLEEM, HELP ASSEBLIEF", action: "contact" }
+      ]
+    }
+  };
+
+  if (userTier && messages[userTier]) {
+    const data = messages[userTier];
+    document.getElementById('modal-content').innerText = data.text;
+    const btnContainer = document.getElementById('modal-buttons');
+    btnContainer.innerHTML = "";
+    data.buttons.forEach(btn => {
+      const b = document.createElement("button");
+      b.textContent = btn.label;
+      b.className = "bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800";
+      if (btn.action === "close") {
+        b.onclick = () => document.getElementById('modal-popup').style.display = 'none';
+      } else if (btn.action === "contact") {
+        b.onclick = () => window.location.href = "/contact.html";
+      } else {
+        b.onclick = () => window.location.href = btn.link;
+      }
+      btnContainer.appendChild(b);
+    });
+    modal.style.display = "flex";
+  }
+});
+
+</script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Montserrat', sans-serif; }
@@ -158,6 +233,7 @@
     localStorage.setItem('userTier', tier);
     location.reload();
   }
+
 function testTier(tier) {
   localStorage.setItem('userTier', tier);
   location.reload();
@@ -173,20 +249,62 @@ document.addEventListener("DOMContentLoaded", () => {
     <div class="bg-white p-6 rounded shadow max-w-xl w-full text-center relative">
       <button onclick="document.getElementById('modal-popup').style.display='none'" class="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-xl">&times;</button>
       <div id="modal-content" class="text-gray-800 text-sm whitespace-pre-wrap leading-relaxed mt-4"></div>
+      <div id="modal-buttons" class="flex flex-col gap-2 mt-4"></div>
     </div>
   `;
   document.body.appendChild(modal);
 
   const messages = {
-    eerste: `Welkom by Kriptiek! Kies onder of jy gratis wil registreer sodat jy kan begin speel, of eers net wil kyk wat ons bied.`,
-    terug: `Welkom terug! Dit lyk of jy nie met jou vorige besoek suksesvol geregistreer het nie.`,
-    gratis: `Welkom terug! Jy is 'n gratis gebruiker. Klik hier as jy wil inteken.`,
-    kriptikus: `Welkom terug, KRIPTIKUS! Dankie vir jou subskripsie.`,
+    eerste: {
+      text: `Welkom by Kriptiek! Kies onder of jy gratis wil registreer sodat jy kan begin speel, of eers net wil kyk wat ons bied.`,
+      buttons: [
+        { label: "JA, EK WIL GRATIS REGISTREER", link: "/register.html" },
+        { label: "NEE, EK WIL EERS NET RONDKYK", action: "close" }
+      ]
+    },
+    terug: {
+      text: `Welkom terug! Dit lyk of jy nie met jou vorige besoek suksesvol geregistreer het nie. Kies onder of jy nou wil registreer, of kontak ons as daar 'n probleem was met jou vorige poging.`,
+      buttons: [
+        { label: "JA, EK WIL NOU GRATIS REGISTREER", link: "/register.html" },
+        { label: "EK KRY NIE GEREGISTREER NIE, HELP ASSEBLIEF", action: "contact" }
+      ]
+    },
+    gratis: {
+      text: `Welkom terug! Jy is 'n GRATIS gebruiker. Kies onder of jy wil voortgaan, meer wil weet oor subskripsie, of inteken.`,
+      buttons: [
+        { label: "EK WIL VOORTGAAN AS GRATIS GEBRUIKER", link: "/" },
+        { label: "VERTEL MY MEER OOR SUBSKRIPSIE", link: "/subsbenefits.html" },
+        { label: "EK IS GEREED OM TE INTEKEN", link: "/subscription.html" }
+      ]
+    },
+    kriptikus: {
+      text: `Welkom terug, KRIPTIKUS! Dankie vir jou subskripsie.`,
+      buttons: [
+        { label: "GAAN VOORT", link: "/" },
+        { label: "EK HET 'N PROBLEEM, HELP ASSEBLIEF", action: "contact" }
+      ]
+    }
   };
 
   if (userTier && messages[userTier]) {
-    document.getElementById('modal-content').innerText = messages[userTier];
-    modal.style.display = 'flex';
+    const data = messages[userTier];
+    document.getElementById('modal-content').innerText = data.text;
+    const btnContainer = document.getElementById('modal-buttons');
+    btnContainer.innerHTML = "";
+    data.buttons.forEach(btn => {
+      const b = document.createElement("button");
+      b.textContent = btn.label;
+      b.className = "bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800";
+      if (btn.action === "close") {
+        b.onclick = () => document.getElementById('modal-popup').style.display = 'none';
+      } else if (btn.action === "contact") {
+        b.onclick = () => window.location.href = "/contact.html";
+      } else {
+        b.onclick = () => window.location.href = btn.link;
+      }
+      btnContainer.appendChild(b);
+    });
+    modal.style.display = "flex";
   }
 });
 
