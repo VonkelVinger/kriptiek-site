@@ -158,6 +158,38 @@
     localStorage.setItem('userTier', tier);
     location.reload();
   }
+function testTier(tier) {
+  localStorage.setItem('userTier', tier);
+  location.reload();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const userTier = localStorage.getItem('userTier');
+  const modal = document.createElement('div');
+  modal.id = 'modal-popup';
+  modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center';
+  modal.style.display = 'none';
+  modal.innerHTML = `
+    <div class="bg-white p-6 rounded shadow max-w-xl w-full text-center relative">
+      <button onclick="document.getElementById('modal-popup').style.display='none'" class="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-xl">&times;</button>
+      <div id="modal-content" class="text-gray-800 text-sm whitespace-pre-wrap leading-relaxed mt-4"></div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  const messages = {
+    eerste: `Welkom by Kriptiek! Kies onder of jy gratis wil registreer sodat jy kan begin speel, of eers net wil kyk wat ons bied.`,
+    terug: `Welkom terug! Dit lyk of jy nie met jou vorige besoek suksesvol geregistreer het nie.`,
+    gratis: `Welkom terug! Jy is 'n gratis gebruiker. Klik hier as jy wil inteken.`,
+    kriptikus: `Welkom terug, KRIPTIKUS! Dankie vir jou subskripsie.`,
+  };
+
+  if (userTier && messages[userTier]) {
+    document.getElementById('modal-content').innerText = messages[userTier];
+    modal.style.display = 'flex';
+  }
+});
+
 </script>
 
 </body>
