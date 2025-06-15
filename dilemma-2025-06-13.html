@@ -45,12 +45,31 @@
   </style>
 </head>
 <body class="min-h-screen flex flex-col items-center p-4">
+  <header class="w-full bg-white shadow p-4 mb-6 text-center text-2xl font-bold text-gray-800">Kriptiek</header>
+
   <main id="dilemma-container" class="w-full max-w-md bg-white border-2 border-[#901c1a] p-6 shadow">
     <h2 class="text-xl font-bold text-center mb-4">13 Junie 2025 se woord: 9 letters:</h2>
     <div id="grid" class="mb-4"></div>
     <div id="keyboard" class="text-center mb-2"></div>
     <p id="message" class="text-center text-gray-600 mt-2"></p>
+    <section class="mt-8 text-sm text-gray-800">
+      <h3 class="text-lg font-bold mb-2">Hoe om te speel</h3>
+      <p class="mb-2">Jy het ses kanse om die woord te raai.</p>
+      <p class="mb-2">Jy mag vir elke probeerslag enige letters in enige volgorde kies, maar elke raaiskoot moet dieselfde aantal letters hê as die woord waarna jy soek. Dit hoef nie ook 'n woord te vorm nie. 'n Raaiskoot met minstens 'n paar klinkers is dus 'n goeie begin.</p>
+      <p class="mb-2">Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER.</p>
+      <p class="font-semibold mt-4">Wat beteken die kleure nadat jy geraai het?</p>
+      <ul class="list-disc list-inside">
+        <li><span class="text-green-700 font-semibold">GROEN</span>: Die letter is in die woord én in die regte posisie.</li>
+        <li><span class="text-orange-600 font-semibold">ORANJE</span>: Die letter is wel in die woord, maar nie hier in die regte posisie nie.</li>
+        <li><span class="text-yellow-500 font-semibold">GEEL</span>: Die letter is meer as een keer in die woord, maar nie hier in die regte posisie nie.</li>
+        <li><span class="text-gray-500 font-semibold">GRYS</span>: Die letter is glad nie in die woord nie.</li>
+      </ul>
+    </section>
   </main>
+
+  <footer class="mt-10 text-center text-sm text-gray-500">
+    &copy; 2025 Kriptiek. Alle regte voorbehou.
+  </footer>
 
   <div id="popup-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50">
     <div id="popup" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#f8f5f2] border-2 border-[#901c1a] p-6 text-center max-w-xs shadow">
@@ -67,10 +86,10 @@
       const MAX_GUESSES = 6;
       const STORAGE_KEY = `dilemma-${new Date().toISOString().split("T")[0]}`;
       const colors = {
-        correct: "#4f83cc",
-        present: "#a5312f",
-        absent: "#6b7280",
-        hint: "#f2c94c"
+        correct: "#15803d",    // green-700
+        present: "#ea580c",    // orange-600
+        multiple: "#facc15",   // yellow-400
+        absent: "#6b7280"       // gray-500
       };
 
       let currentGuess = "";
@@ -148,8 +167,18 @@
             let letter = guess[j];
             let bg = colors.absent;
 
-            if (letter === DAILY_WORD[j]) bg = colors.correct;
-            else if (DAILY_WORD.includes(letter)) bg = colors.present;
+            const correctLetters = DAILY_WORD.split('');
+            const guessedLetters = guess.split('');
+
+            const letterInWord = DAILY_WORD.includes(letter);
+            const correctPosition = letter === DAILY_WORD[j];
+            const letterMultiple = DAILY_WORD.split(letter).length - 1 > 1;
+
+            if (correctPosition) {
+              bg = colors.correct;
+            } else if (letterInWord) {
+              bg = letterMultiple ? colors.multiple : colors.present;
+            }
 
             setTimeout(() => {
               tile.classList.add("flip");
@@ -202,7 +231,7 @@
             document.execCommand("copy");
             alert("Jou telling is nou op jou Clipboard");
           } catch {
-            alert("Kopieer het misluk. Probeer asseblief self te kopieer.");
+            alert("Kopieer het misluk. Probeer om dit self te kopieer deur Ctrl-C te gebruik.");
           }
           document.body.removeChild(textarea);
         }
