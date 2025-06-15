@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dilemma: 2025-06-13</title>
+  <title>DILEMMA – Kriptiek</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Montserrat', sans-serif; }
+    body { font-family: 'Montserrat', sans-serif; background-color: #f8f5f2; }
     .tile {
       width: 40px;
       height: 40px;
@@ -21,55 +21,201 @@
       border: 1px solid #901c1a;
       color: #000;
     }
+    .tile.flip {
+      transition: background 0.3s ease;
+    }
+    .row {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 5px;
+    }
     .keyboard-button:hover {
       background: #a5312f;
       color: white;
       cursor: pointer;
     }
-    .leaderboard, .comments {
-      max-width: 600px;
-      margin: 2rem auto;
+    #popup-overlay.show { display: block !important; }
+    #popup {
+      animation: fadeInPopup 0.4s ease-out forwards;
     }
-    .leaderboard h2, .comments h2 {
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
+    @keyframes fadeInPopup {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+      100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
     }
   </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
-
-  <header class="bg-white shadow p-4 text-center">
-    <h1 class="text-2xl font-bold text-gray-800">🧩 Dilemma: 2025-06-13</h1>
-    <p class="text-gray-600">Raai die woord van vandag so vinnig as moontlik!</p>
-  </header>
-
-  <main class="p-6 text-center">
-    <p class="text-gray-700 mb-4">Jy het 6 kansies. Die tyd begin wanneer jy jou eerste letter tik!</p>
-    <div id="dilemma-game"></div>
+<body class="min-h-screen flex flex-col items-center p-4">
+  <main id="dilemma-container" class="w-full max-w-md bg-white border-2 border-[#901c1a] p-6 shadow">
+    <h2 class="text-xl font-bold text-center mb-4">13 Junie 2025 se woord: 9 letters:</h2>
+    <div id="grid" class="mb-4"></div>
+    <div id="keyboard" class="text-center mb-2"></div>
+    <p id="message" class="text-center text-gray-600 mt-2"></p>
   </main>
 
-  <section class="leaderboard">
-    <h2 class="text-center font-bold text-gray-800">🏆 Vandag se Top 5</h2>
-    <ul class="bg-white shadow p-4 rounded">
-      <li>1. Marna – 01:12</li>
-      <li>2. Jaco – 01:27</li>
-      <li>3. Sipho – 01:42</li>
-      <li>4. Elsa – 02:05</li>
-      <li>5. Pieter – 02:18</li>
-    </ul>
-  </section>
-
-  <section class="comments">
-    <h2 class="text-center font-bold text-gray-800">💬 Kommentaar (slegs vir intekenare)</h2>
-    <div class="bg-white shadow p-4 rounded text-sm text-gray-600">
-      <p><strong>Karlien:</strong> Dis een van my gunstelinge tot nog toe!</p>
-      <p><strong>Andries:</strong> Moeilik maar lekker! 😅</p>
+  <div id="popup-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50">
+    <div id="popup" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#f8f5f2] border-2 border-[#901c1a] p-6 text-center max-w-xs shadow">
+      <p id="popupText" class="font-bold text-[#a5312f] text-xl"></p>
+      <button onclick="copyResult()" class="mt-4 bg-[#a5312f] text-white px-4 py-2">DEEL / SHARE</button><br>
+      <button onclick="document.getElementById('popup-overlay').classList.remove('show')" class="mt-3 border-2 border-[#a5312f] text-[#a5312f] font-bold px-4 py-1">SLUIT</button>
     </div>
-  </section>
+  </div>
 
-  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
-    &copy; 2025 Kriptiek. Alle regte voorbehou.
-  </footer>
+  <script>
+    (function() {
+      const DAILY_WORD = "DWAALSPOOR";
+      const WORD_LENGTH = DAILY_WORD.length;
+      const MAX_GUESSES = 6;
+      const STORAGE_KEY = `dilemma-${new Date().toISOString().split("T")[0]}`;
+      const colors = {
+        correct: "#4f83cc",
+        present: "#a5312f",
+        absent: "#6b7280",
+        hint: "#f2c94c"
+      };
 
+      let currentGuess = "";
+      let guesses = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      const grid = document.getElementById("grid");
+      const message = document.getElementById("message");
+
+      for (let i = 0; i < MAX_GUESSES; i++) {
+        const row = document.createElement("div");
+        row.className = "row";
+        for (let j = 0; j < WORD_LENGTH; j++) {
+          const tile = document.createElement("div");
+          tile.className = "tile";
+          row.appendChild(tile);
+        }
+        grid.appendChild(row);
+      }
+
+      const KEYS = [
+        ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
+        ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
+        ["ENTER", "Z", "X", "C", "V", "B", "N", "M", "⌫"]
+      ];
+      const keyboard = document.getElementById("keyboard");
+      const keyButtons = {};
+
+      KEYS.forEach(row => {
+        const div = document.createElement("div");
+        div.className = "flex justify-center mb-1";
+        row.forEach(k => {
+          const btn = document.createElement("button");
+          const key = k === "⌫" ? "←" : k;
+          btn.textContent = key;
+          btn.className = "keyboard-button border-2 border-[#a5312f] text-[#a5312f] font-bold px-2 py-1 mx-1";
+          btn.onclick = () => handleKey(k);
+          keyButtons[k] = btn;
+          div.appendChild(btn);
+        });
+        keyboard.appendChild(div);
+      });
+
+      updateGrid();
+
+      function handleKey(key) {
+        if (guesses.length >= MAX_GUESSES) return;
+        if (key === "⌫") {
+          currentGuess = currentGuess.slice(0, -1);
+        } else if (key === "ENTER") {
+          if (currentGuess.length !== WORD_LENGTH) {
+            message.textContent = `Gebruik ${WORD_LENGTH} letters.`;
+            return;
+          }
+          guesses.push(currentGuess);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(guesses));
+          checkGuess(currentGuess);
+          currentGuess = "";
+        } else if (/^[A-Z]$/.test(key) && currentGuess.length < WORD_LENGTH) {
+          currentGuess += key;
+        }
+        updateGrid();
+      }
+
+      function updateGrid() {
+        const rows = grid.children;
+        for (let i = 0; i < MAX_GUESSES; i++) {
+          const tiles = rows[i].children;
+          const guess = guesses[i] || "";
+          for (let j = 0; j < WORD_LENGTH; j++) {
+            const tile = tiles[j];
+            tile.textContent = guess[j] || (i === guesses.length ? currentGuess[j] || "" : "");
+            tile.classList.remove("flip");
+
+            if (!guess || guess.length < WORD_LENGTH) continue;
+
+            let letter = guess[j];
+            let bg = colors.absent;
+
+            if (letter === DAILY_WORD[j]) bg = colors.correct;
+            else if (DAILY_WORD.includes(letter)) bg = colors.present;
+
+            setTimeout(() => {
+              tile.classList.add("flip");
+              tile.style.background = bg;
+              tile.style.color = "#fff";
+              tile.style.border = `1px solid ${bg}`;
+              if (keyButtons[letter]) {
+                keyButtons[letter].style.background = bg;
+                keyButtons[letter].style.color = "#fff";
+                keyButtons[letter].style.border = `1px solid ${bg}`;
+              }
+            }, j * 200);
+          }
+        }
+      }
+
+      function checkGuess(guess) {
+        if (guess === DAILY_WORD) {
+          const word = guesses.length === 1 ? "raai" : "raaie";
+          showPopup(`KORREK! Jy het dit in ${guesses.length} ${word} reggekry.`);
+        } else if (guesses.length >= MAX_GUESSES) {
+          showPopup("Jammer, probeer môre weer.");
+        } else {
+          message.textContent = "";
+        }
+      }
+
+      function showPopup(text) {
+        document.getElementById("popupText").textContent = text;
+        document.getElementById("popup-overlay").classList.add("show");
+      }
+
+      window.copyResult = function () {
+        const word = guesses.length === 1 ? "raai" : "raaie";
+        const result = `Ek het vandag se DILEMMA 🧩 in *${guesses.length}* ${word} reggekry. Speel by www.kriptiek.com`;
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(result).then(() => {
+            alert("Jou telling is nou op jou Clipboard");
+          });
+        } else {
+          const textarea = document.createElement("textarea");
+          textarea.value = result;
+          textarea.setAttribute("readonly", "");
+          textarea.style.position = "absolute";
+          textarea.style.left = "-9999px";
+          document.body.appendChild(textarea);
+          textarea.select();
+          try {
+            document.execCommand("copy");
+            alert("Jou telling is nou op jou Clipboard");
+          } catch {
+            alert("Kopieer het misluk. Probeer asseblief self te kopieer.");
+          }
+          document.body.removeChild(textarea);
+        }
+      };
+
+      document.addEventListener("keydown", (e) => {
+        let key = e.key.toUpperCase();
+        if (key === "BACKSPACE") key = "⌫";
+        else if (key === "ENTER") key = "ENTER";
+        else if (!/^[A-Z]$/.test(key)) return;
+        handleKey(key);
+      });
+    })();
+  </script>
 </body>
 </html>
