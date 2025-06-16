@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="af">
 <head>
@@ -7,10 +8,15 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
   <style>
-    body { font-family: 'Montserrat', sans-serif; background-color: #f8f5f2; }
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: #f8f5f2;
+    }
     .tile {
-      width: 40px; height: 40px; display: flex; justify-content: center; align-items: center;
-      font-weight: bold; font-size: 1.2rem; margin: 2px; background: #fff;
+      width: 40px; height: 40px;
+      display: flex; justify-content: center; align-items: center;
+      font-weight: bold; font-size: 1.2rem;
+      margin: 2px; background: #fff;
       border: 1px solid #374151; color: #000;
     }
     .tile.flip { transition: background 0.3s ease; }
@@ -20,28 +26,25 @@
       background-color: white; border-radius: 0.375rem; padding: 0.4rem;
       min-width: 30px; width: 100%;
     }
-    .keyboard-button:hover { background: #a5312f; color: white; cursor: pointer; }
-    .logo-container {
-      position: relative; display: flex; justify-content: center; align-items: center;
-      width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem;
-      background-color: white; overflow: hidden;
-    }
-    .crossword-grid {
-      display: grid; grid-template-columns: repeat(8, minmax(40px, 1fr)); gap: 4px;
-      position: relative; z-index: 10;
+    .keyboard-button:hover {
+      background: #a5312f; color: white; cursor: pointer;
     }
     .letter-box {
-      width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
-      background-color: #374151; color: white; font-size: 1.8rem; font-weight: bold;
-      border: 2px solid #1f2937; border-radius: 0.375rem; text-transform: uppercase;
+      width: 50px; height: 50px;
+      display: flex; justify-content: center; align-items: center;
+      background-color: #374151; color: white;
+      font-size: 1.8rem; font-weight: bold;
+      border: 2px solid #1f2937; border-radius: 0.375rem;
+      text-transform: uppercase;
       box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
     }
     .flipped-k { transform: scaleX(-1); }
     .background-crossword {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
-      grid-template-rows: repeat(auto-fill, minmax(30px, 1fr)); opacity: 0.5;
-      z-index: 1; pointer-events: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
+      grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
+      opacity: 0.5; z-index: 1; pointer-events: none;
     }
     .bg-letter-box {
       display: flex; justify-content: center; align-items: center;
@@ -52,63 +55,46 @@
       display: flex; justify-content: center; gap: 4px; margin-bottom: 0.5rem;
     }
     .game-title-tile {
-      width: 35px; height: 35px; display: flex; justify-content: center; align-items: center;
-      font-weight: bold; font-size: 1.2rem; background-color: #15803d; color: white;
+      width: 35px; height: 35px;
+      display: flex; justify-content: center; align-items: center;
+      font-weight: bold; font-size: 1.2rem;
+      background-color: #15803d; color: white;
       border-radius: 0.375rem; text-transform: uppercase;
     }
-    #popup-overlay {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.7); display: none;
-      justify-content: center; align-items: center; z-index: 50;
-    }
-    #popup-overlay.show { display: flex !important; }
-    #popup {
-      background: white; border: 2px solid #374151; padding: 1.5rem;
-      border-radius: 1rem; max-width: 90%; text-align: center;
-      animation: fadeInPopup 0.4s ease-out forwards;
-    }
-    @keyframes fadeInPopup {
-      from { opacity: 0; transform: translateY(-20px) scale(0.95); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    .popup-button {
-      margin: 0.5rem; padding: 0.5rem 1rem; font-weight: bold;
-      border: 2px solid #374151; background-color: #ffffff; color: #374151;
-      cursor: pointer; border-radius: 0.375rem;
-    }
-    .popup-button:hover { background-color: #374151; color: white; }
   </style>
 </head>
-<body>
-  <h1 class="sr-only">DILEMMA Game</h1>
-  <div class="logo-container">
-    <div id="backgroundCrossword" class="background-crossword"></div>
-    <div class="crossword-grid">
-      <div class="letter-box flipped-k">K</div><div class="letter-box flipped-k">R</div>
-      <div class="letter-box">I</div><div class="letter-box flipped-k">P</div>
-      <div class="letter-box">T</div><div class="letter-box">I</div>
-      <div class="letter-box flipped-k">E</div><div class="letter-box">K</div>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+  <div class="w-full max-w-md">
+    <div class="logo-container relative flex justify-center mb-4">
+      <div id="backgroundCrossword" class="background-crossword"></div>
+      <div class="grid grid-cols-8 gap-1 z-10">
+        <div class="letter-box flipped-k">K</div>
+        <div class="letter-box flipped-k">R</div>
+        <div class="letter-box">I</div>
+        <div class="letter-box flipped-k">P</div>
+        <div class="letter-box">T</div>
+        <div class="letter-box">I</div>
+        <div class="letter-box flipped-k">E</div>
+        <div class="letter-box">K</div>
+      </div>
     </div>
+
+    <main class="bg-white border-2 border-[#374151] p-6 shadow w-full">
+      <div class="game-title">
+        <div class="game-title-tile">D</div><div class="game-title-tile">I</div>
+        <div class="game-title-tile">L</div><div class="game-title-tile">E</div>
+        <div class="game-title-tile">M</div><div class="game-title-tile">M</div>
+        <div class="game-title-tile">A</div>
+      </div>
+      <h2 class="text-xl font-bold text-center mb-4">13 Junie 2025 se woord: 9 letters:</h2>
+      <div id="grid" class="mb-4"></div>
+      <div id="keyboard" class="space-y-2 w-full overflow-hidden"></div>
+      <p id="message" class="text-center text-gray-600 mt-2"></p>
+      <input id="hiddenInput" type="text" class="sr-only" autofocus />
+    </main>
   </div>
-  <main class="w-full max-w-md bg-white border-2 border-[#374151] p-6 shadow">
-    <div class="game-title">
-      <div class="game-title-tile">D</div><div class="game-title-tile">I</div>
-      <div class="game-title-tile">L</div><div class="game-title-tile">E</div>
-      <div class="game-title-tile">M</div><div class="game-title-tile">M</div>
-      <div class="game-title-tile">A</div>
-    </div>
-    <h2 class="text-xl font-bold text-center mb-4">13 Junie 2025 se woord: 9 letters:</h2>
-    <div id="grid" class="mb-4"></div>
-    <div id="keyboard" class="space-y-2 w-full overflow-hidden"></div>
-    <p id="message" class="text-center text-gray-600 mt-2"></p>
-  </main>
-  <div id="popup-overlay">
-    <div id="popup">
-      <p id="popupText" class="text-lg font-bold mb-4"></p>
-      <button class="popup-button" onclick="document.getElementById('popup-overlay').classList.remove('show')">SLUIT</button>
-      <button class="popup-button" onclick="copyResult()">DEEL</button>
-    </div>
-  </div>
+
   <script>
     const WORD = "DWAALSPOOR", MAX = 6;
     let guesses = JSON.parse(localStorage.getItem("dilemma-2025-06-13") || "[]");
@@ -171,42 +157,29 @@
     }
 
     function check(g) {
-      if (g === WORD) showPopup(`KORREK! Jy het dit in ${guesses.length} ${(guesses.length === 1 ? "raai" : "raaie")} reggekry.`);
-      else if (guesses.length >= MAX) showPopup("Jammer, probeer môre weer.");
-      else msg.textContent = "";
+      alert(g === WORD
+        ? `KORREK! Jy het dit in ${guesses.length} ${(guesses.length === 1 ? "raai" : "raaie")} reggekry.`
+        : (guesses.length >= MAX ? "Jammer, probeer môre weer." : "")
+      );
     }
 
-    window.copyResult = function () {
-      const txt = `Ek het vandag se DILEMMA 🧩 in *${guesses.length}* ${(guesses.length === 1 ? "raai" : "raaie")} reggekry. Speel by www.kriptiek.com`;
-      if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => alert("Jou telling is nou op jou Clipboard"));
-    };
-
-    document.addEventListener("keydown", e => {
-      const k = e.key.toUpperCase();
-      if (/^[A-Z]$/.test(k) || k === "ENTER" || k === "BACKSPACE") handle(k === "BACKSPACE" ? "⌫" : k);
-    });
-
-    function showPopup(txt) {
-      document.getElementById("popupText").textContent = txt;
-      document.getElementById("popup-overlay").classList.add("show");
+    function initKeyboardListener() {
+      const hiddenInput = document.getElementById("hiddenInput");
+      hiddenInput.focus();
+      hiddenInput.addEventListener("input", e => {
+        const char = e.data?.toUpperCase();
+        if (char && /^[A-Z]$/.test(char)) handle(char);
+        hiddenInput.value = "";
+      });
+      document.addEventListener("keydown", e => {
+        const k = e.key.toUpperCase();
+        if (/^[A-Z]$/.test(k) || k === "ENTER" || k === "BACKSPACE")
+          handle(k === "BACKSPACE" ? "⌫" : k);
+      });
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
-      const bg = document.getElementById('backgroundCrossword');
-      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      function fillGrid() {
-        bg.innerHTML = '';
-        const count = Math.max(300, (bg.offsetHeight / 30) * (bg.offsetWidth / 30));
-        for (let i = 0; i < count; i++) {
-          const box = document.createElement('div');
-          box.className = 'bg-letter-box';
-          box.textContent = letters[Math.floor(Math.random() * letters.length)];
-          bg.appendChild(box);
-        }
-      }
-      fillGrid();
-      window.addEventListener('resize', fillGrid);
-    });
+    initKeyboardListener();
+    update();
   </script>
 </body>
 </html>
