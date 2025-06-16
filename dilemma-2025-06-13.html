@@ -21,7 +21,7 @@
       font-size: 1.2rem;
       margin: 2px;
       background: #fff;
-      border: 1px solid #901c1a;
+      border: 1px solid #374151;
       color: #000;
     }
     .tile.flip {
@@ -131,7 +131,7 @@
     }
     #popup {
       background: white;
-      border: 2px solid #901c1a;
+      border: 2px solid #374151;
       padding: 1.5rem;
       border-radius: 1rem;
       max-width: 90%;
@@ -152,14 +152,14 @@
       margin: 0.5rem;
       padding: 0.5rem 1rem;
       font-weight: bold;
-      border: 2px solid #901c1a;
+      border: 2px solid #374151;
       background-color: #ffffff;
-      color: #901c1a;
+      color: #374151;
       cursor: pointer;
       border-radius: 0.375rem;
     }
     .popup-button:hover {
-      background-color: #901c1a;
+      background-color: #374151;
       color: white;
     }
   </style>
@@ -182,7 +182,7 @@
   </div>
 </header>
 
-<main class="w-full max-w-md bg-white border-2 border-[#901c1a] p-6 shadow">
+<main class="w-full max-w-md bg-white border-2 border-[#374151] p-6 shadow">
   <div class="game-title">
     <div class="game-title-tile">D</div>
     <div class="game-title-tile">I</div>
@@ -271,7 +271,7 @@
     const row = document.createElement("div"); row.className = "flex justify-center mb-1";
     r.forEach(k => {
       const b = document.createElement("button"); b.textContent = k === "⌫" ? "←" : k;
-      b.className = "keyboard-button border-2 border-[#a5312f] text-[#a5312f] font-bold px-2 py-1 mx-1";
+      b.className = "keyboard-button border-2 border-[#374151] text-[#374151] font-bold px-2 py-1 mx-1";
       b.onclick = () => handle(k); keys[k] = b; row.appendChild(b);
     }); keyboard.appendChild(row);
   });
