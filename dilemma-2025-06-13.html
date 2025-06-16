@@ -95,6 +95,45 @@
       transform: scaleX(-1);
     }
 
+    @media (max-width: 768px) {
+      .keyboard-button {
+        font-size: 0.95rem;
+        padding: 0.4rem 0.6rem;
+        margin: 2px;
+        min-width: 36px;
+        flex: 1 0 auto;
+        height: 48px;
+        text-align: center;
+      }
+
+      .keyboard-button[key="ENTER"],
+      .keyboard-button[key="⌫"] {
+        min-width: 64px;
+        height: auto;
+        padding: 0.5rem 0.6rem;
+        font-size: 0.85rem;
+        line-height: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .keyboard-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 6px;
+      }
+
+      #keyboard {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
+
+
   .background-crossword {
     position: absolute;
     top: 0;
