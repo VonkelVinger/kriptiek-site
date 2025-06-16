@@ -115,6 +115,53 @@
       border-radius: 0.375rem;
       text-transform: uppercase;
     }
+    /* ✅ Popup styling */
+    #popup-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+    }
+    #popup-overlay.show {
+      display: flex !important;
+    }
+    #popup {
+      background: white;
+      border: 2px solid #901c1a;
+      padding: 1.5rem;
+      border-radius: 1rem;
+      max-width: 90%;
+      text-align: center;
+      animation: fadeInPopup 0.4s ease-out forwards;
+    }
+    @keyframes fadeInPopup {
+      from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    .popup-button {
+      margin: 0.5rem;
+      padding: 0.5rem 1rem;
+      font-weight: bold;
+      border: 2px solid #901c1a;
+      background-color: #ffffff;
+      color: #901c1a;
+      cursor: pointer;
+      border-radius: 0.375rem;
+    }
+    .popup-button:hover {
+      background-color: #901c1a;
+      color: white;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col items-center p-4">
@@ -136,7 +183,6 @@
 </header>
 
 <main class="w-full max-w-md bg-white border-2 border-[#901c1a] p-6 shadow">
-  <!-- ✅ Added DILEMMA tiles here -->
   <div class="game-title">
     <div class="game-title-tile">D</div>
     <div class="game-title-tile">I</div>
@@ -146,7 +192,6 @@
     <div class="game-title-tile">M</div>
     <div class="game-title-tile">A</div>
   </div>
-  
   <h2 class="text-xl font-bold text-center mb-4">13 Junie 2025 se woord: 9 letters:</h2>
   <div id="grid" class="mb-4"></div>
   <div id="keyboard" class="text-center mb-2 overflow-x-auto max-w-full flex flex-wrap justify-center"></div>
@@ -165,6 +210,15 @@
     </ul>
   </section>
 </main>
+
+<!-- ✅ Popup added -->
+<div id="popup-overlay">
+  <div id="popup">
+    <p id="popupText" class="text-lg font-bold mb-4"></p>
+    <button class="popup-button" onclick="document.getElementById('popup-overlay').classList.remove('show')">SLUIT</button>
+    <button class="popup-button" onclick="copyResult()">DEEL</button>
+  </div>
+</div>
 
 <footer class="bg-white shadow p-4 text-center text-sm text-gray-500 mt-10">
   &copy; 2025 Kriptiek. Alle regte voorbehou. |
@@ -223,7 +277,7 @@
   });
 
   function handle(k) {
-    if (guesses.length >= MAX) return;
+    if (guesses.length >= MAX || guesses.includes(WORD)) return;
     if (k === "⌫") current = current.slice(0, -1);
     else if (k === "ENTER") {
       if (current.length !== WORD.length) return msg.textContent = `Gebruik ${WORD.length} letters.`;
