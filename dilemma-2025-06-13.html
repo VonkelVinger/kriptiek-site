@@ -164,19 +164,28 @@
       color: white;
     }
     @media (max-width: 768px) {
-  .keyboard-button {
-    font-size: 0.85rem;
-    padding: 0.4rem 0.5rem;
-    margin: 2px;
-    min-width: 10%;
-    max-width: 12%;
-    flex: none;
-  }
-  #keyboard > div {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-}
+      .keyboard-button {
+        font-size: 1rem;
+        padding: 0.5rem;
+        margin: 2px;
+        flex: 0 0 10%;
+        min-width: 32px;
+      }
+
+      .keyboard-button[key="ENTER"],
+      .keyboard-button[key="⌫"] {
+        flex: 0 0 20%;
+        min-width: 64px;
+      }
+
+      #keyboard > div,
+      .keyboard-row {
+        flex-wrap: wrap;
+        justify-content: center;
+        display: flex;
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col items-center p-4">
@@ -280,14 +289,13 @@
 
   const layout = [[..."QWERTYUIOP"],[..."ASDFGHJKL"],["ENTER",..."ZXCVBNM","⌫"]];
   layout.forEach(r => {
-    const row = document.createElement("div"); row.className = "flex justify-center mb-1";
+    const row = document.createElement("div"); row.className = "keyboard-row";
     r.forEach(k => {
       const b = document.createElement("button"); b.textContent = k === "⌫" ? "←" : k;
-      b.className = "keyboard-button";
+      b.className = "keyboard-button"; b.setAttribute("key", k);
       b.onclick = () => handle(k); keys[k] = b; row.appendChild(b);
     }); keyboard.appendChild(row);
   });
-
   function handle(k) {
     if (guesses.length >= MAX || guesses.includes(WORD)) return;
     if (k === "⌫") current = current.slice(0, -1);
