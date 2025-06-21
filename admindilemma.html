@@ -1,14 +1,12 @@
 <!DOCTYPE html>
-<html lang="af">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin – DILEMMA</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+  <title>Create DILEMMA Game</title>
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
+    import { getFirestore, doc, setDoc } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -23,51 +21,38 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    window.submitGame = async function () {
-      const date = document.getElementById('game-date').value;
-      const clue = document.getElementById('game-clue').value.trim();
-      const word = document.getElementById('game-word').value.trim().toUpperCase();
+    window.saveGame = async () => {
+      const date = document.getElementById('date').value;
+      const word = document.getElementById('word').value.toUpperCase();
+      const clue = document.getElementById('clue').value;
 
-      if (!date || !clue || !word) {
-        alert('Vul asseblief al die velde in.');
+      if (!date || !word || !clue) {
+        alert("Please complete all fields.");
         return;
       }
 
+      const docId = `Game${date}`;
+
       try {
-        await setDoc(doc(db, "games", `Game${date}`), {
+        await setDoc(doc(db, 'games', docId), {
           date,
-          clue,
           word,
-          createdAt: new Date().toISOString()
+          clue,
+          created: new Date().toISOString()
         });
-        alert(`Speletjie vir ${date} is gestoor.`);
+        alert(`Game '${docId}' successfully saved.`);
       } catch (e) {
-        console.error("Fout met stoor:", e);
-        alert("Kon nie stoor nie. Probeer weer.");
+        console.error("Error writing document: ", e);
+        alert("Failed to save game. Check console for details.");
       }
-    }
+    };
   </script>
-  <style>
-    body {
-      font-family: 'Montserrat', sans-serif;
-      background-color: #f8f5f2;
-    }
-  </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-6">
-  <main class="bg-white border border-gray-300 rounded-lg shadow p-6 w-full max-w-xl">
-    <h1 class="text-2xl font-bold mb-4 text-center">🛠️ Admin: Skep DILEMMA Speletjie</h1>
-
-    <label class="block mb-2 font-semibold" for="game-date">Datum (bv. 2025-06-13)</label>
-    <input type="date" id="game-date" class="w-full border border-gray-400 p-2 rounded mb-4">
-
-    <label class="block mb-2 font-semibold" for="game-clue">Kriptiese leidraad (3 reëls maksimum)</label>
-    <textarea id="game-clue" rows="3" class="w-full border border-gray-400 p-2 rounded mb-4" placeholder="Tik die leidraad hier..."></textarea>
-
-    <label class="block mb-2 font-semibold" for="game-word">Doelwoord (hoofletters)</label>
-    <input type="text" id="game-word" class="w-full border border-gray-400 p-2 rounded mb-6 uppercase" placeholder="VOORBEELD">
-
-    <button onclick="submitGame()" class="w-full bg-[#374151] text-white font-bold py-2 rounded">Stoor Speletjie</button>
-  </main>
+<body style="font-family: sans-serif; max-width: 600px; margin: 40px auto;">
+  <h1>🧩 Create New DILEMMA Game</h1>
+  <label>Date (YYYY-MM-DD):<br><input type="date" id="date" required></label><br><br>
+  <label>Target Word:<br><input type="text" id="word" maxlength="14" placeholder="e.g. DWAALSPOOR" required></label><br><br>
+  <label>Cryptic Clue:<br><textarea id="clue" rows="4" style="width: 100%;" placeholder="Enter clue here..." required></textarea></label><br><br>
+  <button onclick="saveGame()" style="padding: 10px 20px; font-weight: bold;">Save Game</button>
 </body>
 </html>
