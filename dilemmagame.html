@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getFirestore, doc, getDoc, collection, addDoc, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, collection, getDocs, addDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -49,37 +49,83 @@
       createGrid();
       createKeyboard();
       updateGrid();
-      fetchLeaderboard();
-      fetchComments();
+      loadLeaderboard();
+      loadComments();
     }
 
-    async function fetchLeaderboard() {
-      const q = query(collection(db, `leaderboard/${gameId}/entries`), orderBy("score", "asc"), orderBy("time"), limit(10));
-      const snapshot = await getDocs(q);
-      const table = document.getElementById("leaderboardBody");
-      table.innerHTML = "";
-      snapshot.forEach(doc => {
-        const row = doc.data();
-        table.innerHTML += `<tr class="bg-gray-100">
-          <td class="px-2 py-1 border border-[#374151]">${row.name}</td>
-          <td class="px-2 py-1 border border-[#374151]">${row.score}</td>
-          <td class="px-2 py-1 border border-[#374151]">${row.time}</td>
-        </tr>`;
+    function createGrid() {
+      const grid = document.getElementById("grid");
+      for (let i = 0; i < MAX_GUESSES; i++) {
+        const row = document.createElement("div");
+        row.className = "flex justify-center mb-1";
+        for (let j = 0; j < WORD.length; j++) {
+          const tile = document.createElement("div");
+          tile.className = "tile";
+          row.appendChild(tile);
+        }
+        grid.appendChild(row);
+      }
+    }
+
+    function createKeyboard() {
+      const layout = [[..."QWERTYUIOP"],[..."ASDFGHJKL"],["ENTER",..."ZXCVBNM","⌫"]];
+      const kb = document.getElementById("keyboard");
+      layout.forEach(r => {
+        const row = document.createElement("div");
+        row.className = "flex justify-center mb-1";
+        r.forEach(k => {
+          const b = document.createElement("button");
+          b.textContent = k === "⌫" ? "←" : k;
+          b.className = "keyboard-button";
+          b.onclick = () => handleKey(k);
+          row.appendChild(b);
+        });
+        kb.appendChild(row);
       });
     }
 
-    async function fetchComments() {
-      const q = query(collection(db, `comments/${gameId}/entries`), orderBy("timestamp"));
-      const snapshot = await getDocs(q);
-      const commentList = document.getElementById("commentList");
-      commentList.innerHTML = "";
-      snapshot.forEach(doc => {
-        const c = doc.data();
-        commentList.innerHTML += `<div class="border-t pt-2 text-sm">
-          <p><strong>${c.name}:</strong> ${c.text}</p>
-          <p class="text-xs text-gray-500">${new Date(c.timestamp.toDate()).toLocaleTimeString()}</p>
-        </div>`;
-      });
+    function handleKey(k) {
+      if (guesses.includes(WORD) || guesses.length >= MAX_GUESSES) return;
+      if (k === "⌫") currentGuess = currentGuess.slice(0, -1);
+      else if (k === "ENTER") {
+        if (currentGuess.length !== WORD.length) return;
+        guesses.push(currentGuess);
+        localStorage.setItem(gameId, JSON.stringify(guesses));
+        checkGuess(currentGuess);
+        currentGuess = "";
+      } else if (/^[A-Z]$/.test(k) && currentGuess.length < WORD.length) {
+        currentGuess += k;
+      }
+      updateGrid();
+    }
+
+    function updateGrid() {
+      const grid = document.getElementById("grid").children;
+      for (let i = 0; i < MAX_GUESSES; i++) {
+        const row = grid[i].children;
+        const guess = guesses[i] || "";
+        for (let j = 0; j < WORD.length; j++) {
+          const tile = row[j];
+          const c = guess[j] || (i === guesses.length ? currentGuess[j] || "" : "");
+          tile.textContent = c || "";
+          tile.style.background = "#fff";
+          tile.style.color = "#000";
+          tile.style.border = "1px solid #374151";
+          if (guess) {
+            let color = "#6b7280";
+            if (c === WORD[j]) color = "#15803d";
+            else if (WORD.includes(c)) color = "#ea580c";
+            tile.style.background = color;
+            tile.style.color = "#fff";
+            tile.style.border = `1px solid ${color}`;
+          }
+        }
+      }
+    }
+
+    function checkGuess(g) {
+      if (g === WORD) alert("KORREK!");
+      else if (guesses.length >= MAX_GUESSES) alert("Jammer, probeer weer.");
     }
 
     document.addEventListener("keydown", e => {
@@ -87,6 +133,36 @@
       if (/^[A-Z]$/.test(k) || k === "ENTER" || k === "BACKSPACE")
         handleKey(k === "BACKSPACE" ? "⌫" : k);
     });
+
+    async function loadLeaderboard() {
+      const ref = collection(db, gameId, "leaderboard");
+      const q = query(ref, orderBy("score", "asc"));
+      const snapshot = await getDocs(q);
+      const tbody = document.getElementById("leaderboardBody");
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        const row = document.createElement("tr");
+        row.innerHTML = `<td class='px-2 py-1 border border-[#374151]'>${d.name}</td>
+                         <td class='px-2 py-1 border border-[#374151]'>${d.score}</td>
+                         <td class='px-2 py-1 border border-[#374151]'>${d.time || ''}</td>`;
+        tbody.appendChild(row);
+      });
+    }
+
+    async function loadComments() {
+      const ref = collection(db, gameId, "comments");
+      const q = query(ref, orderBy("created", "asc"));
+      const snapshot = await getDocs(q);
+      const commentSection = document.getElementById("commentsSection");
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        const block = document.createElement("div");
+        block.className = "border-t pt-2 text-sm";
+        block.innerHTML = `<p><strong>${d.name}</strong>: ${d.text}</p>
+                           <p class="text-xs text-gray-500">${new Date(d.created.toDate()).toLocaleTimeString()}</p>`;
+        commentSection.appendChild(block);
+      });
+    }
 
     fetchGame();
   </script>
@@ -101,60 +177,25 @@
     }
     .keyboard-button:hover { background: #a5312f; color: white; cursor: pointer; }
     .letter-box {
-      width: 50px;
-      height: 50px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background-color: #374151;
-      color: white;
-      font-size: 1.8rem;
-      font-weight: bold;
-      border: 2px solid #1f2937;
-      border-radius: 0.375rem;
-      text-transform: uppercase;
+      width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
+      background-color: #374151; color: white; font-size: 1.8rem; font-weight: bold; border: 2px solid #1f2937;
+      border-radius: 0.375rem; text-transform: uppercase;
     }
     .crossword-grid {
-      display: grid;
-      grid-template-columns: repeat(8, 1fr);
-      gap: 4px;
-      margin-bottom: 1rem;
-      position: relative;
-      z-index: 10;
+      display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; position: relative; z-index: 10;
     }
     .logo-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: relative;
-      width: fit-content;
-      margin: 1rem auto;
-      padding: 1rem;
-      border-radius: 1rem;
-      background-color: white;
-      overflow: hidden;
+      position: relative; display: flex; justify-content: center; align-items: center; width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
     }
     .background-crossword {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      display: grid;
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid;
       grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
       grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
-      opacity: 0.5;
-      z-index: 1;
-      pointer-events: none;
+      opacity: 0.5; z-index: 1; pointer-events: none;
     }
     .bg-letter-box {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 1.1rem;
-      font-weight: bold;
-      color: #9ca3af;
-      border: 1px solid #e5e7eb;
-      background-color: transparent;
-      user-select: none;
+      display: flex; justify-content: center; align-items: center; font-size: 1.1rem;
+      font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none;
     }
     .flipped-k { transform: scaleX(-1); }
   </style>
@@ -178,23 +219,19 @@
     <p id="clueDisplay" class="text-center text-gray-700 italic mb-4"></p>
     <div id="grid" class="mb-4"></div>
     <div id="keyboard" class="text-center overflow-x-auto max-w-full flex flex-wrap justify-center"></div>
-    <section class="mt-8">
-      <h3 class="text-xl font-bold text-center mb-2">🏆 Vandag se bestes</h3>
+    <section class="mt-6">
+      <h3 class="text-lg font-bold text-center mb-2">🏆 Vandag se bestes</h3>
       <table class="w-full text-sm text-left text-gray-700 border border-[#374151]">
         <thead class="bg-[#374151] text-white">
-          <tr>
-            <th class="px-2 py-1 border border-[#374151]">Naam</th>
-            <th class="px-2 py-1 border border-[#374151]">Raaie</th>
-            <th class="px-2 py-1 border border-[#374151]">Tyd</th>
-          </tr>
+          <tr><th class="px-2 py-1 border">Naam</th><th class="px-2 py-1 border">Raaie</th><th class="px-2 py-1 border">Tyd</th></tr>
         </thead>
         <tbody id="leaderboardBody"></tbody>
       </table>
     </section>
     <section class="mt-8">
-      <h3 class="text-xl font-bold text-center mb-2">💬 Sê jou sê</h3>
+      <h3 class="text-lg font-bold text-center mb-2">💬 Sê jou sê</h3>
       <p class="text-center text-gray-600 text-sm mb-2">Kommentaar word net vir vandag gestoor</p>
-      <div id="commentList" class="mt-4"></div>
+      <div id="commentsSection"></div>
     </section>
   </main>
   <script>
