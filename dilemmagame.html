@@ -31,6 +31,7 @@
       padding: 0.5rem;
       margin: 0.2rem;
       background: white;
+      box-sizing: border-box;
     }
     .keyboard-button:hover {
       background: #a5312f;
@@ -97,19 +98,6 @@
       background-color: white;
       overflow: hidden;
     }
-    #share-toast {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #15803d;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 6px;
-      font-weight: bold;
-      display: none;
-      z-index: 50;
-    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col items-center p-4">
@@ -126,70 +114,61 @@
       <div class="letter-box">K</div>
     </div>
   </header>
-  <main class="w-full max-w-md bg-white border-2 border-[#374151] p-6 shadow">
-    <h2 class="text-xl font-bold text-center mb-2">🧩 DILEMMA vir <span id="dateDisplay"></span></h2>
-    <p id="clueDisplay" class="text-center text-gray-700 italic mb-4"></p>
-    <div id="grid" class="mb-4"></div>
-    <div id="keyboard" class="text-center overflow-x-auto max-w-full flex flex-wrap justify-center"></div>
-    <div id="rules" class="bg-gray-100 text-sm p-4 rounded mt-4 border border-gray-300">
-      <h4 class="font-bold mb-2">Hoe om te speel</h4>
-      <ul class="list-disc list-inside space-y-1">
-        <li>Jy het ses kanse om die woord te raai.</li>
-        <li>Jy mag vir elke probeerslag enige letters in enige volgorde gebruik.</li>
-        <li>Groen blokke wys dat die letter reg en op die regte plek is.</li>
-        <li>Oranje blokke wys dat die letter in die woord is maar op ’n ander plek.</li>
-        <li>Grys blokke wys dat die letter nie in die woord is nie.</li>
-      </ul>
-    </div>
-    <div id="shareContainer" class="mt-4 hidden">
-      <button id="shareBtn" class="w-full bg-green-700 text-white font-bold py-1 rounded">📤 Deel jou prestasie</button>
-    </div>
-    <!-- 🏆 Leaderboard -->
-    <section class="mt-8">
-      <h3 class="text-lg font-bold text-center mb-2">🏆 Vandag se bestes</h3>
-      <table class="w-full text-sm text-left text-gray-700 border border-[#374151]">
-        <thead class="bg-[#374151] text-white">
-          <tr>
-            <th class="px-2 py-1 border border-[#374151]">Naam</th>
-            <th class="px-2 py-1 border border-[#374151]">Raaie</th>
-            <th class="px-2 py-1 border border-[#374151]">Tyd</th>
-          </tr>
-        </thead>
-        <tbody id="leaderboard-body">
-          <tr>
-            <td class="px-2 py-1 border border-[#374151] text-center text-gray-400" colspan="3">Nog geen inskrywings nie</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-    <!-- 💬 Comments -->
-    <section class="mt-8">
-      <h3 class="text-lg font-bold text-center mb-2">💬 Sê jou sê</h3>
-      <p class="text-center text-gray-600 text-sm mb-2">Kommentaar word net vir vandag gestoor</p>
-      <textarea class="w-full border border-gray-400 p-2 mb-2 rounded resize-none text-sm" rows="3" placeholder="Tik jou kommentaar hier..." id="commentBox"></textarea>
-      <button id="commentBtn" class="w-full bg-[#374151] text-white font-bold py-1 rounded">Kommentaar</button>
-      <div id="commentList" class="mt-4 text-sm border-t pt-2 space-y-2"></div>
-    </section>
-  </main>
-  <div id="share-toast"></div>
-  <script>
-    function checkGuess(g) {
-      if (g === word) {
-        const name = prompt("KORREK! Tik jou naam vir die leaderboard:");
-        if (name) {
-          addDoc(leaderboardRef, {
-            name,
-            guesses: guesses.length,
-            timestamp: serverTimestamp()
-          }).then(() => {
-            loadLeaderboard();
-            setupShareButton(date, guesses.length);
-          });
-        }
-      } else if (guesses.length >= MAX_GUESSES) {
-        alert("Jammer, probeer môre weer.");
-      }
-    }
-  </script>
+<main class="w-full max-w-md bg-white border-2 border-[#374151] p-6 shadow">
+  <h2 class="text-xl font-bold text-center mb-2">🧩 DILEMMA vir <span id="dateDisplay"></span></h2>
+  <p id="clueDisplay" class="text-center text-gray-700 italic mb-4"></p>
+  <div id="grid" class="mb-4"></div>
+  <div id="keyboard" class="text-center overflow-x-auto max-w-full flex flex-wrap justify-center"></div>
+
+  <section class="mt-6 text-sm text-gray-800">
+    <h3 class="text-lg font-bold mb-2">Hoe om te speel</h3>
+    <p class="mb-2">Jy het ses kanse om die woord te raai.</p>
+    <p class="mb-2">Jy mag vir elke probeerslag enige letters in enige volgorde kies, maar elke raaiskoot moet dieselfde aantal letters hê as die woord waarna jy soek. Dit hoef nie ook 'n woord te vorm nie.</p>
+    <p class="mb-2">Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER.</p>
+    <ul class="list-disc list-inside mt-4">
+      <li><span class="text-green-700 font-semibold">GROEN</span>: Die letter is in die woord én in die regte posisie.</li>
+      <li><span class="text-orange-600 font-semibold">ORANJE</span>: Die letter is in die woord, maar op 'n ander plek.</li>
+      <li><span class="text-yellow-500 font-semibold">GEEL</span>: Die letter kom meer as een keer in die woord voor, maar is nie hier op die regte plek nie.</li>
+      <li><span class="text-gray-600 font-semibold">GRYS</span>: Die letter is nie in die woord nie.</li>
+    </ul>
+  </section>
+
+  <!-- 🏆 Leaderboard -->
+  <section class="mt-8">
+    <h3 class="text-lg font-bold text-center mb-2">🏆 Vandag se bestes</h3>
+    <table class="w-full text-sm text-left text-gray-700 border border-[#374151]">
+      <thead class="bg-[#374151] text-white">
+        <tr>
+          <th class="px-2 py-1 border border-[#374151]">Naam</th>
+          <th class="px-2 py-1 border border-[#374151]">Raaie</th>
+          <th class="px-2 py-1 border border-[#374151]">Tyd</th>
+        </tr>
+      </thead>
+      <tbody id="leaderboard-body">
+        <tr>
+          <td class="px-2 py-1 border border-[#374151] text-center text-gray-400" colspan="3">Nog geen inskrywings nie</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 💬 Comments -->
+  <section class="mt-8">
+    <h3 class="text-lg font-bold text-center mb-2">💬 Sê jou sê</h3>
+    <p class="text-center text-gray-600 text-sm mb-2">Kommentaar word net vir vandag gestoor</p>
+    <textarea class="w-full border border-gray-400 p-2 mb-2 rounded resize-none text-sm" rows="3" placeholder="Tik jou kommentaar hier..." id="commentBox"></textarea>
+    <button id="commentBtn" class="w-full bg-[#374151] text-white font-bold py-1 rounded">Kommentaar</button>
+    <div id="commentList" class="mt-4 text-sm border-t pt-2 space-y-2"></div>
+  </section>
+</main>
+
+<footer class="bg-white shadow p-4 text-center text-sm text-gray-500 mt-10">
+  &copy; 2025 Kriptiek. Alle regte voorbehou. |
+  <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
+  <a href="/terms.html" class="underline">Voorwaardes</a> |
+  <a href="/terms.html" class="underline">Gereelde vrae</a> |
+  <a href="/terms.html" class="underline">Oor Kriptiek</a> |
+  <a href="/terms.html" class="underline">Kontak ons</a>
+</footer>
 </body>
 </html>
