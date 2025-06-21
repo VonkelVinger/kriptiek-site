@@ -97,6 +97,19 @@
       background-color: white;
       overflow: hidden;
     }
+    #share-toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #15803d;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: bold;
+      display: none;
+      z-index: 50;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col items-center p-4">
@@ -113,243 +126,60 @@
       <div class="letter-box">K</div>
     </div>
   </header>
-<main class="w-full max-w-md bg-white border-2 border-[#374151] p-6 shadow">
-  <h2 class="text-xl font-bold text-center mb-2">🧩 DILEMMA vir <span id="dateDisplay"></span></h2>
-  <p id="clueDisplay" class="text-center text-gray-700 italic mb-4"></p>
-  <div id="grid" class="mb-4"></div>
-  <div id="keyboard" class="text-center overflow-x-auto max-w-full flex flex-wrap justify-center"></div>
-
-  <!-- 🏆 Leaderboard -->
-  <section class="mt-8">
-    <h3 class="text-lg font-bold text-center mb-2">🏆 Vandag se bestes</h3>
-    <table class="w-full text-sm text-left text-gray-700 border border-[#374151]">
-      <thead class="bg-[#374151] text-white">
-        <tr>
-          <th class="px-2 py-1 border border-[#374151]">Naam</th>
-          <th class="px-2 py-1 border border-[#374151]">Raaie</th>
-          <th class="px-2 py-1 border border-[#374151]">Tyd</th>
-        </tr>
-      </thead>
-      <tbody id="leaderboard-body">
-        <tr>
-          <td class="px-2 py-1 border border-[#374151] text-center text-gray-400" colspan="3">Nog geen inskrywings nie</td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
-
-  <!-- 💬 Comments -->
-  <section class="mt-8">
-    <h3 class="text-lg font-bold text-center mb-2">💬 Sê jou sê</h3>
-    <p class="text-center text-gray-600 text-sm mb-2">Kommentaar word net vir vandag gestoor</p>
-    <textarea class="w-full border border-gray-400 p-2 mb-2 rounded resize-none text-sm" rows="3" placeholder="Tik jou kommentaar hier..." id="commentBox"></textarea>
-    <button id="commentBtn" class="w-full bg-[#374151] text-white font-bold py-1 rounded">Kommentaar</button>
-    <div id="commentList" class="mt-4 text-sm border-t pt-2 space-y-2"></div>
-  </section>
-</main>
-
+  <main class="w-full max-w-md bg-white border-2 border-[#374151] p-6 shadow">
+    <h2 class="text-xl font-bold text-center mb-2">🧩 DILEMMA vir <span id="dateDisplay"></span></h2>
+    <p id="clueDisplay" class="text-center text-gray-700 italic mb-4"></p>
+    <div id="grid" class="mb-4"></div>
+    <div id="keyboard" class="text-center overflow-x-auto max-w-full flex flex-wrap justify-center"></div>
+    <div id="shareContainer" class="mt-4 hidden">
+      <button id="shareBtn" class="w-full bg-green-700 text-white font-bold py-1 rounded">📤 Deel jou prestasie</button>
+    </div>
+    <!-- 🏆 Leaderboard -->
+    <section class="mt-8">
+      <h3 class="text-lg font-bold text-center mb-2">🏆 Vandag se bestes</h3>
+      <table class="w-full text-sm text-left text-gray-700 border border-[#374151]">
+        <thead class="bg-[#374151] text-white">
+          <tr>
+            <th class="px-2 py-1 border border-[#374151]">Naam</th>
+            <th class="px-2 py-1 border border-[#374151]">Raaie</th>
+            <th class="px-2 py-1 border border-[#374151]">Tyd</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body">
+          <tr>
+            <td class="px-2 py-1 border border-[#374151] text-center text-gray-400" colspan="3">Nog geen inskrywings nie</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+    <!-- 💬 Comments -->
+    <section class="mt-8">
+      <h3 class="text-lg font-bold text-center mb-2">💬 Sê jou sê</h3>
+      <p class="text-center text-gray-600 text-sm mb-2">Kommentaar word net vir vandag gestoor</p>
+      <textarea class="w-full border border-gray-400 p-2 mb-2 rounded resize-none text-sm" rows="3" placeholder="Tik jou kommentaar hier..." id="commentBox"></textarea>
+      <button id="commentBtn" class="w-full bg-[#374151] text-white font-bold py-1 rounded">Kommentaar</button>
+      <div id="commentList" class="mt-4 text-sm border-t pt-2 space-y-2"></div>
+    </section>
+  </main>
+  <div id="share-toast"></div>
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const bg = document.getElementById('backgroundCrossword');
-      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      function fillGrid() {
-        bg.innerHTML = '';
-        const count = Math.max(300, (bg.offsetHeight / 30) * (bg.offsetWidth / 30));
-        for (let i = 0; i < count; i++) {
-          const box = document.createElement('div');
-          box.className = 'bg-letter-box';
-          box.textContent = letters[Math.floor(Math.random() * letters.length)];
-          bg.appendChild(box);
+    function checkGuess(g) {
+      if (g === word) {
+        const name = prompt("KORREK! Tik jou naam vir die leaderboard:");
+        if (name) {
+          addDoc(leaderboardRef, {
+            name,
+            guesses: guesses.length,
+            timestamp: serverTimestamp()
+          }).then(() => {
+            loadLeaderboard();
+            setupShareButton(date, guesses.length);
+          });
         }
+      } else if (guesses.length >= MAX_GUESSES) {
+        alert("Jammer, probeer môre weer.");
       }
-      fillGrid();
-      window.addEventListener('resize', fillGrid);
-    });
+    }
   </script>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-  import {
-    getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp,
-    query, orderBy, getDocs
-  } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
-    authDomain: "kriptiek-c9ea2.firebaseapp.com",
-    projectId: "kriptiek-c9ea2",
-    storageBucket: "kriptiek-c9ea2.appspot.com",
-    messagingSenderId: "620450620939",
-    appId: "1:620450620939:web:e93a18ac23b53b33db890e"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  const params = new URLSearchParams(window.location.search);
-  const gameId = params.get("gameId");
-  const gameRef = doc(db, "games", gameId);
-  const leaderboardRef = collection(db, `games/${gameId}/leaderboard`);
-  const commentsRef = collection(db, `games/${gameId}/comments`);
-
-  let word = "", clue = "", date = "", guesses = [], currentGuess = "";
-  const MAX_GUESSES = 6;
-
-  async function initGame() {
-    const snap = await getDoc(gameRef);
-    if (!snap.exists()) return alert("Geen speletjie gevind vir " + gameId);
-    const data = snap.data();
-    word = data.word.toUpperCase();
-    clue = data.clue;
-    date = data.date;
-    guesses = JSON.parse(localStorage.getItem(gameId) || "[]");
-    document.getElementById("dateDisplay").textContent = date;
-    document.getElementById("clueDisplay").textContent = clue;
-    createGrid();
-    createKeyboard();
-    updateGrid();
-    loadLeaderboard();
-    loadComments();
-  }
-
-  function createGrid() {
-    const grid = document.getElementById("grid");
-    grid.innerHTML = "";
-    for (let i = 0; i < MAX_GUESSES; i++) {
-      const row = document.createElement("div");
-      row.className = "flex justify-center mb-1";
-      for (let j = 0; j < word.length; j++) {
-        const tile = document.createElement("div");
-        tile.className = "tile";
-        row.appendChild(tile);
-      }
-      grid.appendChild(row);
-    }
-  }
-
-  function createKeyboard() {
-    const layout = [[..."QWERTYUIOP"],[..."ASDFGHJKL"],["ENTER",..."ZXCVBNM","⌫"]];
-    const kb = document.getElementById("keyboard");
-    kb.innerHTML = "";
-    layout.forEach(r => {
-      const row = document.createElement("div");
-      row.className = "flex justify-center mb-1";
-      r.forEach(k => {
-        const b = document.createElement("button");
-        b.textContent = k === "⌫" ? "←" : k;
-        b.className = "keyboard-button";
-        b.onclick = () => handleKey(k);
-        row.appendChild(b);
-      });
-      kb.appendChild(row);
-    });
-  }
-
-  function handleKey(k) {
-    if (guesses.includes(word) || guesses.length >= MAX_GUESSES) return;
-    if (k === "⌫") currentGuess = currentGuess.slice(0, -1);
-    else if (k === "ENTER") {
-      if (currentGuess.length !== word.length) return;
-      guesses.push(currentGuess);
-      localStorage.setItem(gameId, JSON.stringify(guesses));
-      checkGuess(currentGuess);
-      currentGuess = "";
-    } else if (/^[A-Z]$/.test(k) && currentGuess.length < word.length) {
-      currentGuess += k;
-    }
-    updateGrid();
-  }
-
-  function updateGrid() {
-    const grid = document.getElementById("grid").children;
-    for (let i = 0; i < MAX_GUESSES; i++) {
-      const row = grid[i].children;
-      const guess = guesses[i] || "";
-      for (let j = 0; j < word.length; j++) {
-        const tile = row[j];
-        const c = guess[j] || (i === guesses.length ? currentGuess[j] || "" : "");
-        tile.textContent = c || "";
-        tile.style.background = "#fff";
-        tile.style.color = "#000";
-        tile.style.border = "1px solid #374151";
-        if (guess) {
-          let color = "#6b7280";
-          if (c === word[j]) color = "#15803d";
-          else if (word.includes(c)) color = "#ea580c";
-          tile.style.background = color;
-          tile.style.color = "#fff";
-          tile.style.border = `1px solid ${color}`;
-        }
-      }
-    }
-  }
-
-  function checkGuess(g) {
-    if (g === word) {
-      const name = prompt("KORREK! Tik jou naam vir die leaderboard:");
-      if (name) {
-        addDoc(leaderboardRef, {
-          name,
-          guesses: guesses.length,
-          timestamp: serverTimestamp()
-        }).then(loadLeaderboard);
-      }
-    } else if (guesses.length >= MAX_GUESSES) {
-      alert("Jammer, probeer môre weer.");
-    }
-  }
-
-  async function loadLeaderboard() {
-    const q = query(leaderboardRef, orderBy("guesses"), orderBy("timestamp"));
-    const snap = await getDocs(q);
-    const table = document.getElementById("leaderboard-body");
-    table.innerHTML = "";
-    if (snap.empty) {
-      table.innerHTML = `<tr><td colspan="3" class="px-2 py-1 border border-[#374151] text-center text-gray-400">Nog geen inskrywings nie</td></tr>`;
-    } else {
-      snap.forEach(doc => {
-        const d = doc.data();
-        const row = `<tr>
-          <td class="px-2 py-1 border border-[#374151]">${d.name}</td>
-          <td class="px-2 py-1 border border-[#374151]">${d.guesses}</td>
-          <td class="px-2 py-1 border border-[#374151]">${(d.timestamp?.toDate() || "").toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</td>
-        </tr>`;
-        table.innerHTML += row;
-      });
-    }
-  }
-
-  async function loadComments() {
-    const snap = await getDocs(query(commentsRef, orderBy("timestamp")));
-    const box = document.getElementById("commentList");
-    box.innerHTML = "";
-    snap.forEach(doc => {
-      const d = doc.data();
-      const html = `<div class="border-t pt-2 text-sm">
-          <p><strong>${d.name}:</strong> ${d.comment}</p>
-          <p class="text-xs text-gray-500">${(d.timestamp?.toDate() || "").toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</p>
-        </div>`;
-      box.innerHTML += html;
-    });
-  }
-
-  document.getElementById("commentBtn").addEventListener("click", async () => {
-    const val = document.getElementById("commentBox").value.trim();
-    const name = prompt("Tik jou naam:");
-    if (val && name) {
-      await addDoc(commentsRef, {
-        name,
-        comment: val,
-        timestamp: serverTimestamp()
-      });
-      document.getElementById("commentBox").value = "";
-      loadComments();
-    }
-  });
-
-  document.addEventListener("keydown", e => {
-    const k = e.key.toUpperCase();
-    if (/^[A-Z]$/.test(k) || k === "ENTER" || k === "BACKSPACE") handleKey(k === "BACKSPACE" ? "⌫" : k);
-  });
-
-  initGame();
-</script>
+</body>
+</html>
