@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="af">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin – DILEMMA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+      authDomain: "kriptiek-c9ea2.firebaseapp.com",
+      projectId: "kriptiek-c9ea2",
+      storageBucket: "kriptiek-c9ea2.appspot.com",
+      messagingSenderId: "620450620939",
+      appId: "1:620450620939:web:e93a18ac23b53b33db890e",
+      measurementId: "G-S9V4CMP1FP"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.submitGame = async function () {
+      const date = document.getElementById('game-date').value;
+      const clue = document.getElementById('game-clue').value.trim();
+      const word = document.getElementById('game-word').value.trim().toUpperCase();
+
+      if (!date || !clue || !word) {
+        alert('Vul asseblief al die velde in.');
+        return;
+      }
+
+      try {
+        await setDoc(doc(db, "games", `Game${date}`), {
+          date,
+          clue,
+          word,
+          createdAt: new Date().toISOString()
+        });
+        alert(`Speletjie vir ${date} is gestoor.`);
+      } catch (e) {
+        console.error("Fout met stoor:", e);
+        alert("Kon nie stoor nie. Probeer weer.");
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: #f8f5f2;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+  <main class="bg-white border border-gray-300 rounded-lg shadow p-6 w-full max-w-xl">
+    <h1 class="text-2xl font-bold mb-4 text-center">🛠️ Admin: Skep DILEMMA Speletjie</h1>
+
+    <label class="block mb-2 font-semibold" for="game-date">Datum (bv. 2025-06-13)</label>
+    <input type="date" id="game-date" class="w-full border border-gray-400 p-2 rounded mb-4">
+
+    <label class="block mb-2 font-semibold" for="game-clue">Kriptiese leidraad (3 reëls maksimum)</label>
+    <textarea id="game-clue" rows="3" class="w-full border border-gray-400 p-2 rounded mb-4" placeholder="Tik die leidraad hier..."></textarea>
+
+    <label class="block mb-2 font-semibold" for="game-word">Doelwoord (hoofletters)</label>
+    <input type="text" id="game-word" class="w-full border border-gray-400 p-2 rounded mb-6 uppercase" placeholder="VOORBEELD">
+
+    <button onclick="submitGame()" class="w-full bg-[#374151] text-white font-bold py-2 rounded">Stoor Speletjie</button>
+  </main>
+</body>
+</html>
