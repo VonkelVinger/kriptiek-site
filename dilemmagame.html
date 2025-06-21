@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="af">
 <head>
@@ -101,7 +102,8 @@
   </style>
 </head>
 <body class="min-h-screen flex flex-col items-center p-4">
-  <header class="logo-container">
+  <header class="w-full bg-white shadow p-4 mb-4 text-center">
+  <div class="logo-container">
     <div id="backgroundCrossword" class="background-crossword"></div>
     <div class="crossword-grid">
       <div class="letter-box flipped-k">K</div>
@@ -113,7 +115,8 @@
       <div class="letter-box flipped-k">E</div>
       <div class="letter-box">K</div>
     </div>
-  </header>
+    </div>
+</header>
 
 <main class="w-full max-w-md bg-white border-2 border-[#374151] p-6 shadow">
   <h2 class="text-xl font-bold text-center mb-2">🧩 DILEMMA vir <span id="dateDisplay"></span></h2>
@@ -215,7 +218,147 @@
     loadComments();
   }
 
-  // ... rest of game logic (same as earlier)
+  
+  function createGrid() {
+    const grid = document.getElementById("grid");
+    grid.innerHTML = "";
+    for (let i = 0; i < MAX_GUESSES; i++) {
+      const row = document.createElement("div");
+      row.className = "flex justify-center mb-1";
+      for (let j = 0; j < word.length; j++) {
+        const tile = document.createElement("div");
+        tile.className = "tile";
+        row.appendChild(tile);
+      }
+      grid.appendChild(row);
+    }
+  }
+
+  function createKeyboard() {
+    const layout = [[..."QWERTYUIOP"], [..."ASDFGHJKL"], ["ENTER",..."ZXCVBNM","⌫"]];
+    const kb = document.getElementById("keyboard");
+    kb.innerHTML = "";
+    layout.forEach(r => {
+      const row = document.createElement("div");
+      row.className = "flex justify-center mb-1";
+      r.forEach(k => {
+        const b = document.createElement("button");
+        b.textContent = k === "⌫" ? "←" : k;
+        b.className = "keyboard-button";
+        b.onclick = () => handleKey(k);
+        row.appendChild(b);
+      });
+      kb.appendChild(row);
+    });
+  }
+
+  function handleKey(k) {
+    if (guesses.includes(word) || guesses.length >= MAX_GUESSES) return;
+    if (k === "⌫") currentGuess = currentGuess.slice(0, -1);
+    else if (k === "ENTER") {
+      if (currentGuess.length !== word.length) return;
+      guesses.push(currentGuess);
+      localStorage.setItem(gameId, JSON.stringify(guesses));
+      checkGuess(currentGuess);
+      currentGuess = "";
+    } else if (/^[A-Z]$/.test(k) && currentGuess.length < word.length) {
+      currentGuess += k;
+    }
+    updateGrid();
+  }
+
+  function updateGrid() {
+    const grid = document.getElementById("grid").children;
+    for (let i = 0; i < MAX_GUESSES; i++) {
+      const row = grid[i].children;
+      const guess = guesses[i] || "";
+      for (let j = 0; j < word.length; j++) {
+        const tile = row[j];
+        const c = guess[j] || (i === guesses.length ? currentGuess[j] || "" : "");
+        tile.textContent = c || "";
+        tile.style.background = "#fff";
+        tile.style.color = "#000";
+        tile.style.border = "1px solid #374151";
+        if (guess) {
+          let color = "#6b7280";
+          if (c === word[j]) color = "#15803d";
+          else if (word.includes(c)) color = "#ea580c";
+          tile.style.background = color;
+          tile.style.color = "#fff";
+          tile.style.border = `1px solid ${color}`;
+        }
+      }
+    }
+  }
+
+  function checkGuess(g) {
+    if (g === word) {
+      const name = prompt("KORREK! Tik jou naam vir die leaderboard:");
+      if (name) {
+        addDoc(leaderboardRef, {
+          name,
+          guesses: guesses.length,
+          timestamp: serverTimestamp()
+        }).then(loadLeaderboard);
+      }
+    } else if (guesses.length >= MAX_GUESSES) {
+      alert("Jammer, probeer môre weer.");
+    }
+  }
+
+  async function loadLeaderboard() {
+    const q = query(leaderboardRef, orderBy("guesses"), orderBy("timestamp"));
+    const snap = await getDocs(q);
+    const table = document.getElementById("leaderboard-body");
+    table.innerHTML = "";
+    if (snap.empty) {
+      table.innerHTML = `<tr><td colspan="3" class="px-2 py-1 border border-[#374151] text-center text-gray-400">Nog geen inskrywings nie</td></tr>`;
+    } else {
+      snap.forEach(doc => {
+        const d = doc.data();
+        const row = `<tr>
+          <td class="px-2 py-1 border border-[#374151]">${d.name}</td>
+          <td class="px-2 py-1 border border-[#374151]">${d.guesses}</td>
+          <td class="px-2 py-1 border border-[#374151]">${(d.timestamp?.toDate() || "").toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</td>
+        </tr>`;
+        table.innerHTML += row;
+      });
+    }
+  }
+
+  async function loadComments() {
+    const snap = await getDocs(query(commentsRef, orderBy("timestamp")));
+    const box = document.getElementById("commentList");
+    box.innerHTML = "";
+    snap.forEach(doc => {
+      const d = doc.data();
+      const html = `<div class="border-t pt-2 text-sm">
+          <p><strong>${d.name}:</strong> ${d.comment}</p>
+          <p class="text-xs text-gray-500">${(d.timestamp?.toDate() || "").toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</p>
+        </div>`;
+      box.innerHTML += html;
+    });
+  }
+
+  document.getElementById("commentBtn").addEventListener("click", async () => {
+    const val = document.getElementById("commentBox").value.trim();
+    const name = prompt("Tik jou naam:");
+    if (val && name) {
+      await addDoc(commentsRef, {
+        name,
+        comment: val,
+        timestamp: serverTimestamp()
+      });
+      document.getElementById("commentBox").value = "";
+      loadComments();
+    }
+  });
+
+  document.addEventListener("keydown", e => {
+    const k = e.key.toUpperCase();
+    if (/^[A-Z]$/.test(k) || k === "ENTER" || k === "BACKSPACE") handleKey(k === "BACKSPACE" ? "⌫" : k);
+  });
+
 
   initGame();
 </script>
