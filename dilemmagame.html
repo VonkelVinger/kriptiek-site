@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="af">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DILEMMA – Kriptiek</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+      authDomain: "kriptiek-c9ea2.firebaseapp.com",
+      projectId: "kriptiek-c9ea2",
+      storageBucket: "kriptiek-c9ea2.appspot.com",
+      messagingSenderId: "620450620939",
+      appId: "1:620450620939:web:e93a18ac23b53b33db890e",
+      measurementId: "G-S9V4CMP1FP"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const gameId = urlParams.get('gameId');
+    if (!gameId) {
+      document.body.innerHTML = '<p class="text-center mt-10 text-red-600">Geen gameId gespesifiseer nie.</p>';
+      throw new Error("Missing gameId");
+    }
+
+    const gameRef = doc(db, "games", gameId);
+    const gameSnap = await getDoc(gameRef);
+
+    if (!gameSnap.exists()) {
+      document.body.innerHTML = '<p class="text-center mt-10 text-red-600">Geen speletjie gevind vir die gegewe gameId.</p>';
+      throw new Error("Game not found");
+    }
+
+    const gameData = gameSnap.data();
+    const word = gameData.word.toUpperCase();
+    const clue = gameData.clue;
+    const date = gameId.replace("Game", "");
+
+    document.getElementById("game-date").textContent = date;
+    document.getElementById("clue").textContent = clue;
+
+    const MAX = 6;
+    const key = `dilemma-${date}`;
+    let guesses = JSON.parse(localStorage.getItem(key) || "[]");
+    let current = "";
+    const grid = document.getElementById("grid"), keyboard = document.getElementById("keyboard"), msg = document.getElementById("message");
+    const rows = [], keys = {};
+
+    for (let i = 0; i < MAX; i++) {
+      const row = document.createElement("div"); row.className = "row flex justify-center mb-1";
+      for (let j = 0; j < word.length; j++) {
+        const t = document.createElement("div"); t.className = "tile";
+        row.appendChild(t);
+      }
+      grid.appendChild(row); rows.push(row);
+    }
+
+    const layout = [[..."QWERTYUIOP"], [..."ASDFGHJKL"], ["ENTER", ..."ZXCVBNM", "⌫"]];
+    layout.forEach(r => {
+      const row = document.createElement("div"); row.className = "keyboard-row flex justify-center mb-1";
+      r.forEach(k => {
+        const b = document.createElement("button"); b.textContent = k === "⌫" ? "←" : k;
+        b.className = "keyboard-button"; b.setAttribute("key", k);
+        b.onclick = () => handle(k); keys[k] = b; row.appendChild(b);
+      }); keyboard.appendChild(row);
+    });
+
+    function handle(k) {
+      if (guesses.length >= MAX || guesses.includes(word)) return;
+      if (k === "⌫") current = current.slice(0, -1);
+      else if (k === "ENTER") {
+        if (current.length !== word.length) return msg.textContent = `Gebruik ${word.length} letters.`;
+        guesses.push(current); localStorage.setItem(key, JSON.stringify(guesses));
+        check(current); current = "";
+      } else if (/^[A-Z]$/.test(k) && current.length < word.length) current += k;
+      update();
+    }
+
+    function update() {
+      rows.forEach((r, i) => [...r.children].forEach((t, j) => {
+        const g = guesses[i] || ""; const c = g[j] || (i === guesses.length ? current[j] || "" : "");
+        t.textContent = c; t.classList.remove("flip");
+        if (!g || g.length < word.length) return;
+        let color = "#6b7280";
+        if (c === word[j]) color = "#15803d";
+        else if (word.includes(c)) color = (word.split(c).length > 2 ? "#facc15" : "#ea580c");
+        setTimeout(() => {
+          t.classList.add("flip"); t.style.background = color; t.style.color = "#fff"; t.style.border = `1px solid ${color}`;
+          if (keys[c]) Object.assign(keys[c].style, { background: color, color: "#fff", border: `1px solid ${color}` });
+        }, j * 200);
+      }));
+    }
+
+    function check(g) {
+      if (g === word) showPopup(`KORREK! Jy het dit in ${guesses.length} ${(guesses.length === 1 ? "raai" : "raaie")} reggekry.`);
+      else if (guesses.length >= MAX) showPopup("Jammer, probeer môre weer.");
+      else msg.textContent = "";
+    }
+
+    window.copyResult = function () {
+      const txt = `Ek het vandag se DILEMMA 🧹 in *${guesses.length}* ${(guesses.length === 1 ? "raai" : "raaie")} reggekry. Speel by www.kriptiek.com`;
+      if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => alert("Jou telling is nou op jou Clipboard"));
+    };
+
+    document.addEventListener("keydown", e => {
+      const k = e.key.toUpperCase(); if (/^[A-Z]$/.test(k) || k === "ENTER" || k === "BACKSPACE") handle(k === "BACKSPACE" ? "⌫" : k);
+    });
+
+    function showPopup(txt) {
+      document.getElementById("popupText").textContent = txt;
+      document.getElementById("popup-overlay").classList.add("show");
+    }
+
+    update();
+  </script>
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: #f8f5f2;
+    }
+    .tile {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 1.2rem;
+      margin: 2px;
+      background: #fff;
+      border: 1px solid #374151;
+      color: #000;
+    }
+    .tile.flip {
+      transition: background 0.3s ease;
+    }
+    .keyboard-button {
+      border: 2px solid #374151;
+      color: #374151;
+      font-weight: bold;
+      padding: 0.5rem;
+      margin: 0.2rem;
+      background: white;
+      box-sizing: border-box;
+    }
+    .keyboard-button:hover {
+      background: #a5312f;
+      color: white;
+      cursor: pointer;
+    }
+    #popup-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+    }
+    #popup-overlay.show {
+      display: flex !important;
+    }
+    #popup {
+      background: white;
+      border: 2px solid #374151;
+      padding: 1.5rem;
+      border-radius: 1rem;
+      max-width: 90%;
+      text-align: center;
+      animation: fadeInPopup 0.4s ease-out forwards;
+    }
+    @keyframes fadeInPopup {
+      from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .popup-button {
+      margin: 0.5rem;
+      padding: 0.5rem 1rem;
+      font-weight: bold;
+      border: 2px solid #374151;
+      background-color: #ffffff;
+      color: #374151;
+      cursor: pointer;
+      border-radius: 0.375rem;
+    }
+    .popup-button:hover {
+      background-color: #374151;
+      color: white;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4">
+  <main class="w-full max-w-md bg-white border-2 border-[#374151] p-6 shadow">
+    <h2 id="game-date" class="text-xl font-bold text-center mb-2"></h2>
+    <p id="clue" class="text-center text-sm text-gray-600 mb-4 italic"></p>
+    <div id="grid" class="mb-4"></div>
+    <div id="keyboard" class="text-center mb-2 overflow-x-auto max-w-full flex flex-wrap justify-center"></div>
+    <p id="message" class="text-center text-gray-600 mt-2"></p>
+  </main>
+
+  <div id="popup-overlay">
+    <div id="popup">
+      <p id="popupText" class="text-lg font-bold mb-4"></p>
+      <button class="popup-button" onclick="document.getElementById('popup-overlay').classList.remove('show')">SLUIT</button>
+      <button class="popup-button" onclick="copyResult()">DEEL</button>
+    </div>
+  </div>
+</body>
+</html>
