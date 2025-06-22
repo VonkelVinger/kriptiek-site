@@ -331,42 +331,45 @@
   }
 
   function update() {
+  const rows = document.querySelectorAll("#grid .flex");
   rows.forEach((rowEl, i) => {
     const guess = guesses[i] || "";
     const isFinal = guess.length === word.length;
 
-    // Create arrays for letter tracking
     const tiles = [...rowEl.children];
     const feedback = Array(word.length).fill("gray");
-    const targetLetters = word.split("");
-    const used = Array(word.length).fill(false); // track matched positions
+    const used = Array(word.length).fill(false);
+    const letterCount = {};
+
+    // Count letter frequency in the target word
+    for (const l of word) {
+      letterCount[l] = (letterCount[l] || 0) + 1;
+    }
 
     // First pass: mark greens
     for (let j = 0; j < word.length; j++) {
-      const c = guess[j];
-      if (c === word[j]) {
+      if (guess[j] === word[j]) {
         feedback[j] = "green";
         used[j] = true;
+        letterCount[guess[j]]--;
       }
     }
 
-    // Second pass: mark oranges and yellows
+    // Second pass: mark yellows and oranges
     for (let j = 0; j < word.length; j++) {
       const c = guess[j];
-      if (feedback[j] === "gray") {
-        for (let k = 0; k < word.length; k++) {
-          if (!used[k] && c === word[k]) {
-            feedback[j] = "orange";
-            used[k] = true;
-            break;
-          }
+      if (feedback[j] === "gray" && word.includes(c)) {
+        const remaining = letterCount[c] || 0;
+        if (remaining > 0) {
+          feedback[j] = (word.split(c).length > 1) ? "yellow" : "orange";
+          letterCount[c]--;
         }
       }
     }
 
-    // Apply colors to tiles
+    // Apply tile styles
     tiles.forEach((tile, j) => {
-      const c = guess[j] || (i === guesses.length ? current[j] || "" : "");
+      const c = guess[j] || (i === guesses.length ? currentGuess[j] || "" : "");
       tile.textContent = c;
       tile.classList.remove("flip");
 
@@ -377,10 +380,14 @@
           bg = "#15803d"; fg = "#fff"; border = bg;
         } else if (feedback[j] === "orange") {
           bg = "#ea580c"; fg = "#fff"; border = bg;
-        } else if (feedback[j] === "gray") {
+        } else if (feedback[j] === "yellow") {
+          bg = "#facc15"; fg = "#000"; border = bg;
+        } else {
           bg = "#6b7280"; fg = "#fff"; border = bg;
         }
-        if (keys[c]) Object.assign(keys[c].style, { background: bg, color: fg, border: `1px solid ${border}` });
+
+        const keyBtn = Array.from(document.querySelectorAll(".keyboard-button")).find(b => b.textContent === c);
+        if (keyBtn) Object.assign(keyBtn.style, { background: bg, color: fg, border: `1px solid ${border}` });
       }
 
       tile.style.background = bg;
@@ -389,8 +396,6 @@
     });
   });
 }
-
-
   function checkGuess(g) {
     if (g === word) {
       const name = prompt("KORREK! Tik jou naam vir die leaderboard:");
