@@ -330,29 +330,66 @@
     updateGrid();
   }
 
-  function updateGrid() {
-    const grid = document.getElementById("grid").children;
-    for (let i = 0; i < MAX_GUESSES; i++) {
-      const row = grid[i].children;
-      const guess = guesses[i] || "";
-      for (let j = 0; j < word.length; j++) {
-        const tile = row[j];
-        const c = guess[j] || (i === guesses.length ? currentGuess[j] || "" : "");
-        tile.textContent = c || "";
-        tile.style.background = "#fff";
-        tile.style.color = "#000";
-        tile.style.border = "1px solid #374151";
-        if (guess) {
-          let color = "#6b7280";
-          if (c === word[j]) color = "#15803d";
-          else if (word.includes(c)) color = "#ea580c";
-          tile.style.background = color;
-          tile.style.color = "#fff";
-          tile.style.border = `1px solid ${color}`;
+  function update() {
+  rows.forEach((rowEl, i) => {
+    const guess = guesses[i] || "";
+    const isFinal = guess.length === WORD.length;
+
+    // Create arrays for letter tracking
+    const tiles = [...rowEl.children];
+    const feedback = Array(WORD.length).fill("gray");
+    const targetLetters = WORD.split("");
+    const used = Array(WORD.length).fill(false); // track matched positions
+
+    // First pass: mark greens
+    for (let j = 0; j < WORD.length; j++) {
+      const c = guess[j];
+      if (c === WORD[j]) {
+        feedback[j] = "green";
+        used[j] = true;
+      }
+    }
+
+    // Second pass: mark oranges and yellows
+    for (let j = 0; j < WORD.length; j++) {
+      const c = guess[j];
+      if (feedback[j] === "gray") {
+        for (let k = 0; k < WORD.length; k++) {
+          if (!used[k] && c === WORD[k]) {
+            feedback[j] = "orange";
+            used[k] = true;
+            break;
+          }
         }
       }
     }
-  }
+
+    // Apply colors to tiles
+    tiles.forEach((tile, j) => {
+      const c = guess[j] || (i === guesses.length ? current[j] || "" : "");
+      tile.textContent = c;
+      tile.classList.remove("flip");
+
+      let bg = "#fff", fg = "#000", border = "#374151";
+      if (isFinal) {
+        tile.classList.add("flip");
+        if (feedback[j] === "green") {
+          bg = "#15803d"; fg = "#fff"; border = bg;
+        } else if (feedback[j] === "orange") {
+          bg = "#ea580c"; fg = "#fff"; border = bg;
+        } else if (feedback[j] === "gray") {
+          bg = "#6b7280"; fg = "#fff"; border = bg;
+        }
+        if (keys[c]) Object.assign(keys[c].style, { background: bg, color: fg, border: `1px solid ${border}` });
+      }
+
+      tile.style.background = bg;
+      tile.style.color = fg;
+      tile.style.border = `1px solid ${border}`;
+    });
+  });
+}
+
 
   function checkGuess(g) {
     if (g === word) {
