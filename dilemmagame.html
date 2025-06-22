@@ -337,25 +337,25 @@
 
     // Create arrays for letter tracking
     const tiles = [...rowEl.children];
-    const feedback = Array(WORD.length).fill("gray");
-    const targetLetters = WORD.split("");
-    const used = Array(WORD.length).fill(false); // track matched positions
+    const feedback = Array(word.length).fill("gray");
+    const targetLetters = word.split("");
+    const used = Array(word.length).fill(false); // track matched positions
 
     // First pass: mark greens
-    for (let j = 0; j < WORD.length; j++) {
+    for (let j = 0; j < word.length; j++) {
       const c = guess[j];
-      if (c === WORD[j]) {
+      if (c === word[j]) {
         feedback[j] = "green";
         used[j] = true;
       }
     }
 
     // Second pass: mark oranges and yellows
-    for (let j = 0; j < WORD.length; j++) {
+    for (let j = 0; j < word.length; j++) {
       const c = guess[j];
       if (feedback[j] === "gray") {
-        for (let k = 0; k < WORD.length; k++) {
-          if (!used[k] && c === WORD[k]) {
+        for (let k = 0; k < word.length; k++) {
+          if (!used[k] && c === word[k]) {
             feedback[j] = "orange";
             used[k] = true;
             break;
