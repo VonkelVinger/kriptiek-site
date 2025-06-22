@@ -277,7 +277,7 @@
     document.getElementById("clueDisplay").textContent = clue;
     createGrid();
     createKeyboard();
-    updateGrid();
+    update();
     loadLeaderboard();
     loadComments();
   }
@@ -327,7 +327,7 @@
     } else if (/^[A-Z]$/.test(k) && currentGuess.length < word.length) {
       currentGuess += k;
     }
-    updateGrid();
+    update();
   }
 
   function update() {
