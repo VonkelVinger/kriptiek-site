@@ -338,36 +338,34 @@
 
     const tiles = [...rowEl.children];
     const feedback = Array(word.length).fill("gray");
-    const used = Array(word.length).fill(false);
+    const usedTarget = Array(word.length).fill(false);
     const letterCount = {};
 
-    // Count letter frequency in the target word
-    for (const l of word) {
-      letterCount[l] = (letterCount[l] || 0) + 1;
+    // Count target letter frequency
+    for (const char of word) {
+      letterCount[char] = (letterCount[char] || 0) + 1;
     }
 
-    // First pass: mark greens
+    // First pass: greens
     for (let j = 0; j < word.length; j++) {
       if (guess[j] === word[j]) {
         feedback[j] = "green";
-        used[j] = true;
+        usedTarget[j] = true;
         letterCount[guess[j]]--;
       }
     }
 
-    // Second pass: mark yellows and oranges
+    // Second pass: orange or yellow
     for (let j = 0; j < word.length; j++) {
-      const c = guess[j];
-      if (feedback[j] === "gray" && word.includes(c)) {
-        const remaining = letterCount[c] || 0;
-        if (remaining > 0) {
-          feedback[j] = (word.split(c).length > 1) ? "yellow" : "orange";
-          letterCount[c]--;
-        }
+      if (feedback[j] !== "gray") continue;
+      const guessedChar = guess[j];
+      if (letterCount[guessedChar] > 0 && word.includes(guessedChar)) {
+        feedback[j] = (word.split(guessedChar).length > 1) ? "yellow" : "orange";
+        letterCount[guessedChar]--;
       }
     }
 
-    // Apply tile styles
+    // Style application
     tiles.forEach((tile, j) => {
       const c = guess[j] || (i === guesses.length ? currentGuess[j] || "" : "");
       tile.textContent = c;
@@ -396,6 +394,7 @@
     });
   });
 }
+
   function checkGuess(g) {
     if (g === word) {
       const name = prompt("KORREK! Tik jou naam vir die leaderboard:");
