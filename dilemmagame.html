@@ -156,169 +156,13 @@
       </div>
     </div>
   </header>
- <!DOCTYPE html>
-<html lang="af">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DILEMMA – Kriptiek</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
-  <style>
-    body {
-      font-family: 'Montserrat', sans-serif;
-      background-color: #f8f5f2;
-    }
-    .tile {
-      width: 40px;
-      height: 40px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-weight: bold;
-      font-size: 1.2rem;
-      margin: 2px;
-      background: #fff;
-      border: 1px solid #374151;
-      color: #000;
-    }
-    .keyboard-button {
-      border: 2px solid #374151;
-      color: #374151;
-      font-weight: bold;
-      padding: 0.5rem;
-      margin: 0.2rem;
-      background: white;
-      box-sizing: border-box;
-    }
-    .keyboard-button:hover {
-      background: #a5312f;
-      color: white;
-      cursor: pointer;
-    }
-    .letter-box {
-      width: 50px;
-      height: 50px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background-color: #374151;
-      color: white;
-      font-size: 1.8rem;
-      font-weight: bold;
-      border: 2px solid #1f2937;
-      border-radius: 0.375rem;
-      text-transform: uppercase;
-      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
-    }
-    .flipped-k { transform: scaleX(-1); }
-    .crossword-grid {
-      display: grid;
-      grid-template-columns: repeat(8, minmax(40px, 1fr));
-      gap: 4px;
-      position: relative;
-      z-index: 10;
-    }
-    .background-crossword {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
-      grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
-      opacity: 0.5;
-      z-index: 1;
-      pointer-events: none;
-    }
-    .bg-letter-box {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 1.1rem;
-      font-weight: bold;
-      color: #9ca3af;
-      border: 1px solid #e5e7eb;
-      background-color: transparent;
-      user-select: none;
-    }
-    .logo-container {
-      position: relative;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: fit-content;
-      margin: 1rem auto;
-      padding: 1rem;
-      border-radius: 1rem;
-      background-color: white;
-      overflow: hidden;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    }
-    #popup-overlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.7);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 50;
-    }
-    #popup-overlay.show {
-      display: flex !important;
-    }
-    #popup {
-      background: white;
-      border: 2px solid #374151;
-      padding: 1.5rem;
-      border-radius: 1rem;
-      max-width: 90%;
-      text-align: center;
-      animation: fadeInPopup 0.4s ease-out forwards;
-    }
-    @keyframes fadeInPopup {
-      from { opacity: 0; transform: translateY(-20px) scale(0.95); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    .popup-button {
-      margin: 0.5rem;
-      padding: 0.5rem 1rem;
-      font-weight: bold;
-      border: 2px solid #374151;
-      background-color: #ffffff;
-      color: #374151;
-      cursor: pointer;
-      border-radius: 0.375rem;
-    }
-    .popup-button:hover {
-      background-color: #374151;
-      color: white;
-    }
-  </style>
-</head>
-<body class="min-h-screen flex flex-col items-center p-4">
-  <header class="w-full bg-white shadow p-4 mb-4 text-center">
-    <div class="logo-container">
-      <div id="backgroundCrossword" class="background-crossword"></div>
-      <div class="crossword-grid">
-        <div class="letter-box flipped-k">K</div>
-        <div class="letter-box flipped-k">R</div>
-        <div class="letter-box">I</div>
-        <div class="letter-box flipped-k">P</div>
-        <div class="letter-box">T</div>
-        <div class="letter-box">I</div>
-        <div class="letter-box flipped-k">E</div>
-        <div class="letter-box">K</div>
-      </div>
-    </div>
-  </header>
+
   <main class="w-full max-w-md bg-white border-2 border-[#374151] p-6 shadow">
     <h2 class="text-xl font-bold text-center mb-2">🧙 DILEMMA vir <span id="dateDisplay"></span></h2>
     <p id="clueDisplay" class="text-center text-gray-700 italic mb-4"></p>
     <div id="grid" class="mb-4"></div>
     <div id="keyboard" class="text-center overflow-x-auto max-w-full flex flex-wrap justify-center"></div>
+
     <section class="mt-6 text-sm text-gray-800">
       <h3 class="text-lg font-bold mb-2">Hoe om te speel</h3>
       <p class="mb-2">Jy het ses kanse om die woord te raai.</p>
@@ -331,6 +175,7 @@
         <li><span class="text-gray-600 font-semibold">GRYS</span>: Die letter is nie in die woord nie.</li>
       </ul>
     </section>
+
     <section class="mt-8">
       <h3 class="text-lg font-bold text-center mb-2">🏆 Vandag se bestes</h3>
       <table class="w-full text-sm text-left text-gray-700 border border-[#374151]">
@@ -366,424 +211,211 @@
     <a href="/terms.html" class="underline">Oor Kriptiek</a> |
     <a href="/terms.html" class="underline">Kontak ons</a>
   </footer>
-
- <!DOCTYPE html>
-<html lang="af">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DILEMMA – Kriptiek</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
-  <style>
-    body {
-      font-family: 'Montserrat', sans-serif;
-      background-color: #f8f5f2;
-    }
-    .tile {
-      width: 40px;
-      height: 40px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-weight: bold;
-      font-size: 1.2rem;
-      margin: 2px;
-      background: #fff;
-      border: 1px solid #374151;
-      color: #000;
-    }
-    .keyboard-button {
-      border: 2px solid #374151;
-      color: #374151;
-      font-weight: bold;
-      padding: 0.5rem;
-      margin: 0.2rem;
-      background: white;
-      box-sizing: border-box;
-    }
-    .keyboard-button:hover {
-      background: #a5312f;
-      color: white;
-      cursor: pointer;
-    }
-    .letter-box {
-      width: 50px;
-      height: 50px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background-color: #374151;
-      color: white;
-      font-size: 1.8rem;
-      font-weight: bold;
-      border: 2px solid #1f2937;
-      border-radius: 0.375rem;
-      text-transform: uppercase;
-      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
-    }
-    .flipped-k { transform: scaleX(-1); }
-    .crossword-grid {
-      display: grid;
-      grid-template-columns: repeat(8, minmax(40px, 1fr));
-      gap: 4px;
-      position: relative;
-      z-index: 10;
-    }
-    .background-crossword {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
-      grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
-      opacity: 0.5;
-      z-index: 1;
-      pointer-events: none;
-    }
-    .bg-letter-box {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 1.1rem;
-      font-weight: bold;
-      color: #9ca3af;
-      border: 1px solid #e5e7eb;
-      background-color: transparent;
-      user-select: none;
-    }
-    .logo-container {
-      position: relative;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: fit-content;
-      margin: 1rem auto;
-      padding: 1rem;
-      border-radius: 1rem;
-      background-color: white;
-      overflow: hidden;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    }
-    #popup-overlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.7);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 50;
-    }
-    #popup-overlay.show {
-      display: flex !important;
-    }
-    #popup {
-      background: white;
-      border: 2px solid #374151;
-      padding: 1.5rem;
-      border-radius: 1rem;
-      max-width: 90%;
-      text-align: center;
-      animation: fadeInPopup 0.4s ease-out forwards;
-    }
-    @keyframes fadeInPopup {
-      from { opacity: 0; transform: translateY(-20px) scale(0.95); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    .popup-button {
-      margin: 0.5rem;
-      padding: 0.5rem 1rem;
-      font-weight: bold;
-      border: 2px solid #374151;
-      background-color: #ffffff;
-      color: #374151;
-      cursor: pointer;
-      border-radius: 0.375rem;
-    }
-    .popup-button:hover {
-      background-color: #374151;
-      color: white;
-    }
-  </style>
-</head>
-<body class="min-h-screen flex flex-col items-center p-4">
-  <header class="w-full bg-white shadow p-4 mb-4 text-center">
-    <div class="logo-container">
-      <div id="backgroundCrossword" class="background-crossword"></div>
-      <div class="crossword-grid">
-        <div class="letter-box flipped-k">K</div>
-        <div class="letter-box flipped-k">R</div>
-        <div class="letter-box">I</div>
-        <div class="letter-box flipped-k">P</div>
-        <div class="letter-box">T</div>
-        <div class="letter-box">I</div>
-        <div class="letter-box flipped-k">E</div>
-        <div class="letter-box">K</div>
-      </div>
-    </div>
-  </header>
-  <main class="w-full max-w-md bg-white border-2 border-[#374151] p-6 shadow">
-    <h2 class="text-xl font-bold text-center mb-2">🧙 DILEMMA vir <span id="dateDisplay"></span></h2>
-    <p id="clueDisplay" class="text-center text-gray-700 italic mb-4"></p>
-    <div id="grid" class="mb-4"></div>
-    <div id="keyboard" class="text-center overflow-x-auto max-w-full flex flex-wrap justify-center"></div>
-    <section class="mt-6 text-sm text-gray-800">
-      <h3 class="text-lg font-bold mb-2">Hoe om te speel</h3>
-      <p class="mb-2">Jy het ses kanse om die woord te raai.</p>
-      <p class="mb-2">Jy mag vir elke probeerslag enige letters in enige volgorde kies, maar elke raaiskoot moet dieselfde aantal letters hê as die woord waarna jy soek. Dit hoef nie ook 'n woord te vorm nie.</p>
-      <p class="mb-2">Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER.</p>
-      <ul class="list-disc list-inside mt-4">
-        <li><span class="text-green-700 font-semibold">GROEN</span>: Die letter is in die woord én in die regte posisie.</li>
-        <li><span class="text-orange-600 font-semibold">ORANJE</span>: Die letter is in die woord, maar op 'n ander plek.</li>
-        <li><span class="text-yellow-500 font-semibold">GEEL</span>: Die letter kom meer as een keer in die woord voor, maar is nie hier op die regte plek nie.</li>
-        <li><span class="text-gray-600 font-semibold">GRYS</span>: Die letter is nie in die woord nie.</li>
-      </ul>
-    </section>
-    <section class="mt-8">
-      <h3 class="text-lg font-bold text-center mb-2">🏆 Vandag se bestes</h3>
-      <table class="w-full text-sm text-left text-gray-700 border border-[#374151]">
-        <thead class="bg-[#374151] text-white">
-          <tr>
-            <th class="px-2 py-1 border border-[#374151]">Naam</th>
-            <th class="px-2 py-1 border border-[#374151]">Raaie</th>
-            <th class="px-2 py-1 border border-[#374151]">Tyd</th>
-          </tr>
-        </thead>
-        <tbody id="leaderboard-body">
-          <tr>
-            <td class="px-2 py-1 border border-[#374151] text-center text-gray-400" colspan="3">Nog geen inskrywings nie</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-  </main>
-
-  <div id="popup-overlay">
-    <div id="popup">
-      <p id="popupText" class="text-lg font-bold mb-4"></p>
-      <button class="popup-button" onclick="document.getElementById('popup-overlay').classList.remove('show')">SLUIT</button>
-      <button class="popup-button" onclick="copyResult()">DEEL</button>
-    </div>
-  </div>
-
-  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500 mt-10">
-    &copy; 2025 Kriptiek. Alle regte voorbehou. |
-    <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
-    <a href="/terms.html" class="underline">Voorwaardes</a> |
-    <a href="/terms.html" class="underline">Gereelde vrae</a> |
-    <a href="/terms.html" class="underline">Oor Kriptiek</a> |
-    <a href="/terms.html" class="underline">Kontak ons</a>
-  </footer>
-
   <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-  import {
-    getFirestore, doc, getDoc, collection, addDoc, serverTimestamp,
-    query, orderBy, getDocs
-  } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import {
+      getFirestore, doc, getDoc, collection, addDoc, serverTimestamp,
+      query, orderBy, getDocs
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
-    authDomain: "kriptiek-c9ea2.firebaseapp.com",
-    projectId: "kriptiek-c9ea2",
-    storageBucket: "kriptiek-c9ea2.appspot.com",
-    messagingSenderId: "620450620939",
-    appId: "1:620450620939:web:e93a18ac23b53b33db890e"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+      authDomain: "kriptiek-c9ea2.firebaseapp.com",
+      projectId: "kriptiek-c9ea2",
+      storageBucket: "kriptiek-c9ea2.appspot.com",
+      messagingSenderId: "620450620939",
+      appId: "1:620450620939:web:e93a18ac23b53b33db890e"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  const params = new URLSearchParams(window.location.search);
-  const gameId = params.get("gameId");
-  const gameRef = doc(db, "games", gameId);
-  const leaderboardRef = collection(db, `games/${gameId}/leaderboard`);
+    const params = new URLSearchParams(window.location.search);
+    const gameId = params.get("gameId");
+    const gameRef = doc(db, "games", gameId);
+    const leaderboardRef = collection(db, `games/${gameId}/leaderboard`);
 
-  let word = "", clue = "", date = "", guesses = [], currentGuess = "";
-  const MAX_GUESSES = 6;
+    let word = "", clue = "", date = "", guesses = [], currentGuess = "";
+    const MAX_GUESSES = 6;
 
-  async function initGame() {
-    const snap = await getDoc(gameRef);
-    if (!snap.exists()) return alert("Geen speletjie gevind vir " + gameId);
-    const data = snap.data();
-    word = data.word.toUpperCase();
-    clue = data.clue;
-    date = data.date;
-    guesses = JSON.parse(localStorage.getItem(gameId) || "[]");
-    document.getElementById("dateDisplay").textContent = date;
-    document.getElementById("clueDisplay").textContent = clue;
-    createGrid();
-    createKeyboard();
-    update();
-    loadLeaderboard();
-  }
-
-  function createGrid() {
-    const grid = document.getElementById("grid");
-    grid.innerHTML = "";
-    for (let i = 0; i < MAX_GUESSES; i++) {
-      const row = document.createElement("div");
-      row.className = "flex justify-center mb-1";
-      for (let j = 0; j < word.length; j++) {
-        const tile = document.createElement("div");
-        tile.className = "tile";
-        row.appendChild(tile);
-      }
-      grid.appendChild(row);
+    async function initGame() {
+      const snap = await getDoc(gameRef);
+      if (!snap.exists()) return alert("Geen speletjie gevind vir " + gameId);
+      const data = snap.data();
+      word = data.word.toUpperCase();
+      clue = data.clue;
+      date = data.date;
+      guesses = JSON.parse(localStorage.getItem(gameId) || "[]");
+      document.getElementById("dateDisplay").textContent = date;
+      document.getElementById("clueDisplay").textContent = clue;
+      createGrid();
+      createKeyboard();
+      update();
+      loadLeaderboard();
     }
-  }
 
-  function createKeyboard() {
-    const layout = [[..."QWERTYUIOP"], [..."ASDFGHJKL"], ["ENTER",..."ZXCVBNM","⌫"]];
-    const kb = document.getElementById("keyboard");
-    kb.innerHTML = "";
-    layout.forEach(r => {
-      const row = document.createElement("div");
-      row.className = "flex justify-center mb-1";
-      r.forEach(k => {
-        const b = document.createElement("button");
-        b.textContent = k === "⌫" ? "←" : k;
-        b.className = "keyboard-button";
-        b.onclick = () => handleKey(k);
-        row.appendChild(b);
+    function createGrid() {
+      const grid = document.getElementById("grid");
+      grid.innerHTML = "";
+      for (let i = 0; i < MAX_GUESSES; i++) {
+        const row = document.createElement("div");
+        row.className = "flex justify-center mb-1";
+        for (let j = 0; j < word.length; j++) {
+          const tile = document.createElement("div");
+          tile.className = "tile";
+          row.appendChild(tile);
+        }
+        grid.appendChild(row);
+      }
+    }
+
+    function createKeyboard() {
+      const layout = [[..."QWERTYUIOP"], [..."ASDFGHJKL"], ["ENTER",..."ZXCVBNM","⌫"]];
+      const kb = document.getElementById("keyboard");
+      kb.innerHTML = "";
+      layout.forEach(r => {
+        const row = document.createElement("div");
+        row.className = "flex justify-center mb-1";
+        r.forEach(k => {
+          const b = document.createElement("button");
+          b.textContent = k === "⌫" ? "←" : k;
+          b.className = "keyboard-button";
+          b.onclick = () => handleKey(k);
+          row.appendChild(b);
+        });
+        kb.appendChild(row);
       });
-      kb.appendChild(row);
-    });
-  }
-
-  function handleKey(k) {
-    if (guesses.includes(word) || guesses.length >= MAX_GUESSES) return;
-    if (k === "⌫") currentGuess = currentGuess.slice(0, -1);
-    else if (k === "ENTER") {
-      if (currentGuess.length !== word.length) return;
-      guesses.push(currentGuess);
-      localStorage.setItem(gameId, JSON.stringify(guesses));
-      checkGuess(currentGuess);
-      currentGuess = "";
-    } else if (/^[A-Z]$/.test(k) && currentGuess.length < word.length) {
-      currentGuess += k;
     }
-    update();
-  }
 
-  function update() {
-    const rows = document.querySelectorAll("#grid .flex");
-    rows.forEach((rowEl, i) => {
-      const guess = guesses[i] || "";
-      const isFinal = guess.length === word.length;
-
-      const tiles = [...rowEl.children];
-      const feedback = Array(word.length).fill("gray");
-      const usedTarget = Array(word.length).fill(false);
-      const letterCount = {};
-
-      for (const char of word) {
-        letterCount[char] = (letterCount[char] || 0) + 1;
+    function handleKey(k) {
+      if (guesses.includes(word) || guesses.length >= MAX_GUESSES) return;
+      if (k === "⌫") currentGuess = currentGuess.slice(0, -1);
+      else if (k === "ENTER") {
+        if (currentGuess.length !== word.length) return;
+        guesses.push(currentGuess);
+        localStorage.setItem(gameId, JSON.stringify(guesses));
+        checkGuess(currentGuess);
+        currentGuess = "";
+      } else if (/^[A-Z]$/.test(k) && currentGuess.length < word.length) {
+        currentGuess += k;
       }
+      update();
+    }
+    function update() {
+      const rows = document.querySelectorAll("#grid .flex");
+      rows.forEach((rowEl, i) => {
+        const guess = guesses[i] || "";
+        const isFinal = guess.length === word.length;
 
-      for (let j = 0; j < word.length; j++) {
-        if (guess[j] === word[j]) {
-          feedback[j] = "green";
-          usedTarget[j] = true;
-          letterCount[guess[j]]--;
+        const tiles = [...rowEl.children];
+        const feedback = Array(word.length).fill("gray");
+        const usedTarget = Array(word.length).fill(false);
+        const letterCount = {};
+
+        for (const char of word) {
+          letterCount[char] = (letterCount[char] || 0) + 1;
         }
-      }
 
-      for (let j = 0; j < word.length; j++) {
-        if (feedback[j] !== "gray") continue;
-        const guessedChar = guess[j];
-        if (letterCount[guessedChar] > 0 && word.includes(guessedChar)) {
-          feedback[j] = (word.split(guessedChar).length > 1) ? "yellow" : "orange";
-          letterCount[guessedChar]--;
+        for (let j = 0; j < word.length; j++) {
+          if (guess[j] === word[j]) {
+            feedback[j] = "green";
+            usedTarget[j] = true;
+            letterCount[guess[j]]--;
+          }
         }
-      }
 
-      tiles.forEach((tile, j) => {
-        const c = guess[j] || (i === guesses.length ? currentGuess[j] || "" : "");
-        tile.textContent = c;
-        tile.classList.remove("flip");
+        for (let j = 0; j < word.length; j++) {
+          if (feedback[j] !== "gray") continue;
+          const guessedChar = guess[j];
+          if (letterCount[guessedChar] > 0 && word.includes(guessedChar)) {
+            feedback[j] = (word.split(guessedChar).length > 1) ? "yellow" : "orange";
+            letterCount[guessedChar]--;
+          }
+        }
 
-        let bg = "#fff", fg = "#000", border = "#374151";
-        if (isFinal) {
-          tile.classList.add("flip");
-          if (feedback[j] === "green") {
-            bg = "#15803d"; fg = "#fff"; border = bg;
-          } else if (feedback[j] === "orange") {
-            bg = "#ea580c"; fg = "#fff"; border = bg;
-          } else if (feedback[j] === "yellow") {
-            bg = "#facc15"; fg = "#000"; border = bg;
-          } else {
-            bg = "#6b7280"; fg = "#fff"; border = bg;
+        tiles.forEach((tile, j) => {
+          const c = guess[j] || (i === guesses.length ? currentGuess[j] || "" : "");
+          tile.textContent = c;
+          tile.classList.remove("flip");
+
+          let bg = "#fff", fg = "#000", border = "#374151";
+          if (isFinal) {
+            tile.classList.add("flip");
+            if (feedback[j] === "green") {
+              bg = "#15803d"; fg = "#fff"; border = bg;
+            } else if (feedback[j] === "orange") {
+              bg = "#ea580c"; fg = "#fff"; border = bg;
+            } else if (feedback[j] === "yellow") {
+              bg = "#facc15"; fg = "#000"; border = bg;
+            } else {
+              bg = "#6b7280"; fg = "#fff"; border = bg;
+            }
+
+            const keyBtn = Array.from(document.querySelectorAll(".keyboard-button")).find(b => b.textContent === c);
+            if (keyBtn) Object.assign(keyBtn.style, { background: bg, color: fg, border: `1px solid ${border}` });
           }
 
-          const keyBtn = Array.from(document.querySelectorAll(".keyboard-button")).find(b => b.textContent === c);
-          if (keyBtn) Object.assign(keyBtn.style, { background: bg, color: fg, border: `1px solid ${border}` });
+          tile.style.background = bg;
+          tile.style.color = fg;
+          tile.style.border = `1px solid ${border}`;
+        });
+      });
+    }
+
+    function checkGuess(g) {
+      if (g === word) {
+        const name = prompt("KORREK! Tik jou naam vir die leaderboard:");
+        if (name) {
+          addDoc(leaderboardRef, {
+            name,
+            guesses: guesses.length,
+            timestamp: serverTimestamp()
+          }).then(loadLeaderboard);
         }
-
-        tile.style.background = bg;
-        tile.style.color = fg;
-        tile.style.border = `1px solid ${border}`;
-      });
-    });
-  }
-
-  function checkGuess(g) {
-    if (g === word) {
-      const name = prompt("KORREK! Tik jou naam vir die leaderboard:");
-      if (name) {
-        addDoc(leaderboardRef, {
-          name,
-          guesses: guesses.length,
-          timestamp: serverTimestamp()
-        }).then(loadLeaderboard);
+        showPopup(`KORREK! Jy het dit in ${guesses.length} ${(guesses.length === 1 ? "raai" : "raaie")} reggekry.`);
+      } else if (guesses.length >= MAX_GUESSES) {
+        showPopup("Jammer, probeer môre weer.");
       }
-      showPopup(`KORREK! Jy het dit in ${guesses.length} ${(guesses.length === 1 ? "raai" : "raaie")} reggekry.`);
-    } else if (guesses.length >= MAX_GUESSES) {
-      showPopup("Jammer, probeer môre weer.");
     }
-  }
 
-  async function loadLeaderboard() {
-    const q = query(leaderboardRef, orderBy("guesses"), orderBy("timestamp"));
-    const snap = await getDocs(q);
-    const table = document.getElementById("leaderboard-body");
-    table.innerHTML = "";
-    if (snap.empty) {
-      table.innerHTML = `<tr><td colspan="3" class="px-2 py-1 border border-[#374151] text-center text-gray-400">Nog geen inskrywings nie</td></tr>`;
-    } else {
-      snap.forEach(doc => {
-        const d = doc.data();
-        const row = `<tr>
-          <td class="px-2 py-1 border border-[#374151]">${d.name}</td>
-          <td class="px-2 py-1 border border-[#374151]">${d.guesses}</td>
-          <td class="px-2 py-1 border border-[#374151]">${(d.timestamp?.toDate() || "").toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</td>
-        </tr>`;
-        table.innerHTML += row;
-      });
+    async function loadLeaderboard() {
+      const q = query(leaderboardRef, orderBy("guesses"), orderBy("timestamp"));
+      const snap = await getDocs(q);
+      const table = document.getElementById("leaderboard-body");
+      table.innerHTML = "";
+      if (snap.empty) {
+        table.innerHTML = `<tr><td colspan="3" class="px-2 py-1 border border-[#374151] text-center text-gray-400">Nog geen inskrywings nie</td></tr>`;
+      } else {
+        snap.forEach(doc => {
+          const d = doc.data();
+          const row = `<tr>
+            <td class="px-2 py-1 border border-[#374151]">${d.name}</td>
+            <td class="px-2 py-1 border border-[#374151]">${d.guesses}</td>
+            <td class="px-2 py-1 border border-[#374151]">${(d.timestamp?.toDate() || "").toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</td>
+          </tr>`;
+          table.innerHTML += row;
+        });
+      }
     }
-  }
 
-  function showPopup(txt) {
-    document.getElementById("popupText").textContent = txt;
-    document.getElementById("popup-overlay").classList.add("show");
-  }
-
-  window.copyResult = function () {
-    const txt = `Ek het vandag se DILEMMA 🤩 in *${guesses.length}* ${(guesses.length === 1 ? "raai" : "raaie")} reggekry. Speel by www.kriptiek.com`;
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(txt).then(() => alert("Jou telling is nou op jou Clipboard"));
+    function showPopup(txt) {
+      document.getElementById("popupText").textContent = txt;
+      document.getElementById("popup-overlay").classList.add("show");
     }
-  };
 
-  document.addEventListener("keydown", e => {
-    const k = e.key.toUpperCase();
-    if (/^[A-Z]$/.test(k) || k === "ENTER" || k === "BACKSPACE") handleKey(k === "BACKSPACE" ? "⌫" : k);
-  });
+    window.copyResult = function () {
+      const txt = `Ek het vandag se DILEMMA 🤩 in *${guesses.length}* ${(guesses.length === 1 ? "raai" : "raaie")} reggekry. Speel by www.kriptiek.com`;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(txt).then(() => alert("Jou telling is nou op jou Clipboard"));
+      }
+    };
 
-  initGame();
-</script>
+    document.addEventListener("keydown", e => {
+      const k = e.key.toUpperCase();
+      if (/^[A-Z]$/.test(k) || k === "ENTER" || k === "BACKSPACE") handleKey(k === "BACKSPACE" ? "⌫" : k);
+    });
 
-
+    initGame();
+  </script>
+</body>
+</html>
