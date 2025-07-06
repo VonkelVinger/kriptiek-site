@@ -405,26 +405,6 @@ async function loadLeaderboard() {
       }
     }
 
-    async function loadLeaderboard() {
-      const q = query(leaderboardRef, orderBy("guesses"), orderBy("timestamp"));
-      const snap = await getDocs(q);
-      const table = document.getElementById("leaderboard-body");
-      table.innerHTML = "";
-      if (snap.empty) {
-        table.innerHTML = `<tr><td colspan="3" class="px-2 py-1 border border-[#374151] text-center text-gray-400">Nog geen inskrywings nie</td></tr>`;
-      } else {
-        snap.forEach(doc => {
-          const d = doc.data();
-          const row = `<tr>
-            <td class="px-2 py-1 border border-[#374151]">${d.name}</td>
-            <td class="px-2 py-1 border border-[#374151]">${d.guesses}</td>
-            <td class="px-2 py-1 border border-[#374151]">${(d.timestamp?.toDate() || "").toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</td>
-          </tr>`;
-          table.innerHTML += row;
-        });
-      }
-    }
-
     function showPopup(txt) {
       document.getElementById("popupText").textContent = txt;
       document.getElementById("popup-overlay").classList.add("show");
