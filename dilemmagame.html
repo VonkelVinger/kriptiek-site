@@ -267,7 +267,7 @@ async function loadLeaderboard() {
 
   table.innerHTML = "";
   if (snap.empty) {
-    table.innerHTML = `<tr><td colspan="3" class="px-2 py-1 border border-[#374151] text-center text-gray-400">Nog geen inskrywings nie!</td></tr>`;
+    table.innerHTML = `<tr><td colspan="3" class="px-2 py-1 border border-[#374151] text-center text-gray-400">Nog geen inskrywings nie</td></tr>`;
   } else {
     snap.forEach(doc => {
       const d = doc.data();
@@ -281,7 +281,6 @@ async function loadLeaderboard() {
     });
   }
 }
-
     function createGrid() {
       const grid = document.getElementById("grid");
       grid.innerHTML = "";
