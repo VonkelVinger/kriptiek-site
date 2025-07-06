@@ -28,75 +28,85 @@
   </footer>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import {
-      getFirestore, collection, getDocs
-    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+  import {
+    getFirestore, collection, getDocs
+  } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
-      authDomain: "kriptiek-c9ea2.firebaseapp.com",
-      projectId: "kriptiek-c9ea2",
-      storageBucket: "kriptiek-c9ea2.appspot.com",
-      messagingSenderId: "620450620939",
-      appId: "1:620450620939:web:e93a18ac23b53b33db890e"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+    authDomain: "kriptiek-c9ea2.firebaseapp.com",
+    projectId: "kriptiek-c9ea2",
+    storageBucket: "kriptiek-c9ea2.appspot.com",
+    messagingSenderId: "620450620939",
+    appId: "1:620450620939:web:e93a18ac23b53b33db890e"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-    async function loadArchive() {
-      const gamesCol = collection(db, "games");
-      const snap = await getDocs(gamesCol);
-      if (snap.empty) return;
+  async function loadArchive() {
+    const gamesCol = collection(db, "games");
+    const snap = await getDocs(gamesCol);
+    if (snap.empty) return;
 
-      const entries = [];
-      snap.forEach(doc => {
-        const data = doc.data();
-        if (data.date) {
-          entries.push({ date: data.date, gameId: doc.id });
-        }
-      });
-
-      // Sort by date descending
-      entries.sort((a, b) => b.date.localeCompare(a.date));
-
-      // Group by year and month
-      const grouped = {};
-      entries.forEach(({ date, gameId }) => {
-        const [year, month, day] = date.split("-");
-        const monthKey = `${year}-${month}`;
-        if (!grouped[monthKey]) grouped[monthKey] = [];
-        grouped[monthKey].push({ date, gameId });
-      });
-
-      const container = document.getElementById("archiveList");
-      for (const [monthKey, games] of Object.entries(grouped)) {
-        const section = document.createElement("div");
-        const [y, m] = monthKey.split("-");
-        const heading = document.createElement("h2");
-        heading.className = "text-xl font-semibold text-[#374151] mb-2";
-        heading.textContent = new Date(`${y}-${m}-01`).toLocaleString("af-ZA", { month: "long", year: "numeric" });
-        section.appendChild(heading);
-
-        const ul = document.createElement("ul");
-        ul.className = "list-disc list-inside";
-        games.forEach(({ date, gameId }) => {
-          const li = document.createElement("li");
-          const link = document.createElement("a");
-          link.href = `/dilemmagame.html?gameId=${gameId}`;
-          link.className = "text-blue-700 hover:underline";
-          link.textContent = date;
-          li.appendChild(link);
-          ul.appendChild(li);
+    const entries = [];
+    snap.forEach(doc => {
+      const data = doc.data();
+      if (data.date) {
+        entries.push({
+          date: data.date,
+          gameId: doc.id
         });
-
-        section.appendChild(ul);
-        container.appendChild(section);
       }
-    }
+    });
 
-    loadArchive();
-  </script>
+    // Sort descending by date
+    entries.sort((a, b) => b.date.localeCompare(a.date));
+
+    // Group by year-month
+    const grouped = {};
+    entries.forEach(({ date, gameId }) => {
+      const [year, month, day] = date.split("-");
+      const monthKey = `${year}-${month}`;
+      if (!grouped[monthKey]) grouped[monthKey] = [];
+      grouped[monthKey].push({ date, gameId });
+    });
+
+    const container = document.getElementById("archiveList");
+    for (const [monthKey, games] of Object.entries(grouped)) {
+      const [year, month] = monthKey.split("-");
+      const monthName = new Date(`${year}-${month}-01`).toLocaleString("af-ZA", { month: "long", year: "numeric" });
+
+      const section = document.createElement("div");
+      section.classList.add("mb-4");
+
+      const heading = document.createElement("h2");
+      heading.className = "text-xl font-semibold text-[#374151] mb-2";
+      heading.textContent = `🗓️ ${monthName}`;
+      section.appendChild(heading);
+
+      const ul = document.createElement("ul");
+      ul.className = "list-disc list-inside";
+      games.forEach(({ date, gameId }) => {
+        const [y, m, d] = date.split("-");
+        const friendly = `${parseInt(d)} ${new Date(`${y}-${m}-01`).toLocaleString("af-ZA", { month: "long" })}`;
+        const li = document.createElement("li");
+        const link = document.createElement("a");
+        link.href = `/dilemmagame.html?gameId=${gameId}`;
+        link.className = "text-blue-700 hover:underline";
+        link.textContent = friendly;
+        li.appendChild(link);
+        ul.appendChild(li);
+      });
+
+      section.appendChild(ul);
+      container.appendChild(section);
+    }
+  }
+
+  loadArchive();
+</script>
+
 </body>
 </html>
