@@ -286,7 +286,7 @@ async function loadLeaderboard() {
       grid.innerHTML = "";
       for (let i = 0; i < MAX_GUESSES; i++) {
         const row = document.createElement("div");
-        row.className = "flex justify-center mb-1";
+        row.className = "flex justify-center mb-1 whitespace-nowrap";
         for (let j = 0; j < word.length; j++) {
           const tile = document.createElement("div");
           tile.className = "tile";
