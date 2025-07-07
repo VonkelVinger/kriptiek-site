@@ -11,180 +11,198 @@
       font-family: 'Montserrat', sans-serif;
       background-color: #f8f5f2;
     }
-    .rotate-warning {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      background: #f87171;
-      color: white;
-      font-weight: bold;
-      text-align: center;
-      padding: 0.75rem;
-      z-index: 50;
+    .keyboard-row {
+      display: flex;
+      justify-content: center;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+      margin-bottom: 0.25rem;
     }
-    @media (max-width: 768px) and (orientation: portrait) {
-      .keyboard {
-        transform: scale(0.85);
-        transform-origin: top center;
-      }
-      .rotate-warning {
-        display: block;
+    .keyboard-row::-webkit-scrollbar {
+      display: none;
+    }
+    @media (orientation: portrait) {
+      .keyboard-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
       }
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col items-center p-4">
-
-  <div class="rotate-warning">
-    🔄 Draai jou foon horisontaal vir 'n beter speelervaring.
-  </div>
-
-  <!-- HEADER -->
-  <header class="text-center mb-4">
-    <h1 class="text-3xl font-bold text-slate-700">🧩 Vandag se DILEMMA</h1>
-    <p id="gameDate" class="text-gray-600"></p>
+<body class="min-h-screen flex flex-col items-center p-4 text-gray-800 bg-[#f8f5f2]">
+  <header class="text-center mb-6">
+    <h1 class="text-3xl font-bold mb-1">🧠 Vandag se <span class="text-blue-900">DILEMMA</span></h1>
+    <p id="gameDate" class="text-sm text-gray-600"></p>
   </header>
 
-  <!-- CLUE -->
-  <section class="mb-4 text-center">
-    <p id="crypticClue" class="text-lg text-slate-800 font-semibold"></p>
+  <section class="text-center mb-4">
+    <p class="font-bold">VANDAG SE LEIDRAAD: <span id="clue" class="font-normal text-gray-800">...</span></p>
   </section>
 
-  <!-- GAME GRID -->
-  <div id="gameGrid" class="flex gap-2 justify-center mb-4"></div>
+  <main class="flex flex-col items-center space-y-4 w-full max-w-lg">
+    <div id="wordGrid" class="flex flex-wrap justify-center gap-2"></div>
 
-  <!-- KEYBOARD -->
-  <div id="keyboard" class="keyboard space-y-2 mb-4"></div>
+    <div class="keyboard-container w-full">
+      <div id="keyboard" class="flex flex-col items-center space-y-2"></div>
+    </div>
 
-  <!-- FEEDBACK + NAME INPUT -->
-  <div id="gameFeedback" class="text-center text-lg font-bold text-slate-700"></div>
-  <div id="nameInputSection" class="hidden text-center mt-4">
-    <input id="playerName" class="border p-2 rounded text-center" placeholder="Jou naam" maxlength="20" />
-    <button id="submitScore" class="ml-2 px-4 py-2 bg-blue-700 text-white rounded">Dien in</button>
-  </div>
+    <div class="text-center mt-4">
+      <h2 class="font-bold text-lg">🏆 Beste Pogings</h2>
+      <div id="bestAttempts" class="mt-2 bg-white border border-gray-300 p-2 rounded text-gray-700 text-sm min-h-[2rem] w-64 text-center">
+        ...
+      </div>
+    </div>
+  </main>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    collection,
+    getDocs
+  } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
-  <!-- LEADERBOARD -->
-  <section id="leaderboardSection" class="mt-6 w-full max-w-md">
-    <h2 class="text-xl font-bold mb-2 text-center text-slate-700">🏆 Beste Pogings</h2>
-    <ul id="leaderboard" class="bg-white p-4 rounded shadow space-y-1"></ul>
-  </section>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+    authDomain: "kriptiek-c9ea2.firebaseapp.com",
+    projectId: "kriptiek-c9ea2",
+    storageBucket: "kriptiek-c9ea2.appspot.com",
+    messagingSenderId: "620450620939",
+    appId: "1:620450620939:web:e93a18ac23b53b33db890e"
+  };
 
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
-    import { getFirestore, doc, getDoc, collection, addDoc, query, orderBy, limit, getDocs } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
-      authDomain: "kriptiek-c9ea2.firebaseapp.com",
-      projectId: "kriptiek-c9ea2",
-      storageBucket: "kriptiek-c9ea2.appspot.com",
-      messagingSenderId: "620450620939",
-      appId: "1:620450620939:web:e93a18ac23b53b33db890e"
-    };
+  const urlParams = new URLSearchParams(window.location.search);
+  const gameId = urlParams.get("gameId");
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+  let targetWord = "";
+  let clue = "";
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const gameId = urlParams.get('gameId');
-    const gameRef = doc(db, 'games', gameId);
+  async function loadGameData() {
+    if (!gameId) return alert("Geen speletjie-ID gevind nie.");
+    const gameRef = doc(db, "games", gameId);
+    const gameSnap = await getDoc(gameRef);
 
-    let targetWord = '';
-    let guesses = [];
+    if (gameSnap.exists()) {
+      const data = gameSnap.data();
+      targetWord = data.word.toUpperCase();
+      clue = data.clue;
+      document.getElementById("clue").textContent = clue;
+      document.getElementById("gameDate").textContent = `Datum: ${data.date}`;
+      renderGrid(targetWord.length);
+      renderKeyboard();
+    } else {
+      alert("Geen speletjie gevind nie.");
+    }
+  }
 
-    async function loadGame() {
-      const gameSnap = await getDoc(gameRef);
-      if (!gameSnap.exists()) {
-        document.getElementById('gameDate').textContent = 'Geen speletjie gevind nie';
-        return;
+  function renderGrid(length) {
+    const grid = document.getElementById("wordGrid");
+    grid.innerHTML = "";
+    for (let i = 0; i < length; i++) {
+      const box = document.createElement("div");
+      box.className = "w-10 h-10 border-2 border-slate-400 rounded text-center font-bold text-xl flex items-center justify-center bg-white";
+      box.setAttribute("data-index", i);
+      grid.appendChild(box);
+    }
+  }
+
+  const keyboardRows = [
+    "QWERTYUIOP",
+    "ASDFGHJKL",
+    "ENTERZXCVBNMDEL"
+  ];
+
+  function renderKeyboard() {
+    const container = document.getElementById("keyboard");
+    container.innerHTML = "";
+    keyboardRows.forEach(row => {
+      const rowDiv = document.createElement("div");
+      rowDiv.className = "flex gap-1";
+      for (const char of row) {
+        const key = document.createElement("button");
+        key.textContent = char === "DEL" ? "⌫" : char;
+        key.dataset.key = char;
+        key.className =
+          "bg-slate-700 text-white px-3 py-2 rounded font-bold text-sm min-w-[2.2rem]";
+        key.addEventListener("click", handleKeyClick);
+        rowDiv.appendChild(key);
       }
+      container.appendChild(rowDiv);
+    });
+  }
 
-      const gameData = gameSnap.data();
-      targetWord = gameData.word.toUpperCase();
+  loadGameData();
+  let currentGuess = "";
+  let attemptCount = 0;
 
-      document.getElementById('gameDate').textContent = `Datum: ${gameData.date}`;
-      document.getElementById('crypticClue').textContent = gameData.clue;
-      buildGrid();
-      buildKeyboard();
-      loadLeaderboard();
+  function handleKeyClick(e) {
+    const key = e.currentTarget.dataset.key;
+
+    if (key === "ENTER") {
+      if (currentGuess.length !== targetWord.length) return;
+      checkGuess();
+    } else if (key === "DEL") {
+      currentGuess = currentGuess.slice(0, -1);
+      updateGridDisplay();
+    } else if (key.length === 1 && currentGuess.length < targetWord.length) {
+      currentGuess += key;
+      updateGridDisplay();
     }
+  }
 
-    function buildGrid() {
-      const container = document.getElementById('gameGrid');
-      container.innerHTML = '';
-      for (let i = 0; i < targetWord.length; i++) {
-        const box = document.createElement('div');
-        box.className = 'w-10 h-10 border-2 border-slate-400 flex items-center justify-center text-xl font-bold bg-white';
-        box.textContent = guesses[i] || '';
-        container.appendChild(box);
-      }
+  function updateGridDisplay() {
+    const boxes = document.querySelectorAll("#wordGrid > div");
+    boxes.forEach((box, idx) => {
+      box.textContent = currentGuess[idx] || "";
+    });
+  }
+
+  function checkGuess() {
+    attemptCount++;
+    if (currentGuess.toUpperCase() === targetWord) {
+      saveBestAttempt(attemptCount);
+      setTimeout(() => {
+        alert(`Korrekt! Jy het dit reggekry in ${attemptCount} pogings.`);
+        currentGuess = "";
+        updateGridDisplay();
+      }, 100);
+    } else {
+      currentGuess = "";
+      updateGridDisplay();
     }
+  }
 
-    function buildKeyboard() {
-      const keys = ["QWERTYUIOP", "ASDFGHJKL", "ENTERZXCVBNM⌫"];
-      const container = document.getElementById('keyboard');
-      container.innerHTML = '';
-      keys.forEach(row => {
-        const rowEl = document.createElement('div');
-        row.split('').forEach(key => {
-          const btn = document.createElement('button');
-          btn.textContent = key === '⌫' ? 'DEL' : key;
-          btn.className = 'bg-slate-700 text-white px-3 py-2 rounded mx-1';
-          btn.onclick = () => handleKey(key);
-          rowEl.appendChild(btn);
-        });
-        container.appendChild(rowEl);
-      });
+  function saveBestAttempt(count) {
+    const key = `best_${gameId}`;
+    const existing = localStorage.getItem(key);
+    if (!existing || parseInt(existing) > count) {
+      localStorage.setItem(key, count);
+      renderBestAttempt(count);
+    } else {
+      renderBestAttempt(existing);
     }
+  }
 
-    function handleKey(key) {
-      if (key === 'ENTER') {
-        if (guesses.join('') === targetWord) {
-          document.getElementById('gameFeedback').textContent = '🎉 Reg geraai!';
-          document.getElementById('nameInputSection').classList.remove('hidden');
-        } else {
-          document.getElementById('gameFeedback').textContent = '❌ Probeer weer';
-        }
-        return;
-      }
-      if (key === '⌫') {
-        guesses.pop();
-      } else if (guesses.length < targetWord.length) {
-        guesses.push(key);
-      }
-      buildGrid();
+  function renderBestAttempt(value) {
+    const scoreDiv = document.getElementById("bestScore");
+    scoreDiv.textContent = value;
+  }
+
+  // Load saved best score if available
+  document.addEventListener("DOMContentLoaded", () => {
+    if (gameId) {
+      const saved = localStorage.getItem(`best_${gameId}`);
+      if (saved) renderBestAttempt(saved);
     }
+  });
+</script>
 
-    async function loadLeaderboard() {
-      const scoresRef = collection(db, `leaderboard/${gameId}/entries`);
-      const q = query(scoresRef, orderBy('score'), limit(10));
-      const snap = await getDocs(q);
-      const list = document.getElementById('leaderboard');
-      list.innerHTML = '';
-      snap.forEach(doc => {
-        const entry = doc.data();
-        const li = document.createElement('li');
-        li.textContent = `${entry.name} – ${entry.score} letters`; 
-        list.appendChild(li);
-      });
-    }
 
-    document.getElementById('submitScore').onclick = async () => {
-      const name = document.getElementById('playerName').value.trim();
-      if (!name) return;
-      const score = guesses.length;
-      await addDoc(collection(db, `leaderboard/${gameId}/entries`), {
-        name,
-        score,
-        timestamp: new Date().toISOString()
-      });
-      document.getElementById('nameInputSection').classList.add('hidden');
-      loadLeaderboard();
-    };
 
-    loadGame();
-  </script>
-</body>
-</html>
+
+  
