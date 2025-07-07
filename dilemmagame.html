@@ -303,7 +303,7 @@ async function loadLeaderboard() {
       kb.innerHTML = "";
       layout.forEach(r => {
         const row = document.createElement("div");
-        row.className = "flex justify-center mb-1";
+        row.className = "flex justify-center mb-1 whitespace-nowrap";
         r.forEach(k => {
           const b = document.createElement("button");
           b.textContent = k === "⌫" ? "←" : k;
