@@ -319,21 +319,7 @@ async function loadLeaderboard() {
       });
     }
 
-    function handleKey(k) {
-      if (guesses.includes(word) || guesses.length >= MAX_GUESSES) return;
-      if (k === "⌫") currentGuess = currentGuess.slice(0, -1);
-      else if (k === "ENTER") {
-        if (currentGuess.length !== word.length) return;
-        guesses.push(currentGuess);
-        localStorage.setItem(gameId, JSON.stringify(guesses));
-        checkGuess(currentGuess);
-        currentGuess = "";
-      } else if (/^[A-Z]$/.test(k) && currentGuess.length < word.length) {
-        currentGuess += k;
-      }
-      update();
-    }
-    function update() {
+   function update() {
   const rows = document.querySelectorAll("#grid .flex");
   rows.forEach((rowEl, i) => {
     const guess = guesses[i] || "";
@@ -351,30 +337,57 @@ async function loadLeaderboard() {
       }
     }
 
-   // Second pass: orange or yellow
-for (let j = 0; j < word.length; j++) {
-  if (feedback[j] !== "gray") continue;
-  const letter = guess[j];
+    // Second pass: orange or yellow
+    for (let j = 0; j < word.length; j++) {
+      if (feedback[j] !== "gray") continue;
+      const letter = guess[j];
 
-  let found = false;
+      for (let k = 0; k < word.length; k++) {
+        if (!used[k] && word[k] === letter) {
+          const totalInSolution = word.split('').filter(c => c === letter).length;
+          feedback[j] = totalInSolution > 1 ? "yellow" : "orange";
+          used[k] = true;
+          break;
+        }
+      }
+    }
 
-  // Look for unused matches in other positions
-  for (let k = 0; k < word.length; k++) {
-    if (!used[k] && word[k] === letter) {
-      found = true;
+    // Render tiles
+    tiles.forEach((tile, j) => {
+      const c = guess[j] || (i === guesses.length ? currentGuess[j] || "" : "");
+      tile.textContent = c;
+      tile.classList.remove("flip");
 
-      // Mark orange or yellow based on solution frequency
-      const totalInSolution = word.split('').filter(c => c === letter).length;
-      if (totalInSolution > 1) {
-        feedback[j] = "yellow";
-      } else {
-        feedback[j] = "orange";
+      let bg = "#fff", fg = "#000", border = "#374151";
+      if (isFinal) {
+        tile.classList.add("flip");
+        if (feedback[j] === "green") {
+          bg = "#15803d"; fg = "#fff"; border = bg;
+        } else if (feedback[j] === "orange") {
+          bg = "#ea580c"; fg = "#fff"; border = bg;
+        } else if (feedback[j] === "yellow") {
+          bg = "#facc15"; fg = "#000"; border = bg;
+        } else {
+          bg = "#6b7280"; fg = "#fff"; border = bg;
+        }
+
+        const keyBtn = Array.from(document.querySelectorAll(".keyboard-button")).find(b => b.textContent === c);
+        if (keyBtn && keyBtn.textContent.length === 1) {
+          const currentBg = keyBtn.style.background;
+          const priority = { "#15803d": 3, "#facc15": 2.5, "#ea580c": 2, "#6b7280": 1 };
+          const newPriority = priority[bg] || 0;
+          const currentPriority = priority[currentBg] || 0;
+          if (newPriority > currentPriority) {
+            Object.assign(keyBtn.style, { background: bg, color: fg, border: `1px solid ${border}` });
+          }
+        }
       }
 
-      used[k] = true;
-      break;
-    }
-  }
+      tile.style.background = bg;
+      tile.style.color = fg;
+      tile.style.border = `1px solid ${border}`;
+    });
+  });
 }
 
 
