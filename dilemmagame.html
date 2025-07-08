@@ -381,8 +381,13 @@
             }
             
             availableLetters[letter]--;
+          } else if (solutionFreq[letter] > 1) {
+            // Letter appears multiple times in solution, but no more available
+            // This means we've used up all instances, but since it appears multiple times,
+            // this should still be yellow (not gray)
+            feedback[i] = 'yellow';
           }
-          // If availableLetters[letter] <= 0, it stays gray
+          // Only stays gray if letter doesn't exist in solution at all
         }
       }
       
