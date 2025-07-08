@@ -346,7 +346,7 @@ async function loadLeaderboard() {
       letterCount[c] = (letterCount[c] || 0) + 1;
     }
 
-    // First pass: mark greens
+    // First pass: mark green
     for (let j = 0; j < word.length; j++) {
       if (guessArray[j] === solutionArray[j]) {
         feedback[j] = "green";
@@ -354,17 +354,17 @@ async function loadLeaderboard() {
       }
     }
 
-    // Second pass: mark yellows and oranges
+    // Second pass: mark yellow or orange
     for (let j = 0; j < word.length; j++) {
       if (feedback[j] !== "gray") continue;
       const letter = guessArray[j];
       if (letter in letterCount && letterCount[letter] > 0) {
-        feedback[j] = (word[j] === letter) ? "orange" : "yellow";
+        feedback[j] = (word.split(letter).length > 1) ? "yellow" : "orange";
         letterCount[letter]--;
       }
     }
 
-    // Render tiles and update keyboard
+    // Render tiles and keyboard
     tiles.forEach((tile, j) => {
       const c = guessArray[j] || (i === guesses.length ? currentGuess[j] || "" : "");
       tile.textContent = c;
@@ -375,15 +375,15 @@ async function loadLeaderboard() {
         tile.classList.add("flip");
         if (feedback[j] === "green") {
           bg = "#15803d"; fg = "#fff"; border = bg;
-        } else if (feedback[j] === "orange") {
-          bg = "#ea580c"; fg = "#fff"; border = bg;
         } else if (feedback[j] === "yellow") {
           bg = "#facc15"; fg = "#000"; border = bg;
+        } else if (feedback[j] === "orange") {
+          bg = "#ea580c"; fg = "#fff"; border = bg;
         } else {
           bg = "#6b7280"; fg = "#fff"; border = bg;
         }
 
-        // Update keyboard color with priority
+        // Keyboard color update
         const keyBtn = Array.from(document.querySelectorAll(".keyboard-button")).find(b => b.textContent === c);
         if (keyBtn && keyBtn.textContent.length === 1) {
           const currentBg = keyBtn.style.background;
