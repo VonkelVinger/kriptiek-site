@@ -202,7 +202,7 @@
     let word = "", clue = "", date = "", guesses = [], currentGuess = "";
     const MAX_GUESSES = 6;
 
-   function update() {
+ function update() {
   const rows = document.querySelectorAll("#grid .flex");
   rows.forEach((rowEl, i) => {
     const guess = guesses[i] || "";
@@ -213,36 +213,41 @@
 
     const solution = word.split("");
     const guessArray = guess.split("");
-    const usedLetters = {}; // count of how many of each letter we've used from the solution
 
-    // Count total occurrences of each letter in the solution
-    const solutionCounts = {};
-    for (let c of solution) {
-      solutionCounts[c] = (solutionCounts[c] || 0) + 1;
-    }
+    const matchedSolution = Array(word.length).fill(false);
+    const matchedGuess = Array(word.length).fill(false);
 
-    // First pass: green
+    // First pass: mark exact matches (green)
     for (let j = 0; j < word.length; j++) {
       if (guessArray[j] === solution[j]) {
         feedback[j] = "green";
-        usedLetters[guessArray[j]] = (usedLetters[guessArray[j]] || 0) + 1;
+        matchedSolution[j] = true;
+        matchedGuess[j] = true;
       }
     }
 
-  // Second pass: orange or yellow
-for (let j = 0; j < word.length; j++) {
-  if (feedback[j] === "green") continue;
+    // Second pass: mark partial matches (orange or yellow)
+    for (let j = 0; j < word.length; j++) {
+      if (matchedGuess[j]) continue;
 
-  const letter = guessArray[j];
-  const totalAvailable = solutionCounts[letter] || 0;
-  const alreadyUsed = feedback.reduce((count, f, idx) =>
-    guessArray[idx] === letter && (f === "green" || f === "orange" || f === "yellow")
-      ? count + 1 : count, 0);
+      const letter = guessArray[j];
+      let matchIndex = -1;
 
-  if (solution.includes(letter) && alreadyUsed < totalAvailable) {
-    feedback[j] = totalAvailable > 1 ? "yellow" : "orange";
-  }
-}
+      for (let k = 0; k < word.length; k++) {
+        if (!matchedSolution[k] && solution[k] === letter) {
+          matchIndex = k;
+          break;
+        }
+      }
+
+      if (matchIndex !== -1) {
+        matchedSolution[matchIndex] = true;
+        matchedGuess[j] = true;
+
+        const totalInSolution = solution.filter(c => c === letter).length;
+        feedback[j] = totalInSolution > 1 ? "yellow" : "orange";
+      }
+    }
 
     // Render tiles
     tiles.forEach((tile, j) => {
