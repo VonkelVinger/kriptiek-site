@@ -329,7 +329,7 @@ async function loadLeaderboard() {
       }
       update();
     }
-   function update() {
+  function update() {
   const rows = document.querySelectorAll("#grid .flex");
   rows.forEach((rowEl, i) => {
     const guess = guesses[i] || "";
@@ -337,26 +337,42 @@ async function loadLeaderboard() {
 
     const tiles = [...rowEl.children];
     const feedback = Array(word.length).fill("gray");
-    const used = Array(word.length).fill(false);
+    const letterUsed = Array(word.length).fill(false);
+    const letterCounts = {};
 
-    // First pass: green
+    // Build frequency map of the target word
+    for (const c of word) {
+      letterCounts[c] = (letterCounts[c] || 0) + 1;
+    }
+
+    const usedInGuess = {};
+
+    // First pass: mark greens
     for (let j = 0; j < word.length; j++) {
       if (guess[j] === word[j]) {
         feedback[j] = "green";
-        used[j] = true;
+        letterUsed[j] = true;
+        usedInGuess[guess[j]] = (usedInGuess[guess[j]] || 0) + 1;
       }
     }
 
-    // Second pass: orange or yellow
+    // Second pass: mark orange or yellow
     for (let j = 0; j < word.length; j++) {
       if (feedback[j] !== "gray") continue;
+
       const letter = guess[j];
+      let found = false;
+
       for (let k = 0; k < word.length; k++) {
-        if (!used[k] && letter === word[k]) {
-          const wordCount = word.split('').filter(c => c === letter).length;
-          const guessCount = guess.split('').filter(c => c === letter).length;
-          feedback[j] = (wordCount > 1 || guessCount > 1) ? "yellow" : "orange";
-          used[k] = true;
+        if (!letterUsed[k] && word[k] === letter) {
+          usedInGuess[letter] = (usedInGuess[letter] || 0) + 1;
+          if (letterCounts[letter] > 1) {
+            feedback[j] = "yellow";
+          } else {
+            feedback[j] = "orange";
+          }
+          letterUsed[k] = true;
+          found = true;
           break;
         }
       }
@@ -399,6 +415,7 @@ async function loadLeaderboard() {
     });
   });
 }
+
 
 
     function checkGuess(g) {
