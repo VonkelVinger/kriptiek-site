@@ -329,6 +329,7 @@ async function loadLeaderboard() {
       }
       update();
     }
+
 function update() {
   const rows = document.querySelectorAll("#grid .flex");
   rows.forEach((rowEl, i) => {
@@ -339,31 +340,50 @@ function update() {
     const guessArray = guess.split("");
     const solutionArray = word.split("");
     const feedback = Array(word.length).fill("gray");
-    const used = Array(word.length).fill(false);
 
-    // First pass: Green
-    for (let j = 0; j < word.length; j++) {
-      if (guessArray[j] === solutionArray[j]) {
-        feedback[j] = "green";
-        used[j] = true;
+    if (isFinal) {
+      // Step 1: Mark all correct positions as green
+      const solutionUsed = Array(word.length).fill(false);
+      for (let j = 0; j < word.length; j++) {
+        if (guessArray[j] === solutionArray[j]) {
+          feedback[j] = "green";
+          solutionUsed[j] = true;
+        }
       }
-    }
 
-    // Second pass: Yellow or Orange
-    for (let j = 0; j < word.length; j++) {
-      if (feedback[j] === "gray") {
-        const letter = guessArray[j];
-        for (let k = 0; k < word.length; k++) {
-          if (!used[k] && solutionArray[k] === letter) {
-            feedback[j] = guessArray.filter(l => l === letter).length > 1 ? "yellow" : "orange";
-            used[k] = true;
-            break;
+      // Step 2: For non-green positions, check if letter exists elsewhere
+      for (let j = 0; j < word.length; j++) {
+        if (feedback[j] !== "green") {
+          const guessLetter = guessArray[j];
+          
+          // Count how many times this letter appears in the guess
+          const guessCount = guessArray.filter(l => l === guessLetter).length;
+          
+          // Count how many times this letter appears in the solution
+          const solutionCount = solutionArray.filter(l => l === guessLetter).length;
+          
+          // Check if this letter exists in the solution at all
+          const foundIndex = solutionArray.findIndex((l, idx) => l === guessLetter && !solutionUsed[idx]);
+          
+          if (foundIndex !== -1) {
+            // Letter exists in solution
+            if (guessCount > 1 && solutionCount >= 1) {
+              // Letter appears multiple times in guess
+              feedback[j] = "yellow";
+            } else {
+              // Letter appears once in guess or solution has multiple instances
+              feedback[j] = "orange";
+            }
+            solutionUsed[foundIndex] = true;
+          } else {
+            // Letter doesn't exist in solution or all instances are used
+            feedback[j] = "gray";
           }
         }
       }
     }
 
-    // Render
+    // Render tiles
     tiles.forEach((tile, j) => {
       const c = guessArray[j] || (i === guesses.length ? currentGuess[j] || "" : "");
       tile.textContent = c;
@@ -382,6 +402,7 @@ function update() {
           bg = "#6b7280"; fg = "#fff"; border = bg;
         }
 
+        // Update keyboard colors
         const keyBtn = Array.from(document.querySelectorAll(".keyboard-button")).find(b => b.textContent === c);
         if (keyBtn && keyBtn.textContent.length === 1) {
           const currentBg = keyBtn.style.background;
@@ -400,7 +421,6 @@ function update() {
     });
   });
 }
-
 
     function checkGuess(g) {
       if (g === word) {
