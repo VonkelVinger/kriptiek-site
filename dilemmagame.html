@@ -339,32 +339,47 @@ async function loadLeaderboard() {
     const guessArray = guess.split("");
     const solutionArray = word.split("");
     const feedback = Array(word.length).fill("gray");
-    const letterCount = {};
 
-    // Count letter frequencies in solution
-    for (const c of solutionArray) {
-      letterCount[c] = (letterCount[c] || 0) + 1;
+    const solutionLetterCount = {};
+    const usedGreen = Array(word.length).fill(false);
+
+    // Count letters in solution
+    for (let c of solutionArray) {
+      solutionLetterCount[c] = (solutionLetterCount[c] || 0) + 1;
     }
 
-    // First pass: mark green
+    // Track how many of each letter we've matched
+    const matchedCount = {};
+
+    // First pass: assign green
     for (let j = 0; j < word.length; j++) {
       if (guessArray[j] === solutionArray[j]) {
         feedback[j] = "green";
-        letterCount[guessArray[j]]--;
+        usedGreen[j] = true;
+        matchedCount[guessArray[j]] = (matchedCount[guessArray[j]] || 0) + 1;
       }
     }
 
-    // Second pass: mark yellow or orange
+    // Second pass: assign yellow and orange
     for (let j = 0; j < word.length; j++) {
       if (feedback[j] !== "gray") continue;
       const letter = guessArray[j];
-      if (letter in letterCount && letterCount[letter] > 0) {
-        feedback[j] = (word.split(letter).length > 1) ? "yellow" : "orange";
-        letterCount[letter]--;
+
+      if (!solutionLetterCount[letter]) continue; // Not in word at all
+
+      const alreadyMatched = matchedCount[letter] || 0;
+      if (alreadyMatched >= solutionLetterCount[letter]) continue; // We've already used up this letter
+
+      if (solutionLetterCount[letter] > 1) {
+        feedback[j] = "yellow";
+      } else {
+        feedback[j] = "orange";
       }
+
+      matchedCount[letter] = alreadyMatched + 1;
     }
 
-    // Render tiles and keyboard
+    // Render tiles and update keyboard
     tiles.forEach((tile, j) => {
       const c = guessArray[j] || (i === guesses.length ? currentGuess[j] || "" : "");
       tile.textContent = c;
@@ -383,7 +398,6 @@ async function loadLeaderboard() {
           bg = "#6b7280"; fg = "#fff"; border = bg;
         }
 
-        // Keyboard color update
         const keyBtn = Array.from(document.querySelectorAll(".keyboard-button")).find(b => b.textContent === c);
         if (keyBtn && keyBtn.textContent.length === 1) {
           const currentBg = keyBtn.style.background;
@@ -402,7 +416,6 @@ async function loadLeaderboard() {
     });
   });
 }
-
 
     function checkGuess(g) {
       if (g === word) {
