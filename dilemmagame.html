@@ -365,54 +365,40 @@
       update();
     }
 
-    function getFeedback(guess, solution) {
-      const feedback = Array(guess.length).fill('gray');
-      const solutionArray = solution.split('');
-      const guessArray = guess.split('');
-      
-      // Count frequency of each letter in solution
-      const solutionFreq = {};
-      solutionArray.forEach(letter => {
-        solutionFreq[letter] = (solutionFreq[letter] || 0) + 1;
-      });
-      
-      // Create a copy for tracking available letters
-      const availableLetters = {...solutionFreq};
-      
-      // First pass: Mark all correct positions (green)
-      for (let i = 0; i < guess.length; i++) {
-        if (guessArray[i] === solutionArray[i]) {
-          feedback[i] = 'green';
-          availableLetters[guessArray[i]]--;
-        }
-      }
-      
-      // Second pass: Handle wrong positions
-      for (let i = 0; i < guess.length; i++) {
-        if (feedback[i] === 'gray') { // Only process non-green positions
-          const letter = guessArray[i];
-          
-          // Check if letter exists in solution and is still available
-          if (availableLetters[letter] > 0) {
-            // Letter exists in solution (after accounting for greens)
-            const totalInSolution = solutionFreq[letter];
-            
-            if (totalInSolution > 1) {
-              // Multiple occurrences in solution → Yellow
-              feedback[i] = 'yellow';
-            } else {
-              // Single occurrence in solution → Orange
-              feedback[i] = 'orange';
-            }
-            
-            availableLetters[letter]--;
-          }
-          // If availableLetters[letter] <= 0, it stays gray
-        }
-      }
-      
-      return feedback;
+   function getFeedback(guess, solution) {
+  const feedback = Array(guess.length).fill('gray');
+  const solutionArray = solution.split('');
+  const guessArray = guess.split('');
+  
+  const solutionFreq = {};
+  solutionArray.forEach(letter => {
+    solutionFreq[letter] = (solutionFreq[letter] || 0) + 1;
+  });
+
+  const availableLetters = { ...solutionFreq };
+
+  // First pass: Green
+  for (let i = 0; i < guess.length; i++) {
+    if (guessArray[i] === solutionArray[i]) {
+      feedback[i] = 'green';
+      availableLetters[guessArray[i]]--;
     }
+  }
+
+  // Second pass: Yellow / Orange based on guess frequency
+  for (let i = 0; i < guess.length; i++) {
+    if (feedback[i] === 'gray') {
+      const letter = guessArray[i];
+      if (availableLetters[letter] > 0) {
+        const guessOccurrences = guessArray.filter(l => l === letter).length;
+        feedback[i] = guessOccurrences > 1 ? 'yellow' : 'orange';
+        availableLetters[letter]--;
+      }
+    }
+  }
+
+  return feedback;
+}
 
     function updateKeyboardColors(guess, feedback) {
       const colorPriority = {
