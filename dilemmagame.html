@@ -329,7 +329,7 @@ async function loadLeaderboard() {
       }
       update();
     }
- function update() {
+function update() {
   const rows = document.querySelectorAll("#grid .flex");
   rows.forEach((rowEl, i) => {
     const guess = guesses[i] || "";
@@ -340,6 +340,7 @@ async function loadLeaderboard() {
     const solutionArray = word.split("");
     const feedback = Array(word.length).fill("gray");
 
+    // Count letters in the solution
     const solutionLetterCount = {};
     for (let c of solutionArray) {
       solutionLetterCount[c] = (solutionLetterCount[c] || 0) + 1;
@@ -353,18 +354,25 @@ async function loadLeaderboard() {
       }
     }
 
-    // Second pass: assign yellow or orange
+    // Count letter frequencies in the guess
+    const guessLetterCount = {};
+    for (let c of guessArray) {
+      guessLetterCount[c] = (guessLetterCount[c] || 0) + 1;
+    }
+
+    // Second pass: assign yellow/orange
     for (let j = 0; j < word.length; j++) {
-      if (feedback[j] === "gray") {
-        const letter = guessArray[j];
-        if (solutionLetterCount[letter] > 0) {
-          feedback[j] = word.split(letter).length > 1 ? "yellow" : "orange";
-          solutionLetterCount[letter]--;
-        }
+      if (feedback[j] !== "gray") continue;
+      const letter = guessArray[j];
+
+      if (solutionLetterCount[letter] > 0) {
+        const countInGuess = guessLetterCount[letter] || 0;
+        feedback[j] = countInGuess > 1 ? "yellow" : "orange";
+        solutionLetterCount[letter]--;
       }
     }
 
-    // Render tiles and update keyboard
+    // Render
     tiles.forEach((tile, j) => {
       const c = guessArray[j] || (i === guesses.length ? currentGuess[j] || "" : "");
       tile.textContent = c;
@@ -401,7 +409,6 @@ async function loadLeaderboard() {
     });
   });
 }
-
 
     function checkGuess(g) {
       if (g === word) {
