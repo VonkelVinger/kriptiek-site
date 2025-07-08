@@ -369,12 +369,12 @@
             // Letter exists in solution
             const totalInSolution = solutionArray.filter(l => l === letter).length;
             
-            if (totalInSolution > 1) {
-              // Multiple occurrences in solution → Yellow
-              feedback[i] = 'yellow';
-            } else {
+            if (totalInSolution === 1) {
               // Single occurrence in solution → Orange
               feedback[i] = 'orange';
+            } else {
+              // Multiple occurrences in solution → Yellow
+              feedback[i] = 'yellow';
             }
             
             solutionFreq[letter]--;
