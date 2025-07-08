@@ -211,44 +211,44 @@
     const tiles = [...rowEl.children];
     const feedback = Array(word.length).fill("gray");
 
-    // Track letter counts in solution
-    const solutionCounts = {};
-    for (const letter of word) {
-      solutionCounts[letter] = (solutionCounts[letter] || 0) + 1;
-    }
+    const solutionArray = word.split("");
+    const guessArray = guess.split("");
+    const matchedSolutionIndices = Array(word.length).fill(false); // which letters in solution were matched
 
-    // Track usage of each letter from solution
-    const usedCounts = {};
-
-    // First pass: green
+    // First pass: exact matches (green)
     for (let j = 0; j < word.length; j++) {
-      if (guess[j] === word[j]) {
+      if (guessArray[j] === solutionArray[j]) {
         feedback[j] = "green";
-        usedCounts[guess[j]] = (usedCounts[guess[j]] || 0) + 1;
+        matchedSolutionIndices[j] = true;
       }
     }
 
-    // Second pass: orange or yellow
+    // Second pass: partial matches (orange or yellow)
     for (let j = 0; j < word.length; j++) {
-      if (feedback[j] !== "gray") continue;
+      if (feedback[j] === "green") continue;
+      const letter = guessArray[j];
 
-      const letter = guess[j];
-
-      if (word.includes(letter)) {
-        const used = usedCounts[letter] || 0;
-        const total = solutionCounts[letter];
-
-        if (used < total) {
-          // Letter exists but not yet fully used
-          feedback[j] = total > 1 ? "yellow" : "orange";
-          usedCounts[letter] = used + 1;
+      // Try to find this letter in a non-matched position in the solution
+      let foundIndex = -1;
+      for (let k = 0; k < word.length; k++) {
+        if (!matchedSolutionIndices[k] && solutionArray[k] === letter) {
+          foundIndex = k;
+          break;
         }
+      }
+
+      if (foundIndex !== -1) {
+        // mark this solution letter as used
+        matchedSolutionIndices[foundIndex] = true;
+        // if the letter appears more than once in the solution, it's yellow
+        const totalInSolution = solutionArray.filter(c => c === letter).length;
+        feedback[j] = totalInSolution > 1 ? "yellow" : "orange";
       }
     }
 
     // Render tiles
     tiles.forEach((tile, j) => {
-      const c = guess[j] || (i === guesses.length ? currentGuess[j] || "" : "");
+      const c = guessArray[j] || (i === guesses.length ? currentGuess[j] || "" : "");
       tile.textContent = c;
       tile.classList.remove("flip");
 
