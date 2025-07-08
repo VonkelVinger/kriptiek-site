@@ -416,7 +416,7 @@ async function loadLeaderboard() {
     }
 
     window.copyResult = function () {
-      const txt = `Ek het vandag se DILEMMA 🤩 in *${guesses.length}* ${(guesses.length === 1 ? "raai" : "raaie")} reggekry. Speel by www.kriptiek.com`;
+      const txt = `Ek het vandag se DILEMMA 🧩 in *${guesses.length}* ${(guesses.length === 1 ? "raai" : "raaie")} reggekry. Speel by www.kriptiek.com`;
       if (navigator.clipboard) {
         navigator.clipboard.writeText(txt).then(() => alert("Jou telling is nou op jou Clipboard"));
       }
