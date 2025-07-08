@@ -202,7 +202,7 @@
     let word = "", clue = "", date = "", guesses = [], currentGuess = "";
     const MAX_GUESSES = 6;
 
-    function update() {
+   function update() {
   const rows = document.querySelectorAll("#grid .flex");
   rows.forEach((rowEl, i) => {
     const guess = guesses[i] || "";
@@ -213,31 +213,32 @@
 
     const solution = word.split("");
     const guessArray = guess.split("");
-    const matchedSolution = Array(word.length).fill(false);
-    const matchedGuess = Array(word.length).fill(false);
+    const usedLetters = {}; // count of how many of each letter we've used from the solution
+
+    // Count total occurrences of each letter in the solution
+    const solutionCounts = {};
+    for (let c of solution) {
+      solutionCounts[c] = (solutionCounts[c] || 0) + 1;
+    }
 
     // First pass: green
     for (let j = 0; j < word.length; j++) {
       if (guessArray[j] === solution[j]) {
         feedback[j] = "green";
-        matchedSolution[j] = true;
-        matchedGuess[j] = true;
+        usedLetters[guessArray[j]] = (usedLetters[guessArray[j]] || 0) + 1;
       }
     }
 
-    // Second pass: orange/yellow
+    // Second pass: orange or yellow
     for (let j = 0; j < word.length; j++) {
-      if (matchedGuess[j]) continue; // already green
+      if (feedback[j] === "green") continue;
       const letter = guessArray[j];
+      const alreadyUsed = usedLetters[letter] || 0;
+      const totalAvailable = solutionCounts[letter] || 0;
 
-      for (let k = 0; k < word.length; k++) {
-        if (!matchedSolution[k] && solution[k] === letter) {
-          matchedSolution[k] = true;
-          matchedGuess[j] = true;
-          const totalInSolution = solution.filter(l => l === letter).length;
-          feedback[j] = totalInSolution > 1 ? "yellow" : "orange";
-          break;
-        }
+      if (solution.includes(letter) && alreadyUsed < totalAvailable) {
+        usedLetters[letter] = alreadyUsed + 1;
+        feedback[j] = totalAvailable > 1 ? "yellow" : "orange";
       }
     }
 
@@ -278,7 +279,6 @@
     });
   });
 }
-
     function createGrid() {
       const grid = document.getElementById("grid");
       grid.innerHTML = "";
