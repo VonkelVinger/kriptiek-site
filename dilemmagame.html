@@ -229,17 +229,18 @@
       }
     }
 
-    // Second pass: orange/yellow
+  // Second pass: orange or yellow
 for (let j = 0; j < word.length; j++) {
   if (feedback[j] === "green") continue;
 
   const letter = guessArray[j];
   const totalAvailable = solutionCounts[letter] || 0;
-  const alreadyUsed = usedLetters[letter] || 0;
+  const alreadyUsed = feedback.reduce((count, f, idx) =>
+    guessArray[idx] === letter && (f === "green" || f === "orange" || f === "yellow")
+      ? count + 1 : count, 0);
 
   if (solution.includes(letter) && alreadyUsed < totalAvailable) {
     feedback[j] = totalAvailable > 1 ? "yellow" : "orange";
-    usedLetters[letter] = alreadyUsed + 1;
   }
 }
 
