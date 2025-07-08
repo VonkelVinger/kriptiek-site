@@ -364,15 +364,14 @@ function update() {
         // Try to find a remaining unused matching letter in solution
         for (let k = 0; k < word.length; k++) {
           if (!used[k] && solutionArray[k] === letter) {
-            if (solutionFreq[letter] > 0) {
+           if (solutionFreq[letter] > 0) {
   const totalInSolution = solutionArray.filter(l => l === letter).length;
-if (solutionFreq[letter] > 0) {
   feedback[j] = totalInSolution > 1 ? "yellow" : "orange";
   used[k] = true;
   solutionFreq[letter]--;
   break;
 }
-}
+
           }
         }
       }
