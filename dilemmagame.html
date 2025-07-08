@@ -202,7 +202,7 @@
     let word = "", clue = "", date = "", guesses = [], currentGuess = "";
     const MAX_GUESSES = 6;
 
- function update() {
+function update() {
   const rows = document.querySelectorAll("#grid .flex");
   rows.forEach((rowEl, i) => {
     const guess = guesses[i] || "";
@@ -217,7 +217,7 @@
     const matchedSolution = Array(word.length).fill(false);
     const matchedGuess = Array(word.length).fill(false);
 
-    // First pass: mark exact matches (green)
+    // Pass 1: Green matches
     for (let j = 0; j < word.length; j++) {
       if (guessArray[j] === solution[j]) {
         feedback[j] = "green";
@@ -226,27 +226,24 @@
       }
     }
 
-    // Second pass: mark partial matches (orange or yellow)
+    // Pass 2: Orange/yellow matches
     for (let j = 0; j < word.length; j++) {
       if (matchedGuess[j]) continue;
-
       const letter = guessArray[j];
-      let matchIndex = -1;
 
+      let found = false;
       for (let k = 0; k < word.length; k++) {
         if (!matchedSolution[k] && solution[k] === letter) {
-          matchIndex = k;
+          matchedSolution[k] = true;
+          matchedGuess[j] = true;
+          const totalInSolution = solution.filter(c => c === letter).length;
+          feedback[j] = totalInSolution > 1 ? "yellow" : "orange";
+          found = true;
           break;
         }
       }
 
-      if (matchIndex !== -1) {
-        matchedSolution[matchIndex] = true;
-        matchedGuess[j] = true;
-
-        const totalInSolution = solution.filter(c => c === letter).length;
-        feedback[j] = totalInSolution > 1 ? "yellow" : "orange";
-      }
+      // if no match found, feedback stays gray
     }
 
     // Render tiles
@@ -286,6 +283,7 @@
     });
   });
 }
+
     function createGrid() {
       const grid = document.getElementById("grid");
       grid.innerHTML = "";
