@@ -334,65 +334,72 @@ async function loadLeaderboard() {
       update();
     }
     function update() {
-      const rows = document.querySelectorAll("#grid .flex");
-      rows.forEach((rowEl, i) => {
-        const guess = guesses[i] || "";
-        const isFinal = guess.length === word.length;
+  const rows = document.querySelectorAll("#grid .flex");
+  rows.forEach((rowEl, i) => {
+    const guess = guesses[i] || "";
+    const isFinal = guess.length === word.length;
 
-        const tiles = [...rowEl.children];
-        const feedback = Array(word.length).fill("gray");
-        const usedTarget = Array(word.length).fill(false);
-        const letterCount = {};
+    const tiles = [...rowEl.children];
+    const feedback = Array(word.length).fill("gray");
+    const targetLetters = word.split("");
+    const used = Array(word.length).fill(false);
 
-        for (const char of word) {
-          letterCount[char] = (letterCount[char] || 0) + 1;
-        }
-
-        for (let j = 0; j < word.length; j++) {
-          if (guess[j] === word[j]) {
-            feedback[j] = "green";
-            usedTarget[j] = true;
-            letterCount[guess[j]]--;
-          }
-        }
-
-        for (let j = 0; j < word.length; j++) {
-          if (feedback[j] !== "gray") continue;
-          const guessedChar = guess[j];
-          if (letterCount[guessedChar] > 0 && word.includes(guessedChar)) {
-            feedback[j] = (word.split(guessedChar).length > 1) ? "yellow" : "orange";
-            letterCount[guessedChar]--;
-          }
-        }
-
-        tiles.forEach((tile, j) => {
-          const c = guess[j] || (i === guesses.length ? currentGuess[j] || "" : "");
-          tile.textContent = c;
-          tile.classList.remove("flip");
-
-          let bg = "#fff", fg = "#000", border = "#374151";
-          if (isFinal) {
-            tile.classList.add("flip");
-            if (feedback[j] === "green") {
-              bg = "#15803d"; fg = "#fff"; border = bg;
-            } else if (feedback[j] === "orange") {
-              bg = "#ea580c"; fg = "#fff"; border = bg;
-            } else if (feedback[j] === "yellow") {
-              bg = "#facc15"; fg = "#000"; border = bg;
-            } else {
-              bg = "#6b7280"; fg = "#fff"; border = bg;
-            }
-
-            const keyBtn = Array.from(document.querySelectorAll(".keyboard-button")).find(b => b.textContent === c);
-            if (keyBtn) Object.assign(keyBtn.style, { background: bg, color: fg, border: `1px solid ${border}` });
-          }
-
-          tile.style.background = bg;
-          tile.style.color = fg;
-          tile.style.border = `1px solid ${border}`;
-        });
-      });
+    // First pass: green (exact matches)
+    for (let j = 0; j < word.length; j++) {
+      if (guess[j] === word[j]) {
+        feedback[j] = "green";
+        used[j] = true;
+      }
     }
+
+    // Second pass: orange (misplaced matches)
+    for (let j = 0; j < word.length; j++) {
+      if (feedback[j] !== "gray") continue;
+      for (let k = 0; k < word.length; k++) {
+        if (!used[k] && guess[j] === word[k]) {
+          feedback[j] = "orange";
+          used[k] = true;
+          break;
+        }
+      }
+    }
+
+    // Render tiles
+    tiles.forEach((tile, j) => {
+      const c = guess[j] || (i === guesses.length ? currentGuess[j] || "" : "");
+      tile.textContent = c;
+      tile.classList.remove("flip");
+
+      let bg = "#fff", fg = "#000", border = "#374151";
+      if (isFinal) {
+        tile.classList.add("flip");
+        if (feedback[j] === "green") {
+          bg = "#15803d"; fg = "#fff"; border = bg;
+        } else if (feedback[j] === "orange") {
+          bg = "#ea580c"; fg = "#fff"; border = bg;
+        } else {
+          bg = "#6b7280"; fg = "#fff"; border = bg;
+        }
+
+        // Update keyboard color (do not override green if already set)
+        const keyBtn = Array.from(document.querySelectorAll(".keyboard-button")).find(b => b.textContent === c);
+        if (keyBtn && keyBtn.textContent.length === 1) {
+          const currentBg = keyBtn.style.background;
+          const priority = { "#15803d": 3, "#ea580c": 2, "#6b7280": 1 };
+          const newPriority = priority[bg] || 0;
+          const currentPriority = priority[currentBg] || 0;
+          if (newPriority > currentPriority) {
+            Object.assign(keyBtn.style, { background: bg, color: fg, border: `1px solid ${border}` });
+          }
+        }
+      }
+
+      tile.style.background = bg;
+      tile.style.color = fg;
+      tile.style.border = `1px solid ${border}`;
+    });
+  });
+}
 
     function checkGuess(g) {
       if (g === word) {
