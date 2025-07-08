@@ -47,26 +47,6 @@
       color: white;
       cursor: pointer;
     }
-    .keyboard-button.green {
-      background-color: #15803d;
-      color: white;
-      border-color: #15803d;
-    }
-    .keyboard-button.orange {
-      background-color: #ea580c;
-      color: white;
-      border-color: #ea580c;
-    }
-    .keyboard-button.yellow {
-      background-color: #facc15;
-      color: black;
-      border-color: #facc15;
-    }
-    .keyboard-button.gray {
-      background-color: #6b7280;
-      color: white;
-      border-color: #6b7280;
-    }
     .letter-box {
       width: 50px;
       height: 50px;
@@ -268,9 +248,6 @@
     let word = "", clue = "", date = "", guesses = [], currentGuess = "";
     const MAX_GUESSES = 6;
 
-    // Track keyboard button states for consistent color updates
-    const keyboardStates = {};
-
     async function initGame() {
       const snap = await getDoc(gameRef);
       if (!snap.exists()) return alert("Geen speletjie gevind vir " + gameId);
@@ -343,7 +320,6 @@
           b.textContent = k === "⌫" ? "←" : k;
           b.className = "keyboard-button";
           b.onclick = () => handleKey(k);
-          b.setAttribute('data-key', k);
           row.appendChild(b);
         });
         kb.appendChild(row);
@@ -392,10 +368,9 @@
         if (feedback[i] === 'gray') { // Only process non-green positions
           const letter = guessArray[i];
           
-          // Check if letter exists in solution and is still available
           if (availableLetters[letter] > 0) {
             // Letter exists in solution (after accounting for greens)
-            const totalInSolution = solutionFreq[letter];
+            const totalInSolution = solutionFreq[letter]; // Original count in solution
             
             if (totalInSolution > 1) {
               // Multiple occurrences in solution → Yellow
@@ -406,39 +381,17 @@
             }
             
             availableLetters[letter]--;
+          } else if (solutionFreq[letter] > 1) {
+            // Letter appears multiple times in solution, but no more available
+            // This means we've used up all instances, but since it appears multiple times,
+            // this should still be yellow (not gray)
+            feedback[i] = 'yellow';
           }
-          // If availableLetters[letter] <= 0, it stays gray
+          // Only stays gray if letter doesn't exist in solution at all
         }
       }
       
       return feedback;
-    }
-
-    function updateKeyboardColors(guess, feedback) {
-      const colorPriority = {
-        'green': 4,
-        'orange': 3,
-        'yellow': 2,
-        'gray': 1
-      };
-
-      guess.split('').forEach((letter, index) => {
-        const color = feedback[index];
-        const currentColor = keyboardStates[letter] || '';
-        
-        // Only update if new color has higher priority
-        if (colorPriority[color] > (colorPriority[currentColor] || 0)) {
-          keyboardStates[letter] = color;
-          
-          const keyBtn = document.querySelector(`[data-key="${letter}"]`);
-          if (keyBtn) {
-            // Remove all color classes
-            keyBtn.classList.remove('green', 'orange', 'yellow', 'gray');
-            // Add new color class
-            keyBtn.classList.add(color);
-          }
-        }
-      });
     }
 
     function update() {
@@ -473,17 +426,33 @@
               default:
                 bg = "#6b7280"; fg = "#fff"; border = bg;
             }
+
+            // Update keyboard colors with proper priority
+            const keyBtn = Array.from(document.querySelectorAll(".keyboard-button")).find(b => b.textContent === c);
+            if (keyBtn && keyBtn.textContent.length === 1) {
+              const currentBg = keyBtn.style.backgroundColor;
+              const colorPriority = {
+                "rgb(21, 128, 61)": 4,     // green
+                "rgb(234, 88, 12)": 3,     // orange  
+                "rgb(250, 204, 21)": 2,    // yellow
+                "rgb(107, 114, 128)": 1    // gray
+              };
+              
+              const newPriority = colorPriority[`rgb(${parseInt(bg.slice(1,3), 16)}, ${parseInt(bg.slice(3,5), 16)}, ${parseInt(bg.slice(5,7), 16)})`] || 0;
+              const currentPriority = colorPriority[currentBg] || 0;
+              
+              if (newPriority > currentPriority) {
+                keyBtn.style.backgroundColor = bg;
+                keyBtn.style.color = fg;
+                keyBtn.style.borderColor = border;
+              }
+            }
           }
 
           tile.style.backgroundColor = bg;
           tile.style.color = fg;
           tile.style.borderColor = border;
         });
-
-        // Update keyboard colors for completed guesses
-        if (isFinal) {
-          updateKeyboardColors(guess, feedback);
-        }
       });
     }
 
