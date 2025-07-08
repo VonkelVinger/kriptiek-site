@@ -365,12 +365,12 @@ function update() {
         for (let k = 0; k < word.length; k++) {
           if (!used[k] && solutionArray[k] === letter) {
             if (solutionFreq[letter] > 0) {
-              const guessCount = guessArray.filter(l => l === letter).length;
-              feedback[j] = (guessCount > 1) ? "yellow" : "orange";
-              used[k] = true;
-              solutionFreq[letter]--;
-              break;
-            }
+  const totalInSolution = solutionArray.filter(l => l === letter).length;
+  feedback[j] = totalInSolution > 1 ? "yellow" : "orange";
+  used[k] = true;
+  solutionFreq[letter]--;
+  break;
+}
           }
         }
       }
