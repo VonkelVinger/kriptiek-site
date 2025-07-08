@@ -99,47 +99,7 @@
       overflow: hidden;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     }
-    #popup-overlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.7);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 50;
-    }
-    #popup-overlay.show {
-      display: flex !important;
-    }
-    #popup {
-      background: white;
-      border: 2px solid #374151;
-      padding: 1.5rem;
-      border-radius: 1rem;
-      max-width: 90%;
-      text-align: center;
-      animation: fadeInPopup 0.4s ease-out forwards;
-    }
-    @keyframes fadeInPopup {
-      from { opacity: 0; transform: translateY(-20px) scale(0.95); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    .popup-button {
-      margin: 0.5rem;
-      padding: 0.5rem 1rem;
-      font-weight: bold;
-      border: 2px solid #374151;
-      background-color: #ffffff;
-      color: #374151;
-      cursor: pointer;
-      border-radius: 0.375rem;
-    }
-    .popup-button:hover {
-      background-color: #374151;
-      color: white;
-    }
-  </style>
+</style>
 </head>
 <body class="min-h-screen flex flex-col items-center p-4">
   <header class="w-full bg-white shadow p-4 mb-4 text-center">
@@ -162,10 +122,9 @@
     <h2 class="text-xl font-bold text-center mb-2">🧙 DILEMMA vir <span id="dateDisplay"></span></h2>
     <p id="clueDisplay" class="text-center text-gray-700 italic mb-4"></p>
     <div id="grid" class="mb-4"></div>
-  <div class="w-full overflow-x-auto">
-  <div id="keyboard" class="inline-block"></div>
-</div>
-
+    <div class="w-full overflow-x-auto">
+      <div id="keyboard" class="inline-block"></div>
+    </div>
 
     <section class="mt-6 text-sm text-gray-800">
       <h3 class="text-lg font-bold mb-2">Hoe om te speel</h3>
@@ -175,7 +134,7 @@
       <ul class="list-disc list-inside mt-4">
         <li><span class="text-green-700 font-semibold">GROEN</span>: Die letter is in die woord én in die regte posisie.</li>
         <li><span class="text-orange-600 font-semibold">ORANJE</span>: Die letter is in die woord, maar op 'n ander plek.</li>
-        <li><span class="text-yellow-500 font-semibold">GEEL</span>: Die letter is mer as een keer in die woord, maar nie in hierdie blok nie.</li>
+        <li><span class="text-yellow-500 font-semibold">GEEL</span>: Die letter is op die verkeerde plek, en kom meer as een keer in die woord voor.</li>
         <li><span class="text-gray-600 font-semibold">GRYS</span>: Die letter is glad nie in die woord nie.</li>
       </ul>
     </section>
@@ -198,7 +157,6 @@
       </table>
     </section>
   </main>
-
   <div id="popup-overlay">
     <div id="popup">
       <p id="popupText" class="text-lg font-bold mb-4"></p>
@@ -207,15 +165,15 @@
     </div>
   </div>
 
-   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
-  &copy; 2025 Kriptiek. Alle regte voorbehou. |
-<a href="/index.html" class="underline">Tuis</a> |  
-<a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
-  <a href="/terms.html" class="underline">Voorwaardes</a> |
-  <a href="/terms.html" class="underline">Gereelde vrae</a> |
-  <a href="/terms.html" class="underline">Oor Kriptiek</a> |
-  <a href="/terms.html" class="underline">Kontak ons</a>
-</footer>
+  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
+    &copy; 2025 Kriptiek. Alle regte voorbehou. |
+    <a href="/index.html" class="underline">Tuis</a> |
+    <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
+    <a href="/terms.html" class="underline">Voorwaardes</a> |
+    <a href="/terms.html" class="underline">Gereelde vrae</a> |
+    <a href="/terms.html" class="underline">Oor Kriptiek</a> |
+    <a href="/terms.html" class="underline">Kontak ons</a>
+  </footer>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import {
@@ -243,49 +201,76 @@
     let word = "", clue = "", date = "", guesses = [], currentGuess = "";
     const MAX_GUESSES = 6;
 
-    async function initGame() {
-      const snap = await getDoc(gameRef);
-      if (!snap.exists()) return alert("Geen speletjie gevind vir " + gameId);
-      const data = snap.data();
-      word = data.word.toUpperCase();
-      clue = data.clue;
-      date = data.date;
-      guesses = JSON.parse(localStorage.getItem(gameId) || "[]");
-      document.getElementById("dateDisplay").textContent = date;
-      document.getElementById("clueDisplay").textContent = clue;
-      createGrid();
-      createKeyboard();
-      update();
-      loadLeaderboard();
+    function update() {
+      const rows = document.querySelectorAll("#grid .flex");
+      rows.forEach((rowEl, i) => {
+        const guess = guesses[i] || "";
+        const isFinal = guess.length === word.length;
+
+        const tiles = [...rowEl.children];
+        const feedback = Array(word.length).fill("gray");
+        const used = Array(word.length).fill(false);
+
+        // First pass: green
+        for (let j = 0; j < word.length; j++) {
+          if (guess[j] === word[j]) {
+            feedback[j] = "green";
+            used[j] = true;
+          }
+        }
+
+        // Second pass: orange or yellow
+        for (let j = 0; j < word.length; j++) {
+          if (feedback[j] !== "gray") continue;
+          const letter = guess[j];
+
+          for (let k = 0; k < word.length; k++) {
+            if (!used[k] && word[k] === letter) {
+              const totalInSolution = word.split('').filter(c => c === letter).length;
+              feedback[j] = totalInSolution > 1 ? "yellow" : "orange";
+              used[k] = true;
+              break;
+            }
+          }
+        }
+
+        // Render tiles
+        tiles.forEach((tile, j) => {
+          const c = guess[j] || (i === guesses.length ? currentGuess[j] || "" : "");
+          tile.textContent = c;
+          tile.classList.remove("flip");
+
+          let bg = "#fff", fg = "#000", border = "#374151";
+          if (isFinal) {
+            tile.classList.add("flip");
+            if (feedback[j] === "green") {
+              bg = "#15803d"; fg = "#fff"; border = bg;
+            } else if (feedback[j] === "orange") {
+              bg = "#ea580c"; fg = "#fff"; border = bg;
+            } else if (feedback[j] === "yellow") {
+              bg = "#facc15"; fg = "#000"; border = bg;
+            } else {
+              bg = "#6b7280"; fg = "#fff"; border = bg;
+            }
+
+            const keyBtn = Array.from(document.querySelectorAll(".keyboard-button")).find(b => b.textContent === c);
+            if (keyBtn && keyBtn.textContent.length === 1) {
+              const currentBg = keyBtn.style.background;
+              const priority = { "#15803d": 3, "#facc15": 2.5, "#ea580c": 2, "#6b7280": 1 };
+              const newPriority = priority[bg] || 0;
+              const currentPriority = priority[currentBg] || 0;
+              if (newPriority > currentPriority) {
+                Object.assign(keyBtn.style, { background: bg, color: fg, border: `1px solid ${border}` });
+              }
+            }
+          }
+
+          tile.style.background = bg;
+          tile.style.color = fg;
+          tile.style.border = `1px solid ${border}`;
+        });
+      });
     }
-async function loadLeaderboard() {
-  const q = query(leaderboardRef, orderBy("guesses"), orderBy("timestamp"));
-  const snap = await getDocs(q);
-
-  console.log("Leaderboard loaded:", snap.size, "entries");
-
-  const table = document.getElementById("leaderboard-body");
-  if (!table) {
-    console.warn("Leaderboard table not found in DOM!");
-    return;
-  }
-
-  table.innerHTML = "";
-  if (snap.empty) {
-    table.innerHTML = `<tr><td colspan="3" class="px-2 py-1 border border-[#374151] text-center text-gray-400">Nog geen inskrywings nie</td></tr>`;
-  } else {
-    snap.forEach(doc => {
-      const d = doc.data();
-      console.log("Entry:", d);
-      const row = `<tr>
-        <td class="px-2 py-1 border border-[#374151]">${d.name}</td>
-        <td class="px-2 py-1 border border-[#374151]">${d.guesses}</td>
-        <td class="px-2 py-1 border border-[#374151]">${(d.timestamp?.toDate() || "").toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</td>
-      </tr>`;
-      table.innerHTML += row;
-    });
-  }
-}
     function createGrid() {
       const grid = document.getElementById("grid");
       grid.innerHTML = "";
@@ -302,7 +287,7 @@ async function loadLeaderboard() {
     }
 
     function createKeyboard() {
-      const layout = [[..."QWERTYUIOP"], [..."ASDFGHJKL"], ["ENTER",..."ZXCVBNM","⌫"]];
+      const layout = [[..."QWERTYUIOP"], [..."ASDFGHJKL"], ["ENTER", ..."ZXCVBNM", "⌫"]];
       const kb = document.getElementById("keyboard");
       kb.innerHTML = "";
       layout.forEach(r => {
@@ -319,77 +304,20 @@ async function loadLeaderboard() {
       });
     }
 
-   function update() {
-  const rows = document.querySelectorAll("#grid .flex");
-  rows.forEach((rowEl, i) => {
-    const guess = guesses[i] || "";
-    const isFinal = guess.length === word.length;
-
-    const tiles = [...rowEl.children];
-    const feedback = Array(word.length).fill("gray");
-    const used = Array(word.length).fill(false);
-
-    // First pass: green
-    for (let j = 0; j < word.length; j++) {
-      if (guess[j] === word[j]) {
-        feedback[j] = "green";
-        used[j] = true;
+    function handleKey(k) {
+      if (guesses.includes(word) || guesses.length >= MAX_GUESSES) return;
+      if (k === "⌫") currentGuess = currentGuess.slice(0, -1);
+      else if (k === "ENTER") {
+        if (currentGuess.length !== word.length) return;
+        guesses.push(currentGuess);
+        localStorage.setItem(gameId, JSON.stringify(guesses));
+        checkGuess(currentGuess);
+        currentGuess = "";
+      } else if (/^[A-Z]$/.test(k) && currentGuess.length < word.length) {
+        currentGuess += k;
       }
+      update();
     }
-
-    // Second pass: orange or yellow
-    for (let j = 0; j < word.length; j++) {
-      if (feedback[j] !== "gray") continue;
-      const letter = guess[j];
-
-      for (let k = 0; k < word.length; k++) {
-        if (!used[k] && word[k] === letter) {
-          const totalInSolution = word.split('').filter(c => c === letter).length;
-          feedback[j] = totalInSolution > 1 ? "yellow" : "orange";
-          used[k] = true;
-          break;
-        }
-      }
-    }
-
-    // Render tiles
-    tiles.forEach((tile, j) => {
-      const c = guess[j] || (i === guesses.length ? currentGuess[j] || "" : "");
-      tile.textContent = c;
-      tile.classList.remove("flip");
-
-      let bg = "#fff", fg = "#000", border = "#374151";
-      if (isFinal) {
-        tile.classList.add("flip");
-        if (feedback[j] === "green") {
-          bg = "#15803d"; fg = "#fff"; border = bg;
-        } else if (feedback[j] === "orange") {
-          bg = "#ea580c"; fg = "#fff"; border = bg;
-        } else if (feedback[j] === "yellow") {
-          bg = "#facc15"; fg = "#000"; border = bg;
-        } else {
-          bg = "#6b7280"; fg = "#fff"; border = bg;
-        }
-
-        const keyBtn = Array.from(document.querySelectorAll(".keyboard-button")).find(b => b.textContent === c);
-        if (keyBtn && keyBtn.textContent.length === 1) {
-          const currentBg = keyBtn.style.background;
-          const priority = { "#15803d": 3, "#facc15": 2.5, "#ea580c": 2, "#6b7280": 1 };
-          const newPriority = priority[bg] || 0;
-          const currentPriority = priority[currentBg] || 0;
-          if (newPriority > currentPriority) {
-            Object.assign(keyBtn.style, { background: bg, color: fg, border: `1px solid ${border}` });
-          }
-        }
-      }
-
-      tile.style.background = bg;
-      tile.style.color = fg;
-      tile.style.border = `1px solid ${border}`;
-    });
-  });
-}
-
 
     function checkGuess(g) {
       if (g === word) {
@@ -419,9 +347,50 @@ async function loadLeaderboard() {
       }
     };
 
+    async function loadLeaderboard() {
+      const q = query(leaderboardRef, orderBy("guesses"), orderBy("timestamp"));
+      const snap = await getDocs(q);
+
+      const table = document.getElementById("leaderboard-body");
+      if (!table) return;
+
+      table.innerHTML = "";
+      if (snap.empty) {
+        table.innerHTML = `<tr><td colspan="3" class="px-2 py-1 border border-[#374151] text-center text-gray-400">Nog geen inskrywings nie</td></tr>`;
+      } else {
+        snap.forEach(doc => {
+          const d = doc.data();
+          const row = `<tr>
+            <td class="px-2 py-1 border border-[#374151]">${d.name}</td>
+            <td class="px-2 py-1 border border-[#374151]">${d.guesses}</td>
+            <td class="px-2 py-1 border border-[#374151]">${(d.timestamp?.toDate() || "").toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</td>
+          </tr>`;
+          table.innerHTML += row;
+        });
+      }
+    }
+
+    async function initGame() {
+      const snap = await getDoc(gameRef);
+      if (!snap.exists()) return alert("Geen speletjie gevind vir " + gameId);
+      const data = snap.data();
+      word = data.word.toUpperCase();
+      clue = data.clue;
+      date = data.date;
+      guesses = JSON.parse(localStorage.getItem(gameId) || "[]");
+      document.getElementById("dateDisplay").textContent = date;
+      document.getElementById("clueDisplay").textContent = clue;
+      createGrid();
+      createKeyboard();
+      update();
+      loadLeaderboard();
+    }
+
     document.addEventListener("keydown", e => {
       const k = e.key.toUpperCase();
-      if (/^[A-Z]$/.test(k) || k === "ENTER" || k === "BACKSPACE") handleKey(k === "BACKSPACE" ? "⌫" : k);
+      if (/^[A-Z]$/.test(k) || k === "ENTER" || k === "BACKSPACE") {
+        handleKey(k === "BACKSPACE" ? "⌫" : k);
+      }
     });
 
     initGame();
