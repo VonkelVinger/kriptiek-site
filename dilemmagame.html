@@ -352,19 +352,26 @@ async function loadLeaderboard() {
     }
 
     // Second pass: orange or yellow
-    for (let j = 0; j < word.length; j++) {
-      if (feedback[j] !== "gray") continue;
-      const letter = guess[j];
-      for (let k = 0; k < word.length; k++) {
-        if (!used[k] && letter === word[k]) {
-          const wordCount = word.split('').filter(c => c === letter).length;
-          const guessCount = guess.split('').filter(c => c === letter).length;
-          feedback[j] = (wordCount > 1 || guessCount > 1) ? "yellow" : "orange";
-          used[k] = true;
-          break;
-        }
-      }
-    }
+for (let j = 0; j < word.length; j++) {
+  if (feedback[j] !== "gray") continue;
+  const letter = guess[j];
+
+  // Count total occurrences of the letter in guess so far
+  const occurrencesSoFar = feedback
+    .slice(0, j)
+    .filter((fb, idx) => guess[idx] === letter && fb !== "gray").length;
+
+  const wordCount = word.split('').filter(c => c === letter).length;
+  const guessCount = guess.split('').filter(c => c === letter).length;
+
+  // Still matching letters left in the solution?
+  if (occurrencesSoFar < wordCount) {
+    feedback[j] = (wordCount > 1 || guessCount > 1) ? "yellow" : "orange";
+  } else if (guessCount > 1) {
+    // All correct positions are used up, but guess has multiple → yellow
+    feedback[j] = "yellow";
+  }
+}
 
     // Render tiles
     tiles.forEach((tile, j) => {
