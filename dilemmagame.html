@@ -340,33 +340,37 @@ function update() {
     const solutionArray = word.split("");
     const feedback = Array(word.length).fill("gray");
 
-    // Count how many of each letter are in the solution
-    const solutionLetterCount = {};
-    for (let c of solutionArray) {
-      solutionLetterCount[c] = (solutionLetterCount[c] || 0) + 1;
-    }
+    // Track used positions in solution
+    const used = Array(word.length).fill(false);
 
-    // First pass: mark green
+    // First pass: mark greens
     for (let j = 0; j < word.length; j++) {
       if (guessArray[j] === solutionArray[j]) {
         feedback[j] = "green";
-        solutionLetterCount[guessArray[j]]--;
+        used[j] = true;
       }
     }
 
-    // Second pass: mark yellow or orange based on remaining availability
+    // Second pass: mark yellow or orange
     for (let j = 0; j < word.length; j++) {
       if (feedback[j] === "gray") {
         const letter = guessArray[j];
-        if (solutionLetterCount[letter] > 0) {
-          const isRepeatedInGuess = guessArray.filter(l => l === letter).length > 1;
-          feedback[j] = isRepeatedInGuess ? "yellow" : "orange";
-          solutionLetterCount[letter]--;
+
+        // Try to find the same letter elsewhere in the solution (wrong place)
+        let found = false;
+        for (let k = 0; k < word.length; k++) {
+          if (!used[k] && solutionArray[k] === letter) {
+            feedback[j] = guessArray.filter(l => l === letter).length > 1 ? "yellow" : "orange";
+            used[k] = true;
+            found = true;
+            break;
+          }
         }
+        // If not found, feedback[j] stays gray
       }
     }
 
-    // Apply colors to tiles and keyboard
+    // Render feedback to tiles
     tiles.forEach((tile, j) => {
       const c = guessArray[j] || (i === guesses.length ? currentGuess[j] || "" : "");
       tile.textContent = c;
@@ -403,7 +407,6 @@ function update() {
     });
   });
 }
-
 
     function checkGuess(g) {
       if (g === word) {
