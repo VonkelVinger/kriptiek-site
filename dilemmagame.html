@@ -23,15 +23,6 @@
       background: #fff;
       border: 1px solid #374151;
       color: #000;
-      transition: all 0.3s ease;
-    }
-    .tile.flip {
-      animation: flip 0.6s ease-in-out;
-    }
-    @keyframes flip {
-      0% { transform: rotateY(0deg); }
-      50% { transform: rotateY(90deg); }
-      100% { transform: rotateY(0deg); }
     }
     .keyboard-button {
       border: 2px solid #374151;
@@ -46,26 +37,6 @@
       background: #a5312f;
       color: white;
       cursor: pointer;
-    }
-    .keyboard-button.green {
-      background-color: #15803d;
-      color: white;
-      border-color: #15803d;
-    }
-    .keyboard-button.orange {
-      background-color: #ea580c;
-      color: white;
-      border-color: #ea580c;
-    }
-    .keyboard-button.yellow {
-      background-color: #facc15;
-      color: black;
-      border-color: #facc15;
-    }
-    .keyboard-button.gray {
-      background-color: #6b7280;
-      color: white;
-      border-color: #6b7280;
     }
     .letter-box {
       width: 50px;
@@ -268,9 +239,6 @@
     let word = "", clue = "", date = "", guesses = [], currentGuess = "";
     const MAX_GUESSES = 6;
 
-    // Track keyboard button states for consistent color updates
-    const keyboardStates = {};
-
     async function initGame() {
       const snap = await getDoc(gameRef);
       if (!snap.exists()) return alert("Geen speletjie gevind vir " + gameId);
@@ -286,36 +254,34 @@
       update();
       loadLeaderboard();
     }
+async function loadLeaderboard() {
+  const q = query(leaderboardRef, orderBy("guesses"), orderBy("timestamp"));
+  const snap = await getDocs(q);
 
-    async function loadLeaderboard() {
-      const q = query(leaderboardRef, orderBy("guesses"), orderBy("timestamp"));
-      const snap = await getDocs(q);
+  console.log("Leaderboard loaded:", snap.size, "entries");
 
-      console.log("Leaderboard loaded:", snap.size, "entries");
+  const table = document.getElementById("leaderboard-body");
+  if (!table) {
+    console.warn("Leaderboard table not found in DOM!");
+    return;
+  }
 
-      const table = document.getElementById("leaderboard-body");
-      if (!table) {
-        console.warn("Leaderboard table not found in DOM!");
-        return;
-      }
-
-      table.innerHTML = "";
-      if (snap.empty) {
-        table.innerHTML = `<tr><td colspan="3" class="px-2 py-1 border border-[#374151] text-center text-gray-400">Nog geen inskrywings nie</td></tr>`;
-      } else {
-        snap.forEach(doc => {
-          const d = doc.data();
-          console.log("Entry:", d);
-          const row = `<tr>
-            <td class="px-2 py-1 border border-[#374151]">${d.name}</td>
-            <td class="px-2 py-1 border border-[#374151]">${d.guesses}</td>
-            <td class="px-2 py-1 border border-[#374151]">${(d.timestamp?.toDate() || "").toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</td>
-          </tr>`;
-          table.innerHTML += row;
-        });
-      }
-    }
-
+  table.innerHTML = "";
+  if (snap.empty) {
+    table.innerHTML = `<tr><td colspan="3" class="px-2 py-1 border border-[#374151] text-center text-gray-400">Nog geen inskrywings nie</td></tr>`;
+  } else {
+    snap.forEach(doc => {
+      const d = doc.data();
+      console.log("Entry:", d);
+      const row = `<tr>
+        <td class="px-2 py-1 border border-[#374151]">${d.name}</td>
+        <td class="px-2 py-1 border border-[#374151]">${d.guesses}</td>
+        <td class="px-2 py-1 border border-[#374151]">${(d.timestamp?.toDate() || "").toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</td>
+      </tr>`;
+      table.innerHTML += row;
+    });
+  }
+}
     function createGrid() {
       const grid = document.getElementById("grid");
       grid.innerHTML = "";
@@ -343,7 +309,6 @@
           b.textContent = k === "⌫" ? "←" : k;
           b.className = "keyboard-button";
           b.onclick = () => handleKey(k);
-          b.setAttribute('data-key', k);
           row.appendChild(b);
         });
         kb.appendChild(row);
@@ -364,143 +329,90 @@
       }
       update();
     }
+function update() {
+  const rows = document.querySelectorAll("#grid .flex");
+  rows.forEach((rowEl, i) => {
+    const guess = guesses[i] || "";
+    const isFinal = guess.length === word.length;
 
-    function getFeedback(guess, solution) {
-      const feedback = Array(guess.length).fill('gray');
-      const solutionArray = solution.split('');
-      const guessArray = guess.split('');
-      
-      // Debug logging
-      console.log('Solution:', solution, 'Length:', solution.length);
-      console.log('Guess:', guess, 'Length:', guess.length);
-      
-      // Count frequency of each letter in solution
-      const solutionFreq = {};
-      solutionArray.forEach(letter => {
-        solutionFreq[letter] = (solutionFreq[letter] || 0) + 1;
-      });
-      
-      console.log('Solution frequency:', solutionFreq);
-      
-      // Create a copy for tracking available letters
-      const availableLetters = {...solutionFreq};
-      
-      // First pass: Mark all correct positions (green)
-      for (let i = 0; i < guess.length; i++) {
-        if (guessArray[i] === solutionArray[i]) {
-          feedback[i] = 'green';
-          availableLetters[guessArray[i]]--;
-          console.log(`Green at position ${i}: ${guessArray[i]}`);
-        }
+    const tiles = [...rowEl.children];
+    const guessArray = guess.split("");
+    const solutionArray = word.split("");
+    const feedback = Array(word.length).fill("gray");
+    const used = Array(word.length).fill(false);
+
+    // Count how many times each letter appears in the solution
+    const solutionFreq = {};
+    for (let char of solutionArray) {
+      solutionFreq[char] = (solutionFreq[char] || 0) + 1;
+    }
+
+    // First pass: assign greens
+    for (let j = 0; j < word.length; j++) {
+      if (guessArray[j] === solutionArray[j]) {
+        feedback[j] = "green";
+        used[j] = true;
+        solutionFreq[guessArray[j]]--;
       }
-      
-      console.log('Available letters after greens:', availableLetters);
-      
-      // Second pass: Handle wrong positions
-      for (let i = 0; i < guess.length; i++) {
-        if (feedback[i] === 'gray') { // Only process non-green positions
-          const letter = guessArray[i];
-          
-          console.log(`Processing position ${i}, letter: ${letter}, available: ${availableLetters[letter]}`);
-          
-          // Check if letter exists in solution and is still available
-          if (availableLetters[letter] && availableLetters[letter] > 0) {
-            // Letter exists in solution (after accounting for greens)
-            const totalInSolution = solutionFreq[letter];
-            
-            if (totalInSolution > 1) {
-              // Multiple occurrences in solution → Yellow
-              feedback[i] = 'yellow';
-              console.log(`Yellow at position ${i}: ${letter}`);
-            } else {
-              // Single occurrence in solution → Orange
-              feedback[i] = 'orange';
-              console.log(`Orange at position ${i}: ${letter}`);
+    }
+
+    // Second pass: assign yellow or orange
+    for (let j = 0; j < word.length; j++) {
+      if (feedback[j] === "gray") {
+        const letter = guessArray[j];
+
+        // Try to find a remaining unused matching letter in solution
+        for (let k = 0; k < word.length; k++) {
+          if (!used[k] && solutionArray[k] === letter) {
+            if (solutionFreq[letter] > 0) {
+              const guessCount = guessArray.filter(l => l === letter).length;
+              feedback[j] = (guessCount > 1) ? "yellow" : "orange";
+              used[k] = true;
+              solutionFreq[letter]--;
+              break;
             }
-            
-            availableLetters[letter]--;
-          } else {
-            console.log(`Gray at position ${i}: ${letter} (not available)`);
           }
         }
       }
-      
-      console.log('Final feedback:', feedback);
-      return feedback;
     }
 
-    function updateKeyboardColors(guess, feedback) {
-      const colorPriority = {
-        'green': 4,
-        'orange': 3,
-        'yellow': 2,
-        'gray': 1
-      };
+    // Render tiles and update keyboard
+    tiles.forEach((tile, j) => {
+      const c = guessArray[j] || (i === guesses.length ? currentGuess[j] || "" : "");
+      tile.textContent = c;
+      tile.classList.remove("flip");
 
-      guess.split('').forEach((letter, index) => {
-        const color = feedback[index];
-        const currentColor = keyboardStates[letter] || '';
-        
-        // Only update if new color has higher priority
-        if (colorPriority[color] > (colorPriority[currentColor] || 0)) {
-          keyboardStates[letter] = color;
-          
-          const keyBtn = document.querySelector(`[data-key="${letter}"]`);
-          if (keyBtn) {
-            // Remove all color classes
-            keyBtn.classList.remove('green', 'orange', 'yellow', 'gray');
-            // Add new color class
-            keyBtn.classList.add(color);
+      let bg = "#fff", fg = "#000", border = "#374151";
+      if (isFinal) {
+        tile.classList.add("flip");
+        if (feedback[j] === "green") {
+          bg = "#15803d"; fg = "#fff"; border = bg;
+        } else if (feedback[j] === "yellow") {
+          bg = "#facc15"; fg = "#000"; border = bg;
+        } else if (feedback[j] === "orange") {
+          bg = "#ea580c"; fg = "#fff"; border = bg;
+        } else {
+          bg = "#6b7280"; fg = "#fff"; border = bg;
+        }
+
+        const keyBtn = Array.from(document.querySelectorAll(".keyboard-button")).find(b => b.textContent === c);
+        if (keyBtn && keyBtn.textContent.length === 1) {
+          const currentBg = keyBtn.style.background;
+          const priority = { "#15803d": 3, "#facc15": 2.5, "#ea580c": 2, "#6b7280": 1 };
+          const newPriority = priority[bg] || 0;
+          const currentPriority = priority[currentBg] || 0;
+          if (newPriority > currentPriority) {
+            Object.assign(keyBtn.style, { background: bg, color: fg, border: `1px solid ${border}` });
           }
         }
-      });
-    }
+      }
 
-    function update() {
-      const rows = document.querySelectorAll("#grid .flex");
-      rows.forEach((rowEl, i) => {
-        const guess = guesses[i] || "";
-        const isFinal = guess.length === word.length;
-        const feedback = isFinal ? getFeedback(guess, word) : [];
-
-        const tiles = [...rowEl.children];
-        const guessArray = guess.split("");
-
-        tiles.forEach((tile, j) => {
-          const c = guessArray[j] || (i === guesses.length ? currentGuess[j] || "" : "");
-          tile.textContent = c;
-          tile.classList.remove("flip");
-
-          let bg = "#fff", fg = "#000", border = "#374151";
-          
-          if (isFinal) {
-            tile.classList.add("flip");
-            switch (feedback[j]) {
-              case "green":
-                bg = "#15803d"; fg = "#fff"; border = bg;
-                break;
-              case "yellow":
-                bg = "#facc15"; fg = "#000"; border = bg;
-                break;
-              case "orange":
-                bg = "#ea580c"; fg = "#fff"; border = bg;
-                break;
-              default:
-                bg = "#6b7280"; fg = "#fff"; border = bg;
-            }
-          }
-
-          tile.style.backgroundColor = bg;
-          tile.style.color = fg;
-          tile.style.borderColor = border;
-        });
-
-        // Update keyboard colors for completed guesses
-        if (isFinal) {
-          updateKeyboardColors(guess, feedback);
-        }
-      });
-    }
+      tile.style.background = bg;
+      tile.style.color = fg;
+      tile.style.border = `1px solid ${border}`;
+    });
+  });
+}
 
     function checkGuess(g) {
       if (g === word) {
