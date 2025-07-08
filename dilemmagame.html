@@ -341,42 +341,27 @@ async function loadLeaderboard() {
     const feedback = Array(word.length).fill("gray");
 
     const solutionLetterCount = {};
-    const usedGreen = Array(word.length).fill(false);
-
-    // Count letters in solution
     for (let c of solutionArray) {
       solutionLetterCount[c] = (solutionLetterCount[c] || 0) + 1;
     }
-
-    // Track how many of each letter we've matched
-    const matchedCount = {};
 
     // First pass: assign green
     for (let j = 0; j < word.length; j++) {
       if (guessArray[j] === solutionArray[j]) {
         feedback[j] = "green";
-        usedGreen[j] = true;
-        matchedCount[guessArray[j]] = (matchedCount[guessArray[j]] || 0) + 1;
+        solutionLetterCount[guessArray[j]]--;
       }
     }
 
-    // Second pass: assign yellow and orange
+    // Second pass: assign yellow or orange
     for (let j = 0; j < word.length; j++) {
-      if (feedback[j] !== "gray") continue;
-      const letter = guessArray[j];
-
-      if (!solutionLetterCount[letter]) continue; // Not in word at all
-
-      const alreadyMatched = matchedCount[letter] || 0;
-      if (alreadyMatched >= solutionLetterCount[letter]) continue; // We've already used up this letter
-
-      if (solutionLetterCount[letter] > 1) {
-        feedback[j] = "yellow";
-      } else {
-        feedback[j] = "orange";
+      if (feedback[j] === "gray") {
+        const letter = guessArray[j];
+        if (solutionLetterCount[letter] > 0) {
+          feedback[j] = word.split(letter).length > 1 ? "yellow" : "orange";
+          solutionLetterCount[letter]--;
+        }
       }
-
-      matchedCount[letter] = alreadyMatched + 1;
     }
 
     // Render tiles and update keyboard
@@ -416,6 +401,7 @@ async function loadLeaderboard() {
     });
   });
 }
+
 
     function checkGuess(g) {
       if (g === word) {
