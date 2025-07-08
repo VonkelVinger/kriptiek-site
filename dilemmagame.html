@@ -351,64 +351,30 @@ async function loadLeaderboard() {
       }
     }
 
-    // Second pass: orange or yellow
+   // Second pass: orange or yellow
 for (let j = 0; j < word.length; j++) {
   if (feedback[j] !== "gray") continue;
   const letter = guess[j];
 
-  // Count total occurrences of the letter in guess so far
-  const occurrencesSoFar = feedback
-    .slice(0, j)
-    .filter((fb, idx) => guess[idx] === letter && fb !== "gray").length;
+  let found = false;
 
-  const wordCount = word.split('').filter(c => c === letter).length;
-  const guessCount = guess.split('').filter(c => c === letter).length;
+  // Look for unused matches in other positions
+  for (let k = 0; k < word.length; k++) {
+    if (!used[k] && word[k] === letter) {
+      found = true;
 
-  // Still matching letters left in the solution?
-  if (occurrencesSoFar < wordCount) {
-    feedback[j] = (wordCount > 1 || guessCount > 1) ? "yellow" : "orange";
-  } else if (guessCount > 1) {
-    // All correct positions are used up, but guess has multiple → yellow
-    feedback[j] = "yellow";
-  }
-}
-
-    // Render tiles
-    tiles.forEach((tile, j) => {
-      const c = guess[j] || (i === guesses.length ? currentGuess[j] || "" : "");
-      tile.textContent = c;
-      tile.classList.remove("flip");
-
-      let bg = "#fff", fg = "#000", border = "#374151";
-      if (isFinal) {
-        tile.classList.add("flip");
-        if (feedback[j] === "green") {
-          bg = "#15803d"; fg = "#fff"; border = bg;
-        } else if (feedback[j] === "orange") {
-          bg = "#ea580c"; fg = "#fff"; border = bg;
-        } else if (feedback[j] === "yellow") {
-          bg = "#facc15"; fg = "#000"; border = bg;
-        } else {
-          bg = "#6b7280"; fg = "#fff"; border = bg;
-        }
-
-        const keyBtn = Array.from(document.querySelectorAll(".keyboard-button")).find(b => b.textContent === c);
-        if (keyBtn && keyBtn.textContent.length === 1) {
-          const currentBg = keyBtn.style.background;
-          const priority = { "#15803d": 3, "#facc15": 2.5, "#ea580c": 2, "#6b7280": 1 };
-          const newPriority = priority[bg] || 0;
-          const currentPriority = priority[currentBg] || 0;
-          if (newPriority > currentPriority) {
-            Object.assign(keyBtn.style, { background: bg, color: fg, border: `1px solid ${border}` });
-          }
-        }
+      // Mark orange or yellow based on solution frequency
+      const totalInSolution = word.split('').filter(c => c === letter).length;
+      if (totalInSolution > 1) {
+        feedback[j] = "yellow";
+      } else {
+        feedback[j] = "orange";
       }
 
-      tile.style.background = bg;
-      tile.style.color = fg;
-      tile.style.border = `1px solid ${border}`;
-    });
-  });
+      used[k] = true;
+      break;
+    }
+  }
 }
 
 
