@@ -352,11 +352,14 @@
         solutionFreq[letter] = (solutionFreq[letter] || 0) + 1;
       });
       
+      // Create a copy for tracking available letters
+      const availableLetters = {...solutionFreq};
+      
       // First pass: Mark all correct positions (green)
       for (let i = 0; i < guess.length; i++) {
         if (guessArray[i] === solutionArray[i]) {
           feedback[i] = 'green';
-          solutionFreq[guessArray[i]]--;
+          availableLetters[guessArray[i]]--;
         }
       }
       
@@ -365,21 +368,21 @@
         if (feedback[i] === 'gray') { // Only process non-green positions
           const letter = guessArray[i];
           
-          if (solutionFreq[letter] > 0) {
-            // Letter exists in solution
-            const totalInSolution = solutionArray.filter(l => l === letter).length;
+          if (availableLetters[letter] > 0) {
+            // Letter exists in solution (after accounting for greens)
+            const totalInSolution = solutionFreq[letter]; // Original count in solution
             
-            if (totalInSolution === 1) {
-              // Single occurrence in solution → Orange
-              feedback[i] = 'orange';
-            } else {
+            if (totalInSolution > 1) {
               // Multiple occurrences in solution → Yellow
               feedback[i] = 'yellow';
+            } else {
+              // Single occurrence in solution → Orange
+              feedback[i] = 'orange';
             }
             
-            solutionFreq[letter]--;
+            availableLetters[letter]--;
           }
-          // If solutionFreq[letter] <= 0, it stays gray
+          // If availableLetters[letter] <= 0, it stays gray
         }
       }
       
