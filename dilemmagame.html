@@ -366,10 +366,12 @@ function update() {
           if (!used[k] && solutionArray[k] === letter) {
             if (solutionFreq[letter] > 0) {
   const totalInSolution = solutionArray.filter(l => l === letter).length;
+if (solutionFreq[letter] > 0) {
   feedback[j] = totalInSolution > 1 ? "yellow" : "orange";
   used[k] = true;
   solutionFreq[letter]--;
   break;
+}
 }
           }
         }
