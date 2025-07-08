@@ -25,7 +25,6 @@
       color: #000;
     }
     .keyboard-button {
-      min-width: 40px;
       border: 2px solid #374151;
       color: #374151;
       font-weight: bold;
@@ -99,7 +98,47 @@
       overflow: hidden;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     }
-</style>
+    #popup-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+    }
+    #popup-overlay.show {
+      display: flex !important;
+    }
+    #popup {
+      background: white;
+      border: 2px solid #374151;
+      padding: 1.5rem;
+      border-radius: 1rem;
+      max-width: 90%;
+      text-align: center;
+      animation: fadeInPopup 0.4s ease-out forwards;
+    }
+    @keyframes fadeInPopup {
+      from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .popup-button {
+      margin: 0.5rem;
+      padding: 0.5rem 1rem;
+      font-weight: bold;
+      border: 2px solid #374151;
+      background-color: #ffffff;
+      color: #374151;
+      cursor: pointer;
+      border-radius: 0.375rem;
+    }
+    .popup-button:hover {
+      background-color: #374151;
+      color: white;
+    }
+  </style>
 </head>
 <body class="min-h-screen flex flex-col items-center p-4">
   <header class="w-full bg-white shadow p-4 mb-4 text-center">
@@ -122,21 +161,18 @@
     <h2 class="text-xl font-bold text-center mb-2">🧙 DILEMMA vir <span id="dateDisplay"></span></h2>
     <p id="clueDisplay" class="text-center text-gray-700 italic mb-4"></p>
     <div id="grid" class="mb-4"></div>
-    <div class="w-full overflow-x-auto">
-      <div id="keyboard" class="inline-block"></div>
-    </div>
+    <div id="keyboard" class="text-center overflow-x-auto max-w-full flex flex-wrap justify-center"></div>
 
     <section class="mt-6 text-sm text-gray-800">
-      <h3 class="text-lg font-bold mb-2">HOE OM TE SPEEL</h3>
-      <p class="mb-2">Oorweeg dit om jou selfoon of ander kleiner toestel dwars te hou vir die beste werking ("Landscape Mode" of "Auto-Rotate").</p>
+      <h3 class="text-lg font-bold mb-2">Hoe om te speel</h3>
       <p class="mb-2">Jy het ses kanse om die woord te raai.</p>
       <p class="mb-2">Jy mag vir elke probeerslag enige letters in enige volgorde kies, maar elke raaiskoot moet dieselfde aantal letters hê as die woord waarna jy soek. Dit hoef nie ook 'n woord te vorm nie.</p>
-      <p class="mb-2">Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER. </p>
+      <p class="mb-2">Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER.</p>
       <ul class="list-disc list-inside mt-4">
-        <li><span class="text-green-700 font-semibold">GROEN</span>: Die letter is in die woord en in die regte posisie.</li>
-        <li><span class="text-orange-600 font-semibold">ORANJE</span>: Die letter is wel in die woord, maar nie in hierdie blokkie nie.</li>
-        <li><span class="text-yellow-500 font-semibold">GEEL</span>: Die letter is meer as een keer in die woord, maar nie in hierdie blokkie nie.</li>
-        <li><span class="text-gray-600 font-semibold">GRYS</span>: Die letter is glad nie in die woord nie.</li>
+        <li><span class="text-green-700 font-semibold">GROEN</span>: Die letter is in die woord én in die regte posisie.</li>
+        <li><span class="text-orange-600 font-semibold">ORANJE</span>: Die letter is in die woord, maar op 'n ander plek.</li>
+        <li><span class="text-yellow-500 font-semibold">GEEL</span>: Die letter kom meer as een keer in die woord voor, maar is nie hier op die regte plek nie.</li>
+        <li><span class="text-gray-600 font-semibold">GRYS</span>: Die letter is nie in die woord nie.</li>
       </ul>
     </section>
 
@@ -158,6 +194,7 @@
       </table>
     </section>
   </main>
+
   <div id="popup-overlay">
     <div id="popup">
       <p id="popupText" class="text-lg font-bold mb-4"></p>
@@ -166,9 +203,8 @@
     </div>
   </div>
 
-  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
+  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500 mt-10">
     &copy; 2025 Kriptiek. Alle regte voorbehou. |
-    <a href="/index.html" class="underline">Tuis</a> |
     <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
     <a href="/terms.html" class="underline">Voorwaardes</a> |
     <a href="/terms.html" class="underline">Gereelde vrae</a> |
@@ -202,86 +238,55 @@
     let word = "", clue = "", date = "", guesses = [], currentGuess = "";
     const MAX_GUESSES = 6;
 
-function update() {
-  const rows = document.querySelectorAll("#grid .flex");
-  rows.forEach((rowEl, i) => {
-    const guess = guesses[i] || "";
-    const isFinal = guess.length === word.length;
-
-    const tiles = [...rowEl.children];
-    const feedback = Array(word.length).fill("gray");
-
-    const solution = word.split("");
-    const guessArray = guess.split("");
-
-    const solutionUsed = Array(word.length).fill(false);
-    const guessUsed = Array(word.length).fill(false);
-
-    // Pass 1: green
-    for (let j = 0; j < word.length; j++) {
-      if (guessArray[j] === solution[j]) {
-        feedback[j] = "green";
-        solutionUsed[j] = true;
-        guessUsed[j] = true;
-      }
+    async function initGame() {
+      const snap = await getDoc(gameRef);
+      if (!snap.exists()) return alert("Geen speletjie gevind vir " + gameId);
+      const data = snap.data();
+      word = data.word.toUpperCase();
+      clue = data.clue;
+      date = data.date;
+      guesses = JSON.parse(localStorage.getItem(gameId) || "[]");
+      document.getElementById("dateDisplay").textContent = date;
+      document.getElementById("clueDisplay").textContent = clue;
+      createGrid();
+      createKeyboard();
+      update();
+      loadLeaderboard();
     }
+async function loadLeaderboard() {
+  const q = query(leaderboardRef, orderBy("guesses"), orderBy("timestamp"));
+  const snap = await getDocs(q);
 
-    // Pass 2: orange
-    for (let j = 0; j < word.length; j++) {
-      if (guessUsed[j]) continue;
-      for (let k = 0; k < word.length; k++) {
-        if (!solutionUsed[k] && guessArray[j] === solution[k]) {
-          feedback[j] = "orange";
-          solutionUsed[k] = true;
-          guessUsed[j] = true;
-          break;
-        }
-      }
-    }
+  console.log("Leaderboard loaded:", snap.size, "entries");
 
-    // Render tiles
-    tiles.forEach((tile, j) => {
-      const c = guessArray[j] || (i === guesses.length ? currentGuess[j] || "" : "");
-      tile.textContent = c;
-      tile.classList.remove("flip");
+  const table = document.getElementById("leaderboard-body");
+  if (!table) {
+    console.warn("Leaderboard table not found in DOM!");
+    return;
+  }
 
-      let bg = "#fff", fg = "#000", border = "#374151";
-      if (isFinal) {
-        tile.classList.add("flip");
-        if (feedback[j] === "green") {
-          bg = "#15803d"; fg = "#fff"; border = bg;
-        } else if (feedback[j] === "orange") {
-          bg = "#ea580c"; fg = "#fff"; border = bg;
-        } else {
-          bg = "#6b7280"; fg = "#fff"; border = bg;
-        }
-
-        const keyBtn = Array.from(document.querySelectorAll(".keyboard-button")).find(b => b.textContent === c);
-        if (keyBtn && keyBtn.textContent.length === 1) {
-          const currentBg = keyBtn.style.background;
-          const priority = { "#15803d": 3, "#ea580c": 2, "#6b7280": 1 };
-          const newPriority = priority[bg] || 0;
-          const currentPriority = priority[currentBg] || 0;
-          if (newPriority > currentPriority) {
-            Object.assign(keyBtn.style, { background: bg, color: fg, border: `1px solid ${border}` });
-          }
-        }
-      }
-
-      tile.style.background = bg;
-      tile.style.color = fg;
-      tile.style.border = `1px solid ${border}`;
+  table.innerHTML = "";
+  if (snap.empty) {
+    table.innerHTML = `<tr><td colspan="3" class="px-2 py-1 border border-[#374151] text-center text-gray-400">Nog geen inskrywings nie</td></tr>`;
+  } else {
+    snap.forEach(doc => {
+      const d = doc.data();
+      console.log("Entry:", d);
+      const row = `<tr>
+        <td class="px-2 py-1 border border-[#374151]">${d.name}</td>
+        <td class="px-2 py-1 border border-[#374151]">${d.guesses}</td>
+        <td class="px-2 py-1 border border-[#374151]">${(d.timestamp?.toDate() || "").toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</td>
+      </tr>`;
+      table.innerHTML += row;
     });
-  });
+  }
 }
-
-
     function createGrid() {
       const grid = document.getElementById("grid");
       grid.innerHTML = "";
       for (let i = 0; i < MAX_GUESSES; i++) {
         const row = document.createElement("div");
-        row.className = "flex justify-center mb-1 whitespace-nowrap";
+        row.className = "flex justify-center mb-1";
         for (let j = 0; j < word.length; j++) {
           const tile = document.createElement("div");
           tile.className = "tile";
@@ -292,12 +297,12 @@ function update() {
     }
 
     function createKeyboard() {
-      const layout = [[..."QWERTYUIOP"], [..."ASDFGHJKL"], ["ENTER", ..."ZXCVBNM", "⌫"]];
+      const layout = [[..."QWERTYUIOP"], [..."ASDFGHJKL"], ["ENTER",..."ZXCVBNM","⌫"]];
       const kb = document.getElementById("keyboard");
       kb.innerHTML = "";
       layout.forEach(r => {
         const row = document.createElement("div");
-        row.className = "flex justify-center mb-1 whitespace-nowrap";
+        row.className = "flex justify-center mb-1";
         r.forEach(k => {
           const b = document.createElement("button");
           b.textContent = k === "⌫" ? "←" : k;
@@ -322,6 +327,66 @@ function update() {
         currentGuess += k;
       }
       update();
+    }
+    function update() {
+      const rows = document.querySelectorAll("#grid .flex");
+      rows.forEach((rowEl, i) => {
+        const guess = guesses[i] || "";
+        const isFinal = guess.length === word.length;
+
+        const tiles = [...rowEl.children];
+        const feedback = Array(word.length).fill("gray");
+        const usedTarget = Array(word.length).fill(false);
+        const letterCount = {};
+
+        for (const char of word) {
+          letterCount[char] = (letterCount[char] || 0) + 1;
+        }
+
+        for (let j = 0; j < word.length; j++) {
+          if (guess[j] === word[j]) {
+            feedback[j] = "green";
+            usedTarget[j] = true;
+            letterCount[guess[j]]--;
+          }
+        }
+
+        for (let j = 0; j < word.length; j++) {
+          if (feedback[j] !== "gray") continue;
+          const guessedChar = guess[j];
+          if (letterCount[guessedChar] > 0 && word.includes(guessedChar)) {
+            feedback[j] = (word.split(guessedChar).length > 1) ? "yellow" : "orange";
+            letterCount[guessedChar]--;
+          }
+        }
+
+        tiles.forEach((tile, j) => {
+          const c = guess[j] || (i === guesses.length ? currentGuess[j] || "" : "");
+          tile.textContent = c;
+          tile.classList.remove("flip");
+
+          let bg = "#fff", fg = "#000", border = "#374151";
+          if (isFinal) {
+            tile.classList.add("flip");
+            if (feedback[j] === "green") {
+              bg = "#15803d"; fg = "#fff"; border = bg;
+            } else if (feedback[j] === "orange") {
+              bg = "#ea580c"; fg = "#fff"; border = bg;
+            } else if (feedback[j] === "yellow") {
+              bg = "#facc15"; fg = "#000"; border = bg;
+            } else {
+              bg = "#6b7280"; fg = "#fff"; border = bg;
+            }
+
+            const keyBtn = Array.from(document.querySelectorAll(".keyboard-button")).find(b => b.textContent === c);
+            if (keyBtn) Object.assign(keyBtn.style, { background: bg, color: fg, border: `1px solid ${border}` });
+          }
+
+          tile.style.background = bg;
+          tile.style.color = fg;
+          tile.style.border = `1px solid ${border}`;
+        });
+      });
     }
 
     function checkGuess(g) {
@@ -352,50 +417,9 @@ function update() {
       }
     };
 
-    async function loadLeaderboard() {
-      const q = query(leaderboardRef, orderBy("guesses"), orderBy("timestamp"));
-      const snap = await getDocs(q);
-
-      const table = document.getElementById("leaderboard-body");
-      if (!table) return;
-
-      table.innerHTML = "";
-      if (snap.empty) {
-        table.innerHTML = `<tr><td colspan="3" class="px-2 py-1 border border-[#374151] text-center text-gray-400">Nog geen inskrywings nie</td></tr>`;
-      } else {
-        snap.forEach(doc => {
-          const d = doc.data();
-          const row = `<tr>
-            <td class="px-2 py-1 border border-[#374151]">${d.name}</td>
-            <td class="px-2 py-1 border border-[#374151]">${d.guesses}</td>
-            <td class="px-2 py-1 border border-[#374151]">${(d.timestamp?.toDate() || "").toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</td>
-          </tr>`;
-          table.innerHTML += row;
-        });
-      }
-    }
-
-    async function initGame() {
-      const snap = await getDoc(gameRef);
-      if (!snap.exists()) return alert("Geen speletjie gevind vir " + gameId);
-      const data = snap.data();
-      word = data.word.toUpperCase();
-      clue = data.clue;
-      date = data.date;
-      guesses = JSON.parse(localStorage.getItem(gameId) || "[]");
-      document.getElementById("dateDisplay").textContent = date;
-      document.getElementById("clueDisplay").textContent = clue;
-      createGrid();
-      createKeyboard();
-      update();
-      loadLeaderboard();
-    }
-
     document.addEventListener("keydown", e => {
       const k = e.key.toUpperCase();
-      if (/^[A-Z]$/.test(k) || k === "ENTER" || k === "BACKSPACE") {
-        handleKey(k === "BACKSPACE" ? "⌫" : k);
-      }
+      if (/^[A-Z]$/.test(k) || k === "ENTER" || k === "BACKSPACE") handleKey(k === "BACKSPACE" ? "⌫" : k);
     });
 
     initGame();
