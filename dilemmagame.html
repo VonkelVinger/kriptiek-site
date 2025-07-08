@@ -214,36 +214,29 @@ function update() {
     const solution = word.split("");
     const guessArray = guess.split("");
 
-    const matchedSolution = Array(word.length).fill(false);
-    const matchedGuess = Array(word.length).fill(false);
+    const solutionUsed = Array(word.length).fill(false);
+    const guessUsed = Array(word.length).fill(false);
 
-    // Pass 1: Green matches
+    // Pass 1: green
     for (let j = 0; j < word.length; j++) {
       if (guessArray[j] === solution[j]) {
         feedback[j] = "green";
-        matchedSolution[j] = true;
-        matchedGuess[j] = true;
+        solutionUsed[j] = true;
+        guessUsed[j] = true;
       }
     }
 
-    // Pass 2: Orange/yellow matches
+    // Pass 2: orange
     for (let j = 0; j < word.length; j++) {
-      if (matchedGuess[j]) continue;
-      const letter = guessArray[j];
-
-      let found = false;
+      if (guessUsed[j]) continue;
       for (let k = 0; k < word.length; k++) {
-        if (!matchedSolution[k] && solution[k] === letter) {
-          matchedSolution[k] = true;
-          matchedGuess[j] = true;
-          const totalInSolution = solution.filter(c => c === letter).length;
-          feedback[j] = totalInSolution > 1 ? "yellow" : "orange";
-          found = true;
+        if (!solutionUsed[k] && guessArray[j] === solution[k]) {
+          feedback[j] = "orange";
+          solutionUsed[k] = true;
+          guessUsed[j] = true;
           break;
         }
       }
-
-      // if no match found, feedback stays gray
     }
 
     // Render tiles
@@ -259,8 +252,6 @@ function update() {
           bg = "#15803d"; fg = "#fff"; border = bg;
         } else if (feedback[j] === "orange") {
           bg = "#ea580c"; fg = "#fff"; border = bg;
-        } else if (feedback[j] === "yellow") {
-          bg = "#facc15"; fg = "#000"; border = bg;
         } else {
           bg = "#6b7280"; fg = "#fff"; border = bg;
         }
@@ -268,7 +259,7 @@ function update() {
         const keyBtn = Array.from(document.querySelectorAll(".keyboard-button")).find(b => b.textContent === c);
         if (keyBtn && keyBtn.textContent.length === 1) {
           const currentBg = keyBtn.style.background;
-          const priority = { "#15803d": 3, "#facc15": 2.5, "#ea580c": 2, "#6b7280": 1 };
+          const priority = { "#15803d": 3, "#ea580c": 2, "#6b7280": 1 };
           const newPriority = priority[bg] || 0;
           const currentPriority = priority[currentBg] || 0;
           if (newPriority > currentPriority) {
@@ -283,6 +274,7 @@ function update() {
     });
   });
 }
+
 
     function createGrid() {
       const grid = document.getElementById("grid");
