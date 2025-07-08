@@ -343,42 +343,48 @@ function update() {
 
     if (isFinal) {
       // Step 1: Mark all correct positions as green
-      const solutionUsed = Array(word.length).fill(false);
       for (let j = 0; j < word.length; j++) {
         if (guessArray[j] === solutionArray[j]) {
           feedback[j] = "green";
+        }
+      }
+
+      // Step 2: For non-green positions, determine color based on solution letter frequency
+      const solutionUsed = Array(word.length).fill(false);
+      
+      // Mark green positions as used
+      for (let j = 0; j < word.length; j++) {
+        if (feedback[j] === "green") {
           solutionUsed[j] = true;
         }
       }
 
-      // Step 2: For non-green positions, check if letter exists elsewhere
+      // Process non-green positions
       for (let j = 0; j < word.length; j++) {
         if (feedback[j] !== "green") {
           const guessLetter = guessArray[j];
           
-          // Count how many times this letter appears in the guess
-          const guessCount = guessArray.filter(l => l === guessLetter).length;
-          
           // Count how many times this letter appears in the solution
           const solutionCount = solutionArray.filter(l => l === guessLetter).length;
           
-          // Check if this letter exists in the solution at all
-          const foundIndex = solutionArray.findIndex((l, idx) => l === guessLetter && !solutionUsed[idx]);
+          // Check if this letter exists in unused positions of the solution
+          const availablePositions = solutionArray
+            .map((l, idx) => ({ letter: l, index: idx }))
+            .filter(item => item.letter === guessLetter && !solutionUsed[item.index]);
           
-          if (foundIndex !== -1) {
+          if (availablePositions.length > 0) {
             // Letter exists in solution
-            if (guessCount > 1 && solutionCount >= 1) {
-              // Letter appears multiple times in guess
+            if (solutionCount > 1) {
+              // Letter appears multiple times in solution → Yellow
               feedback[j] = "yellow";
             } else {
-              // Letter appears once in guess or solution has multiple instances
+              // Letter appears once in solution → Orange
               feedback[j] = "orange";
             }
-            solutionUsed[foundIndex] = true;
-          } else {
-            // Letter doesn't exist in solution or all instances are used
-            feedback[j] = "gray";
+            // Mark one available position as used
+            solutionUsed[availablePositions[0].index] = true;
           }
+          // If no available positions, it stays gray
         }
       }
     }
