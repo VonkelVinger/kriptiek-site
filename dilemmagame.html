@@ -370,11 +370,17 @@
       const solutionArray = solution.split('');
       const guessArray = guess.split('');
       
+      // Debug logging
+      console.log('Solution:', solution, 'Length:', solution.length);
+      console.log('Guess:', guess, 'Length:', guess.length);
+      
       // Count frequency of each letter in solution
       const solutionFreq = {};
       solutionArray.forEach(letter => {
         solutionFreq[letter] = (solutionFreq[letter] || 0) + 1;
       });
+      
+      console.log('Solution frequency:', solutionFreq);
       
       // Create a copy for tracking available letters
       const availableLetters = {...solutionFreq};
@@ -384,33 +390,42 @@
         if (guessArray[i] === solutionArray[i]) {
           feedback[i] = 'green';
           availableLetters[guessArray[i]]--;
+          console.log(`Green at position ${i}: ${guessArray[i]}`);
         }
       }
+      
+      console.log('Available letters after greens:', availableLetters);
       
       // Second pass: Handle wrong positions
       for (let i = 0; i < guess.length; i++) {
         if (feedback[i] === 'gray') { // Only process non-green positions
           const letter = guessArray[i];
           
+          console.log(`Processing position ${i}, letter: ${letter}, available: ${availableLetters[letter]}`);
+          
           // Check if letter exists in solution and is still available
-          if (availableLetters[letter] > 0) {
+          if (availableLetters[letter] && availableLetters[letter] > 0) {
             // Letter exists in solution (after accounting for greens)
             const totalInSolution = solutionFreq[letter];
             
             if (totalInSolution > 1) {
               // Multiple occurrences in solution → Yellow
               feedback[i] = 'yellow';
+              console.log(`Yellow at position ${i}: ${letter}`);
             } else {
               // Single occurrence in solution → Orange
               feedback[i] = 'orange';
+              console.log(`Orange at position ${i}: ${letter}`);
             }
             
             availableLetters[letter]--;
+          } else {
+            console.log(`Gray at position ${i}: ${letter} (not available)`);
           }
-          // If availableLetters[letter] <= 0, it stays gray
         }
       }
       
+      console.log('Final feedback:', feedback);
       return feedback;
     }
 
