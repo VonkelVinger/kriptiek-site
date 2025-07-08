@@ -340,13 +340,13 @@ function update() {
     const solutionArray = word.split("");
     const feedback = Array(word.length).fill("gray");
 
-    // 1. Count letter frequencies in solution
+    // Count how many of each letter are in the solution
     const solutionLetterCount = {};
     for (let c of solutionArray) {
       solutionLetterCount[c] = (solutionLetterCount[c] || 0) + 1;
     }
 
-    // 2. First pass: assign green
+    // First pass: mark green
     for (let j = 0; j < word.length; j++) {
       if (guessArray[j] === solutionArray[j]) {
         feedback[j] = "green";
@@ -354,18 +354,19 @@ function update() {
       }
     }
 
-    // 3. Second pass: assign yellow or orange
+    // Second pass: mark yellow or orange based on remaining availability
     for (let j = 0; j < word.length; j++) {
-      if (feedback[j] !== "gray") continue;
-      const letter = guessArray[j];
-      if (solutionLetterCount[letter] > 0) {
-        const repeated = guessArray.filter(l => l === letter).length > 1;
-        feedback[j] = repeated ? "yellow" : "orange";
-        solutionLetterCount[letter]--;
+      if (feedback[j] === "gray") {
+        const letter = guessArray[j];
+        if (solutionLetterCount[letter] > 0) {
+          const isRepeatedInGuess = guessArray.filter(l => l === letter).length > 1;
+          feedback[j] = isRepeatedInGuess ? "yellow" : "orange";
+          solutionLetterCount[letter]--;
+        }
       }
     }
 
-    // 4. Render
+    // Apply colors to tiles and keyboard
     tiles.forEach((tile, j) => {
       const c = guessArray[j] || (i === guesses.length ? currentGuess[j] || "" : "");
       tile.textContent = c;
