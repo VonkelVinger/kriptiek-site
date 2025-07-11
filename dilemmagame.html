@@ -437,11 +437,12 @@ function update() {
     }
 
     window.copyResult = function () {
-      const txt = `Ek het vandag se DILEMMA 🧩 in *${guesses.length}* ${(guesses.length === 1 ? "raai" : "raaie")} reggekry. Speel by www.kriptiek.com`;
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(txt).then(() => alert("Jou telling is nou op jou Clipboard"));
-      }
-    };
+  const gameUrl = window.location.href;
+  const txt = `Ek het vandag se DILEMMA 🧩 in *${guesses.length}* ${(guesses.length === 1 ? "raai" : "raaie")} reggekry. Speel dit hier: ${gameUrl}`;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(txt).then(() => alert("Jou telling is nou op jou Clipboard"));
+  }
+};
 
     document.addEventListener("keydown", e => {
       const k = e.key.toUpperCase();
