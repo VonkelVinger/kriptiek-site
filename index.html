@@ -178,7 +178,13 @@
     } else {
       message.innerHTML = `Welkom terug! Oorweeg dit om 'n <a href="/subscription.html" class="underline text-green-700">Kriptikus</a> te word vir ekstra voordele.`;
       actionButton.href = `/dilemmagame.html?gameId=Game${today}`;
-      actionButton.textContent = "Speel vandag se DILEMMA";
+      actionButton.textContent = "Speel VANDAG SE DILEMMA";
+
+const olderBtn = document.createElement('a');
+      olderBtn.href = "/dilemma-argief.html";
+      olderBtn.textContent = "Speel OUER DILEMMAS";
+      olderBtn.className = 'bg-green-700 text-white px-4 py-2 rounded mt-2';
+      dilemmaButtons.appendChild(olderBtn);
 
       const logoutBtn = document.createElement('button');
       logoutBtn.textContent = "MELD AF";
