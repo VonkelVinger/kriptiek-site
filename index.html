@@ -181,10 +181,16 @@
       actionButton.textContent = "Speel VANDAG SE DILEMMA";
 
 const olderBtn = document.createElement('a');
-      olderBtn.href = "/dilemma-argief.html";
-      olderBtn.textContent = "Speel OUER DILEMMAS";
-      olderBtn.className = 'bg-green-700 text-white px-4 py-2 rounded mt-2';
-      dilemmaButtons.appendChild(olderBtn);
+olderBtn.href = "/dilemma-argief.html";
+olderBtn.textContent = "Speel OUER DILEMMAS";
+olderBtn.className = 'bg-green-700 text-white px-4 py-2 rounded transition transform hover:scale-105 duration-300';
+actionButton.className += ' transition transform hover:scale-105 duration-300';
+
+const buttonGroup = document.createElement('div');
+buttonGroup.className = 'flex flex-col sm:flex-row justify-center gap-4';
+buttonGroup.appendChild(actionButton);
+buttonGroup.appendChild(olderBtn);
+dilemmaButtons.appendChild(buttonGroup);
 
       const logoutBtn = document.createElement('button');
       logoutBtn.textContent = "MELD AF";
