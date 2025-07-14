@@ -73,13 +73,22 @@
       padding: 1rem;
       text-align: center;
       font-size: 0.875rem;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      z-index: 1000;
+      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
     }
     .cookie-banner button {
       background-color: #92400e;
       color: white;
-      margin-left: 1rem;
+      margin: 0.5rem 0.5rem 0 0.5rem;
       padding: 0.5rem 1rem;
       border-radius: 0.375rem;
+    }
+    .cookie-banner a {
+      color: #92400e;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -130,9 +139,12 @@
   <a href="/terms.html" class="underline">Kontak ons</a>
 </footer>
 
-<div id="cookie-banner" class="cookie-banner">
-  Mag ons koekies ("Cookies") gebruik om die webwerf beter te laat werk?
-  <button onclick="document.getElementById('cookie-banner').style.display='none'">Ja, ek aanvaar dit so en gee hiermee my toestemming</button>
+<div id="cookie-banner" class="cookie-banner" style="display:none;">
+  Ons gebruik koekies om jou ervaring te verbeter en die webwerf beter te laat werk.
+  Lees meer in ons <a href="/privacy.html" class="underline">Privaatheidsbeleid</a>.
+  <br class="my-1" />
+  <button onclick="acceptCookies()">Ja, ek aanvaar</button>
+  <button onclick="declineCookies()">Nee dankie</button>
 </div>
 
 <script>
@@ -162,11 +174,26 @@
     if (latestLink) {
       latestLink.href = `/dilemmagame.html?gameId=Game${today}`;
     }
+
+    const consent = localStorage.getItem('cookieConsent');
+    if (!consent) {
+      document.getElementById('cookie-banner').style.display = 'block';
+    }
   });
 
   function testTier(tier) {
     localStorage.setItem('userTier', tier);
     location.reload();
+  }
+
+  function acceptCookies() {
+    localStorage.setItem('cookieConsent', 'accepted');
+    document.getElementById('cookie-banner').style.display = 'none';
+  }
+
+  function declineCookies() {
+    localStorage.setItem('cookieConsent', 'declined');
+    document.getElementById('cookie-banner').style.display = 'none';
   }
 </script>
 
