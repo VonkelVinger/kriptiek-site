@@ -430,9 +430,15 @@ for (let j = 0; j < word.length; j++) {
 
     window.copyResult = function () {
   const gameUrl = window.location.href;
-  const txt = `Ek het vandag se DILEMMA 🧩 in *${guesses.length}* ${(guesses.length === 1 ? "raai" : "raaie")} reggekry. Speel dit hier: ${gameUrl}`;
+  const lastGuess = guesses[guesses.length - 1];
+  const solved = lastGuess === word;
+  const txt = solved
+    ? `Ek het vandag se DILEMMA 🧩 in *${guesses.length}* ${(guesses.length === 1 ? "raai" : "raaie")} reggekry. Speel dit hier: ${gameUrl}`
+    : `Ek kon nie vandag se DILEMMA 🧩 oplos nie. Kan jy beter doen? Speel hier: ${gameUrl}`;
   if (navigator.clipboard) {
-    navigator.clipboard.writeText(txt).then(() => alert("Jou telling is nou op jou Clipboard"));
+    navigator.clipboard.writeText(txt).then(() =>
+      alert("Jou telling is nou op jou knipbord")
+    );
   }
 };
 
