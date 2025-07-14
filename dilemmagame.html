@@ -409,7 +409,7 @@ for (let j = 0; j < word.length; j++) {
 
     function checkGuess(g) {
       if (g === word) {
-        const name = prompt("KORREK! Tik jou naam vir die leaderboard:");
+        const name = prompt("KORREK! Tik jou naam soos jy dit op die lys van beste spelers wil sien:");
         if (name) {
           addDoc(leaderboardRef, {
             name,
