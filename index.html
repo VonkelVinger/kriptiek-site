@@ -176,12 +176,12 @@
       actionButton.href = "/register.html";
       actionButton.textContent = "Registreer nou";
     } else {
-      message.innerHTML = `Welkom terug! Dink daaraan om 'n <a href="/subscription.html" class="underline text-green-700">Kriptikus</a> te word vir ekstra voordele.`;
+      message.innerHTML = `Welkom terug! Oorweeg dit om 'n <a href="/subscription.html" class="underline text-green-700">Kriptikus</a> te word vir ekstra voordele.`;
       actionButton.href = `/dilemmagame.html?gameId=Game${today}`;
       actionButton.textContent = "Speel vandag se DILEMMA";
 
       const logoutBtn = document.createElement('button');
-      logoutBtn.textContent = "Log uit";
+      logoutBtn.textContent = "Meld af";
       logoutBtn.className = "mt-4 underline text-sm text-gray-500 hover:text-black";
       logoutBtn.onclick = () => {
         localStorage.removeItem('userRegistered');
