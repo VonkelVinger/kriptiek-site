@@ -112,23 +112,9 @@
 
 <main class="flex-grow p-6 text-center">
   <p class="text-gray-600 mb-4">WELKOM BY KRIPTIEK!</p>
-  <div class="flex flex-wrap justify-center gap-4 mb-8">
-    <a href="/register.html" class="bg-blue-600 text-white px-4 py-2 rounded">Registreer as 'n gratis gebruiker</a>
-    <a href="/subsbenefits.html" class="bg-blue-600 text-white px-4 py-2 rounded">Die voordele van betaal vir 'n opsionele subskripsie</a>
-    <a href="/subscription.html" class="bg-blue-600 text-white px-4 py-2 rounded">Word 'n Kriptikus deur 'n subskripsie te koop</a>
-  </div>
-  <div id="dilemma-buttons" class="flex flex-col items-center gap-4 mt-4">
-    <a id="latest-dilemma-link" class="bg-green-700 text-white px-4 py-2 rounded">NUUTSTE DILEMMA</a>
-    <a href="/dilemma-argief.html" class="bg-green-700 text-white px-4 py-2 rounded">OUER DILEMMAS</a>
-  </div>
+  <div class="flex flex-wrap justify-center gap-4 mb-8"></div>
+  <div id="dilemma-buttons" class="flex flex-col items-center gap-4 mt-4"></div>
 </main>
-
-<div class="test-buttons mt-6 flex flex-wrap justify-center gap-3">
-  <button onclick="testTier('eerste')" class="bg-blue-600 text-white px-3 py-1 rounded">Toets: Eerste besoek</button>
-  <button onclick="testTier('terug')" class="bg-blue-600 text-white px-3 py-1 rounded">Toets: Welkom terug</button>
-  <button onclick="testTier('gratis')" class="bg-blue-600 text-white px-3 py-1 rounded">Toets: Gratis gebruiker</button>
-  <button onclick="testTier('kriptikus')" class="bg-blue-600 text-white px-3 py-1 rounded">Toets: KRIPTIKUS</button>
-</div>
 
 <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
   &copy; 2025 Kriptiek. Alle regte voorbehou. |
@@ -170,21 +156,44 @@
     window.addEventListener('resize', generateBackgroundGrid);
 
     const today = new Date().toISOString().split('T')[0];
-    const latestLink = document.getElementById("latest-dilemma-link");
-    if (latestLink) {
-      latestLink.href = `/dilemmagame.html?gameId=Game${today}`;
+    const isRegistered = localStorage.getItem('userRegistered') === 'true';
+    const main = document.querySelector('main');
+    const buttonContainer = document.querySelector('.flex.flex-wrap.justify-center.gap-4.mb-8');
+    const dilemmaButtons = document.getElementById('dilemma-buttons');
+
+    buttonContainer.innerHTML = '';
+    dilemmaButtons.innerHTML = '';
+
+    const message = document.createElement('div');
+    message.className = 'text-center text-red-700 font-semibold mb-6';
+    main.insertBefore(message, buttonContainer);
+
+    const actionButton = document.createElement('a');
+    actionButton.className = 'bg-blue-600 text-white px-4 py-2 rounded';
+
+    if (!isRegistered) {
+      message.innerHTML = `Jy moet <a href="/register.html" class="underline text-blue-600">registreer</a> voordat jy speletjies kan speel. Dis vinnig en gratis.`;
+      actionButton.href = "/register.html";
+      actionButton.textContent = "Registreer nou";
+    } else {
+      message.innerHTML = `Welkom terug! Dink daaraan om 'n <a href="/subscription.html" class="underline text-green-700">Kriptikus</a> te word vir ekstra voordele.`;
+      actionButton.href = `/dilemmagame.html?gameId=Game${today}`;
+      actionButton.textContent = "Speel vandag se DILEMMA";
+
+      const logoutBtn = document.createElement('button');
+      logoutBtn.textContent = "Log uit";
+      logoutBtn.className = "mt-4 underline text-sm text-gray-500 hover:text-black";
+      logoutBtn.onclick = () => {
+        localStorage.removeItem('userRegistered');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('userName');
+        location.reload();
+      };
+      main.appendChild(logoutBtn);
     }
 
-    const consent = localStorage.getItem('cookieConsent');
-    if (!consent) {
-      document.getElementById('cookie-banner').style.display = 'block';
-    }
+    buttonContainer.appendChild(actionButton);
   });
-
-  function testTier(tier) {
-    localStorage.setItem('userTier', tier);
-    location.reload();
-  }
 
   function acceptCookies() {
     localStorage.setItem('cookieConsent', 'accepted');
