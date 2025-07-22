@@ -24,20 +24,33 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       const form = document.getElementById('registerForm');
+      const errorBox = document.getElementById('errorBox');
+
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = form.name.value.trim();
         const email = form.email.value.trim();
 
-        if (!email) return alert('E-posadres is verpligtend.');
+        // Basic validation
+        if (!email) {
+          errorBox.textContent = 'E-posadres is verpligtend.';
+          return;
+        }
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(email)) {
+          errorBox.textContent = 'Voer asseblief ’n geldige e-posadres in.';
+          return;
+        }
+        errorBox.textContent = '';
 
+        // Store in localStorage
         localStorage.setItem('userRegistered', 'true');
-        localStorage.setItem('userName', name);
+        localStorage.setItem('userName', name || 'Speler');
         localStorage.setItem('userEmail', email);
 
         try {
           await addDoc(collection(db, 'registrations'), {
-            name,
+            name: name || 'Speler',
             email,
             timestamp: serverTimestamp()
           });
@@ -45,17 +58,14 @@
           console.error("Firestore add failed:", error);
         }
 
+        // Redirect after success
         alert('Welkom by Kriptiek! Jy is nou geregistreer.');
-        window.location.href = '/index.html';
+        window.location.href = '/index.html?registered=true';
       });
     });
   </script>
   <style>
-    body {
-      font-family: 'Montserrat', sans-serif;
-      background-color: #f3f4f6;
-      color: #1f2937;
-    }
+    body { font-family: 'Montserrat', sans-serif; background-color: #f3f4f6; color: #1f2937; }
     .letter-box {
       width: 50px; height: 50px;
       display: flex; justify-content: center; align-items: center;
@@ -65,11 +75,7 @@
       text-transform: uppercase;
     }
     .flipped-k { transform: scaleX(-1); }
-    .crossword-grid {
-      display: grid;
-      grid-template-columns: repeat(8, minmax(40px, 1fr));
-      gap: 4px;
-    }
+    .crossword-grid { display: grid; grid-template-columns: repeat(8, minmax(40px, 1fr)); gap: 4px; }
     .background-crossword {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       display: grid; grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
@@ -113,7 +119,8 @@
         <span class="text-gray-700">E-posadres *</span>
         <input type="email" name="email" required class="mt-1 block w-full border border-gray-300 rounded p-2">
       </label>
-      <button type="submit" class="bg-green-700 text-white px-4 py-2 rounded">Registreer</button>
+      <div id="errorBox" class="text-red-600 text-sm"></div>
+      <button type="submit" class="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800 transition">Registreer</button>
     </form>
   </main>
 
