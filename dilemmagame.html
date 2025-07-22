@@ -139,7 +139,11 @@
   const gameGrid = document.getElementById("game-grid");
   const keyboard = document.getElementById("keyboard");
   const playerNameElem = document.getElementById("playerName");
-  playerNameElem.textContent = window.currentUser?.name || "Speler";
+const storedName = localStorage.getItem("userName");
+playerNameElem.textContent = storedName && storedName.trim() !== "" 
+  ? storedName 
+  : "Gebruiker";
+
 
   // --- Generate Game Grid ---
   let currentRow = 0;
