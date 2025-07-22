@@ -140,12 +140,19 @@
     <!-- Rules Section -->
     <div class="rules">
       <h2>Hoe om te speel</h2>
-      <p>Jy het 6 raaiskote om die geheime woord van 5 letters te raai.</p>
+      <p>
+        Jy het 6 raaiskote om die geheime woord van 5 letters te raai. 
+        Gebruik die leidraad hierbo om jou eerste raaiskoot te maak. 
+        Na elke raaiskoot wys die kleure van die blokkies hoe naby jy is:
+      </p>
       <ul class="list-disc list-inside mt-2">
         <li><span class="font-bold">Groen:</span> Die letter is reg en op die regte plek.</li>
         <li><span class="font-bold">Geel:</span> Die letter is in die woord, maar op die verkeerde plek.</li>
         <li><span class="font-bold">Grys:</span> Die letter is nie in die woord nie.</li>
       </ul>
+      <p class="mt-2">
+        Probeer om die woord in so min moontlike raaiskote te vind en kry jou naam op die leierbord!
+      </p>
     </div>
 
     <!-- Leaderboard Section -->
@@ -154,12 +161,12 @@
       <ul id="leaderboardList" class="text-gray-700 text-left"></ul>
     </div>
   </main>
-
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
     &copy; 2025 Kriptiek. Alle regte voorbehou. |
     <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
     <a href="/terms.html" class="underline">Voorwaardes</a> |
     <a href="/faq.html" class="underline">Gereelde vrae</a> |
+    <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
 <script type="module">
@@ -184,7 +191,6 @@
   const storedName = localStorage.getItem('userName') || 'Speler';
   const storedEmail = localStorage.getItem('userEmail') || '';
   window.currentUser = { name: storedName, email: storedEmail };
-
   document.getElementById("playerName").textContent = storedName;
 
   // --- GAME CONFIG ---
