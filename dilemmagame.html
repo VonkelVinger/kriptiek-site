@@ -108,7 +108,7 @@
       margin-bottom: 8px;
     }
 
-    /* Responsive adjustments for small screens */
+    /* Responsive adjustments */
     @media (max-width: 480px) {
       .letter-tile {
         width: 40px;
@@ -124,7 +124,6 @@
         flex-wrap: wrap;
       }
     }
-
     @media (max-width: 360px) {
       .letter-tile {
         width: 35px;
@@ -155,51 +154,42 @@
       Welkom, <span id="playerName" class="font-semibold text-green-700"></span>!
     </p>
   </header>
+
   <main class="flex-grow game-container">
-    <!-- Clue Section -->
     <div id="clue" class="text-center text-lg mb-4 text-gray-700 font-semibold">
       Laai die leidraad...
     </div>
 
-    <!-- Game Grid -->
     <div id="game-grid" class="mb-6"></div>
-
-    <!-- On-screen Keyboard -->
     <div id="keyboard" class="mb-6"></div>
 
-    <!-- Message & Share -->
-    <div id="gameMessage" class="mt-4 text-center text-lg font-bold text-green-700"></div>
-    <div id="shareContainer" class="mt-2 text-center" style="display:none;">
-      <button id="shareBtn" class="bg-blue-600 text-white px-4 py-2 rounded">DEEL</button>
-    </div>
-
-    <!-- Rules Section -->
     <div class="rules">
-      <h2>HOE OM TE SPEEL</h2>
-      <p>
-        Jy het ses kanse om die woord te raai.
-        Gebruik die leidraad bo om jou eerste raaiskoot te maak.
-        Jy mag vir elke probeerslag enige letters in enige volgorde kies, maar elke raaiskoot moet dieselfde aantal letters hê as die woord waarna jy soek. Dit hoef nie ook 'n woord te vorm nie.
-        Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER.
-        Ná elke raaiskoot wys die kleure van die blokkies hoe naby jy is:
-      </p>
+      <h2>Hoe om te speel</h2>
       <ul class="list-disc list-inside mt-2">
         <li><span class="font-bold text-green-600">GROEN:</span> Die letter is in die woord én op die regte plek.</li>
-<li><span class="font-bold text-yellow-500">GEEL:</span> Die letter is in die woord, maar op die verkeerde plek.</li>
-<li><span class="font-bold text-gray-500">GRYS:</span> Die letter is nie in die woord nie.</li>
+        <li><span class="font-bold text-yellow-500">GEEL:</span> Die letter is in die woord, maar op die verkeerde plek.</li>
+        <li><span class="font-bold text-gray-500">GRYS:</span> Die letter is nie in die woord nie.</li>
+      </ul>
+      <p class="mt-2">
+        <span class="font-bold">WENK:</span> Op kleiner skerms sal jy soms lekkerder speel in landskapformaat ("Landscape Format" of "Auto-Rotate").
+      </p>
+    </div>
 
-    </ul>
-<p class="mt-2">
-  <span class="font-bold">WENK:</span> Op kleiner skerms sal jy soms lekkerder speel in landskapformaat ("Landscape Format" of "Auto-Rotate").
-</p>
-</div>
-
-    <!-- Leaderboard Section -->
     <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
       <h2 class="text-xl font-bold mb-2">Vandag se beste spelers</h2>
       <ul id="leaderboardList" class="text-gray-700 text-left"></ul>
     </div>
   </main>
+
+  <!-- Result Modal -->
+  <div id="resultModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white p-6 rounded shadow-lg text-center max-w-sm w-full">
+      <p id="resultMessage" class="mb-4 font-bold text-lg text-green-700"></p>
+      <button id="modalShareBtn" class="bg-blue-600 text-white px-4 py-2 rounded mb-2">DEEL</button>
+      <br>
+      <button id="closeModalBtn" class="bg-gray-600 text-white px-4 py-2 rounded">SLUIT</button>
+    </div>
+  </div>
 
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
     &copy; 2025 Kriptiek. Alle regte voorbehou. |
@@ -231,8 +221,7 @@
 
   // --- USER SETUP ---
   const storedName = localStorage.getItem('userName') || 'Speler';
-  const storedEmail = localStorage.getItem('userEmail') || '';
-  window.currentUser = { name: storedName, email: storedEmail };
+  window.currentUser = { name: storedName };
   document.getElementById("playerName").textContent = storedName;
 
   // --- GAME CONFIG ---
@@ -244,9 +233,13 @@
   const keyboard = document.getElementById("keyboard");
   const leaderboardList = document.getElementById('leaderboardList');
   const clueElem = document.getElementById('clue');
-  const gameMessage = document.getElementById('gameMessage');
-  const shareContainer = document.getElementById('shareContainer');
-  const shareBtn = document.getElementById('shareBtn');
+
+  const resultModal = document.getElementById('resultModal');
+  const resultMessage = document.getElementById('resultMessage');
+  const shareBtn = document.getElementById('modalShareBtn');
+  const closeBtn = document.getElementById('closeModalBtn');
+
+  closeBtn.onclick = () => resultModal.classList.add('hidden');
 
   let targetWord = "";
   let currentRow = 0;
@@ -262,7 +255,6 @@
     try {
       const gameDocRef = doc(db, 'games', gameId);
       const gameDocSnap = await getDoc(gameDocRef);
-
       if (gameDocSnap.exists()) {
         const data = gameDocSnap.data();
         targetWord = (data.word || "XXXXX").toUpperCase();
@@ -289,6 +281,8 @@
         tile.className = "letter-tile";
         tile.style.width = gridCols > 6 ? "40px" : "50px";
         tile.style.height = gridCols > 6 ? "40px" : "50px";
+        tile.dataset.row = r;
+        tile.dataset.col = c;
         rowDiv.appendChild(tile);
         row.push(tile);
       }
@@ -303,7 +297,6 @@
     keyLayout.forEach(row => {
       const rowDiv = document.createElement("div");
       rowDiv.className = "keyboard-row";
-      rowDiv.style.flexWrap = "wrap";
       [...row].forEach(letter => {
         const key = document.createElement("button");
         key.className = "key";
@@ -352,10 +345,6 @@
   }
 
   function checkGuess(guess) {
-    if (!targetWord || targetWord === "XXXXX") {
-      alert("Geen aktiewe spel om te speel nie.");
-      return;
-    }
     const target = targetWord.toUpperCase();
     const guessLetters = guess.split("");
 
@@ -383,54 +372,39 @@
   }
 
   async function loadLeaderboard() {
-  leaderboardList.innerHTML = '';
-  try {
-    const q = query(
-      collection(db, 'games', gameId, 'leaderboard'),
-      orderBy('score', 'asc'),
-      limit(10)
-    );
-    const querySnapshot = await getDocs(q);
-
-    if (querySnapshot.empty) {
-      const li = document.createElement('li');
-      li.textContent = "Nog geen tellings vir vandag nie.";
-      leaderboardList.appendChild(li);
-    } else {
-      querySnapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const entry = document.createElement('li');
-        entry.className = "leaderboard-entry";
-
-        let formattedTime = "";
-        if (data.timestamp && data.timestamp.toDate) {
-          const dateObj = data.timestamp.toDate();
-          formattedTime = dateObj.toLocaleTimeString("af-ZA", {
-            hour: '2-digit',
-            minute: '2-digit'
-          });
-        }
-
-        if (data.name === "Jou naam kan heel bo wees!") {
-          entry.textContent = data.name;
-        } else {
-          entry.innerHTML = `<strong>${data.name}</strong>: ${data.score} ${data.score === 1 ? 'raaiskoot' : 'raaiskote'}${formattedTime ? ', aangeteken om ' + formattedTime : ''}`;
-        }
-
-        leaderboardList.appendChild(entry);
-      });
+    leaderboardList.innerHTML = '';
+    try {
+      const q = query(collection(db, 'games', gameId, 'leaderboard'), orderBy('score', 'asc'), limit(10));
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) {
+        leaderboardList.innerHTML = "<li>Nog geen tellings vir vandag nie.</li>";
+      } else {
+        querySnapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          const li = document.createElement('li');
+          li.className = "leaderboard-entry";
+          let formattedTime = "";
+          if (data.timestamp && data.timestamp.toDate) {
+            formattedTime = data.timestamp.toDate().toLocaleTimeString("af-ZA", { hour: '2-digit', minute: '2-digit' });
+          }
+          if (data.name === "Jou naam kan heel bo wees!") {
+            li.textContent = data.name;
+          } else {
+            li.innerHTML = `<strong>${data.name}</strong>: ${data.score} ${data.score === 1 ? 'raaiskoot' : 'raaiskote'}${formattedTime ? ', aangeteken om ' + formattedTime : ''}`;
+          }
+          leaderboardList.appendChild(li);
+        });
+      }
+    } catch (err) {
+      console.error('Kon nie leaderboard laai nie:', err);
     }
-  } catch (err) {
-    console.error('Kon nie leaderboard laai nie:', err);
   }
-}
 
   async function submitScore(score) {
     if (!window.currentUser) return;
     try {
       await addDoc(collection(db, 'games', gameId, 'leaderboard'), {
         name: window.currentUser.name,
-        email: window.currentUser.email,
         score,
         timestamp: serverTimestamp()
       });
@@ -445,28 +419,27 @@
       await navigator.clipboard.writeText(text);
       alert("Jou resultate is na die knipbord gekopieer!");
     } catch (err) {
-      console.error("Clipboard error:", err);
-      alert("Kon nie kopieer nie. Probeer handmatig.");
+      alert("Kon nie kopieer nie.");
     }
   }
 
   function gameCompleted(attempts) {
     const word = attempts === 1 ? "raaiskoot" : "raaiskote";
-    const message = `Ek het ${formattedDate} se 🧩 DILEMMA in ${attempts} ${word} opgelos. Speel by: ${gameUrl}`;
-    gameMessage.textContent = `Baie geluk, ${window.currentUser.name}! Jy het die woord in ${attempts} ${word} geraai!`;
-    shareContainer.style.display = 'block';
+    const message = `Ek het ${formattedDate} se DILEMMA in ${attempts} ${word} opgelos. Speel by: ${gameUrl}`;
+    resultMessage.textContent = `Baie geluk, ${window.currentUser.name}! Jy het die woord in ${attempts} ${word} geraai!`;
     shareBtn.onclick = () => copyToClipboard(message);
+    resultModal.classList.remove("hidden");
     submitScore(attempts);
   }
 
   function gameFailed() {
-    const message = `Ek kon nie ${formattedDate} se 🧩 DILEMMA oplos nie. Speel by: ${gameUrl}`;
-    gameMessage.textContent = `Jammer, ${window.currentUser.name}! Die woord was ${targetWord}.`;
-    shareContainer.style.display = 'block';
+    const message = `Ek kon nie ${formattedDate} se DILEMMA oplos nie. Speel by: ${gameUrl}`;
+    resultMessage.textContent = `Jammer, ${window.currentUser.name}! Die woord was ${targetWord}.`;
     shareBtn.onclick = () => copyToClipboard(message);
+    resultModal.classList.remove("hidden");
   }
 
-  document.addEventListener("keydown", (e) => {
+  document.addEventListener("keydown", e => {
     if (e.key === "Enter") handleEnter();
     else if (e.key === "Backspace") handleBackspace();
     else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
