@@ -269,25 +269,35 @@ playerNameElem.textContent = storedName && storedName.trim() !== ""
     else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
   });
   // --- Leaderboard ---
+  // --- Leaderboard ---
   const leaderboardList = document.getElementById('leaderboardList');
-  const gameId = new Date().toISOString().split('T')[0]; // Example: "2025-07-22"
+  const gameId = new Date().toISOString().split('T')[0]; // e.g., "2025-07-22"
 
   async function loadLeaderboard() {
     leaderboardList.innerHTML = '';
     try {
+      console.log('Loading leaderboard for gameId:', gameId);
       const q = query(
         collection(db, 'leaderboards', gameId, 'scores'),
         orderBy('score', 'asc'),
         limit(10)
       );
       const querySnapshot = await getDocs(q);
-      querySnapshot.forEach((doc) => {
-        const entry = document.createElement('li');
-        entry.className = "leaderboard-entry";
-        const data = doc.data();
-        entry.textContent = `${data.name}: ${data.score} pogings`;
-        leaderboardList.appendChild(entry);
-      });
+      if (querySnapshot.empty) {
+        console.log('No leaderboard entries found for', gameId);
+        const li = document.createElement('li');
+        li.textContent = "Nog geen tellings vir vandag nie.";
+        leaderboardList.appendChild(li);
+      } else {
+        querySnapshot.forEach((doc) => {
+          console.log('Leaderboard entry:', doc.data());
+          const entry = document.createElement('li');
+          entry.className = "leaderboard-entry";
+          const data = doc.data();
+          entry.textContent = `${data.name}: ${data.score} pogings`;
+          leaderboardList.appendChild(entry);
+        });
+      }
     } catch (err) {
       console.error('Kon nie leaderboard laai nie:', err);
     }
@@ -297,13 +307,18 @@ playerNameElem.textContent = storedName && storedName.trim() !== ""
   async function submitScore(score) {
     if (!window.currentUser) return;
     try {
+      console.log('Submitting score:', {
+        name: window.currentUser.name,
+        email: window.currentUser.email,
+        score
+      });
       await addDoc(collection(db, 'leaderboards', gameId, 'scores'), {
         name: window.currentUser.name,
         email: window.currentUser.email,
         score,
         timestamp: serverTimestamp()
       });
-      console.log('Telling gestuur vir', window.currentUser.name);
+      console.log('Telling suksesvol gestuur vir', window.currentUser.name);
       loadLeaderboard();
     } catch (err) {
       console.error('Telling stuur het misluk:', err);
@@ -312,12 +327,13 @@ playerNameElem.textContent = storedName && storedName.trim() !== ""
 
   // --- When Game is Completed ---
   function gameCompleted(attempts) {
-    alert(`Baie geluk, ${window.currentUser.name}! Jy het die woord in ${attempts} pogings gerraad!`);
+    alert(`Baie geluk, ${window.currentUser.name}! Jy het die woord in ${attempts} pogings geraai!`);
     submitScore(attempts);
   }
 
   // Load leaderboard on page load
   document.addEventListener('DOMContentLoaded', loadLeaderboard);
+
 </script>
 </body>
 </html>
