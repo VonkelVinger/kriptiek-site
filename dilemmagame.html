@@ -429,37 +429,31 @@
     }
   }
 
+  // --- Restored Share Logic ---
+  function copyToClipboard(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textArea);
+    alert("Jou resultate is na die knipbord gekopieer!");
+  }
+
   function gameCompleted(attempts) {
     const word = attempts === 1 ? "raaiskoot" : "raaiskote";
-    const message = `Veels geluk, ${window.currentUser.name}! Jy het die woord in ${attempts} ${word} geraai.`;
-    gameMessage.textContent = message;
+    const message = `Ek het ${formattedDate} se DILEMMA in ${attempts} ${word} opgelos.`;
+    gameMessage.textContent = `Baie geluk, ${window.currentUser.name}! Jy het die woord in ${attempts} ${word} geraai!`;
     shareContainer.style.display = 'block';
-    shareBtn.textContent = "DEEL";
-    shareBtn.onclick = () => {
-      const shareText = `Ek het ${formattedDate} se DILEMMA in ${attempts} ${word} opgelos. Kan jy beter doen?`;
-      shareResult(shareText);
-    };
+    shareBtn.onclick = () => copyToClipboard(message);
     submitScore(attempts);
   }
 
   function gameFailed() {
-    const message = `Jammer, ${window.currentUser.name}! Die woord was ${targetWord}.`;
-    gameMessage.textContent = message;
+    const message = `Ek kon nie ${formattedDate} se DILEMMA oplos nie. Kan jy beter doen?`;
+    gameMessage.textContent = `Jammer, ${window.currentUser.name}! Die woord was ${targetWord}.`;
     shareContainer.style.display = 'block';
-    shareBtn.textContent = "DEEL";
-    shareBtn.onclick = () => {
-      const shareText = `Ek kon nie ${formattedDate} se DILEMMA oplos nie. Kan jy beter doen?`;
-      shareResult(shareText);
-    };
-  }
-
-  function shareResult(shareText) {
-    if (navigator.share) {
-      navigator.share({ text: shareText });
-    } else {
-      navigator.clipboard.writeText(shareText);
-      alert("Jou resultate is na die knipbord gekopieer!");
-    }
+    shareBtn.onclick = () => copyToClipboard(message);
   }
 
   document.addEventListener("keydown", (e) => {
@@ -475,3 +469,4 @@
 </script>
 </body>
 </html>
+
