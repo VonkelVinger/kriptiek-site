@@ -13,6 +13,31 @@
       background-color: #f9fafb;
       color: #1f2937;
     }
+    header {
+      background-color: #ffffff;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      padding: 1rem;
+      text-align: center;
+    }
+    .logo-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .logo-container .letter-box {
+      width: 40px;
+      height: 40px;
+      margin: 2px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #374151;
+      color: white;
+      font-size: 1.5rem;
+      font-weight: bold;
+      border-radius: 4px;
+    }
     .game-container {
       max-width: 640px;
       margin: 0 auto;
@@ -40,8 +65,8 @@
     .keyboard-row {
       display: flex;
       justify-content: center;
-      flex-wrap: nowrap;
       margin: 5px 0;
+      flex-wrap: nowrap;
     }
     .key {
       min-width: 30px;
@@ -85,16 +110,25 @@
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
-  <header class="bg-white shadow p-4 text-center">
-    <div class="text-3xl font-bold text-gray-700">DILEMMA</div>
+  <header>
+    <div class="logo-container">
+      <div class="letter-box">K</div>
+      <div class="letter-box">R</div>
+      <div class="letter-box">I</div>
+      <div class="letter-box">P</div>
+      <div class="letter-box">T</div>
+      <div class="letter-box">I</div>
+      <div class="letter-box">E</div>
+      <div class="letter-box">K</div>
+    </div>
     <p class="text-sm text-gray-500">
       Welkom, <span id="playerName" class="font-semibold text-green-700"></span>!
     </p>
   </header>
-
   <main class="flex-grow game-container">
     <!-- Clue Section -->
     <div id="clue" class="text-center text-lg mb-4 text-gray-700 font-semibold">
+      <!-- Die raaisel-leidraad vir vandag kom hier -->
       Vandag se raaiselwoord!
     </div>
 
@@ -103,15 +137,14 @@
 
     <!-- On-screen Keyboard -->
     <div id="keyboard" class="mb-6"></div>
-
     <!-- Rules Section -->
     <div class="rules">
       <h2>Hoe om te speel</h2>
-      <p>Jy het 6 raaiskote om die geheime woord van 5 letters te vind.</p>
+      <p>Jy het 6 raaiskote om die geheime woord van 5 letters te raai.</p>
       <ul class="list-disc list-inside mt-2">
-        <li><span class="font-bold">Groen</span>: Die letter is reg en op die regte plek.</li>
-        <li><span class="font-bold">Geel</span>: Die letter is in die woord, maar op die verkeerde plek.</li>
-        <li><span class="font-bold">Grys</span>: Die letter is nie in die woord nie.</li>
+        <li><span class="font-bold">Groen:</span> Die letter is reg en op die regte plek.</li>
+        <li><span class="font-bold">Geel:</span> Die letter is in die woord, maar op die verkeerde plek.</li>
+        <li><span class="font-bold">Grys:</span> Die letter is nie in die woord nie.</li>
       </ul>
     </div>
 
@@ -152,13 +185,12 @@
   const storedEmail = localStorage.getItem('userEmail') || '';
   window.currentUser = { name: storedName, email: storedEmail };
 
-  const playerNameElem = document.getElementById("playerName");
-  playerNameElem.textContent = storedName;
+  document.getElementById("playerName").textContent = storedName;
 
   // --- GAME CONFIG ---
   const gridRows = 6;
   const gridCols = 5;
-  const targetWord = "RAAIS"; // Temporary test word
+  const targetWord = "RAAIS"; // Placeholder test word
   const gameGrid = document.getElementById("game-grid");
   const keyboard = document.getElementById("keyboard");
   const leaderboardList = document.getElementById('leaderboardList');
@@ -168,7 +200,7 @@
   let currentCol = 0;
   let board = [];
 
-  // --- GRID CREATION ---
+  // --- CREATE GAME GRID ---
   function createGrid() {
     gameGrid.innerHTML = "";
     board = [];
@@ -189,7 +221,7 @@
     }
   }
 
-  // --- KEYBOARD CREATION ---
+  // --- CREATE ON-SCREEN KEYBOARD ---
   const keyLayout = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
   function createKeyboard() {
     keyboard.innerHTML = "";
@@ -269,6 +301,7 @@
       }
     }
   }
+
   document.addEventListener("keydown", (e) => {
     if (e.key === "Enter") handleEnter();
     else if (e.key === "Backspace") handleBackspace();
@@ -279,7 +312,6 @@
   async function loadLeaderboard() {
     leaderboardList.innerHTML = '';
     try {
-      console.log('Loading leaderboard for:', gameId);
       const q = query(
         collection(db, 'games', gameId, 'leaderboard'),
         orderBy('score', 'asc'),
@@ -292,7 +324,6 @@
         leaderboardList.appendChild(li);
       } else {
         querySnapshot.forEach((doc) => {
-          console.log('Leaderboard entry:', doc.data());
           const entry = document.createElement('li');
           entry.className = "leaderboard-entry";
           const data = doc.data();
@@ -308,18 +339,12 @@
   async function submitScore(score) {
     if (!window.currentUser) return;
     try {
-      console.log('Submitting score:', {
-        name: window.currentUser.name,
-        email: window.currentUser.email,
-        score
-      });
       await addDoc(collection(db, 'games', gameId, 'leaderboard'), {
         name: window.currentUser.name,
         email: window.currentUser.email,
         score,
         timestamp: serverTimestamp()
       });
-      console.log('Telling suksesvol gestuur vir', window.currentUser.name);
       loadLeaderboard();
     } catch (err) {
       console.error('Telling stuur het misluk:', err);
