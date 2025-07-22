@@ -206,6 +206,7 @@
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
   import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp }
@@ -222,6 +223,8 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+
+  const gameUrl = window.location.href;
 
   // --- USER SETUP ---
   const storedName = localStorage.getItem('userName') || 'Speler';
@@ -247,13 +250,11 @@
   let currentCol = 0;
   let board = [];
 
-  // Format game date for messages
   const gameDate = gameId.replace("Game", "");
   const formattedDate = new Date(gameDate).toLocaleDateString("af-ZA", {
     day: 'numeric', month: 'long', year: 'numeric'
   });
 
-  // --- LOAD GAME DATA ---
   async function loadGameData() {
     try {
       const gameDocRef = doc(db, 'games', gameId);
@@ -270,8 +271,6 @@
       }
     } catch (err) {
       console.error("Kon nie speldata laai nie:", err);
-      targetWord = "XXXXX";
-      clueElem.textContent = "Kon nie speldata laai nie.";
     }
   }
 
@@ -287,8 +286,6 @@
         tile.className = "letter-tile";
         tile.style.width = gridCols > 6 ? "40px" : "50px";
         tile.style.height = gridCols > 6 ? "40px" : "50px";
-        tile.dataset.row = r;
-        tile.dataset.col = c;
         rowDiv.appendChild(tile);
         row.push(tile);
       }
@@ -334,12 +331,14 @@
       currentCol++;
     }
   }
+
   function handleBackspace() {
     if (currentCol > 0) {
       currentCol--;
       board[currentRow][currentCol].textContent = "";
     }
   }
+
   function handleEnter() {
     if (currentCol < gridCols) {
       alert("Vul al die letters in!");
@@ -399,13 +398,11 @@
           const data = docSnap.data();
           const entry = document.createElement('li');
           entry.className = "leaderboard-entry";
-
           if (data.name === "Jou naam kan heel bo wees!") {
             entry.textContent = data.name;
           } else {
             entry.textContent = `${data.name}: ${data.score} ${data.score === 1 ? 'raaiskoot' : 'raaiskote'}`;
           }
-
           leaderboardList.appendChild(entry);
         });
       }
@@ -429,15 +426,14 @@
     }
   }
 
-  // --- Restored Share Logic ---
-  function copyToClipboard(text) {
-    const textArea = document.createElement("textarea");
-    textArea.value = text;
-    document.body.appendChild(textArea);
-    textArea.select();
-    document.execCommand("copy");
-    document.body.removeChild(textArea);
-    alert("Jou resultate is na die knipbord gekopieer!");
+  async function copyToClipboard(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      alert("Jou resultate is na die knipbord gekopieer!");
+    } catch (err) {
+      console.error("Clipboard error:", err);
+      alert("Kon nie kopieer nie. Probeer handmatig.");
+    }
   }
 
   function gameCompleted(attempts) {
@@ -469,4 +465,3 @@
 </script>
 </body>
 </html>
-
