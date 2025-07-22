@@ -107,6 +107,36 @@
       font-weight: bold;
       margin-bottom: 8px;
     }
+
+    /* Responsive adjustments for small screens */
+    @media (max-width: 480px) {
+      .letter-tile {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+      }
+      .key {
+        min-width: 28px;
+        padding: 8px 10px;
+        font-size: 0.9rem;
+      }
+      .keyboard-row {
+        flex-wrap: wrap;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .letter-tile {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+      }
+      .key {
+        min-width: 26px;
+        padding: 6px 8px;
+        font-size: 0.85rem;
+      }
+    }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -196,7 +226,7 @@
 
   // --- GAME CONFIG ---
   let gridRows = 6;
-  let gridCols = 5; // Will adjust based on word length
+  let gridCols = 5;
   const gameId = `Game${new Date().toISOString().split('T')[0]}`;
   const gameGrid = document.getElementById("game-grid");
   const keyboard = document.getElementById("keyboard");
@@ -217,7 +247,7 @@
       if (gameDocSnap.exists()) {
         const data = gameDocSnap.data();
         targetWord = (data.word || "XXXXX").toUpperCase();
-        gridCols = targetWord.length; // Adjust grid columns dynamically
+        gridCols = targetWord.length; // Adjust grid dynamically
         clueElem.textContent = data.clue || "Geen leidraad beskikbaar nie.";
       } else {
         targetWord = "XXXXX";
@@ -241,7 +271,7 @@
       for (let c = 0; c < gridCols; c++) {
         const tile = document.createElement("div");
         tile.className = "letter-tile";
-        tile.style.width = gridCols > 6 ? "40px" : "50px"; // Adjust width for longer words
+        tile.style.width = gridCols > 6 ? "40px" : "50px";
         tile.style.height = gridCols > 6 ? "40px" : "50px";
         tile.dataset.row = r;
         tile.dataset.col = c;
@@ -260,7 +290,7 @@
     keyLayout.forEach(row => {
       const rowDiv = document.createElement("div");
       rowDiv.className = "keyboard-row";
-      rowDiv.style.flexWrap = "wrap"; // Ensure keys wrap on small screens
+      rowDiv.style.flexWrap = "wrap";
       [...row].forEach(letter => {
         const key = document.createElement("button");
         key.className = "key";
@@ -339,6 +369,12 @@
     }
   }
 
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") handleEnter();
+    else if (e.key === "Backspace") handleBackspace();
+    else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
+  });
+
   // --- LEADERBOARD ---
   async function loadLeaderboard() {
     leaderboardList.innerHTML = '';
@@ -396,4 +432,3 @@
 </script>
 </body>
 </html>
-
