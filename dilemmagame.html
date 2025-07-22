@@ -453,7 +453,7 @@
 
   function gameFailed() {
     const message = `Ek kon nie ${formattedDate} se DILEMMA oplos nie. Speel by: ${gameUrl}`;
-    resultMessage.textContent = `Jammer, ${window.currentUser.name}! Die woord was ${targetWord}.`;
+    resultMessage.textContent = `Jammer, ${window.currentUser.name}! Vandag se oplossing is ${targetWord}.`;
     shareBtn.onclick = () => copyToClipboard(message);
     resultModal.classList.remove("hidden");
   }
