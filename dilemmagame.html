@@ -195,15 +195,15 @@
   document.getElementById("playerName").textContent = storedName;
 
   // --- GAME CONFIG ---
-  const gridRows = 6;
-  const gridCols = 5;
+  let gridRows = 6;
+  let gridCols = 5; // Will adjust based on word length
   const gameId = `Game${new Date().toISOString().split('T')[0]}`;
   const gameGrid = document.getElementById("game-grid");
   const keyboard = document.getElementById("keyboard");
   const leaderboardList = document.getElementById('leaderboardList');
   const clueElem = document.getElementById('clue');
 
-  let targetWord = ""; // Will be loaded from Firestore
+  let targetWord = "";
   let currentRow = 0;
   let currentCol = 0;
   let board = [];
@@ -217,6 +217,7 @@
       if (gameDocSnap.exists()) {
         const data = gameDocSnap.data();
         targetWord = (data.word || "XXXXX").toUpperCase();
+        gridCols = targetWord.length; // Adjust grid columns dynamically
         clueElem.textContent = data.clue || "Geen leidraad beskikbaar nie.";
       } else {
         targetWord = "XXXXX";
@@ -240,6 +241,8 @@
       for (let c = 0; c < gridCols; c++) {
         const tile = document.createElement("div");
         tile.className = "letter-tile";
+        tile.style.width = gridCols > 6 ? "40px" : "50px"; // Adjust width for longer words
+        tile.style.height = gridCols > 6 ? "40px" : "50px";
         tile.dataset.row = r;
         tile.dataset.col = c;
         rowDiv.appendChild(tile);
@@ -257,6 +260,7 @@
     keyLayout.forEach(row => {
       const rowDiv = document.createElement("div");
       rowDiv.className = "keyboard-row";
+      rowDiv.style.flexWrap = "wrap"; // Ensure keys wrap on small screens
       [...row].forEach(letter => {
         const key = document.createElement("button");
         key.className = "key";
@@ -296,7 +300,7 @@
   }
   function handleEnter() {
     if (currentCol < gridCols) {
-      alert("Vul al 5 letters in!");
+      alert("Vul al die letters in!");
       return;
     }
     const guess = board[currentRow].map(tile => tile.textContent).join("");
@@ -334,12 +338,6 @@
       }
     }
   }
-
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") handleEnter();
-    else if (e.key === "Backspace") handleBackspace();
-    else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
-  });
 
   // --- LEADERBOARD ---
   async function loadLeaderboard() {
@@ -398,3 +396,4 @@
 </script>
 </body>
 </html>
+
