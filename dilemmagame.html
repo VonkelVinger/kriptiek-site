@@ -201,7 +201,6 @@
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
 <script type="module">
-  // --- FIREBASE SETUP ---
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
   import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
@@ -247,7 +246,7 @@
       if (gameDocSnap.exists()) {
         const data = gameDocSnap.data();
         targetWord = (data.word || "XXXXX").toUpperCase();
-        gridCols = targetWord.length; // Adjust grid dynamically
+        gridCols = targetWord.length;
         clueElem.textContent = data.clue || "Geen leidraad beskikbaar nie.";
       } else {
         targetWord = "XXXXX";
@@ -260,7 +259,6 @@
     }
   }
 
-  // --- CREATE GAME GRID ---
   function createGrid() {
     gameGrid.innerHTML = "";
     board = [];
@@ -283,7 +281,6 @@
     }
   }
 
-  // --- CREATE ON-SCREEN KEYBOARD ---
   const keyLayout = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
   function createKeyboard() {
     keyboard.innerHTML = "";
@@ -315,7 +312,6 @@
     });
   }
 
-  // --- INPUT HANDLING ---
   function handleKey(letter) {
     if (currentCol < gridCols && currentRow < gridRows) {
       board[currentRow][currentCol].textContent = letter;
@@ -337,7 +333,6 @@
     checkGuess(guess);
   }
 
-  // --- CHECK GUESS ---
   function checkGuess(guess) {
     if (!targetWord || targetWord === "XXXXX") {
       alert("Geen aktiewe spel om te speel nie.");
@@ -369,13 +364,6 @@
     }
   }
 
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") handleEnter();
-    else if (e.key === "Backspace") handleBackspace();
-    else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
-  });
-
-  // --- LEADERBOARD ---
   async function loadLeaderboard() {
     leaderboardList.innerHTML = '';
     try {
@@ -385,16 +373,23 @@
         limit(10)
       );
       const querySnapshot = await getDocs(q);
+
       if (querySnapshot.empty) {
         const li = document.createElement('li');
         li.textContent = "Nog geen tellings vir vandag nie.";
         leaderboardList.appendChild(li);
       } else {
-        querySnapshot.forEach((doc) => {
+        querySnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
           const entry = document.createElement('li');
           entry.className = "leaderboard-entry";
-          const data = doc.data();
-          entry.textContent = `${data.name}: ${data.score} ${data.score === 1 ? 'raaiskoot' : 'raaiskote'}`;
+
+          if (data.name === "Jou naam kan heel bo wees!") {
+            entry.textContent = data.name;
+          } else {
+            entry.textContent = `${data.name}: ${data.score} ${data.score === 1 ? 'raaiskoot' : 'raaiskote'}`;
+          }
+
           leaderboardList.appendChild(entry);
         });
       }
@@ -424,8 +419,13 @@
     submitScore(attempts);
   }
 
-  // --- INITIALIZE ---
-  await loadGameData();   // Load target word and clue
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") handleEnter();
+    else if (e.key === "Backspace") handleBackspace();
+    else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
+  });
+
+  await loadGameData();
   createGrid();
   createKeyboard();
   loadLeaderboard();
