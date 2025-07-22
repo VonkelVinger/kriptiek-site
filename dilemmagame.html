@@ -167,6 +167,12 @@
     <!-- On-screen Keyboard -->
     <div id="keyboard" class="mb-6"></div>
 
+    <!-- Message & Share -->
+    <div id="gameMessage" class="mt-4 text-center text-lg font-bold text-green-700"></div>
+    <div id="shareContainer" class="mt-2 text-center" style="display:none;">
+      <button id="shareBtn" class="bg-blue-600 text-white px-4 py-2 rounded">DEEL</button>
+    </div>
+
     <!-- Rules Section -->
     <div class="rules">
       <h2>Hoe om te speel</h2>
@@ -227,16 +233,25 @@
   let gridRows = 6;
   let gridCols = 5;
   const params = new URLSearchParams(window.location.search);
-const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
+  const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
   const gameGrid = document.getElementById("game-grid");
   const keyboard = document.getElementById("keyboard");
   const leaderboardList = document.getElementById('leaderboardList');
   const clueElem = document.getElementById('clue');
+  const gameMessage = document.getElementById('gameMessage');
+  const shareContainer = document.getElementById('shareContainer');
+  const shareBtn = document.getElementById('shareBtn');
 
   let targetWord = "";
   let currentRow = 0;
   let currentCol = 0;
   let board = [];
+
+  // Format game date for messages
+  const gameDate = gameId.replace("Game", "");
+  const formattedDate = new Date(gameDate).toLocaleDateString("af-ZA", {
+    day: 'numeric', month: 'long', year: 'numeric'
+  });
 
   // --- LOAD GAME DATA ---
   async function loadGameData() {
@@ -360,7 +375,7 @@ const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T'
       currentRow++;
       currentCol = 0;
       if (currentRow >= gridRows) {
-        setTimeout(() => alert(`Jammer! Die woord was ${targetWord}.`), 500);
+        setTimeout(() => gameFailed(), 500);
       }
     }
   }
@@ -416,8 +431,35 @@ const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T'
 
   function gameCompleted(attempts) {
     const word = attempts === 1 ? "raaiskoot" : "raaiskote";
-    alert(`Baie geluk, ${window.currentUser.name}! Jy het die woord in ${attempts} ${word} geraai!`);
+    const message = `Baie geluk, ${window.currentUser.name}! Jy het die woord in ${attempts} ${word} geraai!`;
+    gameMessage.textContent = message;
+    shareContainer.style.display = 'block';
+    shareBtn.textContent = "DEEL";
+    shareBtn.onclick = () => {
+      const shareText = `Ek het ${formattedDate} se DILEMMA in ${attempts} ${word} opgelos. Kan jy beter doen?`;
+      shareResult(shareText);
+    };
     submitScore(attempts);
+  }
+
+  function gameFailed() {
+    const message = `Jammer, ${window.currentUser.name}! Die woord was ${targetWord}.`;
+    gameMessage.textContent = message;
+    shareContainer.style.display = 'block';
+    shareBtn.textContent = "DEEL";
+    shareBtn.onclick = () => {
+      const shareText = `Ek kon nie ${formattedDate} se DILEMMA oplos nie. Kan jy beter doen?`;
+      shareResult(shareText);
+    };
+  }
+
+  function shareResult(shareText) {
+    if (navigator.share) {
+      navigator.share({ text: shareText });
+    } else {
+      navigator.clipboard.writeText(shareText);
+      alert("Jou resultate is na die knipbord gekopieer!");
+    }
   }
 
   document.addEventListener("keydown", (e) => {
