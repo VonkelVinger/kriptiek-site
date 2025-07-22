@@ -226,7 +226,8 @@
   // --- GAME CONFIG ---
   let gridRows = 6;
   let gridCols = 5;
-  const gameId = `Game${new Date().toISOString().split('T')[0]}`;
+  const params = new URLSearchParams(window.location.search);
+const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
   const gameGrid = document.getElementById("game-grid");
   const keyboard = document.getElementById("keyboard");
   const leaderboardList = document.getElementById('leaderboardList');
