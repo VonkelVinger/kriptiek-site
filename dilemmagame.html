@@ -40,9 +40,11 @@
     .keyboard-row {
       display: flex;
       justify-content: center;
+      flex-wrap: nowrap;
       margin: 5px 0;
     }
     .key {
+      min-width: 30px;
       padding: 10px 12px;
       margin: 2px;
       border-radius: 4px;
@@ -51,6 +53,12 @@
       font-weight: bold;
       cursor: pointer;
       text-transform: uppercase;
+    }
+    .key.bg-green-600 {
+      background-color: #16a34a !important;
+    }
+    .key.bg-red-600 {
+      background-color: #dc2626 !important;
     }
     .key:active {
       background-color: #1f2937;
@@ -62,6 +70,18 @@
     .correct { background-color: #16a34a !important; color: white !important; }
     .present { background-color: #facc15 !important; color: black !important; }
     .absent  { background-color: #9ca3af !important; color: white !important; }
+    .rules {
+      background-color: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 10px;
+      margin-top: 20px;
+    }
+    .rules h2 {
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -75,7 +95,7 @@
   <main class="flex-grow game-container">
     <!-- Clue Section -->
     <div id="clue" class="text-center text-lg mb-4 text-gray-700 font-semibold">
-      Vandag se raaiselwoord!  
+      Vandag se raaiselwoord!
     </div>
 
     <!-- Game Grid -->
@@ -83,6 +103,17 @@
 
     <!-- On-screen Keyboard -->
     <div id="keyboard" class="mb-6"></div>
+
+    <!-- Rules Section -->
+    <div class="rules">
+      <h2>Hoe om te speel</h2>
+      <p>Jy het 6 raaiskote om die geheime woord van 5 letters te vind.</p>
+      <ul class="list-disc list-inside mt-2">
+        <li><span class="font-bold">Groen</span>: Die letter is reg en op die regte plek.</li>
+        <li><span class="font-bold">Geel</span>: Die letter is in die woord, maar op die verkeerde plek.</li>
+        <li><span class="font-bold">Grys</span>: Die letter is nie in die woord nie.</li>
+      </ul>
+    </div>
 
     <!-- Leaderboard Section -->
     <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
@@ -92,7 +123,11 @@
   </main>
 
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
-    &copy; 2025 Kriptiek. Alle regte voorbehou.
+    &copy; 2025 Kriptiek. Alle regte voorbehou. |
+    <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
+    <a href="/terms.html" class="underline">Voorwaardes</a> |
+    <a href="/faq.html" class="underline">Gereelde vrae</a> |
+    <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
 <script type="module">
   // --- FIREBASE SETUP ---
@@ -113,19 +148,17 @@
   const db = getFirestore(app);
 
   // --- USER SETUP ---
-  // --- USER SETUP ---
-const storedName = localStorage.getItem('userName') || 'Speler';
-const storedEmail = localStorage.getItem('userEmail') || '';
-window.currentUser = { name: storedName, email: storedEmail };
+  const storedName = localStorage.getItem('userName') || 'Speler';
+  const storedEmail = localStorage.getItem('userEmail') || '';
+  window.currentUser = { name: storedName, email: storedEmail };
 
-const playerNameElem = document.getElementById("playerName");
-playerNameElem.textContent = storedName;
-
+  const playerNameElem = document.getElementById("playerName");
+  playerNameElem.textContent = storedName;
 
   // --- GAME CONFIG ---
   const gridRows = 6;
   const gridCols = 5;
-  const targetWord = "RAAIS"; // Test word
+  const targetWord = "RAAIS"; // Temporary test word
   const gameGrid = document.getElementById("game-grid");
   const keyboard = document.getElementById("keyboard");
   const leaderboardList = document.getElementById('leaderboardList');
