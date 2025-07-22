@@ -113,8 +113,14 @@
   const db = getFirestore(app);
 
   // --- USER SETUP ---
-  const playerNameElem = document.getElementById("playerName");
-  playerNameElem.textContent = window.currentUser?.name || "Speler";
+  // --- USER SETUP ---
+const storedName = localStorage.getItem('userName') || 'Speler';
+const storedEmail = localStorage.getItem('userEmail') || '';
+window.currentUser = { name: storedName, email: storedEmail };
+
+const playerNameElem = document.getElementById("playerName");
+playerNameElem.textContent = storedName;
+
 
   // --- GAME CONFIG ---
   const gridRows = 6;
