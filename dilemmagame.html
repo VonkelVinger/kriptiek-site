@@ -8,36 +8,200 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
 
   <!-- Firebase Setup -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+ <script type="module">
+  import { collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } 
+    from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
-      authDomain: "kriptiek-c9ea2.firebaseapp.com",
-      projectId: "kriptiek-c9ea2",
-      storageBucket: "kriptiek-c9ea2.appspot.com",
-      messagingSenderId: "620450620939",
-      appId: "1:620450620939:web:e93a18ac23b53b33db890e"
-    };
+  // --- GAME CONFIG ---
+  const gridRows = 6;
+  const gridCols = 5;
+  const targetWord = "RAAIS"; // Test word
+  const gameGrid = document.getElementById("game-grid");
+  const keyboard = document.getElementById("keyboard");
+  const playerNameElem = document.getElementById("playerName");
+  const leaderboardList = document.getElementById('leaderboardList');
+  const gameId = `Game${new Date().toISOString().split('T')[0]}`;
 
-    const app = initializeApp(firebaseConfig);
-    window.db = getFirestore(app);
+  playerNameElem.textContent = window.currentUser?.name || "Speler";
 
-    // --- USER REGISTRATION CHECK ---
-    document.addEventListener('DOMContentLoaded', () => {
-      if (localStorage.getItem('userRegistered') !== 'true') {
-        alert('Jy moet registreer voordat jy kan speel.');
-        window.location.href = '/register.html';
-        return;
+  // --- CREATE GAME GRID ---
+  let currentRow = 0;
+  let currentCol = 0;
+  let board = [];
+
+  function createGrid() {
+    gameGrid.innerHTML = "";
+    board = [];
+    for (let r = 0; r < gridRows; r++) {
+      const rowDiv = document.createElement("div");
+      rowDiv.className = "tile-row";
+      const row = [];
+      for (let c = 0; c < gridCols; c++) {
+        const tile = document.createElement("div");
+        tile.className = "letter-tile";
+        tile.dataset.row = r;
+        tile.dataset.col = c;
+        rowDiv.appendChild(tile);
+        row.push(tile);
       }
+      gameGrid.appendChild(rowDiv);
+      board.push(row);
+    }
+  }
 
-      window.currentUser = {
-        name: localStorage.getItem('userName') || 'Speler',
-        email: localStorage.getItem('userEmail') || ''
-      };
+  // --- CREATE ON-SCREEN KEYBOARD ---
+  const keyLayout = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
+
+  function createKeyboard() {
+    keyboard.innerHTML = "";
+    keyLayout.forEach(row => {
+      const rowDiv = document.createElement("div");
+      rowDiv.className = "keyboard-row";
+      [...row].forEach(letter => {
+        const key = document.createElement("button");
+        key.className = "key";
+        key.textContent = letter;
+        key.onclick = () => handleKey(letter);
+        rowDiv.appendChild(key);
+      });
+      if (row === "ZXCVBNM") {
+        const enter = document.createElement("button");
+        enter.className = "key bg-green-600";
+        enter.textContent = "Enter";
+        enter.onclick = () => handleEnter();
+        rowDiv.appendChild(enter);
+
+        const back = document.createElement("button");
+        back.className = "key bg-red-600";
+        back.textContent = "←";
+        back.onclick = () => handleBackspace();
+        rowDiv.appendChild(back);
+      }
+      keyboard.appendChild(rowDiv);
     });
-  </script>
+  }
+
+  // --- INPUT HANDLING ---
+  function handleKey(letter) {
+    if (currentCol < gridCols && currentRow < gridRows) {
+      board[currentRow][currentCol].textContent = letter;
+      currentCol++;
+    }
+  }
+
+  function handleBackspace() {
+    if (currentCol > 0) {
+      currentCol--;
+      board[currentRow][currentCol].textContent = "";
+    }
+  }
+
+  function handleEnter() {
+    if (currentCol < gridCols) {
+      alert("Vul al 5 letters in!");
+      return;
+    }
+    const guess = board[currentRow].map(tile => tile.textContent).join("");
+    checkGuess(guess);
+  }
+
+  // --- CHECK GUESS ---
+  function checkGuess(guess) {
+    const target = targetWord.toUpperCase();
+    const guessLetters = guess.split("");
+
+    for (let i = 0; i < gridCols; i++) {
+      const tile = board[currentRow][i];
+      const letter = guessLetters[i];
+      if (letter === target[i]) {
+        tile.classList.add("correct");
+      } else if (target.includes(letter)) {
+        tile.classList.add("present");
+      } else {
+        tile.classList.add("absent");
+      }
+    }
+
+    if (guess === target) {
+      setTimeout(() => gameCompleted(currentRow + 1), 500);
+    } else {
+      currentRow++;
+      currentCol = 0;
+      if (currentRow >= gridRows) {
+        setTimeout(() => alert(`Jammer! Die woord was ${targetWord}.`), 500);
+      }
+    }
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") handleEnter();
+    else if (e.key === "Backspace") handleBackspace();
+    else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
+  });
+
+  // --- LEADERBOARD ---
+  async function loadLeaderboard() {
+    leaderboardList.innerHTML = '';
+    try {
+      console.log('Loading leaderboard for:', gameId);
+      const q = query(
+        collection(db, 'games', gameId, 'leaderboard'),
+        orderBy('score', 'asc'),
+        limit(10)
+      );
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) {
+        const li = document.createElement('li');
+        li.textContent = "Nog geen tellings vir vandag nie.";
+        leaderboardList.appendChild(li);
+      } else {
+        querySnapshot.forEach((doc) => {
+          console.log('Leaderboard entry:', doc.data());
+          const entry = document.createElement('li');
+          entry.className = "leaderboard-entry";
+          const data = doc.data();
+          entry.textContent = `${data.name}: ${data.score} ${data.score === 1 ? 'raaiskoot' : 'raaiskote'}`;
+          leaderboardList.appendChild(entry);
+        });
+      }
+    } catch (err) {
+      console.error('Kon nie leaderboard laai nie:', err);
+    }
+  }
+
+  async function submitScore(score) {
+    if (!window.currentUser) return;
+    try {
+      console.log('Submitting score:', {
+        name: window.currentUser.name,
+        email: window.currentUser.email,
+        score
+      });
+      await addDoc(collection(db, 'games', gameId, 'leaderboard'), {
+        name: window.currentUser.name,
+        email: window.currentUser.email,
+        score,
+        timestamp: serverTimestamp()
+      });
+      console.log('Telling suksesvol gestuur vir', window.currentUser.name);
+      loadLeaderboard();
+    } catch (err) {
+      console.error('Telling stuur het misluk:', err);
+    }
+  }
+
+  function gameCompleted(attempts) {
+    const word = attempts === 1 ? "raaiskoot" : "raaiskote";
+    alert(`Baie geluk, ${window.currentUser.name}! Jy het die woord in ${attempts} ${word} geraai!`);
+    submitScore(attempts);
+  }
+
+  // Initialize game
+  createGrid();
+  createKeyboard();
+  loadLeaderboard();
+</script>
+
 
   <style>
     body {
