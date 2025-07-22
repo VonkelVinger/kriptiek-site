@@ -3,69 +3,109 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kriptiek</title>
+  <title>DILEMMA – Kriptiek</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+
   <style>
-    body { font-family: 'Montserrat', sans-serif; }
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: #f9fafb;
+      color: #1f2937;
+    }
+    header {
+      background-color: #ffffff;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      padding: 1rem;
+      text-align: center;
+    }
     .logo-container {
-      position: relative;
       display: flex;
       justify-content: center;
       align-items: center;
-      width: fit-content;
-      margin: 1rem auto;
-      padding: 1rem;
-      border-radius: 1rem;
-      background-color: white;
-      overflow: hidden;
+      margin-bottom: 10px;
     }
-    .crossword-grid {
-      display: grid;
-      grid-template-columns: repeat(8, minmax(40px, 1fr));
-      gap: 4px;
-      position: relative;
-      z-index: 10;
-    }
-    .letter-box {
-      width: 50px;
-      height: 50px;
+    .logo-container .letter-box {
+      width: 40px;
+      height: 40px;
+      margin: 2px;
       display: flex;
       justify-content: center;
       align-items: center;
       background-color: #374151;
       color: white;
-      font-size: 1.8rem;
+      font-size: 1.5rem;
       font-weight: bold;
-      border: 2px solid #1f2937;
-      border-radius: 0.375rem;
-      text-transform: uppercase;
-      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+      border-radius: 4px;
     }
-    .flipped-k { transform: scaleX(-1); }
-    .background-crossword {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
-      grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
-      opacity: 0.5;
-      z-index: 1;
-      pointer-events: none;
+    .game-container {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 1rem;
     }
-    .bg-letter-box {
+    .tile-row {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 5px;
+    }
+    .letter-tile {
+      width: 50px;
+      height: 50px;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 1.1rem;
+      border: 2px solid #374151;
+      font-size: 1.5rem;
       font-weight: bold;
-      color: #9ca3af;
+      text-transform: uppercase;
+      margin: 2px;
+      background-color: white;
+      color: #1f2937;
+    }
+    .keyboard-row {
+      display: flex;
+      justify-content: center;
+      margin: 5px 0;
+      flex-wrap: nowrap;
+    }
+    .key {
+      min-width: 30px;
+      padding: 10px 12px;
+      margin: 2px;
+      border-radius: 4px;
+      background-color: #374151;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+    .key.bg-green-600 {
+      background-color: #16a34a !important;
+    }
+    .key.bg-red-600 {
+      background-color: #dc2626 !important;
+    }
+    .key:active {
+      background-color: #1f2937;
+    }
+    .leaderboard-entry {
+      padding: 4px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .correct { background-color: #16a34a !important; color: white !important; }
+    .present { background-color: #facc15 !important; color: black !important; }
+    .absent  { background-color: #9ca3af !important; color: white !important; }
+    .rules {
+      background-color: #ffffff;
       border: 1px solid #e5e7eb;
-      background-color: transparent;
-      user-select: none;
+      border-radius: 6px;
+      padding: 10px;
+      margin-top: 20px;
+    }
+    .rules h2 {
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-bottom: 8px;
     }
     .cookie-banner {
       background: #fef3c7;
@@ -90,131 +130,358 @@
       color: #92400e;
       font-weight: bold;
     }
+    @media (max-width: 480px) {
+      .letter-tile {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+      }
+      .key {
+        min-width: 28px;
+        padding: 8px 10px;
+        font-size: 0.9rem;
+      }
+      .keyboard-row {
+        flex-wrap: wrap;
+      }
+    }
+    @media (max-width: 360px) {
+      .letter-tile {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+      }
+      .key {
+        min-width: 26px;
+        padding: 6px 8px;
+        font-size: 0.85rem;
+      }
+    }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
-
-<header class="bg-white shadow p-4">
-  <div class="logo-container">
-    <div id="backgroundCrossword" class="background-crossword"></div>
-    <div class="crossword-grid">
-      <div class="letter-box flipped-k">K</div>
-      <div class="letter-box flipped-k">R</div>
+  <header>
+    <div class="logo-container">
+      <div class="letter-box">K</div>
+      <div class="letter-box">R</div>
       <div class="letter-box">I</div>
-      <div class="letter-box flipped-k">P</div>
+      <div class="letter-box">P</div>
       <div class="letter-box">T</div>
       <div class="letter-box">I</div>
-      <div class="letter-box flipped-k">E</div>
+      <div class="letter-box">E</div>
       <div class="letter-box">K</div>
     </div>
+    <p class="text-sm text-gray-500">
+      Welkom, <span id="playerName" class="font-semibold text-green-700"></span>!
+    </p>
+  </header>
+
+  <main class="flex-grow game-container">
+    <div id="clue" class="text-center text-lg mb-4 text-gray-700 font-semibold">
+      Laai die leidraad...
+    </div>
+    <div id="game-grid" class="mb-6"></div>
+    <div id="keyboard" class="mb-6"></div>
+
+    <div class="rules">
+      <h2>Hoe om te speel</h2>
+      <ul class="list-disc list-inside mt-2">
+        <li><span class="font-bold text-green-600">GROEN:</span> Die letter is in die woord én op die regte plek.</li>
+        <li><span class="font-bold text-yellow-500">GEEL:</span> Die letter is in die woord, maar op die verkeerde plek.</li>
+        <li><span class="font-bold text-gray-500">GRYS:</span> Die letter is nie in die woord nie.</li>
+      </ul>
+      <p class="mt-2">
+        <span class="font-bold">WENK:</span> Op kleiner skerms sal jy soms lekkerder speel in landskapformaat ("Landscape Format" of "Auto-Rotate").
+      </p>
+    </div>
+
+    <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
+      <h2 class="text-xl font-bold mb-2">Vandag se beste spelers</h2>
+      <ul id="leaderboardList" class="text-gray-700 text-left"></ul>
+    </div>
+  </main>
+
+  <!-- Result Modal -->
+  <div id="resultModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white p-6 rounded shadow-lg text-center max-w-sm w-full">
+      <p id="resultMessage" class="mb-4 font-bold text-lg text-green-700"></p>
+      <button id="modalShareBtn" class="bg-blue-600 text-white px-4 py-2 rounded mb-2">DEEL</button>
+      <br>
+      <button id="closeModalBtn" class="bg-gray-600 text-white px-4 py-2 rounded">SLUIT</button>
+    </div>
   </div>
-</header>
 
-<main class="flex-grow p-6 text-center">
-  <p class="text-3xl font-bold text-gray-700 mb-4">WELKOM BY KRIPTIEK</p>
-  <div class="flex flex-wrap justify-center gap-4 mb-8"></div>
-  <div id="dilemma-buttons" class="flex flex-col items-center gap-4 mt-4"></div>
-</main>
+  <!-- Cookie Banner -->
+  <div id="cookie-banner" class="cookie-banner hidden">
+    Ons gebruik koekies om jou ervaring te verbeter en die webwerf beter te laat werk.
+    Lees meer in ons <a href="/privacy.html" class="underline">Privaatheidsbeleid</a>.
+    <br class="my-1" />
+    <button id="acceptCookies">Ja, ek aanvaar dit so</button>
+    <button id="declineCookies">Nee dankie</button>
+  </div>
 
-<footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
-  &copy; 2025 Kriptiek. Alle regte voorbehou. |
-  <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
-  <a href="/terms.html" class="underline">Voorwaardes</a> |
-  <a href="/faq.html" class="underline">Gereelde vrae</a> |
-  <a href="/about.html" class="underline">Oor Kriptiek</a> |
-  <a href="/contact.html" class="underline">Kontak ons</a>
-</footer>
+  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
+    &copy; 2025 Kriptiek. Alle regte voorbehou. |
+    <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
+    <a href="/terms.html" class="underline">Voorwaardes</a> |
+    <a href="/faq.html" class="underline">Gereelde vrae</a> |
+    <a href="/about.html" class="underline">Oor Kriptiek</a> |
+    <a href="/contact.html" class="underline">Kontak ons</a>
+  </footer>
 
-<div id="cookie-banner" class="cookie-banner" style="display:none;">
-  Ons gebruik koekies om jou ervaring te verbeter en die webwerf beter te laat werk.
-  Lees meer in ons <a href="/privacy.html" class="underline">Privaatheidsbeleid</a>.
-  <br class="my-1" />
-  <button onclick="acceptCookies()">Ja, ek aanvaar dit so</button>
-  <button onclick="declineCookies()">Nee dankie</button>
-</div>
+<script type="module">
+  // --- Registration Check ---
+  if (localStorage.getItem('userRegistered') !== 'true') {
+    alert("Jy moet geregistreer wees om DILEMMA te speel.");
+    window.location.href = "/register.html";
+  }
 
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const backgroundCrossword = document.getElementById('backgroundCrossword');
-    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    function getRandomLetter() {
-      return letters[Math.floor(Math.random() * letters.length)];
-    }
-    function generateBackgroundGrid() {
-      backgroundCrossword.innerHTML = '';
-      const numRows = Math.ceil(backgroundCrossword.offsetHeight / 30);
-      const numCols = Math.ceil(backgroundCrossword.offsetWidth / 30);
-      const totalCells = (numRows * numCols) || 300;
-      for (let i = 0; i < totalCells; i++) {
-        const bgLetterBox = document.createElement('div');
-        bgLetterBox.classList.add('bg-letter-box');
-        bgLetterBox.textContent = getRandomLetter();
-        backgroundCrossword.appendChild(bgLetterBox);
-      }
-    }
-    generateBackgroundGrid();
-    window.addEventListener('resize', generateBackgroundGrid);
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+  import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
-    const today = new Date().toISOString().split('T')[0];
-    const isRegistered = localStorage.getItem('userRegistered') === 'true';
-    const main = document.querySelector('main');
-    const buttonContainer = document.querySelector('.flex.flex-wrap.justify-center.gap-4.mb-8');
-    const dilemmaButtons = document.getElementById('dilemma-buttons');
+  const firebaseConfig = {
+    apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+    authDomain: "kriptiek-c9ea2.firebaseapp.com",
+    projectId: "kriptiek-c9ea2",
+    storageBucket: "kriptiek-c9ea2.appspot.com",
+    messagingSenderId: "620450620939",
+    appId: "1:620450620939:web:e93a18ac23b53b33db890e"
+  };
 
-    buttonContainer.innerHTML = '';
-    dilemmaButtons.innerHTML = '';
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-    const message = document.createElement('div');
-    message.className = 'text-center text-red-700 font-semibold mb-6';
-    main.insertBefore(message, buttonContainer);
+  const gameUrl = window.location.href;
+  const storedName = localStorage.getItem('userName') || 'Speler';
+  window.currentUser = { name: storedName };
+  document.getElementById("playerName").textContent = storedName;
 
-    const actionButton = document.createElement('a');
-    actionButton.className = 'bg-blue-600 text-white px-4 py-2 rounded';
+  let gridRows = 6;
+  let gridCols = 5;
+  const params = new URLSearchParams(window.location.search);
+  const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
+  const gameGrid = document.getElementById("game-grid");
+  const keyboard = document.getElementById("keyboard");
+  const leaderboardList = document.getElementById('leaderboardList');
 
-    if (!isRegistered) {
-      message.innerHTML = `Jy moet <a href="/register.html" class="underline text-blue-600">registreer</a> voordat jy kan speel. Dis vinnig en gratis.`;
-      actionButton.href = "/register.html";
-      actionButton.textContent = "Registreer nou";
-    } else {
-      message.innerHTML = `Kies onder wat jy wil speel, of <a href="/subscribe.html" class="underline text-green-700">lees meer oor die ekstra voordele as jy betaal om 'n Kriptikus te word.</a>`;
-      actionButton.href = `/dilemmagame.html?gameId=Game${today}`;
-      actionButton.textContent = "Speel VANDAG SE DILEMMA";
+  const resultModal = document.getElementById('resultModal');
+  const resultMessage = document.getElementById('resultMessage');
+  const shareBtn = document.getElementById('modalShareBtn');
+  const closeBtn = document.getElementById('closeModalBtn');
+  closeBtn.onclick = () => resultModal.classList.add('hidden');
 
-const olderBtn = document.createElement('a');
-olderBtn.href = "/dilemma-argief.html";
-olderBtn.textContent = "Speel OUER DILEMMAS";
-olderBtn.className = 'bg-green-700 text-white px-4 py-2 rounded transition transform hover:scale-105 duration-300';
-actionButton.className += ' transition transform hover:scale-105 duration-300';
+  let targetWord = "";
+  let currentRow = 0;
+  let currentCol = 0;
+  let board = [];
 
-const buttonGroup = document.createElement('div');
-buttonGroup.className = 'flex flex-col sm:flex-row justify-center gap-4';
-buttonGroup.appendChild(actionButton);
-buttonGroup.appendChild(olderBtn);
-dilemmaButtons.appendChild(buttonGroup);
-
-      const logoutBtn = document.createElement('button');
-      logoutBtn.textContent = "MELD AF";
-      logoutBtn.className = "mt-4 underline text-sm text-gray-500 hover:text-black";
-      logoutBtn.onclick = () => {
-        localStorage.removeItem('userRegistered');
-        localStorage.removeItem('userEmail');
-        localStorage.removeItem('userName');
-        location.reload();
-      };
-      main.appendChild(logoutBtn);
-    }
+  const gameDate = gameId.replace("Game", "");
+  const formattedDate = new Date(gameDate).toLocaleDateString("af-ZA", {
+    day: 'numeric', month: 'long', year: 'numeric'
   });
 
-  function acceptCookies() {
+  async function loadGameData() {
+    try {
+      const gameDocRef = doc(db, 'games', gameId);
+      const gameDocSnap = await getDoc(gameDocRef);
+      if (gameDocSnap.exists()) {
+        const data = gameDocSnap.data();
+        targetWord = (data.word || "XXXXX").toUpperCase();
+        gridCols = targetWord.length;
+        document.getElementById('clue').textContent = data.clue || "Geen leidraad beskikbaar nie.";
+      }
+    } catch (err) {
+      console.error("Kon nie speldata laai nie:", err);
+    }
+  }
+
+  function createGrid() {
+    gameGrid.innerHTML = "";
+    board = [];
+    for (let r = 0; r < gridRows; r++) {
+      const rowDiv = document.createElement("div");
+      rowDiv.className = "tile-row";
+      const row = [];
+      for (let c = 0; c < gridCols; c++) {
+        const tile = document.createElement("div");
+        tile.className = "letter-tile";
+        tile.style.width = gridCols > 6 ? "40px" : "50px";
+        tile.style.height = gridCols > 6 ? "40px" : "50px";
+        rowDiv.appendChild(tile);
+        row.push(tile);
+      }
+      gameGrid.appendChild(rowDiv);
+      board.push(row);
+    }
+  }
+
+  const keyLayout = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
+  function createKeyboard() {
+    keyboard.innerHTML = "";
+    keyLayout.forEach(row => {
+      const rowDiv = document.createElement("div");
+      rowDiv.className = "keyboard-row";
+      [...row].forEach(letter => {
+        const key = document.createElement("button");
+        key.className = "key";
+        key.textContent = letter;
+        key.onclick = () => handleKey(letter);
+        rowDiv.appendChild(key);
+      });
+      if (row === "ZXCVBNM") {
+        const enter = document.createElement("button");
+        enter.className = "key bg-green-600";
+        enter.textContent = "Enter";
+        enter.onclick = () => handleEnter();
+        rowDiv.appendChild(enter);
+
+        const back = document.createElement("button");
+        back.className = "key bg-red-600";
+        back.textContent = "←";
+        back.onclick = () => handleBackspace();
+        rowDiv.appendChild(back);
+      }
+      keyboard.appendChild(rowDiv);
+    });
+  }
+
+  function handleKey(letter) {
+    if (currentCol < gridCols && currentRow < gridRows) {
+      board[currentRow][currentCol].textContent = letter;
+      currentCol++;
+    }
+  }
+  function handleBackspace() {
+    if (currentCol > 0) {
+      currentCol--;
+      board[currentRow][currentCol].textContent = "";
+    }
+  }
+  function handleEnter() {
+    if (currentCol < gridCols) {
+      alert("Vul al die letters in!");
+      return;
+    }
+    const guess = board[currentRow].map(tile => tile.textContent).join("");
+    checkGuess(guess);
+  }
+
+  function checkGuess(guess) {
+    const target = targetWord.toUpperCase();
+    const guessLetters = guess.split("");
+    for (let i = 0; i < gridCols; i++) {
+      const tile = board[currentRow][i];
+      const letter = guessLetters[i];
+      if (letter === target[i]) {
+        tile.classList.add("correct");
+      } else if (target.includes(letter)) {
+        tile.classList.add("present");
+      } else {
+        tile.classList.add("absent");
+      }
+    }
+    if (guess === target) {
+      setTimeout(() => gameCompleted(currentRow + 1), 500);
+    } else {
+      currentRow++;
+      currentCol = 0;
+      if (currentRow >= gridRows) {
+        setTimeout(() => gameFailed(), 500);
+      }
+    }
+  }
+
+  async function loadLeaderboard() {
+    leaderboardList.innerHTML = '';
+    try {
+      const q = query(collection(db, 'games', gameId, 'leaderboard'), orderBy('score', 'asc'), limit(10));
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) {
+        leaderboardList.innerHTML = "<li>Nog geen tellings vir vandag nie.</li>";
+      } else {
+        querySnapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          const li = document.createElement('li');
+          li.className = "leaderboard-entry";
+          let formattedTime = "";
+          if (data.timestamp && data.timestamp.toDate) {
+            formattedTime = data.timestamp.toDate().toLocaleTimeString("af-ZA", { hour: '2-digit', minute: '2-digit' });
+          }
+          li.innerHTML = `<strong>${data.name}</strong>: ${data.score} ${data.score === 1 ? 'raaiskoot' : 'raaiskote'}${formattedTime ? ', aangeteken om ' + formattedTime : ''}`;
+          leaderboardList.appendChild(li);
+        });
+      }
+    } catch (err) {
+      console.error('Kon nie leaderboard laai nie:', err);
+    }
+  }
+
+  async function submitScore(score) {
+    if (!window.currentUser) return;
+    try {
+      await addDoc(collection(db, 'games', gameId, 'leaderboard'), {
+        name: window.currentUser.name,
+        score,
+        timestamp: serverTimestamp()
+      });
+      loadLeaderboard();
+    } catch (err) {
+      console.error('Telling stuur het misluk:', err);
+    }
+  }
+
+  async function copyToClipboard(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      alert("Jou resultate is na die knipbord gekopieer!");
+    } catch (err) {
+      alert("Kon nie kopieer nie.");
+    }
+  }
+
+  function gameCompleted(attempts) {
+    const word = attempts === 1 ? "raaiskoot" : "raaiskote";
+    const message = `Ek het ${formattedDate} se DILEMMA in ${attempts} ${word} opgelos. Speel by: ${gameUrl}`;
+    resultMessage.textContent = `Baie geluk, ${window.currentUser.name}! Jy het die woord in ${attempts} ${word} geraai!`;
+    shareBtn.onclick = () => copyToClipboard(message);
+    resultModal.classList.remove("hidden");
+    submitScore(attempts);
+  }
+
+  function gameFailed() {
+    const message = `Ek kon nie ${formattedDate} se DILEMMA oplos nie. Speel by: ${gameUrl}`;
+    resultMessage.textContent = `Jammer, ${window.currentUser.name}! Die woord was ${targetWord}.`;
+    shareBtn.onclick = () => copyToClipboard(message);
+    resultModal.classList.remove("hidden");
+  }
+
+  // Cookie Banner Logic
+  const cookieBanner = document.getElementById('cookie-banner');
+  const acceptCookiesBtn = document.getElementById('acceptCookies');
+  const declineCookiesBtn = document.getElementById('declineCookies');
+  if (!localStorage.getItem('cookieConsent')) {
+    cookieBanner.classList.remove('hidden');
+  }
+  acceptCookiesBtn.addEventListener('click', () => {
     localStorage.setItem('cookieConsent', 'accepted');
-    document.getElementById('cookie-banner').style.display = 'none';
-  }
-
-  function declineCookies() {
+    cookieBanner.classList.add('hidden');
+  });
+  declineCookiesBtn.addEventListener('click', () => {
     localStorage.setItem('cookieConsent', 'declined');
-    document.getElementById('cookie-banner').style.display = 'none';
-  }
-</script>
+    cookieBanner.classList.add('hidden');
+  });
 
+  document.addEventListener("keydown", e => {
+    if (e.key === "Enter") handleEnter();
+    else if (e.key === "Backspace") handleBackspace();
+    else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
+  });
+
+  await loadGameData();
+  createGrid();
+  createKeyboard();
+  loadLeaderboard();
+</script>
 </body>
 </html>
