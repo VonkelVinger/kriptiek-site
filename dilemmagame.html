@@ -106,6 +106,20 @@
 
   const gameId = `Game${new Date().toISOString().split('T')[0]}`;
   const leaderboardList = document.getElementById('leaderboardList');
+  const keyboard = document.getElementById("keyboard");
+  const gameGrid = document.getElementById("game-grid");
+
+  // --- Prevent replay if completed ---
+  if (localStorage.getItem(`gameCompleted_${gameId}`) === 'true') {
+    disableGame("Jy het vandag se DILEMMA reeds voltooi.");
+  }
+
+  function disableGame(msg) {
+    alert(msg);
+    const keys = document.querySelectorAll('.key');
+    keys.forEach(key => key.disabled = true);
+    gameGrid.style.pointerEvents = "none";
+  }
 
   async function loadLeaderboard() {
     leaderboardList.innerHTML = '';
@@ -158,6 +172,7 @@
         score,
         timestamp: serverTimestamp()
       });
+      localStorage.setItem(`gameCompleted_${gameId}`, 'true');
       loadLeaderboard();
     } catch (err) {
       console.error('Telling stuur het misluk:', err);
