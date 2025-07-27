@@ -81,7 +81,6 @@
     }
     .key.bg-green-600 { background-color: #16a34a !important; }
     .key.bg-red-600 { background-color: #dc2626 !important; }
-    .key:active { background-color: #1f2937; }
     .leaderboard-entry {
       padding: 4px 0;
       border-bottom: 1px solid #e5e7eb;
@@ -119,10 +118,6 @@
       margin: 0.5rem 0.5rem 0 0.5rem;
       padding: 0.5rem 1rem;
       border-radius: 0.375rem;
-    }
-    .cookie-banner a {
-      color: #92400e;
-      font-weight: bold;
     }
     @media (max-width: 480px) {
       .letter-tile { width: 40px; height: 40px; font-size: 1.2rem; }
@@ -203,12 +198,6 @@
   </footer>
 
 <script type="module">
-  if (localStorage.getItem('userRegistered') !== 'true') {
-    localStorage.setItem('redirectAfterRegister', window.location.href);
-    alert("Jy moet geregistreer wees om DILEMMA te speel.");
-    window.location.href = "/register.html";
-  }
-
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
   import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp, where, deleteDoc }
     from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
@@ -225,155 +214,12 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  const gameUrl = window.location.href;
   const storedName = localStorage.getItem('userName') || 'Speler';
-  window.currentUser = { name: storedName };
   document.getElementById("playerName").textContent = storedName;
 
-  let gridRows = 6;
-  let gridCols = 5;
   const params = new URLSearchParams(window.location.search);
   const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
-  const gameGrid = document.getElementById("game-grid");
-  const keyboard = document.getElementById("keyboard");
   const leaderboardList = document.getElementById('leaderboardList');
-
-  const resultModal = document.getElementById('resultModal');
-  const resultMessage = document.getElementById('resultMessage');
-  const shareBtn = document.getElementById('modalShareBtn');
-  const closeBtn = document.getElementById('closeModalBtn');
-  closeBtn.onclick = () => resultModal.classList.add('hidden');
-
-  let targetWord = "";
-  let currentRow = 0;
-  let currentCol = 0;
-  let board = [];
-
-  const gameDate = gameId.replace("Game", "");
-  const formattedDate = new Date(gameDate).toLocaleDateString("af-ZA", {
-    day: 'numeric', month: 'long', year: 'numeric'
-  });
-
-  if (localStorage.getItem(`gameCompleted_${gameId}`) === 'true') {
-    disableGame("Jy het hierdie speletjie reeds voltooi.");
-  }
-
-  function disableGame(msg) {
-    alert(msg);
-    document.querySelectorAll('.key').forEach(key => key.disabled = true);
-    gameGrid.style.pointerEvents = "none";
-  }
-
-  async function loadGameData() {
-    try {
-      const gameDocRef = doc(db, 'games', gameId);
-      const gameDocSnap = await getDoc(gameDocRef);
-      if (gameDocSnap.exists()) {
-        const data = gameDocSnap.data();
-        targetWord = (data.word || "XXXXX").toUpperCase();
-        gridCols = targetWord.length;
-        document.getElementById('clue').textContent = data.clue || "Geen leidraad beskikbaar nie.";
-      }
-    } catch (err) {
-      console.error("Kon nie speldata laai nie:", err);
-    }
-  }
-
-  function createGrid() {
-    gameGrid.innerHTML = "";
-    board = [];
-    for (let r = 0; r < gridRows; r++) {
-      const rowDiv = document.createElement("div");
-      rowDiv.className = "tile-row";
-      const row = [];
-      for (let c = 0; c < gridCols; c++) {
-        const tile = document.createElement("div");
-        tile.className = "letter-tile";
-        tile.style.width = gridCols > 6 ? "40px" : "50px";
-        tile.style.height = gridCols > 6 ? "40px" : "50px";
-        rowDiv.appendChild(tile);
-        row.push(tile);
-      }
-      gameGrid.appendChild(rowDiv);
-      board.push(row);
-    }
-  }
-
-  const keyLayout = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
-  function createKeyboard() {
-    keyboard.innerHTML = "";
-    keyLayout.forEach(row => {
-      const rowDiv = document.createElement("div");
-      rowDiv.className = "keyboard-row";
-      [...row].forEach(letter => {
-        const key = document.createElement("button");
-        key.className = "key";
-        key.textContent = letter;
-        key.onclick = () => handleKey(letter);
-        rowDiv.appendChild(key);
-      });
-      if (row === "ZXCVBNM") {
-        const enter = document.createElement("button");
-        enter.className = "key bg-green-600";
-        enter.textContent = "Enter";
-        enter.onclick = () => handleEnter();
-        rowDiv.appendChild(enter);
-
-        const back = document.createElement("button");
-        back.className = "key bg-red-600";
-        back.textContent = "←";
-        back.onclick = () => handleBackspace();
-        rowDiv.appendChild(back);
-      }
-      keyboard.appendChild(rowDiv);
-    });
-  }
-
-  function handleKey(letter) {
-    if (currentCol < gridCols && currentRow < gridRows) {
-      board[currentRow][currentCol].textContent = letter;
-      currentCol++;
-    }
-  }
-  function handleBackspace() {
-    if (currentCol > 0) {
-      currentCol--;
-      board[currentRow][currentCol].textContent = "";
-    }
-  }
-  function handleEnter() {
-    if (currentCol < gridCols) {
-      alert("Vul al die letters in!");
-      return;
-    }
-    const guess = board[currentRow].map(tile => tile.textContent).join("");
-    checkGuess(guess);
-  }
-
-  function checkGuess(guess) {
-    const target = targetWord.toUpperCase();
-    const guessLetters = guess.split("");
-    for (let i = 0; i < gridCols; i++) {
-      const tile = board[currentRow][i];
-      const letter = guessLetters[i];
-      if (letter === target[i]) {
-        tile.classList.add("correct");
-      } else if (target.includes(letter)) {
-        tile.classList.add("present");
-      } else {
-        tile.classList.add("absent");
-      }
-    }
-    if (guess === target) {
-      setTimeout(() => gameCompleted(currentRow + 1), 500);
-    } else {
-      currentRow++;
-      currentCol = 0;
-      if (currentRow >= gridRows) {
-        setTimeout(() => gameFailed(), 500);
-      }
-    }
-  }
 
   async function loadLeaderboard() {
     leaderboardList.innerHTML = '';
@@ -406,76 +252,24 @@
 
   async function submitScore(score) {
     try {
+      // Remove placeholder if it exists
       const placeholderRef = collection(db, 'games', gameId, 'leaderboard');
       const qPlaceholder = query(placeholderRef, where('name', '==', 'Jou naam kan heel bo wees!'));
       const placeholderDocs = await getDocs(qPlaceholder);
       placeholderDocs.forEach(async docSnap => { await deleteDoc(docSnap.ref); });
 
       await addDoc(collection(db, 'games', gameId, 'leaderboard'), {
-        name: window.currentUser.name,
+        name: storedName,
         score,
         timestamp: serverTimestamp()
       });
-      localStorage.setItem(`gameCompleted_${gameId}`, 'true');
       loadLeaderboard();
-      disableGame("Jy het die speletjie voltooi!");
     } catch (err) {
       console.error('Telling stuur het misluk:', err);
     }
   }
 
-  async function copyToClipboard(text) {
-    try {
-      await navigator.clipboard.writeText(text);
-      alert("Jou resultate is na die knipbord gekopieer!");
-    } catch (err) {
-      alert("Kon nie kopieer nie.");
-    }
-  }
-
-  function gameCompleted(attempts) {
-    const word = attempts === 1 ? "raaiskoot" : "raaiskote";
-    const message = `Ek het ${formattedDate} se DILEMMA in ${attempts} ${word} opgelos. Speel by: ${gameUrl}`;
-    resultMessage.textContent = `Baie geluk, ${window.currentUser.name}! Jy het die woord in ${attempts} ${word} geraai!`;
-    shareBtn.onclick = () => copyToClipboard(message);
-    resultModal.classList.remove("hidden");
-    submitScore(attempts);
-  }
-
-  function gameFailed() {
-    const message = `Ek kon nie ${formattedDate} se DILEMMA oplos nie. Speel by: ${gameUrl}`;
-    resultMessage.textContent = `Jammer, ${window.currentUser.name}! Vandag se oplossing is ${targetWord}.`;
-    shareBtn.onclick = () => copyToClipboard(message);
-    resultModal.classList.remove("hidden");
-    localStorage.setItem(`gameCompleted_${gameId}`, 'true');
-    disableGame("Jou speletjie is verby.");
-  }
-
-  const cookieBanner = document.getElementById('cookie-banner');
-  const acceptCookiesBtn = document.getElementById('acceptCookies');
-  const declineCookiesBtn = document.getElementById('declineCookies');
-  if (!localStorage.getItem('cookieConsent')) {
-    cookieBanner.classList.remove('hidden');
-  }
-  acceptCookiesBtn.addEventListener('click', () => {
-    localStorage.setItem('cookieConsent', 'accepted');
-    cookieBanner.classList.add('hidden');
-  });
-  declineCookiesBtn.addEventListener('click', () => {
-    localStorage.setItem('cookieConsent', 'declined');
-    cookieBanner.classList.add('hidden');
-  });
-
-  document.addEventListener("keydown", e => {
-    if (e.key === "Enter") handleEnter();
-    else if (e.key === "Backspace") handleBackspace();
-    else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
-  });
-
-  await loadGameData();
-  createGrid();
-  createKeyboard();
-  loadLeaderboard();
+  await loadLeaderboard();
 </script>
 </body>
 </html>
