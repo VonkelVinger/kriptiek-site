@@ -223,7 +223,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-  import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp, deleteDoc }
+  import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -253,11 +253,12 @@
   let targetWord = "";
   const params = new URLSearchParams(window.location.search);
   const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
+  const localKey = `lastGameTime_${gameId}`;
   const gameUrl = window.location.href;
   const gameDate = gameId.replace("Game", "");
   const formattedDate = new Date(gameDate).toLocaleDateString("af-ZA", { day: 'numeric', month: 'long', year: 'numeric' });
 
-  function disableGame(message = "Jy het reeds vandag gespeel. Probeer weer môre.") {
+  function disableGame(message = "Jy het reeds vandag hierdie spel voltooi. Probeer weer môre.") {
     document.getElementById('clue').textContent = message;
     document.removeEventListener("keydown", keyHandler);
     document.querySelectorAll('.key').forEach(key => key.disabled = true);
@@ -279,7 +280,7 @@
   }
 
   async function checkDailyLimit() {
-    const lastGameTime = localStorage.getItem('lastGameTime');
+    const lastGameTime = localStorage.getItem(localKey);
     if (lastGameTime && Date.now() - parseInt(lastGameTime) < 24 * 60 * 60 * 1000) {
       disableGame();
       return false;
@@ -405,13 +406,11 @@
       let validEntries = 0;
       querySnapshot.forEach(docSnap => {
         const data = docSnap.data();
-        if (data.score !== 9999) {
-          validEntries++;
-          const li = document.createElement('li');
-          li.className = "leaderboard-entry";
-          li.innerHTML = `<strong>${data.name}</strong>: ${data.score} ${data.score === 1 ? 'raaiskoot' : 'raaiskote'}`;
-          leaderboardList.appendChild(li);
-        }
+        validEntries++;
+        const li = document.createElement('li');
+        li.className = "leaderboard-entry";
+        li.innerHTML = `<strong>${data.name}</strong>: ${data.score} ${data.score === 1 ? 'raaiskoot' : 'raaiskote'}`;
+        leaderboardList.appendChild(li);
       });
       if (validEntries === 0) leaderboardList.innerHTML = "<li>Jou naam kan eerste wees!</li>";
     } catch (err) {
@@ -426,7 +425,7 @@
         score,
         timestamp: serverTimestamp()
       });
-      localStorage.setItem('lastGameTime', Date.now());
+      localStorage.setItem(localKey, Date.now());
       loadLeaderboard();
     } catch (err) {
       console.error('Telling stuur het misluk:', err);
