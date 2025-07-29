@@ -251,12 +251,45 @@
   let currentCol = 0;
   let board = [];
   let targetWord = "";
-
   const params = new URLSearchParams(window.location.search);
   const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
   const gameUrl = window.location.href;
   const gameDate = gameId.replace("Game", "");
   const formattedDate = new Date(gameDate).toLocaleDateString("af-ZA", { day: 'numeric', month: 'long', year: 'numeric' });
+
+  function disableGame(message = "Jy het reeds vandag gespeel. Probeer weer môre.") {
+    document.getElementById('clue').textContent = message;
+    document.removeEventListener("keydown", keyHandler);
+    document.querySelectorAll('.key').forEach(key => key.disabled = true);
+  }
+
+  async function hasPlayedToday() {
+    try {
+      const q = query(collection(db, 'games', gameId, 'leaderboard'));
+      const snapshot = await getDocs(q);
+      for (const docSnap of snapshot.docs) {
+        const data = docSnap.data();
+        if (data.name === window.currentUser.name) return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Kon nie Firestore vir spelstatus nagaan nie:', err);
+      return false;
+    }
+  }
+
+  async function checkDailyLimit() {
+    const lastGameTime = localStorage.getItem('lastGameTime');
+    if (lastGameTime && Date.now() - parseInt(lastGameTime) < 24 * 60 * 60 * 1000) {
+      disableGame();
+      return false;
+    }
+    if (await hasPlayedToday()) {
+      disableGame();
+      return false;
+    }
+    return true;
+  }
 
   async function loadGameData() {
     try {
@@ -388,18 +421,12 @@
 
   async function submitScore(score) {
     try {
-      const q = query(collection(db, 'games', gameId, 'leaderboard'));
-      const querySnapshot = await getDocs(q);
-      querySnapshot.forEach(async docSnap => {
-        const data = docSnap.data();
-        if (data.score === 9999) await deleteDoc(docSnap.ref);
-      });
-
       await addDoc(collection(db, 'games', gameId, 'leaderboard'), {
         name: window.currentUser.name,
         score,
         timestamp: serverTimestamp()
       });
+      localStorage.setItem('lastGameTime', Date.now());
       loadLeaderboard();
     } catch (err) {
       console.error('Telling stuur het misluk:', err);
@@ -414,6 +441,7 @@
     document.getElementById("modalShareBtn").onclick = () => navigator.clipboard.writeText(message);
     document.getElementById("resultModal").classList.remove("hidden");
     submitScore(attempts);
+    disableGame();
   }
 
   function gameFailed() {
@@ -422,19 +450,25 @@
       `Jammer, ${window.currentUser.name}! Vandag se oplossing is ${targetWord}.`;
     document.getElementById("modalShareBtn").onclick = () => navigator.clipboard.writeText(message);
     document.getElementById("resultModal").classList.remove("hidden");
+    submitScore(gridRows);
+    disableGame();
   }
 
-  document.getElementById("closeModalBtn").onclick = () => document.getElementById("resultModal").classList.add('hidden');
-  document.addEventListener("keydown", e => {
+  function keyHandler(e) {
     if (e.key === "Enter") handleEnter();
     else if (e.key === "Backspace") handleBackspace();
     else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
-  });
+  }
+
+  document.getElementById("closeModalBtn").onclick = () => document.getElementById("resultModal").classList.add('hidden');
+  document.addEventListener("keydown", keyHandler);
 
   await loadGameData();
-  createGrid();
-  createKeyboard();
-  loadLeaderboard();
+  if (await checkDailyLimit()) {
+    createGrid();
+    createKeyboard();
+    loadLeaderboard();
+  }
 </script>
 </body>
 </html>
