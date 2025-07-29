@@ -203,6 +203,12 @@
       };
       main.appendChild(logoutBtn);
     }
+
+    // Show cookie banner if consent is not set
+    const cookieConsent = localStorage.getItem('cookieConsent');
+    if (!cookieConsent) {
+      document.getElementById('cookie-banner').style.display = 'block';
+    }
   });
 
   function acceptCookies() {
