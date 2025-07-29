@@ -94,13 +94,13 @@
     /* --- Faded DILEMMA preview --- */
     #dilemma-preview {
       position: relative;
-      opacity: 0.4; /* More visible */
+      opacity: 0.4;
       pointer-events: none;
       max-width: 350px;
       margin: 0 auto 2rem auto;
-      border: 2px solid #aaa;
+      border: 2px solid #888;
       border-radius: 8px;
-      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35); /* Darker shadow */
       transition: opacity 0.3s ease, transform 0.3s ease;
     }
     #dilemma-preview:hover {
@@ -125,7 +125,7 @@
       align-items: center;
       font-weight: bold;
       font-size: 1.2rem;
-      color: rgba(0, 0, 0, 0.4); /* Faded letters */
+      color: rgba(0, 0, 0, 0.5);
       text-transform: uppercase;
     }
     .preview-keyboard {
@@ -230,9 +230,17 @@
     }
 
     // Fill preview grid with random faded letters
-    document.querySelectorAll('.preview-tile').forEach(tile => {
-      tile.textContent = getRandomLetter();
-    });
+    const tiles = document.querySelectorAll('.preview-tile');
+    tiles.forEach(tile => tile.textContent = getRandomLetter());
+
+    // Shuffle letters every 2–3 seconds
+    setInterval(() => {
+      tiles.forEach(tile => {
+        if (Math.random() < 0.2) { // Random subset each cycle
+          tile.textContent = getRandomLetter();
+        }
+      });
+    }, 2500);
 
     function generateBackgroundGrid() {
       backgroundCrossword.innerHTML = '';
