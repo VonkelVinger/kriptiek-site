@@ -154,8 +154,17 @@
       box-shadow: 0 0 8px rgba(255, 255, 255, 0.8), 0 0 10px rgba(0, 0, 0, 0.3);
       transform: scale(1.08);
     }
-    .preview-key.enter { background: green; }
-    .preview-key.back { background: #b91c1c; }
+    .preview-key.enter, .preview-key.back {
+      animation: pulseGlow 2s infinite alternate;
+    }
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 0 5px rgba(255,255,255,0.6), 0 0 8px rgba(0,0,0,0.4); }
+      100% { box-shadow: 0 0 12px rgba(255,255,255,1), 0 0 15px rgba(0,0,0,0.5); }
+    }
+
+    .dark-blue-text {
+      color: #1e3a8a;
+    }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -205,7 +214,7 @@
 </section>
 
 <main class="flex-grow p-6 text-center">
-  <p class="text-3xl font-bold text-gray-700 mb-4">WELKOM BY KRIPTIEK</p>
+  <p class="text-3xl font-bold dark-blue-text mb-4">Kriptiek.com is die tuiste van DILEMMA en binnekort ook ander Afrikaanse raaisels en woordspeletjies.</p>
   <div class="flex flex-wrap justify-center gap-4 mb-8"></div>
   <div id="dilemma-buttons" class="flex flex-col items-center gap-4 mt-4"></div>
 </main>
@@ -236,16 +245,12 @@
       return letters[Math.floor(Math.random() * letters.length)];
     }
 
-    // Fill preview grid with random faded letters
     const tiles = document.querySelectorAll('.preview-tile');
     tiles.forEach(tile => tile.textContent = getRandomLetter());
 
-    // Shuffle letters every 2–3 seconds
     setInterval(() => {
       tiles.forEach(tile => {
-        if (Math.random() < 0.2) {
-          tile.textContent = getRandomLetter();
-        }
+        if (Math.random() < 0.2) tile.textContent = getRandomLetter();
       });
     }, 2500);
 
