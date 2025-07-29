@@ -90,6 +90,52 @@
       color: #92400e;
       font-weight: bold;
     }
+
+    /* --- Faded DILEMMA preview --- */
+    #dilemma-preview {
+      opacity: 0.2;
+      pointer-events: none;
+      max-width: 350px;
+      margin: 0 auto 2rem auto;
+    }
+    .preview-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .preview-tile {
+      width: 40px;
+      height: 40px;
+      border: 2px solid #374151;
+      background: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 1.2rem;
+      color: #000;
+    }
+    .preview-keyboard {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 4px;
+      justify-items: center;
+      margin-top: 8px;
+    }
+    .preview-key {
+      width: 30px;
+      height: 40px;
+      background: #374151;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+    .preview-key.enter { background: green; }
+    .preview-key.back { background: #b91c1c; }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -109,6 +155,34 @@
     </div>
   </div>
 </header>
+
+<!-- Faded DILEMMA Preview -->
+<section id="dilemma-preview" class="text-center mt-4">
+  <div class="preview-grid">
+    <div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div>
+  </div>
+  <div class="preview-grid">
+    <div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div>
+  </div>
+  <div class="preview-grid">
+    <div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div>
+  </div>
+  <div class="preview-grid">
+    <div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div>
+  </div>
+  <div class="preview-grid">
+    <div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div>
+  </div>
+  <div class="preview-keyboard">
+    <div class="preview-key">Q</div><div class="preview-key">W</div><div class="preview-key">E</div><div class="preview-key">R</div><div class="preview-key">T</div><div class="preview-key">Y</div><div class="preview-key">U</div><div class="preview-key">I</div><div class="preview-key">O</div><div class="preview-key">P</div>
+  </div>
+  <div class="preview-keyboard">
+    <div class="preview-key">A</div><div class="preview-key">S</div><div class="preview-key">D</div><div class="preview-key">F</div><div class="preview-key">G</div><div class="preview-key">H</div><div class="preview-key">J</div><div class="preview-key">K</div><div class="preview-key">L</div>
+  </div>
+  <div class="preview-keyboard">
+    <div class="preview-key">Z</div><div class="preview-key">X</div><div class="preview-key">C</div><div class="preview-key">V</div><div class="preview-key">B</div><div class="preview-key">N</div><div class="preview-key">M</div><div class="preview-key enter">↵</div><div class="preview-key back">←</div>
+  </div>
+</section>
 
 <main class="flex-grow p-6 text-center">
   <p class="text-3xl font-bold text-gray-700 mb-4">WELKOM BY KRIPTIEK</p>
@@ -204,7 +278,6 @@
       main.appendChild(logoutBtn);
     }
 
-    // Show cookie banner if consent is not set
     const cookieConsent = localStorage.getItem('cookieConsent');
     if (!cookieConsent) {
       document.getElementById('cookie-banner').style.display = 'block';
