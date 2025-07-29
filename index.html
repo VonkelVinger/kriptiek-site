@@ -108,7 +108,7 @@
       transform: scale(1.02);
     }
     #dilemma-preview:hover #dilemma-overlay {
-      text-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+      text-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
     }
 
     .preview-grid {
@@ -164,12 +164,17 @@
       justify-content: center;
       font-size: 1.4rem;
       font-weight: bold;
-      color: white;
-      background: rgba(0, 0, 0, 0.4);
+      color: black;
+      background: rgba(255, 255, 255, 0.4);
       border-radius: 6px;
       text-align: center;
       pointer-events: none;
-      transition: text-shadow 0.3s ease;
+      animation: pulseText 2.5s ease-in-out infinite;
+    }
+
+    @keyframes pulseText {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.8; }
     }
   </style>
 </head>
