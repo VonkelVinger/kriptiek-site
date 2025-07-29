@@ -144,6 +144,7 @@
     }
     .preview-tile.darker {
       color: #000;
+      background: #dcdcdc;
       border-color: #000;
       font-weight: 900;
     }
@@ -187,6 +188,11 @@
     .dark-blue-text {
       color: #1e3a8a;
       font-weight: bold;
+    }
+    .message-text {
+      max-width: 400px; /* match WELKOM BY KRIPTIEK */
+      margin: 0 auto;
+      text-align: center;
     }
   </style>
 </head>
@@ -250,6 +256,10 @@
 
 <main class="flex-grow p-6 text-center">
   <p class="text-3xl font-bold dark-blue-text mb-4">WELKOM BY KRIPTIEK</p>
+  <p class="message-text">
+    Kriptiek.com is die tuiste van DILEMMA en binnekort ook ander Afrikaanse raaisels en woordspelletjies.
+    Kies onder wat jy wil speel, <a href="/subscribe.html" class="underline font-bold text-[#1e3a8a]">of lees meer oor ons planne vorentoe.</a>
+  </p>
   <div class="flex flex-wrap justify-center gap-4 mb-8"></div>
   <div id="dilemma-buttons" class="flex flex-col items-center gap-4 mt-4"></div>
 </main>
@@ -317,7 +327,6 @@
       actionButton.href = "/register.html";
       actionButton.textContent = "Registreer nou";
     } else {
-      message.innerHTML = `Kriptiek.com is die tuiste van DILEMMA en binnekort ook ander Afrikaanse raaisels en woordspeletjies. Kies onder wat jy wil speel, <a href="/subscribe.html" class="underline font-bold text-[#1e3a8a]">of lees meer oor ons planne vorentoe.</a>`;
       actionButton.href = `/dilemmagame.html?gameId=Game${today}`;
       actionButton.textContent = "Speel VANDAG SE DILEMMA";
 
