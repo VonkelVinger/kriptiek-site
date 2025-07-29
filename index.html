@@ -103,8 +103,8 @@
       to { opacity: 1; transform: scale(1); }
     }
     @keyframes pulseLetter {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.08); }
+      0%, 100% { transform: scale(1); box-shadow: 0 0 4px rgba(0,0,0,0.3); }
+      50% { transform: scale(1.08); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
     }
     #dilemma-preview {
       position: relative;
@@ -151,7 +151,7 @@
       text-transform: uppercase;
     }
 
-    /* DILEMMA middle row */
+    /* DILEMMA middle row with glow */
     .preview-tile.darker {
       color: #000;
       background: #dcdcdc;
