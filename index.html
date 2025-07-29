@@ -1,3 +1,4 @@
+Review the changes I just made:
 <!DOCTYPE html>
 <html lang="af">
 <head>
@@ -164,7 +165,6 @@
 
     .dark-blue-text {
       color: #1e3a8a;
-      font-weight: bold;
     }
   </style>
 </head>
@@ -281,20 +281,20 @@
     dilemmaButtons.innerHTML = '';
 
     const message = document.createElement('div');
-    message.className = 'text-center dark-blue-text mb-6 font-semibold';
+    message.className = 'text-center text-red-700 font-semibold mb-6';
     main.insertBefore(message, buttonContainer);
 
     const actionButton = document.createElement('a');
     actionButton.className = 'bg-blue-600 text-white px-4 py-2 rounded';
 
     if (!isRegistered) {
-      message.innerHTML = `Jy moet <a href="/register.html" class="underline font-bold text-blue-600">registreer</a> voordat jy kan speel. Dis vinnig en gratis.`;
+      message.innerHTML = `Jy moet <a href="/register.html" class="underline text-blue-600">registreer</a> voordat jy kan speel. Dis vinnig en gratis.`;
       actionButton.href = "/register.html";
       actionButton.textContent = "Registreer nou";
     } else {
-      message.innerHTML = `Kriptiek.com is die tuiste van DILEMMA en binnekort ook ander Afrikaanse raaisels en woordspeletjies. Kies onder wat jy wil speel, <a href="/subscribe.html" class="underline font-bold text-green-700">of lees meer oor ons planne vorentoe.</a>`;
+      message.innerHTML = `Kriptiek.com is die tuiste van DILEMMA en binnekort ook ander Afrikaanse raaisels en woordspeletjies. Kies onder wat jy wil speel, <a href="/subscribe.html" class="underline text-green-700">of lees meer oor ons planne vorentoe.</a>`;
       actionButton.href = `/dilemmagame.html?gameId=Game${today}`;
-      actionButton.textContent = "Speel VANDAG SE DILEMMA`;
+      actionButton.textContent = "Speel VANDAG SE DILEMMA";
 
       const olderBtn = document.createElement('a');
       olderBtn.href = "/dilemma-argief.html";
