@@ -11,6 +11,32 @@
       font-family: 'Montserrat', sans-serif;
       background-color: #f8f5f2;
     }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      text-align: center;
+    }
+    .calendar-grid div {
+      padding: 0.5rem;
+      border-radius: 4px;
+    }
+    .calendar-grid a {
+      display: block;
+      padding: 0.5rem;
+      border-radius: 4px;
+      background-color: #bfdbfe;
+      color: #1e3a8a;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    .calendar-grid a:hover {
+      background-color: #93c5fd;
+    }
+    .day-header {
+      font-weight: bold;
+      color: #374151;
+    }
   </style>
 </head>
 <body class="min-h-screen p-4 text-gray-800 bg-[#f8f5f2]">
@@ -19,8 +45,8 @@
     <p class="text-sm text-gray-600">Kies 'n datum om 'n vorige speletjie te speel</p>
   </header>
 
-  <main class="max-w-2xl mx-auto">
-    <div id="archiveList" class="space-y-6"></div>
+  <main class="max-w-3xl mx-auto">
+    <div id="archiveList" class="space-y-10"></div>
   </main>
 
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
@@ -33,87 +59,108 @@
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
 
-
   <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-  import {
-    getFirestore, collection, getDocs
-  } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
-    authDomain: "kriptiek-c9ea2.firebaseapp.com",
-    projectId: "kriptiek-c9ea2",
-    storageBucket: "kriptiek-c9ea2.appspot.com",
-    messagingSenderId: "620450620939",
-    appId: "1:620450620939:web:e93a18ac23b53b33db890e"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+      authDomain: "kriptiek-c9ea2.firebaseapp.com",
+      projectId: "kriptiek-c9ea2",
+      storageBucket: "kriptiek-c9ea2.appspot.com",
+      messagingSenderId: "620450620939",
+      appId: "1:620450620939:web:e93a18ac23b53b33db890e"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  async function loadArchive() {
-    const gamesCol = collection(db, "games");
-    const snap = await getDocs(gamesCol);
-    if (snap.empty) return;
+    async function loadArchive() {
+      const gamesCol = collection(db, "games");
+      const snap = await getDocs(gamesCol);
+      if (snap.empty) return;
 
-    const entries = [];
-    snap.forEach(doc => {
-      const data = doc.data();
-      if (data.date) {
-        entries.push({
-          date: data.date,
-          gameId: doc.id
-        });
-      }
-    });
-
-    // Sort descending by date
-    entries.sort((a, b) => b.date.localeCompare(a.date));
-
-    // Group by year-month
-    const grouped = {};
-    entries.forEach(({ date, gameId }) => {
-      const [year, month, day] = date.split("-");
-      const monthKey = `${year}-${month}`;
-      if (!grouped[monthKey]) grouped[monthKey] = [];
-      grouped[monthKey].push({ date, gameId });
-    });
-
-    const container = document.getElementById("archiveList");
-    for (const [monthKey, games] of Object.entries(grouped)) {
-      const [year, month] = monthKey.split("-");
-      const monthName = new Date(`${year}-${month}-01`).toLocaleString("af-ZA", { month: "long", year: "numeric" });
-
-      const section = document.createElement("div");
-      section.classList.add("mb-4");
-
-      const heading = document.createElement("h2");
-      heading.className = "text-xl font-semibold text-[#374151] mb-2";
-      heading.textContent = `🗓️ ${monthName}`;
-      section.appendChild(heading);
-
-      const ul = document.createElement("ul");
-      ul.className = "list-disc list-inside";
-      games.forEach(({ date, gameId }) => {
-        const [y, m, d] = date.split("-");
-        const friendly = `${parseInt(d)} ${new Date(`${y}-${m}-01`).toLocaleString("af-ZA", { month: "long" })}`;
-        const li = document.createElement("li");
-        const link = document.createElement("a");
-        link.href = `/dilemmagame.html?gameId=${gameId}`;
-        link.className = "text-blue-700 hover:underline";
-        link.textContent = friendly;
-        li.appendChild(link);
-        ul.appendChild(li);
+      const entries = [];
+      snap.forEach(doc => {
+        const data = doc.data();
+        if (data.date) {
+          entries.push({
+            date: data.date,
+            gameId: doc.id
+          });
+        }
       });
 
-      section.appendChild(ul);
-      container.appendChild(section);
+      // Sort descending by date
+      entries.sort((a, b) => b.date.localeCompare(a.date));
+
+      // Group by year-month
+      const grouped = {};
+      entries.forEach(({ date, gameId }) => {
+        const [year, month, day] = date.split("-");
+        const monthKey = `${year}-${month}`;
+        if (!grouped[monthKey]) grouped[monthKey] = [];
+        grouped[monthKey].push({ date, gameId });
+      });
+
+      const container = document.getElementById("archiveList");
+      for (const [monthKey, games] of Object.entries(grouped)) {
+        const [year, month] = monthKey.split("-");
+        const monthName = new Date(`${year}-${month}-01`).toLocaleString("af-ZA", { month: "long", year: "numeric" });
+
+        const section = document.createElement("div");
+
+        const heading = document.createElement("h2");
+        heading.className = "text-2xl font-semibold text-[#374151] mb-4";
+        heading.textContent = `🗓️ ${monthName}`;
+        section.appendChild(heading);
+
+        const calendar = document.createElement("div");
+        calendar.className = "calendar-grid";
+
+        // Day headers
+        const daysOfWeek = ["Ma", "Di", "Wo", "Do", "Vr", "Sa", "So"];
+        daysOfWeek.forEach(d => {
+          const header = document.createElement("div");
+          header.className = "day-header";
+          header.textContent = d;
+          calendar.appendChild(header);
+        });
+
+        // Prepare days
+        const firstDay = new Date(`${year}-${month}-01`);
+        const totalDays = new Date(year, month, 0).getDate();
+        const startDay = (firstDay.getDay() + 6) % 7; // Monday-start index
+
+        // Fill empty cells
+        for (let i = 0; i < startDay; i++) {
+          const empty = document.createElement("div");
+          calendar.appendChild(empty);
+        }
+
+        // Fill days with links
+        for (let day = 1; day <= totalDays; day++) {
+          const dateStr = `${year}-${month}-${String(day).padStart(2, '0')}`;
+          const cell = document.createElement("div");
+          const game = games.find(g => g.date === dateStr);
+
+          if (game) {
+            const link = document.createElement("a");
+            link.href = `/dilemmagame.html?gameId=${game.gameId}`;
+            link.textContent = day;
+            cell.appendChild(link);
+          } else {
+            cell.textContent = day;
+          }
+          calendar.appendChild(cell);
+        }
+
+        section.appendChild(calendar);
+        container.appendChild(section);
+      }
     }
-  }
 
-  loadArchive();
-</script>
-
+    loadArchive();
+  </script>
 </body>
 </html>
