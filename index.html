@@ -94,17 +94,17 @@
     /* --- Faded DILEMMA preview --- */
     #dilemma-preview {
       position: relative;
-      opacity: 0.2;
+      opacity: 0.4; /* More visible */
       pointer-events: none;
       max-width: 350px;
       margin: 0 auto 2rem auto;
-      border: 2px solid #ccc;
+      border: 2px solid #aaa;
       border-radius: 8px;
-      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
       transition: opacity 0.3s ease, transform 0.3s ease;
     }
     #dilemma-preview:hover {
-      opacity: 0.35;
+      opacity: 0.5;
       transform: scale(1.02);
     }
 
@@ -118,14 +118,15 @@
     .preview-tile {
       width: 40px;
       height: 40px;
-      border: 2px solid #374151;
-      background: white;
+      border: 2px solid #333;
+      background: #f8f8f8;
       display: flex;
       justify-content: center;
       align-items: center;
       font-weight: bold;
       font-size: 1.2rem;
-      color: #000;
+      color: rgba(0, 0, 0, 0.4); /* Faded letters */
+      text-transform: uppercase;
     }
     .preview-keyboard {
       display: grid;
@@ -138,7 +139,7 @@
     .preview-key {
       width: 30px;
       height: 40px;
-      background: #374151;
+      background: #555;
       color: white;
       display: flex;
       justify-content: center;
@@ -223,9 +224,16 @@
   document.addEventListener('DOMContentLoaded', function () {
     const backgroundCrossword = document.getElementById('backgroundCrossword');
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
     function getRandomLetter() {
       return letters[Math.floor(Math.random() * letters.length)];
     }
+
+    // Fill preview grid with random faded letters
+    document.querySelectorAll('.preview-tile').forEach(tile => {
+      tile.textContent = getRandomLetter();
+    });
+
     function generateBackgroundGrid() {
       backgroundCrossword.innerHTML = '';
       const numRows = Math.ceil(backgroundCrossword.offsetHeight / 30);
@@ -238,6 +246,7 @@
         backgroundCrossword.appendChild(bgLetterBox);
       }
     }
+
     generateBackgroundGrid();
     window.addEventListener('resize', generateBackgroundGrid);
 
