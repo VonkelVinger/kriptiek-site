@@ -6,7 +6,6 @@
   <title>DILEMMA – Kriptiek</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
-
   <style>
     body {
       font-family: 'Montserrat', sans-serif;
@@ -169,9 +168,7 @@
   </header>
 
   <main class="flex-grow game-container">
-    <div id="clue" class="text-center text-lg mb-4 text-gray-700 font-semibold">
-      Laai die leidraad...
-    </div>
+    <div id="clue" class="text-center text-lg mb-4 text-gray-700 font-semibold">Laai die leidraad...</div>
     <div id="game-grid" class="mb-6"></div>
     <div id="keyboard" class="mb-6"></div>
 
@@ -241,20 +238,137 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
+  const gameGrid = document.getElementById("game-grid");
+  const keyboard = document.getElementById("keyboard");
+  const leaderboardList = document.getElementById('leaderboardList');
   const storedName = localStorage.getItem('userName') || 'Speler';
   window.currentUser = { name: storedName };
   document.getElementById("playerName").textContent = storedName;
 
+  let gridRows = 6;
+  let gridCols = 5;
+  let currentRow = 0;
+  let currentCol = 0;
+  let board = [];
+  let targetWord = "";
+
   const params = new URLSearchParams(window.location.search);
   const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
-  const leaderboardList = document.getElementById('leaderboardList');
+  const gameUrl = window.location.href;
+  const gameDate = gameId.replace("Game", "");
+  const formattedDate = new Date(gameDate).toLocaleDateString("af-ZA", { day: 'numeric', month: 'long', year: 'numeric' });
+
+  async function loadGameData() {
+    try {
+      const gameDocRef = doc(db, 'games', gameId);
+      const gameDocSnap = await getDoc(gameDocRef);
+      if (gameDocSnap.exists()) {
+        const data = gameDocSnap.data();
+        targetWord = (data.word || "XXXXX").toUpperCase();
+        gridCols = targetWord.length;
+        document.getElementById('clue').textContent = data.clue || "Geen leidraad beskikbaar nie.";
+      }
+    } catch (err) {
+      console.error("Kon nie speldata laai nie:", err);
+    }
+  }
+
+  function createGrid() {
+    gameGrid.innerHTML = "";
+    board = [];
+    for (let r = 0; r < gridRows; r++) {
+      const rowDiv = document.createElement("div");
+      rowDiv.className = "tile-row";
+      const row = [];
+      for (let c = 0; c < gridCols; c++) {
+        const tile = document.createElement("div");
+        tile.className = "letter-tile";
+        rowDiv.appendChild(tile);
+        row.push(tile);
+      }
+      gameGrid.appendChild(rowDiv);
+      board.push(row);
+    }
+  }
+
+  const keyLayout = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
+  function createKeyboard() {
+    keyboard.innerHTML = "";
+    keyLayout.forEach(row => {
+      const rowDiv = document.createElement("div");
+      rowDiv.className = "keyboard-row";
+      [...row].forEach(letter => {
+        const key = document.createElement("button");
+        key.className = "key";
+        key.textContent = letter;
+        key.onclick = () => handleKey(letter);
+        rowDiv.appendChild(key);
+      });
+      if (row === "ZXCVBNM") {
+        const enter = document.createElement("button");
+        enter.className = "key bg-green-600";
+        enter.textContent = "Enter";
+        enter.onclick = () => handleEnter();
+        rowDiv.appendChild(enter);
+        const back = document.createElement("button");
+        back.className = "key bg-red-600";
+        back.textContent = "←";
+        back.onclick = () => handleBackspace();
+        rowDiv.appendChild(back);
+      }
+      keyboard.appendChild(rowDiv);
+    });
+  }
+
+  function handleKey(letter) {
+    if (currentCol < gridCols && currentRow < gridRows) {
+      board[currentRow][currentCol].textContent = letter;
+      currentCol++;
+    }
+  }
+
+  function handleBackspace() {
+    if (currentCol > 0) {
+      currentCol--;
+      board[currentRow][currentCol].textContent = "";
+    }
+  }
+
+  function handleEnter() {
+    if (currentCol < gridCols) {
+      alert("Vul al die letters in!");
+      return;
+    }
+    const guess = board[currentRow].map(tile => tile.textContent).join("");
+    checkGuess(guess);
+  }
+
+  function checkGuess(guess) {
+    const target = targetWord.toUpperCase();
+    const guessLetters = guess.split("");
+    for (let i = 0; i < gridCols; i++) {
+      const tile = board[currentRow][i];
+      const letter = guessLetters[i];
+      if (letter === target[i]) tile.classList.add("correct");
+      else if (target.includes(letter)) tile.classList.add("present");
+      else tile.classList.add("absent");
+    }
+    if (guess === target) {
+      setTimeout(() => gameCompleted(currentRow + 1), 500);
+    } else {
+      currentRow++;
+      currentCol = 0;
+      if (currentRow >= gridRows) {
+        setTimeout(() => gameFailed(), 500);
+      }
+    }
+  }
 
   async function loadLeaderboard() {
     leaderboardList.innerHTML = '';
     try {
       const q = query(collection(db, 'games', gameId, 'leaderboard'), orderBy('score', 'asc'), limit(10));
       const querySnapshot = await getDocs(q);
-
       let validEntries = 0;
       querySnapshot.forEach(docSnap => {
         const data = docSnap.data();
@@ -266,10 +380,7 @@
           leaderboardList.appendChild(li);
         }
       });
-
-      if (validEntries === 0) {
-        leaderboardList.innerHTML = "<li>Jou naam kan eerste wees!</li>";
-      }
+      if (validEntries === 0) leaderboardList.innerHTML = "<li>Jou naam kan eerste wees!</li>";
     } catch (err) {
       console.error('Kon nie leaderboard laai nie:', err);
     }
@@ -277,14 +388,11 @@
 
   async function submitScore(score) {
     try {
-      // Remove placeholder doc if it exists
       const q = query(collection(db, 'games', gameId, 'leaderboard'));
       const querySnapshot = await getDocs(q);
       querySnapshot.forEach(async docSnap => {
         const data = docSnap.data();
-        if (data.score === 9999) {
-          await deleteDoc(docSnap.ref);
-        }
+        if (data.score === 9999) await deleteDoc(docSnap.ref);
       });
 
       await addDoc(collection(db, 'games', gameId, 'leaderboard'), {
@@ -298,7 +406,34 @@
     }
   }
 
-  // Initialize leaderboard
+  function gameCompleted(attempts) {
+    const word = attempts === 1 ? "raaiskoot" : "raaiskote";
+    const message = `Ek het ${formattedDate} se DILEMMA in ${attempts} ${word} opgelos. Speel by: ${gameUrl}`;
+    document.getElementById("resultMessage").textContent =
+      `Baie geluk, ${window.currentUser.name}! Jy het die woord in ${attempts} ${word} geraai!`;
+    document.getElementById("modalShareBtn").onclick = () => navigator.clipboard.writeText(message);
+    document.getElementById("resultModal").classList.remove("hidden");
+    submitScore(attempts);
+  }
+
+  function gameFailed() {
+    const message = `Ek kon nie ${formattedDate} se DILEMMA oplos nie. Speel by: ${gameUrl}`;
+    document.getElementById("resultMessage").textContent =
+      `Jammer, ${window.currentUser.name}! Vandag se oplossing is ${targetWord}.`;
+    document.getElementById("modalShareBtn").onclick = () => navigator.clipboard.writeText(message);
+    document.getElementById("resultModal").classList.remove("hidden");
+  }
+
+  document.getElementById("closeModalBtn").onclick = () => document.getElementById("resultModal").classList.add('hidden');
+  document.addEventListener("keydown", e => {
+    if (e.key === "Enter") handleEnter();
+    else if (e.key === "Backspace") handleBackspace();
+    else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
+  });
+
+  await loadGameData();
+  createGrid();
+  createKeyboard();
   loadLeaderboard();
 </script>
 </body>
