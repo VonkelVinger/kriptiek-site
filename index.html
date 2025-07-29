@@ -98,12 +98,25 @@
       pointer-events: none;
       max-width: 350px;
       margin: 0 auto 2rem auto;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      transition: opacity 0.3s ease, transform 0.3s ease;
     }
+    #dilemma-preview:hover {
+      opacity: 0.35;
+      transform: scale(1.02);
+    }
+    #dilemma-preview:hover #dilemma-overlay {
+      text-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+    }
+
     .preview-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       gap: 4px;
       margin-bottom: 8px;
+      padding: 0 4px;
     }
     .preview-tile {
       width: 40px;
@@ -123,6 +136,7 @@
       gap: 4px;
       justify-items: center;
       margin-top: 8px;
+      padding-bottom: 8px;
     }
     .preview-key {
       width: 30px;
@@ -152,9 +166,10 @@
       font-weight: bold;
       color: white;
       background: rgba(0, 0, 0, 0.4);
-      border-radius: 8px;
+      border-radius: 6px;
       text-align: center;
       pointer-events: none;
+      transition: text-shadow 0.3s ease;
     }
   </style>
 </head>
