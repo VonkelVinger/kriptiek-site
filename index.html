@@ -91,6 +91,16 @@
       font-weight: bold;
     }
 
+    /* --- Fade-in animation --- */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 0.4; transform: scale(1); }
+    }
+    @keyframes fadeRow {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     /* --- Faded DILEMMA preview --- */
     #dilemma-preview {
       position: relative;
@@ -111,11 +121,6 @@
       transform: scale(1.02);
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.98); }
-      to { opacity: 0.4; transform: scale(1); }
-    }
-
     .preview-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
@@ -130,11 +135,6 @@
     .preview-grid:nth-child(3) { animation-delay: 0.5s; }
     .preview-grid:nth-child(4) { animation-delay: 0.7s; }
     .preview-grid:nth-child(5) { animation-delay: 0.9s; }
-
-    @keyframes fadeRow {
-      from { opacity: 0; transform: translateY(5px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
 
     .preview-tile {
       width: 40px;
@@ -159,9 +159,9 @@
       opacity: 0;
       animation: fadeRow 0.6s ease-in forwards;
     }
-    .preview-keyboard:nth-child(6) { animation-delay: 1.1s; }
-    .preview-keyboard:nth-child(7) { animation-delay: 1.3s; }
-    .preview-keyboard:nth-child(8) { animation-delay: 1.5s; }
+    .preview-keyboard:nth-of-type(6) { animation-delay: 1.1s; }
+    .preview-keyboard:nth-of-type(7) { animation-delay: 1.3s; }
+    .preview-keyboard:nth-of-type(8) { animation-delay: 1.5s; }
 
     .preview-key {
       width: 30px;
@@ -185,6 +185,11 @@
     @keyframes pulseGlow {
       0% { box-shadow: 0 0 5px rgba(255,255,255,0.6), 0 0 8px rgba(0,0,0,0.4); }
       100% { box-shadow: 0 0 12px rgba(255,255,255,1), 0 0 15px rgba(0,0,0,0.5); }
+    }
+
+    .dark-blue-text {
+      color: #1e3a8a;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -235,7 +240,7 @@
 </section>
 
 <main class="flex-grow p-6 text-center">
-  <p class="text-3xl font-bold mb-4 text-black">WELKOM BY KRIPTIEK</p>
+  <p class="text-3xl font-bold dark-blue-text mb-4">WELKOM BY KRIPTIEK</p>
   <div class="flex flex-wrap justify-center gap-4 mb-8"></div>
   <div id="dilemma-buttons" class="flex flex-col items-center gap-4 mt-4"></div>
 </main>
