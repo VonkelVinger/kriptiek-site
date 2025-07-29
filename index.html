@@ -102,6 +102,10 @@
       from { opacity: 0; transform: scale(0.9); }
       to { opacity: 1; transform: scale(1); }
     }
+    @keyframes pulseLetter {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
     #dilemma-preview {
       position: relative;
       opacity: 0.4;
@@ -153,15 +157,15 @@
       background: #dcdcdc;
       border-color: #000;
       font-weight: 900;
-      animation: fadeInLetter 1.2s ease forwards;
+      animation: fadeInLetter 1.2s ease forwards, pulseLetter 2s ease-in-out infinite 1.3s;
     }
-    .preview-tile.darker:nth-child(1) { animation-delay: 0s; }
-    .preview-tile.darker:nth-child(2) { animation-delay: 0.2s; }
-    .preview-tile.darker:nth-child(3) { animation-delay: 0.4s; }
-    .preview-tile.darker:nth-child(4) { animation-delay: 0.6s; }
-    .preview-tile.darker:nth-child(5) { animation-delay: 0.8s; }
-    .preview-tile.darker:nth-child(6) { animation-delay: 1s; }
-    .preview-tile.darker:nth-child(7) { animation-delay: 1.2s; }
+    .preview-tile.darker:nth-child(1) { animation-delay: 0s, 1.3s; }
+    .preview-tile.darker:nth-child(2) { animation-delay: 0.2s, 1.3s; }
+    .preview-tile.darker:nth-child(3) { animation-delay: 0.4s, 1.3s; }
+    .preview-tile.darker:nth-child(4) { animation-delay: 0.6s, 1.3s; }
+    .preview-tile.darker:nth-child(5) { animation-delay: 0.8s, 1.3s; }
+    .preview-tile.darker:nth-child(6) { animation-delay: 1s, 1.3s; }
+    .preview-tile.darker:nth-child(7) { animation-delay: 1.2s, 1.3s; }
 
     .preview-keyboard {
       display: grid;
@@ -272,7 +276,7 @@
   <p class="text-3xl font-bold dark-blue-text mb-4">WELKOM BY KRIPTIEK</p>
   <p class="message-text">
     Kriptiek.com is die tuiste van DILEMMA en binnekort ook ander Afrikaanse raaisels en woordspeletjies.
-    Kies onder watter DILEMMA jy wil speel, <a href="/subscribe.html" class="underline font-bold text-[#1e3a8a]">of lees meer oor ons planne vorentoe.</a>
+    Kies onder wat jy wil speel, <a href="/subscribe.html" class="underline font-bold text-[#1e3a8a]">of lees meer oor ons planne vorentoe.</a>
   </p>
   <div class="flex flex-wrap justify-center gap-4 mb-8"></div>
   <div id="dilemma-buttons" class="flex flex-col items-center gap-4 mt-4"></div>
