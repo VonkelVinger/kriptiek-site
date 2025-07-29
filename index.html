@@ -100,8 +100,10 @@
       margin: 0 auto 2rem auto;
       border: 2px solid #888;
       border-radius: 8px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35); /* Darker shadow */
+      background: linear-gradient(to bottom, #ffffff, #f3f4f6); /* Gradient background */
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
       transition: opacity 0.3s ease, transform 0.3s ease;
+      padding: 8px;
     }
     #dilemma-preview:hover {
       opacity: 0.5;
@@ -236,7 +238,7 @@
     // Shuffle letters every 2–3 seconds
     setInterval(() => {
       tiles.forEach(tile => {
-        if (Math.random() < 0.2) { // Random subset each cycle
+        if (Math.random() < 0.2) {
           tile.textContent = getRandomLetter();
         }
       });
