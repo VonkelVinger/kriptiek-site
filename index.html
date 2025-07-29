@@ -100,15 +100,12 @@
       margin: 0 auto 2rem auto;
       border: 2px solid #ccc;
       border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
       transition: opacity 0.3s ease, transform 0.3s ease;
     }
     #dilemma-preview:hover {
       opacity: 0.35;
       transform: scale(1.02);
-    }
-    #dilemma-preview:hover #dilemma-overlay {
-      text-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
     }
 
     .preview-grid {
@@ -151,31 +148,6 @@
     }
     .preview-key.enter { background: green; }
     .preview-key.back { background: #b91c1c; }
-
-    /* --- Overlay message --- */
-    #dilemma-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.4rem;
-      font-weight: bold;
-      color: black;
-      background: rgba(255, 255, 255, 0.4);
-      border-radius: 6px;
-      text-align: center;
-      pointer-events: none;
-      animation: pulseText 2.5s ease-in-out infinite;
-    }
-
-    @keyframes pulseText {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.05); opacity: 0.8; }
-    }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -198,7 +170,6 @@
 
 <!-- Faded DILEMMA Preview -->
 <section id="dilemma-preview" class="text-center mt-4">
-  <div id="dilemma-overlay">Registreer om te speel</div>
   <div class="preview-grid">
     <div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div>
   </div>
