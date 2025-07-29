@@ -79,15 +79,9 @@
       cursor: pointer;
       text-transform: uppercase;
     }
-    .key.bg-green-600 {
-      background-color: #16a34a !important;
-    }
-    .key.bg-red-600 {
-      background-color: #dc2626 !important;
-    }
-    .key:active {
-      background-color: #1f2937;
-    }
+    .key.bg-green-600 { background-color: #16a34a !important; }
+    .key.bg-red-600 { background-color: #dc2626 !important; }
+    .key:active { background-color: #1f2937; }
     .leaderboard-entry {
       padding: 4px 0;
       border-bottom: 1px solid #e5e7eb;
@@ -141,9 +135,7 @@
         padding: 8px 10px;
         font-size: 0.9rem;
       }
-      .keyboard-row {
-        flex-wrap: wrap;
-      }
+      .keyboard-row { flex-wrap: wrap; }
     }
     @media (max-width: 360px) {
       .letter-tile {
@@ -222,7 +214,7 @@
 
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
     &copy; 2025 Kriptiek. Alle regte voorbehou. |
-    <a href="/index.html" class="underline">Tuis</a> |    
+    <a href="/index.html" class="underline">Tuis</a> |
     <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
     <a href="/terms.html" class="underline">Voorwaardes</a> |
     <a href="/faq.html" class="underline">Gereelde vrae</a> |
@@ -231,7 +223,6 @@
   </footer>
 
 <script type="module">
-  // --- Registration Check ---
   if (localStorage.getItem('userRegistered') !== 'true') {
     localStorage.setItem('redirectAfterRegister', window.location.href);
     alert("Jy moet geregistreer wees om DILEMMA te speel.");
@@ -239,7 +230,7 @@
   }
 
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-  import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp }
+  import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp, deleteDoc }
     from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -400,7 +391,7 @@
       const q = query(collection(db, 'games', gameId, 'leaderboard'), orderBy('score', 'asc'), limit(10));
       const querySnapshot = await getDocs(q);
       if (querySnapshot.empty) {
-        leaderboardList.innerHTML = "<li>Nog geen tellings vir vandag nie.</li>";
+        leaderboardList.innerHTML = "<li>Jou naam kan eerste wees!</li>";
       } else {
         querySnapshot.forEach(docSnap => {
           const data = docSnap.data();
