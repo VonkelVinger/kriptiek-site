@@ -139,7 +139,7 @@
       align-items: center;
       font-weight: bold;
       font-size: 1.2rem;
-      color: rgba(0, 0, 0, 0.5);
+      color: #333;
       text-transform: uppercase;
     }
     .preview-keyboard {
@@ -206,13 +206,13 @@
 <!-- Faded DILEMMA Preview -->
 <section id="dilemma-preview" class="text-center mt-4">
   <div class="preview-grid">
-    <div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div>
-  </div>
-  <div class="preview-grid">
-    <div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div>
-  </div>
-  <div class="preview-grid">
-    <div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div><div class="preview-tile"></div>
+    <div class="preview-tile">D</div>
+    <div class="preview-tile">I</div>
+    <div class="preview-tile">L</div>
+    <div class="preview-tile">E</div>
+    <div class="preview-tile">M</div>
+    <div class="preview-tile">M</div>
+    <div class="preview-tile">A</div>
   </div>
   <div class="preview-keyboard">
     <div class="preview-key">Q</div><div class="preview-key">W</div><div class="preview-key">E</div><div class="preview-key">R</div><div class="preview-key">T</div><div class="preview-key">Y</div><div class="preview-key">U</div><div class="preview-key">I</div><div class="preview-key">O</div><div class="preview-key">P</div>
@@ -224,6 +224,7 @@
     <div class="preview-key">Z</div><div class="preview-key">X</div><div class="preview-key">C</div><div class="preview-key">V</div><div class="preview-key">B</div><div class="preview-key">N</div><div class="preview-key">M</div><div class="preview-key enter">↵</div><div class="preview-key back">←</div>
   </div>
 </section>
+
 <main class="flex-grow p-6 text-center">
   <p class="text-3xl font-bold dark-blue-text mb-4">WELKOM BY KRIPTIEK</p>
   <div class="flex flex-wrap justify-center gap-4 mb-8"></div>
@@ -255,15 +256,6 @@
     function getRandomLetter() {
       return letters[Math.floor(Math.random() * letters.length)];
     }
-
-    const tiles = document.querySelectorAll('.preview-tile');
-    tiles.forEach(tile => tile.textContent = getRandomLetter());
-
-    setInterval(() => {
-      tiles.forEach(tile => {
-        if (Math.random() < 0.2) tile.textContent = getRandomLetter();
-      });
-    }, 2500);
 
     function generateBackgroundGrid() {
       backgroundCrossword.innerHTML = '';
