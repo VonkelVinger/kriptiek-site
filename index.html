@@ -1,4 +1,3 @@
-Review the changes I just made:
 <!DOCTYPE html>
 <html lang="af">
 <head>
@@ -105,10 +104,16 @@ Review the changes I just made:
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
       transition: opacity 0.3s ease, transform 0.3s ease;
       padding: 8px;
+      animation: fadeIn 1s ease-in forwards;
     }
     #dilemma-preview:hover {
       opacity: 0.5;
       transform: scale(1.02);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 0.4; transform: scale(1); }
     }
 
     .preview-grid {
@@ -117,7 +122,20 @@ Review the changes I just made:
       gap: 4px;
       margin-bottom: 8px;
       padding: 0 4px;
+      opacity: 0;
+      animation: fadeRow 0.6s ease-in forwards;
     }
+    .preview-grid:nth-child(1) { animation-delay: 0.1s; }
+    .preview-grid:nth-child(2) { animation-delay: 0.3s; }
+    .preview-grid:nth-child(3) { animation-delay: 0.5s; }
+    .preview-grid:nth-child(4) { animation-delay: 0.7s; }
+    .preview-grid:nth-child(5) { animation-delay: 0.9s; }
+
+    @keyframes fadeRow {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     .preview-tile {
       width: 40px;
       height: 40px;
@@ -138,7 +156,13 @@ Review the changes I just made:
       justify-items: center;
       margin-top: 8px;
       padding-bottom: 8px;
+      opacity: 0;
+      animation: fadeRow 0.6s ease-in forwards;
     }
+    .preview-keyboard:nth-child(6) { animation-delay: 1.1s; }
+    .preview-keyboard:nth-child(7) { animation-delay: 1.3s; }
+    .preview-keyboard:nth-child(8) { animation-delay: 1.5s; }
+
     .preview-key {
       width: 30px;
       height: 40px;
@@ -161,10 +185,6 @@ Review the changes I just made:
     @keyframes pulseGlow {
       0% { box-shadow: 0 0 5px rgba(255,255,255,0.6), 0 0 8px rgba(0,0,0,0.4); }
       100% { box-shadow: 0 0 12px rgba(255,255,255,1), 0 0 15px rgba(0,0,0,0.5); }
-    }
-
-    .dark-blue-text {
-      color: #1e3a8a;
     }
   </style>
 </head>
@@ -215,7 +235,7 @@ Review the changes I just made:
 </section>
 
 <main class="flex-grow p-6 text-center">
-  <p class="text-3xl font-bold dark-blue-text mb-4">WELKOM BY KRIPTIEK</p>
+  <p class="text-3xl font-bold mb-4 text-black">WELKOM BY KRIPTIEK</p>
   <div class="flex flex-wrap justify-center gap-4 mb-8"></div>
   <div id="dilemma-buttons" class="flex flex-col items-center gap-4 mt-4"></div>
 </main>
@@ -281,25 +301,25 @@ Review the changes I just made:
     dilemmaButtons.innerHTML = '';
 
     const message = document.createElement('div');
-    message.className = 'text-center text-red-700 font-semibold mb-6';
+    message.className = 'text-center text-black font-semibold mb-6';
     main.insertBefore(message, buttonContainer);
 
     const actionButton = document.createElement('a');
     actionButton.className = 'bg-blue-600 text-white px-4 py-2 rounded';
 
     if (!isRegistered) {
-      message.innerHTML = `Jy moet <a href="/register.html" class="underline text-blue-600">registreer</a> voordat jy kan speel. Dis vinnig en gratis.`;
+      message.innerHTML = `Jy moet <a href="/register.html" class="underline font-bold text-blue-600">registreer</a> voordat jy kan speel. Dis vinnig en gratis.`;
       actionButton.href = "/register.html";
       actionButton.textContent = "Registreer nou";
     } else {
-      message.innerHTML = `Kriptiek.com is die tuiste van DILEMMA en binnekort ook ander Afrikaanse raaisels en woordspeletjies. Kies onder wat jy wil speel, <a href="/subscribe.html" class="underline text-green-700">of lees meer oor ons planne vorentoe.</a>`;
+      message.innerHTML = `Kriptiek.com is die tuiste van DILEMMA en binnekort ook ander Afrikaanse raaisels en woordspeletjies. Kies onder wat jy wil speel, <a href="/subscribe.html" class="underline font-bold text-[#1e3a8a]">of lees meer oor ons planne vorentoe.</a>`;
       actionButton.href = `/dilemmagame.html?gameId=Game${today}`;
       actionButton.textContent = "Speel VANDAG SE DILEMMA";
 
       const olderBtn = document.createElement('a');
       olderBtn.href = "/dilemma-argief.html";
       olderBtn.textContent = "Speel OUER DILEMMAS";
-      olderBtn.className = 'bg-green-700 text-white px-4 py-2 rounded transition transform hover:scale-105 duration-300';
+      olderBtn.className = 'bg-[#1e3a8a] text-white px-4 py-2 rounded transition transform hover:scale-105 duration-300';
       actionButton.className += ' transition transform hover:scale-105 duration-300';
 
       const buttonGroup = document.createElement('div');
