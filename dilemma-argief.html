@@ -46,6 +46,11 @@
   </header>
 
   <main class="max-w-3xl mx-auto">
+    <!-- Month navigation -->
+    <div id="monthNav" class="flex justify-between mb-4 hidden">
+      <button id="prevMonth" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">← Vorige maand</button>
+      <button id="nextMonth" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Volgende maand →</button>
+    </div>
     <div id="archiveList" class="space-y-10"></div>
   </main>
 
@@ -75,6 +80,77 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    let monthKeys = [];
+    let currentMonthIndex = 0;
+
+    function renderMonth(monthKey, grouped) {
+      const container = document.getElementById("archiveList");
+      container.innerHTML = ""; // Clear previous
+
+      const [year, month] = monthKey.split("-");
+      const monthName = new Date(`${year}-${month}-01`).toLocaleString("af-ZA", { month: "long", year: "numeric" });
+
+      const section = document.createElement("div");
+
+      const heading = document.createElement("h2");
+      heading.className = "text-2xl font-semibold text-[#374151] mb-4";
+      heading.textContent = `🗓️ ${monthName}`;
+      section.appendChild(heading);
+
+      const calendar = document.createElement("div");
+      calendar.className = "calendar-grid";
+
+      // Day headers
+      const daysOfWeek = ["Ma", "Di", "Wo", "Do", "Vr", "Sa", "So"];
+      daysOfWeek.forEach(d => {
+        const header = document.createElement("div");
+        header.className = "day-header";
+        header.textContent = d;
+        calendar.appendChild(header);
+      });
+
+      // Prepare days
+      const firstDay = new Date(`${year}-${month}-01`);
+      const totalDays = new Date(year, month, 0).getDate();
+      const startDay = (firstDay.getDay() + 6) % 7; // Monday-start index
+
+      // Fill empty cells
+      for (let i = 0; i < startDay; i++) {
+        const empty = document.createElement("div");
+        calendar.appendChild(empty);
+      }
+
+      // Fill days with links
+      for (let day = 1; day <= totalDays; day++) {
+        const dateStr = `${year}-${month}-${String(day).padStart(2, '0')}`;
+        const cell = document.createElement("div");
+        const game = grouped[monthKey].find(g => g.date === dateStr);
+
+        if (game) {
+          const link = document.createElement("a");
+          link.href = `/dilemmagame.html?gameId=${game.gameId}`;
+          link.textContent = day;
+          cell.appendChild(link);
+        } else {
+          cell.textContent = day;
+        }
+        calendar.appendChild(cell);
+      }
+
+      section.appendChild(calendar);
+      container.appendChild(section);
+
+      updateNavButtons();
+    }
+
+    function updateNavButtons() {
+      const prevBtn = document.getElementById("prevMonth");
+      const nextBtn = document.getElementById("nextMonth");
+
+      prevBtn.disabled = currentMonthIndex === monthKeys.length - 1;
+      nextBtn.disabled = currentMonthIndex === 0;
+    }
+
     async function loadArchive() {
       const gamesCol = collection(db, "games");
       const snap = await getDocs(gamesCol);
@@ -97,67 +173,34 @@
       // Group by year-month
       const grouped = {};
       entries.forEach(({ date, gameId }) => {
-        const [year, month, day] = date.split("-");
+        const [year, month] = date.split("-");
         const monthKey = `${year}-${month}`;
         if (!grouped[monthKey]) grouped[monthKey] = [];
         grouped[monthKey].push({ date, gameId });
       });
 
-      const container = document.getElementById("archiveList");
-      for (const [monthKey, games] of Object.entries(grouped)) {
-        const [year, month] = monthKey.split("-");
-        const monthName = new Date(`${year}-${month}-01`).toLocaleString("af-ZA", { month: "long", year: "numeric" });
+      monthKeys = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
 
-        const section = document.createElement("div");
-
-        const heading = document.createElement("h2");
-        heading.className = "text-2xl font-semibold text-[#374151] mb-4";
-        heading.textContent = `🗓️ ${monthName}`;
-        section.appendChild(heading);
-
-        const calendar = document.createElement("div");
-        calendar.className = "calendar-grid";
-
-        // Day headers
-        const daysOfWeek = ["Ma", "Di", "Wo", "Do", "Vr", "Sa", "So"];
-        daysOfWeek.forEach(d => {
-          const header = document.createElement("div");
-          header.className = "day-header";
-          header.textContent = d;
-          calendar.appendChild(header);
-        });
-
-        // Prepare days
-        const firstDay = new Date(`${year}-${month}-01`);
-        const totalDays = new Date(year, month, 0).getDate();
-        const startDay = (firstDay.getDay() + 6) % 7; // Monday-start index
-
-        // Fill empty cells
-        for (let i = 0; i < startDay; i++) {
-          const empty = document.createElement("div");
-          calendar.appendChild(empty);
-        }
-
-        // Fill days with links
-        for (let day = 1; day <= totalDays; day++) {
-          const dateStr = `${year}-${month}-${String(day).padStart(2, '0')}`;
-          const cell = document.createElement("div");
-          const game = games.find(g => g.date === dateStr);
-
-          if (game) {
-            const link = document.createElement("a");
-            link.href = `/dilemmagame.html?gameId=${game.gameId}`;
-            link.textContent = day;
-            cell.appendChild(link);
-          } else {
-            cell.textContent = day;
-          }
-          calendar.appendChild(cell);
-        }
-
-        section.appendChild(calendar);
-        container.appendChild(section);
+      if (monthKeys.length > 1) {
+        document.getElementById("monthNav").classList.remove("hidden");
       }
+
+      // Show most recent month
+      renderMonth(monthKeys[currentMonthIndex], grouped);
+
+      // Event listeners for navigation
+      document.getElementById("prevMonth").addEventListener("click", () => {
+        if (currentMonthIndex < monthKeys.length - 1) {
+          currentMonthIndex++;
+          renderMonth(monthKeys[currentMonthIndex], grouped);
+        }
+      });
+      document.getElementById("nextMonth").addEventListener("click", () => {
+        if (currentMonthIndex > 0) {
+          currentMonthIndex--;
+          renderMonth(monthKeys[currentMonthIndex], grouped);
+        }
+      });
     }
 
     loadArchive();
