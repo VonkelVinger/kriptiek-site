@@ -257,7 +257,7 @@
   const gameUrl = window.location.href;
   const gameDate = gameId.replace("Game", "");
   const formattedDate = new Date(gameDate).toLocaleDateString("af-ZA", { day: 'numeric', month: 'long', year: 'numeric' });
-  function disableGame(message = "Jy het hierdie een reeds gespeel.") {
+  function disableGame(message = "Jy het hierdie een reeds vandag gespeel") {
     document.getElementById('clue').textContent = message;
     document.removeEventListener("keydown", keyHandler);
     document.querySelectorAll('.key').forEach(key => key.disabled = true);
