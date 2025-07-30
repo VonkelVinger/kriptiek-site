@@ -524,12 +524,12 @@
   document.getElementById("closeModalBtn").onclick = () => document.getElementById("resultModal").classList.add('hidden');
   document.addEventListener("keydown", keyHandler);
 
+  // Initialization
   await loadGameData();
-  if (await checkDailyLimit()) {
-    createGrid();
-    createKeyboard();
-    loadLeaderboard();
-  }
+  createGrid();
+  createKeyboard();
+  await loadLeaderboard();
+  await checkDailyLimit();
 </script>
 </body>
 </html>
