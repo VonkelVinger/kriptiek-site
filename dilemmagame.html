@@ -24,7 +24,16 @@
     .key.bg-green-600 { background-color: #16a34a !important; }
     .key.bg-red-600 { background-color: #1e3a8a !important; }
     /* Lockout message */
-    #lockoutMessage { display: none; text-align: center; margin-top: 10px; font-weight: bold; color: #dc2626; font-size: 1.1rem; opacity: 0; animation: fadeIn 1s forwards; }
+    #lockoutMessage {
+  display: none;
+  text-align: center;
+  margin-top: 10px;
+  font-weight: bold;
+  color: #1e3a8a; /* dark blue */
+  font-size: 1.1rem;
+  opacity: 0;
+  animation: fadeIn 1s forwards;
+}
     #lockoutMessage .icon { margin-right: 6px; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px);} to { opacity: 1; transform: translateY(0);} }
     /* Leaderboard styling */
