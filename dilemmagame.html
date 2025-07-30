@@ -71,7 +71,7 @@
       100% { transform: scale(1); }
     }
     .letter-tile.flip {
-      animation: flipAnim 0.4s ease forwards;
+      animation: flipAnim 0.5s ease forwards;
     }
     @keyframes flipAnim {
       0% { transform: rotateX(0); }
@@ -199,9 +199,6 @@
         <li><span class="font-bold text-yellow-500">GEEL:</span> Die letter is in die woord, maar op die verkeerde plek.</li>
         <li><span class="font-bold text-gray-500">GRYS:</span> Die letter is nie in die woord nie.</li>
       </ul>
-      <p class="mt-2">
-        <span class="font-bold">WENK:</span> Op kleiner skerms sal jy soms lekkerder speel in landskapformaat ("Landscape Format" of "Auto-Rotate").
-      </p>
     </div>
 
     <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
@@ -418,48 +415,44 @@
 
     const keyboardStates = {};
 
-    for (let i = 0; i < gridCols; i++) {
+    // Sequential animation for each tile
+    guessLetters.forEach((letter, i) => {
       const tile = board[currentRow][i];
-      const letter = guessLetters[i];
-      tile.classList.add("flip");
-      if (letter === target[i]) {
-        tile.classList.add("correct");
-        keyboardStates[letter] = "correct";
-        letterCounts[letter]--;
-      }
-    }
+      setTimeout(() => {
+        tile.classList.add("flip");
+        if (letter === target[i]) {
+          tile.classList.add("correct");
+          keyboardStates[letter] = "correct";
+          letterCounts[letter]--;
+        } else if (target.includes(letter) && letterCounts[letter] > 0) {
+          tile.classList.add("present");
+          if (keyboardStates[letter] !== "correct") keyboardStates[letter] = "present";
+          letterCounts[letter]--;
+        } else {
+          tile.classList.add("absent");
+          if (!keyboardStates[letter]) keyboardStates[letter] = "absent";
+        }
 
-    for (let i = 0; i < gridCols; i++) {
-      const tile = board[currentRow][i];
-      const letter = guessLetters[i];
-      if (tile.classList.contains("correct")) continue;
-      if (letterCounts[letter] > 0) {
-        tile.classList.add("present");
-        if (keyboardStates[letter] !== "correct") keyboardStates[letter] = "present";
-        letterCounts[letter]--;
-      } else {
-        tile.classList.add("absent");
-        if (!keyboardStates[letter]) keyboardStates[letter] = "absent";
-      }
-    }
+        if (i === gridCols - 1) {
+          highlightRow(currentRow);
+          if (guess === target) {
+            setTimeout(() => gameCompleted(currentRow + 1), 400);
+          } else {
+            currentRow++;
+            currentCol = 0;
+            if (currentRow >= gridRows) setTimeout(() => gameFailed(), 400);
+          }
 
-    for (const [letter, state] of Object.entries(keyboardStates)) {
-      const keyBtn = [...document.querySelectorAll('.key')].find(k => k.textContent === letter);
-      if (keyBtn) {
-        keyBtn.classList.remove("correct", "present", "absent");
-        keyBtn.classList.add(state);
-      }
-    }
-
-    highlightRow(currentRow);
-
-    if (guess === target) {
-      setTimeout(() => gameCompleted(currentRow + 1), 500);
-    } else {
-      currentRow++;
-      currentCol = 0;
-      if (currentRow >= gridRows) setTimeout(() => gameFailed(), 500);
-    }
+          for (const [ltr, state] of Object.entries(keyboardStates)) {
+            const keyBtn = [...document.querySelectorAll('.key')].find(k => k.textContent === ltr);
+            if (keyBtn) {
+              keyBtn.classList.remove("correct", "present", "absent");
+              keyBtn.classList.add(state);
+            }
+          }
+        }
+      }, i * 350); // 350ms delay between tiles
+    });
   }
 
   async function loadLeaderboard() {
