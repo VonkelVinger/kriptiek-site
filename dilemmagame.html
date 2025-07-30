@@ -257,6 +257,7 @@
   const gameUrl = window.location.href;
   const gameDate = gameId.replace("Game", "");
   const formattedDate = new Date(gameDate).toLocaleDateString("af-ZA", { day: 'numeric', month: 'long', year: 'numeric' });
+
   function disableGame(message = "Jy het hierdie een reeds vandag gespeel") {
     document.getElementById('clue').textContent = message;
     document.removeEventListener("keydown", keyHandler);
@@ -376,16 +377,58 @@
     checkGuess(guess);
   }
 
+  // --- UPDATED CHECKGUESS FUNCTION ---
   function checkGuess(guess) {
     const target = targetWord.toUpperCase();
     const guessLetters = guess.split("");
+
+    const letterCounts = {};
+    for (let ch of target) {
+      letterCounts[ch] = (letterCounts[ch] || 0) + 1;
+    }
+
+    const keyboardStates = {};
+
+    // First pass - mark correct
     for (let i = 0; i < gridCols; i++) {
       const tile = board[currentRow][i];
       const letter = guessLetters[i];
-      if (letter === target[i]) tile.classList.add("correct");
-      else if (target.includes(letter)) tile.classList.add("present");
-      else tile.classList.add("absent");
+      if (letter === target[i]) {
+        tile.classList.add("correct");
+        keyboardStates[letter] = "correct";
+        letterCounts[letter]--;
+      }
     }
+
+    // Second pass - mark present or absent
+    for (let i = 0; i < gridCols; i++) {
+      const tile = board[currentRow][i];
+      const letter = guessLetters[i];
+      if (tile.classList.contains("correct")) continue;
+      if (letterCounts[letter] > 0) {
+        tile.classList.add("present");
+        if (keyboardStates[letter] !== "correct") {
+          keyboardStates[letter] = "present";
+        }
+        letterCounts[letter]--;
+      } else {
+        tile.classList.add("absent");
+        if (!keyboardStates[letter]) {
+          keyboardStates[letter] = "absent";
+        }
+      }
+    }
+
+    // Apply keyboard updates
+    for (const [letter, state] of Object.entries(keyboardStates)) {
+      const keyBtn = [...document.querySelectorAll('.key')].find(k => k.textContent === letter);
+      if (keyBtn) {
+        keyBtn.classList.remove("correct", "present", "absent");
+        keyBtn.classList.add(state);
+      }
+    }
+
+    // Check win or move to next row
     if (guess === target) {
       setTimeout(() => gameCompleted(currentRow + 1), 500);
     } else {
