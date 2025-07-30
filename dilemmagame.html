@@ -382,8 +382,7 @@
   async function checkDailyLimit() {
     const lastGameTime = localStorage.getItem(localKey);
     if (lastGameTime && Date.now() - parseInt(lastGameTime) < 24 * 60 * 60 * 1000) {
-      disableGame();
-      await loadLeaderboard(true);
+      disableGame("Jy het reeds vandag gespeel.");
       return false;
     }
     return true;
@@ -396,14 +395,10 @@
 
   // Initialize
   await loadGameData();
-  if (await checkDailyLimit()) {
-    createGrid();
-    createKeyboard();
-    await loadLeaderboard();
-  } else {
-    createGrid();
-    createKeyboard();
-  }
+  createGrid();
+  createKeyboard();
+  await loadLeaderboard(true);
+  await checkDailyLimit();
 </script>
 </body>
 </html>
