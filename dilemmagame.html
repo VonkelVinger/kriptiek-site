@@ -23,7 +23,19 @@
     .key { min-width: 30px; padding: 10px 12px; margin: 2px; border-radius: 4px; background-color: #374151; color: white; font-weight: bold; cursor: pointer; text-transform: uppercase; }
     .key.bg-green-600 { background-color: #16a34a !important; }
     .key.bg-red-600 { background-color: #dc2626 !important; }
-    .leaderboard-entry { padding: 4px 0; border-bottom: 1px solid #e5e7eb; }
+    /* Lockout message */
+    #lockoutMessage { display: none; text-align: center; margin-top: 10px; font-weight: bold; color: #dc2626; font-size: 1.1rem; opacity: 0; animation: fadeIn 1s forwards; }
+    #lockoutMessage .icon { margin-right: 6px; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px);} to { opacity: 1; transform: translateY(0);} }
+    /* Leaderboard styling */
+    #leaderboard { border: 1px solid #e5e7eb; }
+    #leaderboardList li { padding: 6px 8px; transition: background-color 0.2s ease; }
+    #leaderboardList li:nth-child(odd) { background-color: #f9fafb; }
+    #leaderboardList li:nth-child(even) { background-color: #ffffff; }
+    #leaderboardList li:hover { background-color: #e0e7ff; }
+    #leaderboardList li:first-child { background-color: #d1fae5; font-weight: bold; }
+    #leaderboardList li:first-child .crown { margin-right: 4px; color: #f59e0b; }
+    /* Modal */
     #resultModal { display: none; position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.5); align-items: center; justify-content: center; z-index: 1000; }
     #resultModal .modal-content { background: white; padding: 1.5rem; border-radius: 8px; text-align: center; max-width: 300px; width: 100%; }
     #resultModal button { margin: 5px; padding: 8px 16px; border-radius: 4px; font-weight: bold; }
@@ -45,6 +57,7 @@
   <div id="clue" class="text-center text-lg mb-4 text-gray-700 font-semibold">Laai die leidraad...</div>
   <div id="game-grid" class="mb-6"></div>
   <div id="keyboard" class="mb-6"></div>
+  <p id="lockoutMessage"><span class="icon">🔒</span>Jy kan môre weer speel.</p>
   <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
     <h2 class="text-xl font-bold mb-2">Vandag se beste spelers</h2>
     <ul id="leaderboardList" class="text-gray-700 text-left">
@@ -87,6 +100,7 @@
   const gameGrid = document.getElementById("game-grid");
   const keyboard = document.getElementById("keyboard");
   const leaderboardList = document.getElementById("leaderboardList");
+  const lockoutMessage = document.getElementById("lockoutMessage");
   const modal = document.getElementById("resultModal");
   const resultMsg = document.getElementById("resultMessage");
   const shareBtn = document.getElementById("modalShareBtn");
@@ -106,9 +120,10 @@
   const localKey = `lastGameTime_${gameId}`;
   const gameUrl = window.location.href;
 
-  function disableGame(message = "Jy het hierdie een reeds vandag gespeel") {
+  function disableGame(message = "Jy het hierdie een reeds vandag gespeel.") {
     gameOver = true;
     document.getElementById('clue').textContent = message;
+    lockoutMessage.style.display = "block";
     document.querySelectorAll('.key').forEach(key => key.disabled = true);
   }
 
@@ -264,12 +279,13 @@
     const q = query(collection(db, 'games', gameId, 'leaderboard'), orderBy('score', 'asc'), limit(10));
     const querySnapshot = await getDocs(q);
     let entries = 0;
-    querySnapshot.forEach(docSnap => {
+    querySnapshot.forEach((docSnap, index) => {
       const data = docSnap.data();
       entries++;
       const li = document.createElement('li');
       li.className = "leaderboard-entry";
-      li.innerHTML = `<strong>${data.name}</strong>: ${data.score} ${data.score === 1 ? 'raaiskoot' : 'raaiskote'}`;
+      const crown = index === 0 ? '<span class="crown">👑</span>' : '';
+      li.innerHTML = `${crown}<strong>${data.name}</strong>: ${data.score} ${data.score === 1 ? 'raaiskoot' : 'raaiskote'}`;
       leaderboardList.appendChild(li);
     });
     if (entries === 0) leaderboardList.innerHTML = "<li>Jou naam kan eerste wees!</li>";
@@ -291,6 +307,7 @@
     modal.style.display = "flex";
     shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het vandag se DILEMMA in ${attempts} raaiskote opgelos! Speel by: ${gameUrl}`);
     submitScore(attempts);
+    lockoutMessage.style.display = "block";
   }
 
   function gameFailed() {
@@ -299,6 +316,7 @@
     modal.style.display = "flex";
     shareBtn.onclick = () => navigator.clipboard.writeText(`Ek kon nie vandag se DILEMMA oplos nie. Speel by: ${gameUrl}`);
     submitScore(gridRows);
+    lockoutMessage.style.display = "block";
   }
 
   closeBtn.onclick = () => modal.style.display = "none";
