@@ -72,7 +72,7 @@
     }
     .correct { background-color: #16a34a !important; color: white !important; }
     .present { background-color: #facc15 !important; color: black !important; }
-    .absent { background-color: #9ca3af !important; color: white !important; }
+    .absent  { background-color: #9ca3af !important; color: white !important; }
     .keyboard-row {
       display: flex;
       justify-content: center;
@@ -88,24 +88,19 @@
       font-weight: bold;
       cursor: pointer;
       text-transform: uppercase;
-      transition: transform 0.15s ease;
-    }
-    .key.pop {
-      transform: scale(1.2);
     }
     .key.bg-green-600 { background-color: #16a34a !important; }
     .key.bg-red-600 { background-color: #dc2626 !important; }
+    .leaderboard-entry {
+      padding: 4px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
     .rules {
       background-color: #ffffff;
       border: 1px solid #e5e7eb;
       border-radius: 6px;
       padding: 10px;
       margin-top: 20px;
-    }
-    .rules h2 {
-      font-size: 1.25rem;
-      font-weight: bold;
-      margin-bottom: 8px;
     }
   </style>
 </head>
@@ -131,15 +126,6 @@
     <div id="game-grid" class="mb-6"></div>
     <div id="keyboard" class="mb-6"></div>
 
-    <div class="rules">
-      <h2>Hoe om te speel</h2>
-      <ul class="list-disc list-inside mt-2">
-        <li><span class="font-bold text-green-600">GROEN:</span> Die letter is in die woord én op die regte plek.</li>
-        <li><span class="font-bold text-yellow-500">GEEL:</span> Die letter is in die woord, maar op die verkeerde plek.</li>
-        <li><span class="font-bold text-gray-500">GRYS:</span> Die letter is nie in die woord nie.</li>
-      </ul>
-    </div>
-
     <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
       <h2 class="text-xl font-bold mb-2">Vandag se beste spelers</h2>
       <ul id="leaderboardList" class="text-gray-700 text-left">
@@ -150,17 +136,12 @@
 
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
     &copy; 2025 Kriptiek. Alle regte voorbehou. |
-    <a href="/index.html" class="underline">Tuis</a> |
-    <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
-    <a href="/terms.html" class="underline">Voorwaardes</a> |
-    <a href="/faq.html" class="underline">Gereelde vrae</a> |
-    <a href="/about.html" class="underline">Oor Kriptiek</a> |
-    <a href="/contact.html" class="underline">Kontak ons</a>
+    <a href="/index.html" class="underline">Tuis</a>
   </footer>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-  import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, orderBy, limit }
+  import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } 
     from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -177,20 +158,21 @@
 
   const gameGrid = document.getElementById("game-grid");
   const keyboard = document.getElementById("keyboard");
-  const leaderboardList = document.getElementById('leaderboardList');
+  const leaderboardList = document.getElementById("leaderboardList");
   const storedName = localStorage.getItem('userName') || 'Speler';
   document.getElementById("playerName").textContent = storedName;
 
-  let gridRows = 6;
-  let gridCols = 5;
-  let currentRow = 0;
-  let currentCol = 0;
+  let gridRows = 6, gridCols = 5;
+  let currentRow = 0, currentCol = 0;
   let board = [];
   let targetWord = "";
 
+  const params = new URLSearchParams(window.location.search);
+  const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
+  const localKey = `lastGameTime_${gameId}`;
+  const gameUrl = window.location.href;
+
   async function loadGameData() {
-    const params = new URLSearchParams(window.location.search);
-    const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
     const gameDocRef = doc(db, 'games', gameId);
     const gameDocSnap = await getDoc(gameDocRef);
     if (gameDocSnap.exists()) {
@@ -272,25 +254,18 @@
   }
 
   function checkGuessWithFlip(guess) {
-    const target = targetWord.toUpperCase();
+    const target = targetWord;
     const guessLetters = guess.split("");
     const letterCounts = {};
-
-    for (let ch of target) {
-      letterCounts[ch] = (letterCounts[ch] || 0) + 1;
-    }
+    for (let ch of target) letterCounts[ch] = (letterCounts[ch] || 0) + 1;
 
     const states = new Array(gridCols).fill("absent");
-
-    // First pass - correct letters
     for (let i = 0; i < gridCols; i++) {
       if (guessLetters[i] === target[i]) {
         states[i] = "correct";
         letterCounts[guessLetters[i]]--;
       }
     }
-
-    // Second pass - present letters
     for (let i = 0; i < gridCols; i++) {
       if (states[i] === "correct") continue;
       const letter = guessLetters[i];
@@ -300,7 +275,6 @@
       }
     }
 
-    // Animate tiles with sequential flip
     states.forEach((state, i) => {
       const tile = board[currentRow][i];
       const letter = guessLetters[i];
@@ -312,12 +286,11 @@
     });
 
     setTimeout(() => {
-      if (guess === target) {
-        alert("CORRECT!");
-      } else {
+      if (guess === target) gameCompleted(currentRow + 1);
+      else {
         currentRow++;
         currentCol = 0;
-        if (currentRow >= gridRows) alert("Jammer, probeer weer!");
+        if (currentRow >= gridRows) gameFailed();
       }
     }, gridCols * 350);
   }
@@ -334,9 +307,55 @@
     }
   }
 
+  async function loadLeaderboard() {
+    leaderboardList.innerHTML = '';
+    const q = query(collection(db, 'games', gameId, 'leaderboard'), orderBy('score', 'asc'), limit(10));
+    const querySnapshot = await getDocs(q);
+    let entries = 0;
+    querySnapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      entries++;
+      const li = document.createElement('li');
+      li.className = "leaderboard-entry";
+      li.innerHTML = `<strong>${data.name}</strong>: ${data.score} ${data.score === 1 ? 'raaiskoot' : 'raaiskote'}`;
+      leaderboardList.appendChild(li);
+    });
+    if (entries === 0) {
+      leaderboardList.innerHTML = "<li>Jou naam kan eerste wees!</li>";
+    }
+  }
+
+  async function submitScore(score) {
+    await addDoc(collection(db, 'games', gameId, 'leaderboard'), {
+      name: storedName,
+      score,
+      timestamp: serverTimestamp()
+    });
+    loadLeaderboard();
+  }
+
+  function gameCompleted(attempts) {
+    alert(`Baie geluk, ${storedName}! Jy het die woord in ${attempts} raaiskote geraai!`);
+    submitScore(attempts);
+  }
+
+  function gameFailed() {
+    alert(`Jammer, ${storedName}! Vandag se oplossing is ${targetWord}.`);
+    submitScore(gridRows);
+  }
+
+  function keyHandler(e) {
+    if (e.key === "Enter") handleEnter();
+    else if (e.key === "Backspace") handleBackspace();
+    else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
+  }
+
+  document.addEventListener("keydown", keyHandler);
+
   await loadGameData();
   createGrid();
   createKeyboard();
+  await loadLeaderboard();
 </script>
 </body>
 </html>
