@@ -326,17 +326,20 @@
     try {
       const q = query(collection(db, "games", gameId, "leaderboard"), orderBy("score", "asc"), limit(10));
       const snapshot = await getDocs(q);
-      let delay = 0;
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        const li = document.createElement("li");
-        li.className = "leaderboard-entry";
-        li.style.animationDelay = `${delay}s`;
-        delay += 0.1;
-        li.innerHTML = `<strong>${data.name}</strong>: ${data.score} ${data.score === 1 ? "raaiskoot" : "raaiskote"}`;
-        leaderboardList.appendChild(li);
-      });
-      if (!snapshot.size) {
+      console.log("Leaderboard documents:", snapshot.docs.map(d => d.data()));
+
+      if (!snapshot.empty) {
+        let delay = 0;
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          const li = document.createElement("li");
+          li.className = "leaderboard-entry";
+          li.style.animationDelay = `${delay}s`;
+          delay += 0.1;
+          li.innerHTML = `<strong>${data.name}</strong>: ${data.score} ${data.score === 1 ? "raaiskoot" : "raaiskote"}`;
+          leaderboardList.appendChild(li);
+        });
+      } else {
         leaderboardList.innerHTML = "<li>Jou naam kan eerste wees!</li>";
       }
     } catch (err) {
