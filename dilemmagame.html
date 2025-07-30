@@ -97,10 +97,6 @@
       padding: 4px 0;
       border-bottom: 1px solid #e5e7eb;
     }
-    .highlight-player {
-      background-color: #d1fae5;
-      font-weight: bold;
-    }
     .correct { background-color: #16a34a !important; color: white !important; }
     .present { background-color: #facc15 !important; color: black !important; }
     .absent  { background-color: #9ca3af !important; color: white !important; }
@@ -319,35 +315,19 @@
     }, gridCols * 300);
   }
 
-  async function loadLeaderboard(showPlayerEvenIfLocked = false) {
+  async function loadLeaderboard() {
     leaderboardList.innerHTML = "";
     try {
       const q = query(collection(db, "games", gameId, "leaderboard"), orderBy("score", "asc"), limit(10));
       const snapshot = await getDocs(q);
-      let foundPlayer = false;
-
       snapshot.forEach(docSnap => {
         const data = docSnap.data();
         const li = document.createElement("li");
         li.className = "leaderboard-entry";
-        if (data.name === window.currentUser.name) {
-          foundPlayer = true;
-          li.classList.add("highlight-player");
-        }
         li.innerHTML = `<strong>${data.name}</strong>: ${data.score} ${data.score === 1 ? "raaiskoot" : "raaiskote"}`;
         leaderboardList.appendChild(li);
       });
-
-      if (!foundPlayer && showPlayerEvenIfLocked) {
-        const playerScore = localStorage.getItem(`lastScore_${gameId}`);
-        if (playerScore) {
-          const li = document.createElement("li");
-          li.className = "leaderboard-entry highlight-player";
-          li.innerHTML = `<strong>${window.currentUser.name}</strong>: ${playerScore} ${playerScore === "1" ? "raaiskoot" : "raaiskote"}`;
-          leaderboardList.appendChild(li);
-        }
-      }
-      if (leaderboardList.innerHTML === "") {
+      if (!snapshot.size) {
         leaderboardList.innerHTML = "<li>Jou naam kan eerste wees!</li>";
       }
     } catch (err) {
@@ -363,7 +343,7 @@
         timestamp: serverTimestamp()
       });
       localStorage.setItem(`lastScore_${gameId}`, score);
-      await loadLeaderboard(true);
+      await loadLeaderboard();
     } catch (err) {
       console.error("Telling stuur het misluk:", err);
     }
@@ -397,7 +377,7 @@
   await loadGameData();
   createGrid();
   createKeyboard();
-  await loadLeaderboard(true);
+  await loadLeaderboard();
   await checkDailyLimit();
 </script>
 </body>
