@@ -66,6 +66,14 @@
     .flip {
       transform: rotateX(90deg);
     }
+    .bounce {
+      animation: bounceAnim 0.2s ease;
+    }
+    @keyframes bounceAnim {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
     .keyboard-row {
       display: flex;
       justify-content: center;
@@ -85,10 +93,13 @@
     }
     .key.bg-green-600 { background-color: #16a34a !important; }
     .key.bg-red-600 { background-color: #dc2626 !important; }
-    .key:active { background-color: #1f2937; }
     .leaderboard-entry {
       padding: 4px 0;
       border-bottom: 1px solid #e5e7eb;
+    }
+    .highlight-player {
+      background-color: #d1fae5;
+      font-weight: bold;
     }
     .correct { background-color: #16a34a !important; color: white !important; }
     .present { background-color: #facc15 !important; color: black !important; }
@@ -99,11 +110,6 @@
       border-radius: 6px;
       padding: 10px;
       margin-top: 20px;
-    }
-    .rules h2 {
-      font-size: 1.25rem;
-      font-weight: bold;
-      margin-bottom: 8px;
     }
     .cookie-banner {
       background: #fef3c7;
@@ -116,42 +122,6 @@
       width: 100%;
       z-index: 1000;
       box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
-    }
-    .cookie-banner button {
-      background-color: #92400e;
-      color: white;
-      margin: 0.5rem 0.5rem 0 0.5rem;
-      padding: 0.5rem 1rem;
-      border-radius: 0.375rem;
-    }
-    .cookie-banner a {
-      color: #92400e;
-      font-weight: bold;
-    }
-    @media (max-width: 480px) {
-      .letter-tile {
-        width: 40px;
-        height: 40px;
-        font-size: 1.2rem;
-      }
-      .key {
-        min-width: 28px;
-        padding: 8px 10px;
-        font-size: 0.9rem;
-      }
-      .keyboard-row { flex-wrap: wrap; }
-    }
-    @media (max-width: 360px) {
-      .letter-tile {
-        width: 35px;
-        height: 35px;
-        font-size: 1rem;
-      }
-      .key {
-        min-width: 26px;
-        padding: 6px 8px;
-        font-size: 0.85rem;
-      }
     }
   </style>
 </head>
@@ -184,9 +154,6 @@
         <li><span class="font-bold text-yellow-500">GEEL:</span> Die letter is in die woord, maar op die verkeerde plek.</li>
         <li><span class="font-bold text-gray-500">GRYS:</span> Die letter is nie in die woord nie.</li>
       </ul>
-      <p class="mt-2">
-        <span class="font-bold">WENK:</span> Op kleiner skerms sal jy soms lekkerder speel in landskapformaat ("Landscape Format" of "Auto-Rotate").
-      </p>
     </div>
 
     <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
@@ -199,25 +166,20 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-  import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp, deleteDoc }
+  import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
-  const firebaseConfig = {
+  const app = initializeApp({
     apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
     authDomain: "kriptiek-c9ea2.firebaseapp.com",
-    projectId: "kriptiek-c9ea2",
-    storageBucket: "kriptiek-c9ea2.appspot.com",
-    messagingSenderId: "620450620939",
-    appId: "1:620450620939:web:e93a18ac23b53b33db890e"
-  };
-
-  const app = initializeApp(firebaseConfig);
+    projectId: "kriptiek-c9ea2"
+  });
   const db = getFirestore(app);
 
   const gameGrid = document.getElementById("game-grid");
   const keyboard = document.getElementById("keyboard");
-  const leaderboardList = document.getElementById('leaderboardList');
-  const storedName = localStorage.getItem('userName') || 'Speler';
+  const leaderboardList = document.getElementById("leaderboardList");
+  const storedName = localStorage.getItem("userName") || "Speler";
   window.currentUser = { name: storedName };
   document.getElementById("playerName").textContent = storedName;
 
@@ -227,6 +189,9 @@
   let currentCol = 0;
   let board = [];
   let targetWord = "";
+  const params = new URLSearchParams(window.location.search);
+  const gameId = params.get("gameId") || `Game${new Date().toISOString().split("T")[0]}`;
+  const localKey = `lastGameTime_${gameId}`;
 
   function createGrid() {
     gameGrid.innerHTML = "";
@@ -277,7 +242,10 @@
 
   function handleKey(letter) {
     if (currentCol < gridCols && currentRow < gridRows) {
-      board[currentRow][currentCol].textContent = letter;
+      const tile = board[currentRow][currentCol];
+      tile.textContent = letter;
+      tile.classList.add("bounce");
+      setTimeout(() => tile.classList.remove("bounce"), 200);
       currentCol++;
     }
   }
@@ -301,21 +269,15 @@
   function checkGuess(guess) {
     const target = targetWord.toUpperCase();
     const guessLetters = guess.split("");
-
     const letterCounts = {};
-    for (let ch of target) {
-      letterCounts[ch] = (letterCounts[ch] || 0) + 1;
-    }
+    for (let ch of target) letterCounts[ch] = (letterCounts[ch] || 0) + 1;
 
     const keyboardStates = {};
-
-    // Animate tiles with delays
     guessLetters.forEach((letter, i) => {
       const tile = board[currentRow][i];
       setTimeout(() => {
         tile.classList.add("flip");
         setTimeout(() => {
-          // Apply color after half-flip
           if (letter === target[i]) {
             tile.classList.add("correct");
             keyboardStates[letter] = "correct";
@@ -326,7 +288,6 @@
       }, i * 300);
     });
 
-    // After all flips complete, second pass for yellow/grey
     setTimeout(() => {
       for (let i = 0; i < gridCols; i++) {
         const tile = board[currentRow][i];
@@ -334,39 +295,108 @@
         if (tile.classList.contains("correct")) continue;
         if (letterCounts[letter] > 0) {
           tile.classList.add("present");
-          if (keyboardStates[letter] !== "correct") {
-            keyboardStates[letter] = "present";
-          }
+          if (keyboardStates[letter] !== "correct") keyboardStates[letter] = "present";
           letterCounts[letter]--;
         } else {
           tile.classList.add("absent");
-          if (!keyboardStates[letter]) {
-            keyboardStates[letter] = "absent";
-          }
+          if (!keyboardStates[letter]) keyboardStates[letter] = "absent";
         }
       }
-
       for (const [letter, state] of Object.entries(keyboardStates)) {
-        const keyBtn = [...document.querySelectorAll('.key')].find(k => k.textContent === letter);
+        const keyBtn = [...document.querySelectorAll(".key")].find(k => k.textContent === letter);
         if (keyBtn) {
           keyBtn.classList.remove("correct", "present", "absent");
           keyBtn.classList.add(state);
         }
       }
-
-      if (guess === target) {
-        setTimeout(() => gameCompleted(currentRow + 1), 500);
-      } else {
+      if (guess === target) setTimeout(() => gameCompleted(currentRow + 1), 500);
+      else {
         currentRow++;
         currentCol = 0;
-        if (currentRow >= gridRows) {
-          setTimeout(() => gameFailed(), 500);
-        }
+        if (currentRow >= gridRows) setTimeout(() => gameFailed(), 500);
       }
     }, gridCols * 300);
   }
 
-  // (Other functions like loadGameData, leaderboard, etc. remain unchanged...)
+  async function loadLeaderboard(showPlayerEvenIfLocked = false) {
+    leaderboardList.innerHTML = "";
+    try {
+      const q = query(collection(db, "games", gameId, "leaderboard"), orderBy("score", "asc"), limit(10));
+      const snapshot = await getDocs(q);
+      let foundPlayer = false;
+
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        const li = document.createElement("li");
+        li.className = "leaderboard-entry";
+        if (data.name === window.currentUser.name) {
+          foundPlayer = true;
+          li.classList.add("highlight-player");
+        }
+        li.innerHTML = `<strong>${data.name}</strong>: ${data.score} ${data.score === 1 ? "raaiskoot" : "raaiskote"}`;
+        leaderboardList.appendChild(li);
+      });
+
+      // Add player score if they have played but are not in top 10
+      if (!foundPlayer && showPlayerEvenIfLocked) {
+        const playerScore = localStorage.getItem(`lastScore_${gameId}`);
+        if (playerScore) {
+          const li = document.createElement("li");
+          li.className = "leaderboard-entry highlight-player";
+          li.innerHTML = `<strong>${window.currentUser.name}</strong>: ${playerScore} ${playerScore === "1" ? "raaiskoot" : "raaiskote"}`;
+          leaderboardList.appendChild(li);
+        }
+      }
+      if (leaderboardList.innerHTML === "") {
+        leaderboardList.innerHTML = "<li>Jou naam kan eerste wees!</li>";
+      }
+    } catch (err) {
+      console.error("Kon nie leaderboard laai nie:", err);
+    }
+  }
+
+  async function submitScore(score) {
+    try {
+      await addDoc(collection(db, "games", gameId, "leaderboard"), {
+        name: window.currentUser.name,
+        score,
+        timestamp: serverTimestamp()
+      });
+      localStorage.setItem(`lastScore_${gameId}`, score);
+      await loadLeaderboard(true);
+    } catch (err) {
+      console.error("Telling stuur het misluk:", err);
+    }
+  }
+
+  function gameCompleted(attempts) {
+    submitScore(attempts);
+    alert(`Baie geluk, ${window.currentUser.name}!`);
+  }
+
+  function gameFailed() {
+    submitScore(gridRows);
+    alert(`Jammer, ${window.currentUser.name}!`);
+  }
+
+  async function checkDailyLimit() {
+    const lastGameTime = localStorage.getItem(localKey);
+    if (lastGameTime && Date.now() - parseInt(lastGameTime) < 24 * 60 * 60 * 1000) {
+      disableGame();
+      await loadLeaderboard(true);
+      return false;
+    }
+    return true;
+  }
+
+  function disableGame(message = "Jy het reeds vandag gespeel.") {
+    document.getElementById("clue").textContent = message;
+    document.querySelectorAll(".key").forEach(k => k.disabled = true);
+  }
+
+  createGrid();
+  createKeyboard();
+  await loadLeaderboard(true);
 </script>
 </body>
 </html>
