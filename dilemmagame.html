@@ -60,6 +60,23 @@
       margin: 2px;
       background-color: white;
       color: #1f2937;
+      transition: transform 0.3s ease;
+    }
+    .letter-tile.bounce {
+      animation: bounceAnim 0.2s ease;
+    }
+    @keyframes bounceAnim {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+    .letter-tile.flip {
+      animation: flipAnim 0.4s ease forwards;
+    }
+    @keyframes flipAnim {
+      0% { transform: rotateX(0); }
+      50% { transform: rotateX(90deg); }
+      100% { transform: rotateX(0); }
     }
     .keyboard-row {
       display: flex;
@@ -356,7 +373,10 @@
 
   function handleKey(letter) {
     if (currentCol < gridCols && currentRow < gridRows) {
-      board[currentRow][currentCol].textContent = letter;
+      const tile = board[currentRow][currentCol];
+      tile.textContent = letter;
+      tile.classList.add("bounce");
+      setTimeout(() => tile.classList.remove("bounce"), 200);
       currentCol++;
     }
   }
@@ -377,7 +397,6 @@
     checkGuess(guess);
   }
 
-  // --- UPDATED CHECKGUESS FUNCTION ---
   function checkGuess(guess) {
     const target = targetWord.toUpperCase();
     const guessLetters = guess.split("");
@@ -389,10 +408,11 @@
 
     const keyboardStates = {};
 
-    // First pass - mark correct
+    // First pass - correct letters
     for (let i = 0; i < gridCols; i++) {
       const tile = board[currentRow][i];
       const letter = guessLetters[i];
+      tile.classList.add("flip");
       if (letter === target[i]) {
         tile.classList.add("correct");
         keyboardStates[letter] = "correct";
@@ -400,26 +420,22 @@
       }
     }
 
-    // Second pass - mark present or absent
+    // Second pass - present or absent
     for (let i = 0; i < gridCols; i++) {
       const tile = board[currentRow][i];
       const letter = guessLetters[i];
       if (tile.classList.contains("correct")) continue;
       if (letterCounts[letter] > 0) {
         tile.classList.add("present");
-        if (keyboardStates[letter] !== "correct") {
-          keyboardStates[letter] = "present";
-        }
+        if (keyboardStates[letter] !== "correct") keyboardStates[letter] = "present";
         letterCounts[letter]--;
       } else {
         tile.classList.add("absent");
-        if (!keyboardStates[letter]) {
-          keyboardStates[letter] = "absent";
-        }
+        if (!keyboardStates[letter]) keyboardStates[letter] = "absent";
       }
     }
 
-    // Apply keyboard updates
+    // Update keyboard
     for (const [letter, state] of Object.entries(keyboardStates)) {
       const keyBtn = [...document.querySelectorAll('.key')].find(k => k.textContent === letter);
       if (keyBtn) {
@@ -428,15 +444,13 @@
       }
     }
 
-    // Check win or move to next row
+    // Win or next row
     if (guess === target) {
       setTimeout(() => gameCompleted(currentRow + 1), 500);
     } else {
       currentRow++;
       currentCol = 0;
-      if (currentRow >= gridRows) {
-        setTimeout(() => gameFailed(), 500);
-      }
+      if (currentRow >= gridRows) setTimeout(() => gameFailed(), 500);
     }
   }
 
