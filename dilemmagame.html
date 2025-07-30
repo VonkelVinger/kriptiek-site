@@ -60,7 +60,7 @@
       margin: 2px;
       background-color: white;
       color: #1f2937;
-      transition: transform 0.3s ease;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
     .letter-tile.bounce {
       animation: bounceAnim 0.2s ease;
@@ -77,6 +77,9 @@
       0% { transform: rotateX(0); }
       50% { transform: rotateX(90deg); }
       100% { transform: rotateX(0); }
+    }
+    .letter-tile.glow {
+      box-shadow: 0 0 8px 2px rgba(30, 58, 138, 0.8);
     }
     .keyboard-row {
       display: flex;
@@ -397,6 +400,13 @@
     checkGuess(guess);
   }
 
+  function highlightRow(rowIndex) {
+    board[rowIndex].forEach(tile => {
+      tile.classList.add("glow");
+      setTimeout(() => tile.classList.remove("glow"), 700);
+    });
+  }
+
   function checkGuess(guess) {
     const target = targetWord.toUpperCase();
     const guessLetters = guess.split("");
@@ -408,7 +418,6 @@
 
     const keyboardStates = {};
 
-    // First pass - correct letters
     for (let i = 0; i < gridCols; i++) {
       const tile = board[currentRow][i];
       const letter = guessLetters[i];
@@ -420,7 +429,6 @@
       }
     }
 
-    // Second pass - present or absent
     for (let i = 0; i < gridCols; i++) {
       const tile = board[currentRow][i];
       const letter = guessLetters[i];
@@ -435,7 +443,6 @@
       }
     }
 
-    // Update keyboard
     for (const [letter, state] of Object.entries(keyboardStates)) {
       const keyBtn = [...document.querySelectorAll('.key')].find(k => k.textContent === letter);
       if (keyBtn) {
@@ -444,7 +451,8 @@
       }
     }
 
-    // Win or next row
+    highlightRow(currentRow);
+
     if (guess === target) {
       setTimeout(() => gameCompleted(currentRow + 1), 500);
     } else {
