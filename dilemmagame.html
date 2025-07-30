@@ -106,7 +106,7 @@
   const localKey = `lastGameTime_${gameId}`;
   const gameUrl = window.location.href;
 
-  function disableGame(message = "Jy het hierdie een reeds vandag gespeel.") {
+  function disableGame(message = "Jy het hierdie een reeds vandag gespeel") {
     gameOver = true;
     document.getElementById('clue').textContent = message;
     document.querySelectorAll('.key').forEach(key => key.disabled = true);
