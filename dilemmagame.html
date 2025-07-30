@@ -482,7 +482,7 @@
 
   function gameCompleted(attempts) {
     const word = attempts === 1 ? "raaiskoot" : "raaiskote";
-    const message = `Ek het ${formattedDate} se DILEMMA in ${attempts} ${word} opgelos. Speel by: ${gameUrl}`;
+    const message = `Ek het ${formattedDate} se DILEMMA in ${attempts} ${word} opgelos. Speel by ${gameUrl}`;
     document.getElementById("resultMessage").textContent =
       `Baie geluk, ${window.currentUser.name}! Jy het die woord in ${attempts} ${word} geraai!`;
     document.getElementById("modalShareBtn").onclick = () => navigator.clipboard.writeText(message);
