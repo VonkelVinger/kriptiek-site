@@ -86,6 +86,11 @@
       0%, 100% { box-shadow: 0 0 5px rgba(255, 255, 255, 0.3); }
       50% { box-shadow: 0 0 12px rgba(255, 255, 255, 0.8); }
     }
+    @keyframes bgShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
 
     #dilemma-preview {
       position: relative;
@@ -95,11 +100,12 @@
       margin: 0 auto 2rem auto;
       border: 2px solid #888;
       border-radius: 8px;
-      background: linear-gradient(to bottom, #ffffff, #f3f4f6);
+      background: linear-gradient(270deg, #1e3a8a, #1e40af, #3b82f6);
+      background-size: 300% 300%;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
       transition: opacity 0.3s ease, transform 0.3s ease;
       padding: 8px;
-      animation: fadeRow 1s ease-in forwards;
+      animation: bgShift 6s ease infinite;
     }
     .preview-grid {
       display: grid;
