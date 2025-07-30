@@ -167,43 +167,6 @@
     .preview-tile.darker:nth-child(6) { animation-delay: 0.5s, 1.8s; }
     .preview-tile.darker:nth-child(7) { animation-delay: 0.6s, 1.8s; }
 
-    .preview-keyboard {
-      display: grid;
-      grid-template-columns: repeat(10, 1fr);
-      gap: 4px;
-      justify-items: center;
-      margin-top: 8px;
-      padding-bottom: 8px;
-      opacity: 0;
-      animation: fadeRow 0.6s ease-in forwards;
-    }
-    .preview-keyboard:nth-of-type(4) { animation-delay: 1.1s; }
-    .preview-keyboard:nth-of-type(5) { animation-delay: 1.3s; }
-    .preview-keyboard:nth-of-type(6) { animation-delay: 1.5s; }
-
-    .preview-key {
-      width: 30px;
-      height: 40px;
-      background: #555;
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      border-radius: 4px;
-      font-size: 0.9rem;
-      transition: box-shadow 0.3s ease, transform 0.2s ease;
-    }
-    .preview-key:hover {
-      box-shadow: 0 0 8px rgba(255, 255, 255, 0.8), 0 0 10px rgba(0, 0, 0, 0.3);
-      transform: scale(1.08);
-    }
-    .preview-key.enter, .preview-key.back {
-      animation: pulseGlow 2s infinite alternate;
-    }
-    @keyframes pulseGlow {
-      0% { box-shadow: 0 0 5px rgba(255,255,255,0.6), 0 0 8px rgba(0,0,0,0.4); }
-      100% { box-shadow: 0 0 12px rgba(255,255,255,1), 0 0 15px rgba(0,0,0,0.5); }
-    }
     .dark-blue-text {
       color: #1e3a8a;
       font-weight: bold;
@@ -260,15 +223,6 @@
     <div class="preview-tile">M</div>
     <div class="preview-tile">M</div>
     <div class="preview-tile">A</div>
-  </div>
-  <div class="preview-keyboard">
-    <div class="preview-key">Q</div><div class="preview-key">W</div><div class="preview-key">E</div><div class="preview-key">R</div><div class="preview-key">T</div><div class="preview-key">Y</div><div class="preview-key">U</div><div class="preview-key">I</div><div class="preview-key">O</div><div class="preview-key">P</div>
-  </div>
-  <div class="preview-keyboard">
-    <div class="preview-key">A</div><div class="preview-key">S</div><div class="preview-key">D</div><div class="preview-key">F</div><div class="preview-key">G</div><div class="preview-key">H</div><div class="preview-key">J</div><div class="preview-key">K</div><div class="preview-key">L</div>
-  </div>
-  <div class="preview-keyboard">
-    <div class="preview-key">Z</div><div class="preview-key">X</div><div class="preview-key">C</div><div class="preview-key">V</div><div class="preview-key">B</div><div class="preview-key">N</div><div class="preview-key">M</div><div class="preview-key enter">↵</div><div class="preview-key back">←</div>
   </div>
 </section>
 
@@ -362,7 +316,7 @@
 
       const logoutBtn = document.createElement('button');
       logoutBtn.textContent = "MELD AF";
-logoutBtn.className = "mt-4 no-underline text-sm text-gray-500 hover:text-black";
+      logoutBtn.className = "mt-4 no-underline text-sm text-gray-500 hover:text-black";
       logoutBtn.onclick = () => {
         localStorage.removeItem('userRegistered');
         localStorage.removeItem('userEmail');
