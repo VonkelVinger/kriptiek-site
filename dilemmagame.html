@@ -60,15 +60,7 @@
       margin: 2px;
       background-color: white;
       color: #1f2937;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .letter-tile.bounce {
-      animation: bounceAnim 0.2s ease;
-    }
-    @keyframes bounceAnim {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.2); }
-      100% { transform: scale(1); }
+      transition: transform 0.3s ease;
     }
     .letter-tile.flip {
       animation: flipAnim 0.5s ease forwards;
@@ -78,14 +70,13 @@
       50% { transform: rotateX(90deg); }
       100% { transform: rotateX(0); }
     }
-    .letter-tile.glow {
-      box-shadow: 0 0 8px 2px rgba(30, 58, 138, 0.8);
-    }
+    .correct { background-color: #16a34a !important; color: white !important; }
+    .present { background-color: #facc15 !important; color: black !important; }
+    .absent { background-color: #9ca3af !important; color: white !important; }
     .keyboard-row {
       display: flex;
       justify-content: center;
       margin: 5px 0;
-      flex-wrap: nowrap;
     }
     .key {
       min-width: 30px;
@@ -104,14 +95,6 @@
     }
     .key.bg-green-600 { background-color: #16a34a !important; }
     .key.bg-red-600 { background-color: #dc2626 !important; }
-    .key:active { background-color: #1f2937; }
-    .leaderboard-entry {
-      padding: 4px 0;
-      border-bottom: 1px solid #e5e7eb;
-    }
-    .correct { background-color: #16a34a !important; color: white !important; }
-    .present { background-color: #facc15 !important; color: black !important; }
-    .absent  { background-color: #9ca3af !important; color: white !important; }
     .rules {
       background-color: #ffffff;
       border: 1px solid #e5e7eb;
@@ -123,54 +106,6 @@
       font-size: 1.25rem;
       font-weight: bold;
       margin-bottom: 8px;
-    }
-    .cookie-banner {
-      background: #fef3c7;
-      color: #92400e;
-      padding: 1rem;
-      text-align: center;
-      font-size: 0.875rem;
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      z-index: 1000;
-      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
-    }
-    .cookie-banner button {
-      background-color: #92400e;
-      color: white;
-      margin: 0.5rem 0.5rem 0 0.5rem;
-      padding: 0.5rem 1rem;
-      border-radius: 0.375rem;
-    }
-    .cookie-banner a {
-      color: #92400e;
-      font-weight: bold;
-    }
-    @media (max-width: 480px) {
-      .letter-tile {
-        width: 40px;
-        height: 40px;
-        font-size: 1.2rem;
-      }
-      .key {
-        min-width: 28px;
-        padding: 8px 10px;
-        font-size: 0.9rem;
-      }
-      .keyboard-row { flex-wrap: wrap; }
-    }
-    @media (max-width: 360px) {
-      .letter-tile {
-        width: 35px;
-        height: 35px;
-        font-size: 1rem;
-      }
-      .key {
-        min-width: 26px;
-        padding: 6px 8px;
-        font-size: 0.85rem;
-      }
     }
   </style>
 </head>
@@ -213,25 +148,6 @@
     </div>
   </main>
 
-  <!-- Result Modal -->
-  <div id="resultModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white p-6 rounded shadow-lg text-center max-w-sm w-full">
-      <p id="resultMessage" class="mb-4 font-bold text-lg text-green-700"></p>
-      <button id="modalShareBtn" class="bg-blue-600 text-white px-4 py-2 rounded mb-2">DEEL</button>
-      <br>
-      <button id="closeModalBtn" class="bg-gray-600 text-white px-4 py-2 rounded">SLUIT</button>
-    </div>
-  </div>
-
-  <!-- Cookie Banner -->
-  <div id="cookie-banner" class="cookie-banner hidden">
-    Ons gebruik koekies om jou ervaring te verbeter en die webwerf beter te laat werk.
-    Lees meer in ons <a href="/privacy.html" class="underline">Privaatheidsbeleid</a>.
-    <br class="my-1" />
-    <button id="acceptCookies">Ja, ek aanvaar dit so</button>
-    <button id="declineCookies">Nee dankie</button>
-  </div>
-
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
     &copy; 2025 Kriptiek. Alle regte voorbehou. |
     <a href="/index.html" class="underline">Tuis</a> |
@@ -244,7 +160,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-  import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp, deleteDoc }
+  import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, orderBy, limit }
     from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -263,11 +179,7 @@
   const keyboard = document.getElementById("keyboard");
   const leaderboardList = document.getElementById('leaderboardList');
   const storedName = localStorage.getItem('userName') || 'Speler';
-  window.currentUser = { name: storedName };
   document.getElementById("playerName").textContent = storedName;
-
-  // Load sound
-  const keySound = new Audio('/sounds/click.mp3');
 
   let gridRows = 6;
   let gridCols = 5;
@@ -275,64 +187,17 @@
   let currentCol = 0;
   let board = [];
   let targetWord = "";
-  const params = new URLSearchParams(window.location.search);
-  const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
-  const localKey = `lastGameTime_${gameId}`;
-  const gameUrl = window.location.href;
-  const gameDate = gameId.replace("Game", "");
-  const formattedDate = new Date(gameDate).toLocaleDateString("af-ZA", { day: 'numeric', month: 'long', year: 'numeric' });
-
-  function playKeySound() {
-    keySound.currentTime = 0;
-    keySound.play().catch(() => {}); // Avoid errors if sound not ready
-  }
-
-  function disableGame(message = "Jy het hierdie een reeds vandag gespeel") {
-    document.getElementById('clue').textContent = message;
-    document.removeEventListener("keydown", keyHandler);
-    document.querySelectorAll('.key').forEach(key => key.disabled = true);
-  }
-
-  async function hasPlayedToday() {
-    try {
-      const q = query(collection(db, 'games', gameId, 'leaderboard'));
-      const snapshot = await getDocs(q);
-      for (const docSnap of snapshot.docs) {
-        const data = docSnap.data();
-        if (data.name === window.currentUser.name) return true;
-      }
-      return false;
-    } catch (err) {
-      console.error('Kon nie Firestore vir spelstatus nagaan nie:', err);
-      return false;
-    }
-  }
-
-  async function checkDailyLimit() {
-    const lastGameTime = localStorage.getItem(localKey);
-    if (lastGameTime && Date.now() - parseInt(lastGameTime) < 24 * 60 * 60 * 1000) {
-      disableGame();
-      return false;
-    }
-    if (await hasPlayedToday()) {
-      disableGame();
-      return false;
-    }
-    return true;
-  }
 
   async function loadGameData() {
-    try {
-      const gameDocRef = doc(db, 'games', gameId);
-      const gameDocSnap = await getDoc(gameDocRef);
-      if (gameDocSnap.exists()) {
-        const data = gameDocSnap.data();
-        targetWord = (data.word || "XXXXX").toUpperCase();
-        gridCols = targetWord.length;
-        document.getElementById('clue').textContent = data.clue || "Geen leidraad beskikbaar nie.";
-      }
-    } catch (err) {
-      console.error("Kon nie speldata laai nie:", err);
+    const params = new URLSearchParams(window.location.search);
+    const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
+    const gameDocRef = doc(db, 'games', gameId);
+    const gameDocSnap = await getDoc(gameDocRef);
+    if (gameDocSnap.exists()) {
+      const data = gameDocSnap.data();
+      targetWord = (data.word || "XXXXX").toUpperCase();
+      gridCols = targetWord.length;
+      document.getElementById('clue').textContent = data.clue || "Geen leidraad beskikbaar nie.";
     }
   }
 
@@ -364,34 +229,19 @@
         const key = document.createElement("button");
         key.className = "key";
         key.textContent = letter;
-        key.onclick = () => {
-          key.classList.add("pop");
-          setTimeout(() => key.classList.remove("pop"), 150);
-          playKeySound();
-          handleKey(letter);
-        };
+        key.onclick = () => handleKey(letter);
         rowDiv.appendChild(key);
       });
       if (row === "ZXCVBNM") {
         const enter = document.createElement("button");
         enter.className = "key bg-green-600";
         enter.textContent = "Enter";
-        enter.onclick = () => {
-          enter.classList.add("pop");
-          setTimeout(() => enter.classList.remove("pop"), 150);
-          playKeySound();
-          handleEnter();
-        };
+        enter.onclick = handleEnter;
         rowDiv.appendChild(enter);
         const back = document.createElement("button");
         back.className = "key bg-red-600";
         back.textContent = "←";
-        back.onclick = () => {
-          back.classList.add("pop");
-          setTimeout(() => back.classList.remove("pop"), 150);
-          playKeySound();
-          handleBackspace();
-        };
+        back.onclick = handleBackspace;
         rowDiv.appendChild(back);
       }
       keyboard.appendChild(rowDiv);
@@ -400,10 +250,7 @@
 
   function handleKey(letter) {
     if (currentCol < gridCols && currentRow < gridRows) {
-      const tile = board[currentRow][currentCol];
-      tile.textContent = letter;
-      tile.classList.add("bounce");
-      setTimeout(() => tile.classList.remove("bounce"), 200);
+      board[currentRow][currentCol].textContent = letter;
       currentCol++;
     }
   }
@@ -421,143 +268,75 @@
       return;
     }
     const guess = board[currentRow].map(tile => tile.textContent).join("");
-    checkGuess(guess);
+    checkGuessWithFlip(guess);
   }
 
-  function highlightRow(rowIndex) {
-    board[rowIndex].forEach(tile => {
-      tile.classList.add("glow");
-      setTimeout(() => tile.classList.remove("glow"), 700);
-    });
-  }
-
-  function checkGuess(guess) {
+  function checkGuessWithFlip(guess) {
     const target = targetWord.toUpperCase();
     const guessLetters = guess.split("");
-
     const letterCounts = {};
+
     for (let ch of target) {
       letterCounts[ch] = (letterCounts[ch] || 0) + 1;
     }
 
-    const keyboardStates = {};
+    const states = new Array(gridCols).fill("absent");
 
-    // Sequential animation for each tile
-    guessLetters.forEach((letter, i) => {
+    // First pass - correct letters
+    for (let i = 0; i < gridCols; i++) {
+      if (guessLetters[i] === target[i]) {
+        states[i] = "correct";
+        letterCounts[guessLetters[i]]--;
+      }
+    }
+
+    // Second pass - present letters
+    for (let i = 0; i < gridCols; i++) {
+      if (states[i] === "correct") continue;
+      const letter = guessLetters[i];
+      if (letterCounts[letter] > 0) {
+        states[i] = "present";
+        letterCounts[letter]--;
+      }
+    }
+
+    // Animate tiles with sequential flip
+    states.forEach((state, i) => {
       const tile = board[currentRow][i];
+      const letter = guessLetters[i];
       setTimeout(() => {
         tile.classList.add("flip");
-        if (letter === target[i]) {
-          tile.classList.add("correct");
-          keyboardStates[letter] = "correct";
-          letterCounts[letter]--;
-        } else if (target.includes(letter) && letterCounts[letter] > 0) {
-          tile.classList.add("present");
-          if (keyboardStates[letter] !== "correct") keyboardStates[letter] = "present";
-          letterCounts[letter]--;
-        } else {
-          tile.classList.add("absent");
-          if (!keyboardStates[letter]) keyboardStates[letter] = "absent";
-        }
-
-        if (i === gridCols - 1) {
-          highlightRow(currentRow);
-          if (guess === target) {
-            setTimeout(() => gameCompleted(currentRow + 1), 400);
-          } else {
-            currentRow++;
-            currentCol = 0;
-            if (currentRow >= gridRows) setTimeout(() => gameFailed(), 400);
-          }
-
-          for (const [ltr, state] of Object.entries(keyboardStates)) {
-            const keyBtn = [...document.querySelectorAll('.key')].find(k => k.textContent === ltr);
-            if (keyBtn) {
-              keyBtn.classList.remove("correct", "present", "absent");
-              keyBtn.classList.add(state);
-            }
-          }
-        }
-      }, i * 350); // 350ms delay between tiles
+        tile.classList.add(state);
+        updateKeyboard(letter, state);
+      }, i * 350);
     });
+
+    setTimeout(() => {
+      if (guess === target) {
+        alert("CORRECT!");
+      } else {
+        currentRow++;
+        currentCol = 0;
+        if (currentRow >= gridRows) alert("Jammer, probeer weer!");
+      }
+    }, gridCols * 350);
   }
 
-  async function loadLeaderboard() {
-    leaderboardList.innerHTML = '';
-    try {
-      const q = query(collection(db, 'games', gameId, 'leaderboard'), orderBy('score', 'asc'), limit(10));
-      const querySnapshot = await getDocs(q);
-      let validEntries = 0;
-      for (const docSnap of querySnapshot.docs) {
-        const data = docSnap.data();
-        if (data.score === 9999) {
-          await deleteDoc(docSnap.ref);
-          continue;
-        }
-        validEntries++;
-        const li = document.createElement('li');
-        li.className = "leaderboard-entry";
-        li.innerHTML = `<strong>${data.name}</strong>: ${data.score} ${data.score === 1 ? 'raaiskoot' : 'raaiskote'}`;
-        leaderboardList.appendChild(li);
+  function updateKeyboard(letter, state) {
+    const keyBtn = [...document.querySelectorAll('.key')].find(k => k.textContent === letter);
+    if (keyBtn) {
+      if (state === "correct" || (state === "present" && !keyBtn.classList.contains("correct"))) {
+        keyBtn.classList.remove("present", "absent");
+        keyBtn.classList.add(state);
+      } else if (state === "absent" && !keyBtn.classList.contains("correct") && !keyBtn.classList.contains("present")) {
+        keyBtn.classList.add("absent");
       }
-      if (validEntries === 0) {
-        leaderboardList.innerHTML = "<li>Jou naam kan eerste wees!</li>";
-      }
-    } catch (err) {
-      console.error('Kon nie leaderboard laai nie:', err);
     }
   }
 
-  async function submitScore(score) {
-    try {
-      await addDoc(collection(db, 'games', gameId, 'leaderboard'), {
-        name: window.currentUser.name,
-        score,
-        timestamp: serverTimestamp()
-      });
-      localStorage.setItem(localKey, Date.now());
-      loadLeaderboard();
-    } catch (err) {
-      console.error('Telling stuur het misluk:', err);
-    }
-  }
-
-  function gameCompleted(attempts) {
-    const word = attempts === 1 ? "raaiskoot" : "raaiskote";
-    const message = `Ek het ${formattedDate} se DILEMMA in ${attempts} ${word} opgelos. Speel by: ${gameUrl}`;
-    document.getElementById("resultMessage").textContent =
-      `Baie geluk, ${window.currentUser.name}! Jy het die woord in ${attempts} ${word} geraai!`;
-    document.getElementById("modalShareBtn").onclick = () => navigator.clipboard.writeText(message);
-    document.getElementById("resultModal").classList.remove("hidden");
-    submitScore(attempts);
-    disableGame();
-  }
-
-  function gameFailed() {
-    const message = `Ek kon nie ${formattedDate} se DILEMMA oplos nie. Speel by: ${gameUrl}`;
-    document.getElementById("resultMessage").textContent =
-      `Jammer, ${window.currentUser.name}! Vandag se oplossing is ${targetWord}.`;
-    document.getElementById("modalShareBtn").onclick = () => navigator.clipboard.writeText(message);
-    document.getElementById("resultModal").classList.remove("hidden");
-    submitScore(gridRows);
-    disableGame();
-  }
-
-  function keyHandler(e) {
-    if (e.key === "Enter") { playKeySound(); handleEnter(); }
-    else if (e.key === "Backspace") { playKeySound(); handleBackspace(); }
-    else if (/^[a-zA-Z]$/.test(e.key)) { playKeySound(); handleKey(e.key.toUpperCase()); }
-  }
-
-  document.getElementById("closeModalBtn").onclick = () => document.getElementById("resultModal").classList.add('hidden');
-  document.addEventListener("keydown", keyHandler);
-
-  // Initialization
   await loadGameData();
   createGrid();
   createKeyboard();
-  await loadLeaderboard();
-  await checkDailyLimit();
 </script>
 </body>
 </html>
