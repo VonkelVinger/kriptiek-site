@@ -97,6 +97,10 @@
       font-weight: bold;
       cursor: pointer;
       text-transform: uppercase;
+      transition: transform 0.15s ease;
+    }
+    .key.pop {
+      transform: scale(1.2);
     }
     .key.bg-green-600 { background-color: #16a34a !important; }
     .key.bg-red-600 { background-color: #dc2626 !important; }
@@ -262,6 +266,9 @@
   window.currentUser = { name: storedName };
   document.getElementById("playerName").textContent = storedName;
 
+  // Load sound
+  const keySound = new Audio('/sounds/click.mp3');
+
   let gridRows = 6;
   let gridCols = 5;
   let currentRow = 0;
@@ -274,6 +281,11 @@
   const gameUrl = window.location.href;
   const gameDate = gameId.replace("Game", "");
   const formattedDate = new Date(gameDate).toLocaleDateString("af-ZA", { day: 'numeric', month: 'long', year: 'numeric' });
+
+  function playKeySound() {
+    keySound.currentTime = 0;
+    keySound.play().catch(() => {}); // Avoid errors if sound not ready
+  }
 
   function disableGame(message = "Jy het hierdie een reeds vandag gespeel") {
     document.getElementById('clue').textContent = message;
@@ -352,19 +364,34 @@
         const key = document.createElement("button");
         key.className = "key";
         key.textContent = letter;
-        key.onclick = () => handleKey(letter);
+        key.onclick = () => {
+          key.classList.add("pop");
+          setTimeout(() => key.classList.remove("pop"), 150);
+          playKeySound();
+          handleKey(letter);
+        };
         rowDiv.appendChild(key);
       });
       if (row === "ZXCVBNM") {
         const enter = document.createElement("button");
         enter.className = "key bg-green-600";
         enter.textContent = "Enter";
-        enter.onclick = () => handleEnter();
+        enter.onclick = () => {
+          enter.classList.add("pop");
+          setTimeout(() => enter.classList.remove("pop"), 150);
+          playKeySound();
+          handleEnter();
+        };
         rowDiv.appendChild(enter);
         const back = document.createElement("button");
         back.className = "key bg-red-600";
         back.textContent = "←";
-        back.onclick = () => handleBackspace();
+        back.onclick = () => {
+          back.classList.add("pop");
+          setTimeout(() => back.classList.remove("pop"), 150);
+          playKeySound();
+          handleBackspace();
+        };
         rowDiv.appendChild(back);
       }
       keyboard.appendChild(rowDiv);
@@ -517,9 +544,9 @@
   }
 
   function keyHandler(e) {
-    if (e.key === "Enter") handleEnter();
-    else if (e.key === "Backspace") handleBackspace();
-    else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
+    if (e.key === "Enter") { playKeySound(); handleEnter(); }
+    else if (e.key === "Backspace") { playKeySound(); handleBackspace(); }
+    else if (/^[a-zA-Z]$/.test(e.key)) { playKeySound(); handleKey(e.key.toUpperCase()); }
   }
 
   document.getElementById("closeModalBtn").onclick = () => document.getElementById("resultModal").classList.add('hidden');
