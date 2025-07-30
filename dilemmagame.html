@@ -7,178 +7,65 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Montserrat', sans-serif;
-      background-color: #f9fafb;
-      color: #1f2937;
-    }
-    header {
-      background-color: #ffffff;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      padding: 1rem;
-      text-align: center;
-    }
-    .logo-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    .logo-container .letter-box {
-      width: 40px;
-      height: 40px;
-      margin: 2px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background-color: #374151;
-      color: white;
-      font-size: 1.5rem;
-      font-weight: bold;
-      border-radius: 4px;
-    }
-    .game-container {
-      max-width: 640px;
-      margin: 0 auto;
-      padding: 1rem;
-    }
-    .tile-row {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 5px;
-    }
-    .letter-tile {
-      width: 50px;
-      height: 50px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      border: 2px solid #374151;
-      font-size: 1.5rem;
-      font-weight: bold;
-      text-transform: uppercase;
-      margin: 2px;
-      background-color: white;
-      color: #1f2937;
-      transition: transform 0.3s ease;
-    }
-    .letter-tile.flip {
-      animation: flipAnim 0.5s ease forwards;
-    }
-    @keyframes flipAnim {
-      0% { transform: rotateX(0); }
-      50% { transform: rotateX(90deg); }
-      100% { transform: rotateX(0); }
-    }
+    body { font-family: 'Montserrat', sans-serif; background-color: #f9fafb; color: #1f2937; }
+    header { background-color: #ffffff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); padding: 1rem; text-align: center; }
+    .logo-container { display: flex; justify-content: center; align-items: center; margin-bottom: 10px; }
+    .logo-container .letter-box { width: 40px; height: 40px; margin: 2px; display: flex; justify-content: center; align-items: center; background-color: #374151; color: white; font-size: 1.5rem; font-weight: bold; border-radius: 4px; }
+    .game-container { max-width: 640px; margin: 0 auto; padding: 1rem; }
+    .tile-row { display: flex; justify-content: center; margin-bottom: 5px; }
+    .letter-tile { width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; border: 2px solid #374151; font-size: 1.5rem; font-weight: bold; text-transform: uppercase; margin: 2px; background-color: white; color: #1f2937; transition: transform 0.3s ease; }
+    .letter-tile.flip { animation: flipAnim 0.5s ease forwards; }
+    @keyframes flipAnim { 0% { transform: rotateX(0); } 50% { transform: rotateX(90deg); } 100% { transform: rotateX(0); } }
     .correct { background-color: #16a34a !important; color: white !important; }
     .present { background-color: #facc15 !important; color: black !important; }
-    .absent  { background-color: #9ca3af !important; color: white !important; }
-    .keyboard-row {
-      display: flex;
-      justify-content: center;
-      margin: 5px 0;
-    }
-    .key {
-      min-width: 30px;
-      padding: 10px 12px;
-      margin: 2px;
-      border-radius: 4px;
-      background-color: #374151;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      text-transform: uppercase;
-    }
+    .absent { background-color: #9ca3af !important; color: white !important; }
+    .keyboard-row { display: flex; justify-content: center; margin: 5px 0; }
+    .key { min-width: 30px; padding: 10px 12px; margin: 2px; border-radius: 4px; background-color: #374151; color: white; font-weight: bold; cursor: pointer; text-transform: uppercase; }
     .key.bg-green-600 { background-color: #16a34a !important; }
     .key.bg-red-600 { background-color: #dc2626 !important; }
-    .leaderboard-entry {
-      padding: 4px 0;
-      border-bottom: 1px solid #e5e7eb;
-    }
-    .rules {
-      background-color: #ffffff;
-      border: 1px solid #e5e7eb;
-      border-radius: 6px;
-      padding: 10px;
-      margin-top: 20px;
-    }
-    /* Modal */
-    #resultModal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background-color: rgba(0, 0, 0, 0.5);
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
-    #resultModal .modal-content {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 8px;
-      text-align: center;
-      max-width: 300px;
-      width: 100%;
-    }
-    #resultModal button {
-      margin: 5px;
-      padding: 8px 16px;
-      border-radius: 4px;
-      font-weight: bold;
-    }
-    .btn-share {
-      background-color: #1e3a8a;
-      color: white;
-    }
-    .btn-close {
-      background-color: #6b7280;
-      color: white;
-    }
+    .leaderboard-entry { padding: 4px 0; border-bottom: 1px solid #e5e7eb; }
+    #resultModal { display: none; position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.5); align-items: center; justify-content: center; z-index: 1000; }
+    #resultModal .modal-content { background: white; padding: 1.5rem; border-radius: 8px; text-align: center; max-width: 300px; width: 100%; }
+    #resultModal button { margin: 5px; padding: 8px 16px; border-radius: 4px; font-weight: bold; }
+    .btn-share { background-color: #1e3a8a; color: white; }
+    .btn-close { background-color: #6b7280; color: white; }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
-  <header>
-    <div class="logo-container">
-      <div class="letter-box">K</div>
-      <div class="letter-box">R</div>
-      <div class="letter-box">I</div>
-      <div class="letter-box">P</div>
-      <div class="letter-box">T</div>
-      <div class="letter-box">I</div>
-      <div class="letter-box">E</div>
-      <div class="letter-box">K</div>
-    </div>
-    <p class="text-sm text-gray-500">
-      Welkom, <span id="playerName" class="font-semibold text-green-700"></span>!
-    </p>
-  </header>
-
-  <main class="flex-grow game-container">
-    <div id="clue" class="text-center text-lg mb-4 text-gray-700 font-semibold">Laai die leidraad...</div>
-    <div id="game-grid" class="mb-6"></div>
-    <div id="keyboard" class="mb-6"></div>
-
-    <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
-      <h2 class="text-xl font-bold mb-2">Vandag se beste spelers</h2>
-      <ul id="leaderboardList" class="text-gray-700 text-left">
-        <li>Jou naam kan eerste wees!</li>
-      </ul>
-    </div>
-  </main>
-
-  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
-    &copy; 2025 Kriptiek. Alle regte voorbehou. |
-    <a href="/index.html" class="underline">Tuis</a>
-  </footer>
-
-  <!-- Result Modal -->
-  <div id="resultModal">
-    <div class="modal-content">
-      <p id="resultMessage" class="mb-4 font-bold"></p>
-      <button id="modalShareBtn" class="btn-share">DEEL</button>
-      <button id="closeModalBtn" class="btn-close">SLUIT</button>
-    </div>
+<header>
+  <div class="logo-container">
+    <div class="letter-box">K</div><div class="letter-box">R</div><div class="letter-box">I</div>
+    <div class="letter-box">P</div><div class="letter-box">T</div><div class="letter-box">I</div>
+    <div class="letter-box">E</div><div class="letter-box">K</div>
   </div>
+  <p class="text-sm text-gray-500">Welkom, <span id="playerName" class="font-semibold text-green-700"></span>!</p>
+</header>
+
+<main class="flex-grow game-container">
+  <div id="clue" class="text-center text-lg mb-4 text-gray-700 font-semibold">Laai die leidraad...</div>
+  <div id="game-grid" class="mb-6"></div>
+  <div id="keyboard" class="mb-6"></div>
+  <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
+    <h2 class="text-xl font-bold mb-2">Vandag se beste spelers</h2>
+    <ul id="leaderboardList" class="text-gray-700 text-left">
+      <li>Jou naam kan eerste wees!</li>
+    </ul>
+  </div>
+</main>
+
+<footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
+  &copy; 2025 Kriptiek. Alle regte voorbehou. |
+  <a href="/index.html" class="underline">Tuis</a>
+</footer>
+
+<!-- Modal -->
+<div id="resultModal">
+  <div class="modal-content">
+    <p id="resultMessage" class="mb-4 font-bold"></p>
+    <button id="modalShareBtn" class="btn-share">DEEL</button>
+    <button id="closeModalBtn" class="btn-close">SLUIT</button>
+  </div>
+</div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
@@ -212,16 +99,16 @@
   let currentRow = 0, currentCol = 0;
   let board = [];
   let targetWord = "";
+  let gameOver = false;
 
   const params = new URLSearchParams(window.location.search);
   const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
   const localKey = `lastGameTime_${gameId}`;
   const gameUrl = window.location.href;
 
-  // Lockout check
   function disableGame(message = "Jy het hierdie een reeds vandag gespeel.") {
+    gameOver = true;
     document.getElementById('clue').textContent = message;
-    document.removeEventListener("keydown", keyHandler);
     document.querySelectorAll('.key').forEach(key => key.disabled = true);
   }
 
@@ -293,6 +180,7 @@
   }
 
   function handleKey(letter) {
+    if (gameOver) return;
     if (currentCol < gridCols && currentRow < gridRows) {
       board[currentRow][currentCol].textContent = letter;
       currentCol++;
@@ -300,6 +188,7 @@
   }
 
   function handleBackspace() {
+    if (gameOver) return;
     if (currentCol > 0) {
       currentCol--;
       board[currentRow][currentCol].textContent = "";
@@ -307,6 +196,7 @@
   }
 
   function handleEnter() {
+    if (gameOver) return;
     if (currentCol < gridCols) {
       alert("Vul al die letters in!");
       return;
@@ -382,9 +272,7 @@
       li.innerHTML = `<strong>${data.name}</strong>: ${data.score} ${data.score === 1 ? 'raaiskoot' : 'raaiskote'}`;
       leaderboardList.appendChild(li);
     });
-    if (entries === 0) {
-      leaderboardList.innerHTML = "<li>Jou naam kan eerste wees!</li>";
-    }
+    if (entries === 0) leaderboardList.innerHTML = "<li>Jou naam kan eerste wees!</li>";
   }
 
   async function submitScore(score) {
@@ -398,21 +286,19 @@
   }
 
   function gameCompleted(attempts) {
-    const msg = `Baie geluk, ${storedName}! Jy het die woord in ${attempts} raaiskote geraai!`;
-    resultMsg.textContent = msg;
+    gameOver = true;
+    resultMsg.textContent = `Baie geluk, ${storedName}! Jy het die woord in ${attempts} raaiskote geraai!`;
     modal.style.display = "flex";
     shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het vandag se DILEMMA in ${attempts} raaiskote opgelos! Speel by: ${gameUrl}`);
     submitScore(attempts);
-    disableGame();
   }
 
   function gameFailed() {
-    const msg = `Jammer, ${storedName}! Vandag se oplossing is ${targetWord}.`;
-    resultMsg.textContent = msg;
+    gameOver = true;
+    resultMsg.textContent = `Jammer, ${storedName}! Vandag se oplossing is ${targetWord}.`;
     modal.style.display = "flex";
     shareBtn.onclick = () => navigator.clipboard.writeText(`Ek kon nie vandag se DILEMMA oplos nie. Speel by: ${gameUrl}`);
     submitScore(gridRows);
-    disableGame();
   }
 
   closeBtn.onclick = () => modal.style.display = "none";
