@@ -102,6 +102,38 @@
       padding: 10px;
       margin-top: 20px;
     }
+    /* Modal */
+    #resultModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    #resultModal .modal-content {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      text-align: center;
+      max-width: 300px;
+      width: 100%;
+    }
+    #resultModal button {
+      margin: 5px;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .btn-share {
+      background-color: #1e3a8a;
+      color: white;
+    }
+    .btn-close {
+      background-color: #6b7280;
+      color: white;
+    }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -139,6 +171,15 @@
     <a href="/index.html" class="underline">Tuis</a>
   </footer>
 
+  <!-- Result Modal -->
+  <div id="resultModal">
+    <div class="modal-content">
+      <p id="resultMessage" class="mb-4 font-bold"></p>
+      <button id="modalShareBtn" class="btn-share">DEEL</button>
+      <button id="closeModalBtn" class="btn-close">SLUIT</button>
+    </div>
+  </div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
   import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } 
@@ -159,6 +200,11 @@
   const gameGrid = document.getElementById("game-grid");
   const keyboard = document.getElementById("keyboard");
   const leaderboardList = document.getElementById("leaderboardList");
+  const modal = document.getElementById("resultModal");
+  const resultMsg = document.getElementById("resultMessage");
+  const shareBtn = document.getElementById("modalShareBtn");
+  const closeBtn = document.getElementById("closeModalBtn");
+
   const storedName = localStorage.getItem('userName') || 'Speler';
   document.getElementById("playerName").textContent = storedName;
 
@@ -171,6 +217,22 @@
   const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
   const localKey = `lastGameTime_${gameId}`;
   const gameUrl = window.location.href;
+
+  // Lockout check
+  function disableGame(message = "Jy het hierdie een reeds vandag gespeel.") {
+    document.getElementById('clue').textContent = message;
+    document.removeEventListener("keydown", keyHandler);
+    document.querySelectorAll('.key').forEach(key => key.disabled = true);
+  }
+
+  async function checkDailyLimit() {
+    const lastGameTime = localStorage.getItem(localKey);
+    if (lastGameTime && Date.now() - parseInt(lastGameTime) < 24 * 60 * 60 * 1000) {
+      disableGame();
+      return false;
+    }
+    return true;
+  }
 
   async function loadGameData() {
     const gameDocRef = doc(db, 'games', gameId);
@@ -331,18 +393,29 @@
       score,
       timestamp: serverTimestamp()
     });
-    loadLeaderboard();
+    localStorage.setItem(localKey, Date.now());
+    await loadLeaderboard();
   }
 
   function gameCompleted(attempts) {
-    alert(`Baie geluk, ${storedName}! Jy het die woord in ${attempts} raaiskote geraai!`);
+    const msg = `Baie geluk, ${storedName}! Jy het die woord in ${attempts} raaiskote geraai!`;
+    resultMsg.textContent = msg;
+    modal.style.display = "flex";
+    shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het vandag se DILEMMA in ${attempts} raaiskote opgelos! Speel by: ${gameUrl}`);
     submitScore(attempts);
+    disableGame();
   }
 
   function gameFailed() {
-    alert(`Jammer, ${storedName}! Vandag se oplossing is ${targetWord}.`);
+    const msg = `Jammer, ${storedName}! Vandag se oplossing is ${targetWord}.`;
+    resultMsg.textContent = msg;
+    modal.style.display = "flex";
+    shareBtn.onclick = () => navigator.clipboard.writeText(`Ek kon nie vandag se DILEMMA oplos nie. Speel by: ${gameUrl}`);
     submitScore(gridRows);
+    disableGame();
   }
+
+  closeBtn.onclick = () => modal.style.display = "none";
 
   function keyHandler(e) {
     if (e.key === "Enter") handleEnter();
@@ -356,6 +429,7 @@
   createGrid();
   createKeyboard();
   await loadLeaderboard();
+  await checkDailyLimit();
 </script>
 </body>
 </html>
