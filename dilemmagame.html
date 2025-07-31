@@ -317,9 +317,9 @@
 
   function gameCompleted(attempts) {
     gameOver = true;
-    resultMsg.textContent = `Baie geluk, ${storedName}! Jy het die woord in ${attempts} raaiskote geraai!`;
+    resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${attempts} raaiskote gekry!`;
     modal.style.display = "flex";
-    shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het vandag se DILEMMA in ${attempts} raaiskote opgelos! Speel by: ${gameUrl}`);
+    shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het vandag se DILEMMA in ${attempts} raaiskote opgelos. Speel by ${gameUrl}`);
     submitScore(attempts);
     lockoutMessage.style.display = "block";
   }
