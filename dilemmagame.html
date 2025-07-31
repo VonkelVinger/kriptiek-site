@@ -70,7 +70,7 @@
   <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
     <h2 class="text-xl font-bold mb-2">Vandag se beste spelers</h2>
     <ul id="leaderboardList" class="text-gray-700 text-left">
-      <li>Jou naam kan eerste wees!</li>
+      <li>Jy kan eerste op die leierbord wees!</li>
     </ul>
   </div>
 </main>
@@ -302,7 +302,7 @@
       li.innerHTML = `${crown}<strong>${data.name}</strong>: ${data.score} ${data.score === 1 ? 'raaiskoot' : 'raaiskote'}`;
       leaderboardList.appendChild(li);
     });
-    if (entries === 0) leaderboardList.innerHTML = "<li>Jou naam kan eerste wees!</li>";
+    if (entries === 0) leaderboardList.innerHTML = "<li>Jy kan eerste op die leierbord wees!</li>";
   }
 
   async function submitScore(score) {
