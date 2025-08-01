@@ -339,7 +339,7 @@ function generateShareGrid() {
     row.forEach(state => {
       if (state === "correct") shareText += "🟩";
       else if (state === "present") shareText += "🟨";
-      else shareText += "⬜";
+      else shareText += "⬛";
     });
     shareText += "\n";
   });
@@ -348,11 +348,13 @@ function generateShareGrid() {
 
 function gameCompleted(attempts) {
   gameOver = true;
-  resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${attempts} raaiskote gekry!`;
+  const attemptText = attempts === 1 ? "raaiskoot" : "raaiskote";
+  resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${attempts} ${attemptText} gekry!`;
   modal.style.display = "flex";
   shareBtn.onclick = () => {
     const shareGrid = generateShareGrid();
-    navigator.clipboard.writeText(`Ek het vandag se DILEMMA in ${attempts} raaiskote opgelos.\n\n${shareGrid}\nSpeel by ${gameUrl}`);
+    const shareAttemptText = attempts === 1 ? "raaiskoot" : "raaiskote";
+    navigator.clipboard.writeText(`Ek het vandag se DILEMMA in ${attempts} ${shareAttemptText} opgelos.\n\n${shareGrid}\nSpeel by ${gameUrl}`);
   };
   submitScore(attempts);
   lockoutMessage.style.display = "block";
