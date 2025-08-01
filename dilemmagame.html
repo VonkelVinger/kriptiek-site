@@ -347,7 +347,7 @@ function gameCompleted(attempts) {
   modal.style.display = "flex";
   shareBtn.onclick = () => {
     const emojiGrid = getEmojiGrid(board.slice(0, attempts));
-    const message = `Ek het vandag se DILEMMA in ${attempts} raaiskote opgelos:\n\n${emojiGrid}\n\nSpeel by www.kriptiek.com`;
+    const message = `Ek het vandag se DILEMMA in ${attempts} raaiskote opgelos.\n\n${emojiGrid}\n\nSpeel by www.kriptiek.com`;
     navigator.clipboard.writeText(message);
   };
   submitScore(attempts);
