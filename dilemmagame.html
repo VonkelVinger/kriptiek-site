@@ -143,6 +143,7 @@ let currentRow = 0, currentCol = 0;
 let board = [];
 let targetWord = "";
 let gameOver = false;
+let gameResults = [];
 
 const params = new URLSearchParams(window.location.search);
 const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
@@ -271,6 +272,8 @@ function checkGuessWithFlip(guess) {
     }
   }
 
+  gameResults.push(states);
+
   states.forEach((state, i) => {
     const tile = board[currentRow][i];
     const letter = guessLetters[i];
@@ -330,11 +333,27 @@ async function submitScore(score) {
   await loadLeaderboard();
 }
 
+function generateShareGrid() {
+  let shareText = "";
+  gameResults.forEach(row => {
+    row.forEach(state => {
+      if (state === "correct") shareText += "🟩";
+      else if (state === "present") shareText += "🟨";
+      else shareText += "⬜";
+    });
+    shareText += "\n";
+  });
+  return shareText;
+}
+
 function gameCompleted(attempts) {
   gameOver = true;
   resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${attempts} raaiskote gekry!`;
   modal.style.display = "flex";
-  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het vandag se DILEMMA in ${attempts} raaiskote opgelos. Speel by ${gameUrl}`);
+  shareBtn.onclick = () => {
+    const shareGrid = generateShareGrid();
+    navigator.clipboard.writeText(`Ek het vandag se DILEMMA in ${attempts} raaiskote opgelos.\n\n${shareGrid}\nSpeel by ${gameUrl}`);
+  };
   submitScore(attempts);
   lockoutMessage.style.display = "block";
 }
@@ -343,7 +362,10 @@ function gameFailed() {
   gameOver = true;
   resultMsg.textContent = `Jammer, ${storedName}! Vandag se oplossing is ${targetWord}.`;
   modal.style.display = "flex";
-  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek kon nie vandag se DILEMMA oplos nie. Speel by: ${gameUrl}`);
+  shareBtn.onclick = () => {
+    const shareGrid = generateShareGrid();
+    navigator.clipboard.writeText(`Ek kon nie vandag se DILEMMA oplos nie.\n\n${shareGrid}\nSpeel by: ${gameUrl}`);
+  };
   submitScore(gridRows);
   lockoutMessage.style.display = "block";
 }
