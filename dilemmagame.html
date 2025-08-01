@@ -13,83 +13,75 @@
 <body class="bg-gray-100 min-h-screen flex flex-col">
 <!-- ... (rest of body and modal markup remains unchanged) ... -->
 <script type="module">
-// ... (Firebase setup and game logic functions as already defined) ...
+(async function main() {
+  // ... (Firebase setup and game logic functions as already defined) ...
 
-function buildEmojiGrid() {
-  const emojiGrid = [];
-  for (let r = 0; r <= currentRow; r++) {
-    let line = "";
-    for (let c = 0; c < gridCols; c++) {
-      const tile = board[r][c];
-      if (tile.classList.contains("correct")) line += "🟩";
-      else if (tile.classList.contains("present")) line += "🟨";
-      else line += "⬜";
+  function buildEmojiGrid() {
+    const emojiGrid = [];
+    for (let r = 0; r <= currentRow; r++) {
+      let line = "";
+      for (let c = 0; c < gridCols; c++) {
+        const tile = board[r][c];
+        if (tile.classList.contains("correct")) line += "🟩";
+        else if (tile.classList.contains("present")) line += "🟨";
+        else line += "⬜";
+      }
+      emojiGrid.push(line);
     }
-    emojiGrid.push(line);
+    return emojiGrid.join("\n");
   }
-  return emojiGrid.join("\n");
-}
 
-function gameCompleted(attempts) {
-  gameOver = true;
-  resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${attempts} raaiskote gekry!`;
-  modal.style.display = "flex";
+  function gameCompleted(attempts) {
+    gameOver = true;
+    resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${attempts} raaiskote gekry!`;
+    modal.style.display = "flex";
 
-  const emojiSummary = buildEmojiGrid();
-  const displayLink = "www.kriptiek.com";
-  const fullUrl = gameUrl;
-  const message = `DILEMMA ${gameId.replace("Game", "")} ${attempts}/6\n${emojiSummary}\n${displayLink}`;
+    const emojiSummary = buildEmojiGrid();
+    const displayLink = "www.kriptiek.com";
+    const fullUrl = gameUrl;
+    const message = `DILEMMA ${gameId.replace("Game", "")} ${attempts}/6\n${emojiSummary}\n${displayLink}`;
 
-  shareBtn.onclick = () => {
-    navigator.clipboard.writeText(message).then(() => {
-      const link = document.createElement("a");
-      link.href = fullUrl;
-      link.target = "_blank";
-      link.click();
-    });
-  };
+    shareBtn.onclick = () => {
+      navigator.clipboard.writeText(message);
+    };
 
-  submitScore(attempts);
-  lockoutMessage.style.display = "block";
-}
+    submitScore(attempts);
+    lockoutMessage.style.display = "block";
+  }
 
-function gameFailed() {
-  gameOver = true;
-  resultMsg.textContent = `Jammer, ${storedName}! Vandag se oplossing is ${targetWord}.`;
-  modal.style.display = "flex";
+  function gameFailed() {
+    gameOver = true;
+    resultMsg.textContent = `Jammer, ${storedName}! Vandag se oplossing is ${targetWord}.`;
+    modal.style.display = "flex";
 
-  const emojiSummary = buildEmojiGrid();
-  const displayLink = "www.kriptiek.com";
-  const fullUrl = gameUrl;
-  const message = `DILEMMA ${gameId.replace("Game", "")} X/6\n${emojiSummary}\n${displayLink}`;
+    const emojiSummary = buildEmojiGrid();
+    const displayLink = "www.kriptiek.com";
+    const fullUrl = gameUrl;
+    const message = `DILEMMA ${gameId.replace("Game", "")} X/6\n${emojiSummary}\n${displayLink}`;
 
-  shareBtn.onclick = () => {
-    navigator.clipboard.writeText(message).then(() => {
-      const link = document.createElement("a");
-      link.href = fullUrl;
-      link.target = "_blank";
-      link.click();
-    });
-  };
+    shareBtn.onclick = () => {
+      navigator.clipboard.writeText(message);
+    };
 
-  submitScore(gridRows);
-  lockoutMessage.style.display = "block";
-}
+    submitScore(gridRows);
+    lockoutMessage.style.display = "block";
+  }
 
-closeBtn.onclick = () => modal.style.display = "none";
+  closeBtn.onclick = () => modal.style.display = "none";
 
-function keyHandler(e) {
-  if (e.key === "Enter") handleEnter();
-  else if (e.key === "Backspace") handleBackspace();
-  else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
-}
+  function keyHandler(e) {
+    if (e.key === "Enter") handleEnter();
+    else if (e.key === "Backspace") handleBackspace();
+    else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
+  }
 
-document.addEventListener("keydown", keyHandler);
-await loadGameData();
-createGrid();
-createKeyboard();
-await loadLeaderboard();
-await checkDailyLimit();
+  document.addEventListener("keydown", keyHandler);
+  await loadGameData();
+  createGrid();
+  createKeyboard();
+  await loadLeaderboard();
+  await checkDailyLimit();
+})();
 </script>
 </body>
 </html>
