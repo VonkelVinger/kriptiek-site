@@ -1,4 +1,3 @@
-<!-- START OF dilemmagame.html -->
 <!DOCTYPE html>
 <html lang="af">
 <head>
@@ -65,32 +64,30 @@
   <div id="game-grid" class="mb-6"></div>
   <div id="keyboard" class="mb-6"></div>
   <p id="lockoutMessage"><span class="icon">🔒</span>Jy kan môre weer speel</p>
-
-  <!-- HOE OM TE SPEEL -->
-  <div class="mt-6 bg-white rounded shadow p-4">
-    <h2 class="text-xl font-bold mb-2">HOE OM TE SPEEL</h2>
-    <p class="text-gray-700 leading-relaxed mb-2">
-      Jy het ses kanse om die woord te raai.<br>
-      Jy mag vir elke probeerslag enige letters in enige volgorde kies, maar elke raaiskoot moet dieselfde aantal letters hê as die woord waarna jy soek. Dit hoef nie ook 'n woord te vorm nie.<br>
-      Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER.
-    </p>
-    <p class="text-gray-700 italic mb-2">
-      WENK: Op kleiner skerms sal jy soms lekkerder speel in landskap-formaat ("Landscape Format" of "Auto-Rotate").
-    </p>
-    <p class="text-gray-700 leading-relaxed">
-      <span class="font-bold text-green-700">GROEN</span>: Die letter is in die antwoord en in die regte blokkie.<br>
-      <span class="font-bold text-yellow-600">GEEL</span>: Die letter is in die antwoord, maar nie in die regte blokkie nie.<br>
-      <span class="font-bold text-gray-500">GRYS</span>: Die letter is glad nie in die antwoord nie.
-    </p>
-  </div>
-
-  <!-- LEADERBOARD -->
-  <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
-    <h2 class="text-xl font-bold mb-2">Vandag se beste spelers</h2>
-    <ul id="leaderboardList" class="text-gray-700 text-left">
-      <li>Jy kan eerste op die leierbord wees!</li>
-    </ul>
-  </div>
+<!-- HOE OM TE SPEEL section -->
+<div class="mt-6 bg-white rounded shadow p-4">
+  <h2 class="text-xl font-bold mb-2">HOE OM TE SPEEL</h2>
+  <p class="text-gray-700 leading-relaxed mb-2">
+    Jy het ses kanse om die woord te raai.<br>
+    Jy mag vir elke probeerslag enige letters in enige volgorde kies, maar elke raaiskoot moet dieselfde aantal letters hê as die woord waarna jy soek. Dit hoef nie ook 'n woord te vorm nie.<br>
+    Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER.
+  </p>
+  <p class="text-gray-700 italic mb-2">
+    WENK: Op kleiner skerms sal jy soms lekkerder speel in landskap-formaat ("Landscape Format" of "Auto-Rotate").
+  </p>
+  <p class="text-gray-700 leading-relaxed">
+    <span class="font-bold text-green-700">GROEN</span>: Die letter is in die antwoord en in die regte blokkie.<br>
+    <span class="font-bold text-yellow-600">GEEL</span>: Die letter is in die antwoord, maar nie in die regte blokkie nie.<br>
+    <span class="font-bold text-gray-500">GRYS</span>: Die letter is glad nie in die antwoord nie.
+  </p>
+</div>
+<!-- Leaderboard -->
+<div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
+  <h2 class="text-xl font-bold mb-2">Vandag se beste spelers</h2>
+  <ul id="leaderboardList" class="text-gray-700 text-left">
+    <li>Jy kan eerste op die leierbord wees!</li>
+  </ul>
+</div>
 </main>
 
 <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
@@ -103,7 +100,7 @@
   <a href="/contact.html" class="underline">Kontak ons</a>
 </footer>
 
-<!-- MODAL -->
+<!-- Modal -->
 <div id="resultModal">
   <div class="modal-content">
     <p id="resultMessage" class="mb-4 font-bold"></p>
@@ -112,10 +109,10 @@
   </div>
 </div>
 
-<!-- GAME SCRIPT -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } 
+  from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -137,6 +134,7 @@ const modal = document.getElementById("resultModal");
 const resultMsg = document.getElementById("resultMessage");
 const shareBtn = document.getElementById("modalShareBtn");
 const closeBtn = document.getElementById("closeModalBtn");
+
 const storedName = localStorage.getItem('userName') || 'Speler';
 document.getElementById("playerName").textContent = storedName;
 
@@ -149,6 +147,7 @@ let gameOver = false;
 const params = new URLSearchParams(window.location.search);
 const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
 const localKey = `lastGameTime_${gameId}`;
+const gameUrl = window.location.href;
 
 function disableGame(message = "Jy het hierdie een reeds vandag gespeel") {
   gameOver = true;
@@ -304,16 +303,6 @@ function updateKeyboard(letter, state) {
   }
 }
 
-function getEmojiGrid(rows) {
-  return rows.map(row =>
-    row.map(tile => {
-      if (tile.classList.contains("correct")) return "🟩";
-      if (tile.classList.contains("present")) return "🟨";
-      return "⬜";
-    }).join("")
-  ).join("\n");
-}
-
 async function loadLeaderboard() {
   leaderboardList.innerHTML = '';
   const q = query(collection(db, 'games', gameId, 'leaderboard'), orderBy('score', 'asc'), limit(10));
@@ -345,11 +334,7 @@ function gameCompleted(attempts) {
   gameOver = true;
   resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${attempts} raaiskote gekry!`;
   modal.style.display = "flex";
-  shareBtn.onclick = () => {
-    const emojiGrid = getEmojiGrid(board.slice(0, attempts));
-    const message = `Ek het vandag se DILEMMA in ${attempts} raaiskote opgelos:\n\n${emojiGrid}\n\nSpeel by www.kriptiek.com`;
-    navigator.clipboard.writeText(message);
-  };
+  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het vandag se DILEMMA in ${attempts} raaiskote opgelos. Speel by ${gameUrl}`);
   submitScore(attempts);
   lockoutMessage.style.display = "block";
 }
@@ -358,21 +343,20 @@ function gameFailed() {
   gameOver = true;
   resultMsg.textContent = `Jammer, ${storedName}! Vandag se oplossing is ${targetWord}.`;
   modal.style.display = "flex";
-  shareBtn.onclick = () => {
-    const emojiGrid = getEmojiGrid(board);
-    const message = `Ek kon nie vandag se DILEMMA oplos nie:\n\n${emojiGrid}\n\nProbeer weer by www.kriptiek.com`;
-    navigator.clipboard.writeText(message);
-  };
+  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek kon nie vandag se DILEMMA oplos nie. Speel by: ${gameUrl}`);
   submitScore(gridRows);
   lockoutMessage.style.display = "block";
 }
 
 closeBtn.onclick = () => modal.style.display = "none";
-document.addEventListener("keydown", e => {
+
+function keyHandler(e) {
   if (e.key === "Enter") handleEnter();
   else if (e.key === "Backspace") handleBackspace();
   else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
-});
+}
+
+document.addEventListener("keydown", keyHandler);
 
 await loadGameData();
 createGrid();
@@ -382,4 +366,3 @@ await checkDailyLimit();
 </script>
 </body>
 </html>
-<!-- END OF dilemmagame.html -->
