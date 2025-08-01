@@ -337,9 +337,9 @@ function generateShareGrid() {
   let shareText = "";
   gameResults.forEach(row => {
     row.forEach(state => {
-      if (state === "correct") shareText += "🟢";
-      else if (state === "present") shareText += "🟡";
-      else shareText += "⬜";
+      if (state === "correct") shareText += "🟩";
+      else if (state === "present") shareText += "🟨";
+      else shareText += "⬛";
     });
     shareText += "\n";
   });
