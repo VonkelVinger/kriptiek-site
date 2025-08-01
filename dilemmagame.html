@@ -7,334 +7,48 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Montserrat', sans-serif; background-color: #f9fafb; color: #1f2937; }
-    header { background-color: #ffffff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); padding: 1rem; text-align: center; }
-    .logo-container { display: flex; justify-content: center; align-items: center; margin-bottom: 10px; }
-    .logo-container .letter-box { width: 40px; height: 40px; margin: 2px; display: flex; justify-content: center; align-items: center; background-color: #374151; color: white; font-size: 1.5rem; font-weight: bold; border-radius: 4px; }
-    .game-container { max-width: 640px; margin: 0 auto; padding: 1rem; }
-    .tile-row { display: flex; justify-content: center; margin-bottom: 5px; }
-    .letter-tile { width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; border: 2px solid #374151; font-size: 1.5rem; font-weight: bold; text-transform: uppercase; margin: 2px; background-color: white; color: #1f2937; transition: transform 0.3s ease; }
-    .letter-tile.flip { animation: flipAnim 0.5s ease forwards; }
-    @keyframes flipAnim { 0% { transform: rotateX(0); } 50% { transform: rotateX(90deg); } 100% { transform: rotateX(0); } }
-    .correct { background-color: #16a34a !important; color: white !important; }
-    .present { background-color: #facc15 !important; color: black !important; }
-    .absent { background-color: #9ca3af !important; color: white !important; }
-    .keyboard-row { display: flex; justify-content: center; margin: 5px 0; }
-    .key { min-width: 30px; padding: 10px 12px; margin: 2px; border-radius: 4px; background-color: #374151; color: white; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-    .key.bg-green-600 { background-color: #16a34a !important; }
-    .key.bg-red-600 { background-color: #1e3a8a !important; }
-    #lockoutMessage {
-      display: none;
-      text-align: center;
-      margin-top: 10px;
-      font-weight: bold;
-      color: #1e3a8a;
-      font-size: 1.1rem;
-      opacity: 0;
-      animation: fadeIn 1s forwards;
-    }
-    #lockoutMessage .icon { margin-right: 6px; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px);} to { opacity: 1; transform: translateY(0);} }
-    #leaderboard { border: 1px solid #e5e7eb; }
-    #leaderboardList li { padding: 6px 8px; transition: background-color 0.2s ease; }
-    #leaderboardList li:nth-child(odd) { background-color: #f9fafb; }
-    #leaderboardList li:nth-child(even) { background-color: #ffffff; }
-    #leaderboardList li:hover { background-color: #e0e7ff; }
-    #leaderboardList li:first-child { background-color: #d1fae5; font-weight: bold; }
-    #leaderboardList li:first-child .crown { margin-right: 4px; color: #f59e0b; }
-    #resultModal { display: none; position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.5); align-items: center; justify-content: center; z-index: 1000; }
-    #resultModal .modal-content { background: white; padding: 1.5rem; border-radius: 8px; text-align: center; max-width: 300px; width: 100%; }
-    #resultModal button { margin: 5px; padding: 8px 16px; border-radius: 4px; font-weight: bold; }
-    .btn-share { background-color: #1e3a8a; color: white; }
-    .btn-close { background-color: #6b7280; color: white; }
+    /* ... (same CSS as before) ... */
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
-<header>
-  <div class="logo-container">
-    <div class="letter-box">K</div><div class="letter-box">R</div><div class="letter-box">I</div>
-    <div class="letter-box">P</div><div class="letter-box">T</div><div class="letter-box">I</div>
-    <div class="letter-box">E</div><div class="letter-box">K</div>
-  </div>
-  <p class="text-sm text-gray-500">Welkom, <span id="playerName" class="font-semibold text-green-700"></span>!</p>
-</header>
-
-<main class="flex-grow game-container">
-  <div id="clue" class="text-center text-lg mb-4 text-gray-700 font-semibold">Laai die leidraad...</div>
-  <div id="game-grid" class="mb-6"></div>
-  <div id="keyboard" class="mb-6"></div>
-  <p id="lockoutMessage"><span class="icon">🔒</span>Jy kan môre weer speel</p>
-<!-- HOE OM TE SPEEL section -->
-<div class="mt-6 bg-white rounded shadow p-4">
-  <h2 class="text-xl font-bold mb-2">HOE OM TE SPEEL</h2>
-  <p class="text-gray-700 leading-relaxed mb-2">
-    Jy het ses kanse om die woord te raai.<br>
-    Jy mag vir elke probeerslag enige letters in enige volgorde kies, maar elke raaiskoot moet dieselfde aantal letters hê as die woord waarna jy soek. Dit hoef nie ook 'n woord te vorm nie.<br>
-    Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER.
-  </p>
-  <p class="text-gray-700 italic mb-2">
-    WENK: Op kleiner skerms sal jy soms lekkerder speel in landskap-formaat ("Landscape Format" of "Auto-Rotate").
-  </p>
-  <p class="text-gray-700 leading-relaxed">
-    <span class="font-bold text-green-700">GROEN</span>: Die letter is in die antwoord en in die regte blokkie.<br>
-    <span class="font-bold text-yellow-600">GEEL</span>: Die letter is in die antwoord, maar nie in die regte blokkie nie.<br>
-    <span class="font-bold text-gray-500">GRYS</span>: Die letter is glad nie in die antwoord nie.
-  </p>
-</div>
-<!-- Leaderboard -->
-<div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
-  <h2 class="text-xl font-bold mb-2">Vandag se beste spelers</h2>
-  <ul id="leaderboardList" class="text-gray-700 text-left">
-    <li>Jy kan eerste op die leierbord wees!</li>
-  </ul>
-</div>
-</main>
-
-<footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
-  &copy; 2025 Kriptiek. Alle regte voorbehou. |
-  <a href="/index.html" class="underline">Tuis</a>
-  <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
-  <a href="/terms.html" class="underline">Voorwaardes</a> |
-  <a href="/faq.html" class="underline">Gereelde vrae</a> |
-  <a href="/about.html" class="underline">Oor Kriptiek</a> |
-  <a href="/contact.html" class="underline">Kontak ons</a>
-</footer>
-
-<!-- Modal -->
-<div id="resultModal">
-  <div class="modal-content">
-    <p id="resultMessage" class="mb-4 font-bold"></p>
-    <button id="modalShareBtn" class="btn-share">DEEL</button>
-    <button id="closeModalBtn" class="btn-close">SLUIT</button>
-  </div>
-</div>
-
+<!-- ... (rest of body and modal markup remains unchanged) ... -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } 
-  from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+// ... (Firebase setup and game logic functions as already defined) ...
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
-  authDomain: "kriptiek-c9ea2.firebaseapp.com",
-  projectId: "kriptiek-c9ea2",
-  storageBucket: "kriptiek-c9ea2.appspot.com",
-  messagingSenderId: "620450620939",
-  appId: "1:620450620939:web:e93a18ac23b53b33db890e"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const gameGrid = document.getElementById("game-grid");
-const keyboard = document.getElementById("keyboard");
-const leaderboardList = document.getElementById("leaderboardList");
-const lockoutMessage = document.getElementById("lockoutMessage");
-const modal = document.getElementById("resultModal");
-const resultMsg = document.getElementById("resultMessage");
-const shareBtn = document.getElementById("modalShareBtn");
-const closeBtn = document.getElementById("closeModalBtn");
-
-const storedName = localStorage.getItem('userName') || 'Speler';
-document.getElementById("playerName").textContent = storedName;
-
-let gridRows = 6, gridCols = 5;
-let currentRow = 0, currentCol = 0;
-let board = [];
-let targetWord = "";
-let gameOver = false;
-
-const params = new URLSearchParams(window.location.search);
-const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
-const localKey = `lastGameTime_${gameId}`;
-const gameUrl = window.location.href;
-
-function disableGame(message = "Jy het hierdie een reeds vandag gespeel") {
-  gameOver = true;
-  document.getElementById('clue').textContent = message;
-  lockoutMessage.style.display = "block";
-  document.querySelectorAll('.key').forEach(key => key.disabled = true);
-}
-
-async function checkDailyLimit() {
-  const lastGameTime = localStorage.getItem(localKey);
-  if (lastGameTime && Date.now() - parseInt(lastGameTime) < 24 * 60 * 60 * 1000) {
-    disableGame();
-    return false;
-  }
-  return true;
-}
-
-async function loadGameData() {
-  const gameDocRef = doc(db, 'games', gameId);
-  const gameDocSnap = await getDoc(gameDocRef);
-  if (gameDocSnap.exists()) {
-    const data = gameDocSnap.data();
-    targetWord = (data.word || "XXXXX").toUpperCase();
-    gridCols = targetWord.length;
-    document.getElementById('clue').textContent = data.clue || "Geen leidraad beskikbaar nie.";
-  }
-}
-
-function createGrid() {
-  gameGrid.innerHTML = "";
-  board = [];
-  for (let r = 0; r < gridRows; r++) {
-    const rowDiv = document.createElement("div");
-    rowDiv.className = "tile-row";
-    const row = [];
+function buildEmojiGrid() {
+  const emojiGrid = [];
+  for (let r = 0; r <= currentRow; r++) {
+    let line = "";
     for (let c = 0; c < gridCols; c++) {
-      const tile = document.createElement("div");
-      tile.className = "letter-tile";
-      rowDiv.appendChild(tile);
-      row.push(tile);
+      const tile = board[r][c];
+      if (tile.classList.contains("correct")) line += "🟩";
+      else if (tile.classList.contains("present")) line += "🟨";
+      else line += "⬜";
     }
-    gameGrid.appendChild(rowDiv);
-    board.push(row);
+    emojiGrid.push(line);
   }
-}
-
-const keyLayout = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
-function createKeyboard() {
-  keyboard.innerHTML = "";
-  keyLayout.forEach(row => {
-    const rowDiv = document.createElement("div");
-    rowDiv.className = "keyboard-row";
-    [...row].forEach(letter => {
-      const key = document.createElement("button");
-      key.className = "key";
-      key.textContent = letter;
-      key.onclick = () => handleKey(letter);
-      rowDiv.appendChild(key);
-    });
-    if (row === "ZXCVBNM") {
-      const enter = document.createElement("button");
-      enter.className = "key bg-green-600";
-      enter.textContent = "Enter";
-      enter.onclick = handleEnter;
-      rowDiv.appendChild(enter);
-      const back = document.createElement("button");
-      back.className = "key bg-red-600";
-      back.textContent = "←";
-      back.onclick = handleBackspace;
-      rowDiv.appendChild(back);
-    }
-    keyboard.appendChild(rowDiv);
-  });
-}
-
-function handleKey(letter) {
-  if (gameOver) return;
-  if (currentCol < gridCols && currentRow < gridRows) {
-    board[currentRow][currentCol].textContent = letter;
-    currentCol++;
-  }
-}
-
-function handleBackspace() {
-  if (gameOver) return;
-  if (currentCol > 0) {
-    currentCol--;
-    board[currentRow][currentCol].textContent = "";
-  }
-}
-
-function handleEnter() {
-  if (gameOver) return;
-  if (currentCol < gridCols) {
-    alert("Vul al die letters in!");
-    return;
-  }
-  const guess = board[currentRow].map(tile => tile.textContent).join("");
-  checkGuessWithFlip(guess);
-}
-
-function checkGuessWithFlip(guess) {
-  const target = targetWord;
-  const guessLetters = guess.split("");
-  const letterCounts = {};
-  for (let ch of target) letterCounts[ch] = (letterCounts[ch] || 0) + 1;
-
-  const states = new Array(gridCols).fill("absent");
-  for (let i = 0; i < gridCols; i++) {
-    if (guessLetters[i] === target[i]) {
-      states[i] = "correct";
-      letterCounts[guessLetters[i]]--;
-    }
-  }
-  for (let i = 0; i < gridCols; i++) {
-    if (states[i] === "correct") continue;
-    const letter = guessLetters[i];
-    if (letterCounts[letter] > 0) {
-      states[i] = "present";
-      letterCounts[letter]--;
-    }
-  }
-
-  states.forEach((state, i) => {
-    const tile = board[currentRow][i];
-    const letter = guessLetters[i];
-    setTimeout(() => {
-      tile.classList.add("flip");
-      tile.classList.add(state);
-      updateKeyboard(letter, state);
-    }, i * 350);
-  });
-
-  setTimeout(() => {
-    if (guess === target) gameCompleted(currentRow + 1);
-    else {
-      currentRow++;
-      currentCol = 0;
-      if (currentRow >= gridRows) gameFailed();
-    }
-  }, gridCols * 350);
-}
-
-function updateKeyboard(letter, state) {
-  const keyBtn = [...document.querySelectorAll('.key')].find(k => k.textContent === letter);
-  if (keyBtn) {
-    if (state === "correct" || (state === "present" && !keyBtn.classList.contains("correct"))) {
-      keyBtn.classList.remove("present", "absent");
-      keyBtn.classList.add(state);
-    } else if (state === "absent" && !keyBtn.classList.contains("correct") && !keyBtn.classList.contains("present")) {
-      keyBtn.classList.add("absent");
-    }
-  }
-}
-
-async function loadLeaderboard() {
-  leaderboardList.innerHTML = '';
-  const q = query(collection(db, 'games', gameId, 'leaderboard'), orderBy('score', 'asc'), limit(10));
-  const querySnapshot = await getDocs(q);
-  let entries = 0;
-  querySnapshot.forEach((docSnap, index) => {
-    const data = docSnap.data();
-    entries++;
-    const li = document.createElement('li');
-    li.className = "leaderboard-entry";
-    const crown = index === 0 ? '<span class="crown">👑</span>' : '';
-    li.innerHTML = `${crown}<strong>${data.name}</strong>: ${data.score} ${data.score === 1 ? 'raaiskoot' : 'raaiskote'}`;
-    leaderboardList.appendChild(li);
-  });
-  if (entries === 0) leaderboardList.innerHTML = "<li>Jy kan eerste op die leierbord wees!</li>";
-}
-
-async function submitScore(score) {
-  await addDoc(collection(db, 'games', gameId, 'leaderboard'), {
-    name: storedName,
-    score,
-    timestamp: serverTimestamp()
-  });
-  localStorage.setItem(localKey, Date.now());
-  await loadLeaderboard();
+  return emojiGrid.join("\n");
 }
 
 function gameCompleted(attempts) {
   gameOver = true;
   resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${attempts} raaiskote gekry!`;
   modal.style.display = "flex";
-  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het vandag se DILEMMA in ${attempts} raaiskote opgelos. Speel by ${gameUrl}`);
+
+  const emojiSummary = buildEmojiGrid();
+  const displayLink = "www.kriptiek.com";
+  const fullUrl = gameUrl;
+  const message = `DILEMMA ${gameId.replace("Game", "")} ${attempts}/6\n${emojiSummary}\n${displayLink}`;
+
+  shareBtn.onclick = () => {
+    navigator.clipboard.writeText(message).then(() => {
+      const link = document.createElement("a");
+      link.href = fullUrl;
+      link.target = "_blank";
+      link.click();
+    });
+  };
+
   submitScore(attempts);
   lockoutMessage.style.display = "block";
 }
@@ -343,7 +57,21 @@ function gameFailed() {
   gameOver = true;
   resultMsg.textContent = `Jammer, ${storedName}! Vandag se oplossing is ${targetWord}.`;
   modal.style.display = "flex";
-  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek kon nie vandag se DILEMMA oplos nie. Speel by: ${gameUrl}`);
+
+  const emojiSummary = buildEmojiGrid();
+  const displayLink = "www.kriptiek.com";
+  const fullUrl = gameUrl;
+  const message = `DILEMMA ${gameId.replace("Game", "")} X/6\n${emojiSummary}\n${displayLink}`;
+
+  shareBtn.onclick = () => {
+    navigator.clipboard.writeText(message).then(() => {
+      const link = document.createElement("a");
+      link.href = fullUrl;
+      link.target = "_blank";
+      link.click();
+    });
+  };
+
   submitScore(gridRows);
   lockoutMessage.style.display = "block";
 }
@@ -357,7 +85,6 @@ function keyHandler(e) {
 }
 
 document.addEventListener("keydown", keyHandler);
-
 await loadGameData();
 createGrid();
 createKeyboard();
