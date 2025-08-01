@@ -314,32 +314,45 @@ function getEmojiGrid(rows) {
   ).join("\n");
 }
 
+async function loadLeaderboard() {
+  leaderboardList.innerHTML = '';
+  const q = query(collection(db, 'games', gameId, 'leaderboard'), orderBy('score', 'asc'), limit(10));
+  const querySnapshot = await getDocs(q);
+  let entries = 0;
+  querySnapshot.forEach((docSnap, index) => {
+    const data = docSnap.data();
+    entries++;
+    const li = document.createElement('li');
+    li.className = "leaderboard-entry";
+    const crown = index === 0 ? '<span class="crown">👑</span>' : '';
+    li.innerHTML = `${crown}<strong>${data.name}</strong>: ${data.score} ${data.score === 1 ? 'raaiskoot' : 'raaiskote'}`;
+    leaderboardList.appendChild(li);
+  });
+  if (entries === 0) leaderboardList.innerHTML = "<li>Jy kan eerste op die leierbord wees!</li>";
+}
+
+async function submitScore(score) {
+  await addDoc(collection(db, 'games', gameId, 'leaderboard'), {
+    name: storedName,
+    score,
+    timestamp: serverTimestamp()
+  });
+  localStorage.setItem(localKey, Date.now());
+  await loadLeaderboard();
+}
+
 function gameCompleted(attempts) {
   gameOver = true;
   resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${attempts} raaiskote gekry!`;
   modal.style.display = "flex";
   shareBtn.onclick = () => {
     const emojiGrid = getEmojiGrid(board.slice(0, attempts));
-    const message = `Ek het DILEMMA (${gameId}) in ${attempts} raaiskote opgelos:\n\n${emojiGrid}\n\nSpeel by www.kriptiek.com`;
+    const message = `Ek het vandag se DILEMMA in ${attempts} raaiskote opgelos:\n\n${emojiGrid}\n\nSpeel by www.kriptiek.com`;
     navigator.clipboard.writeText(message);
   };
   submitScore(attempts);
   lockoutMessage.style.display = "block";
 }
-
-function gameFailed() {
-  gameOver = true;
-  resultMsg.textContent = `Jammer, ${storedName}! Vandag se oplossing is ${targetWord}.`;
-  modal.style.display = "flex";
-  shareBtn.onclick = () => {
-    const emojiGrid = getEmojiGrid(board);
-    const message = `Ek kon DILEMMA (${gameId}) nie oplos nie:\n\n${emojiGrid}\n\nProbeer weer by www.kriptiek.com`;
-    navigator.clipboard.writeText(message);
-  };
-  submitScore(gridRows);
-  lockoutMessage.style.display = "block";
-}
-
 
 function gameFailed() {
   gameOver = true;
