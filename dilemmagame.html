@@ -319,11 +319,27 @@ async function submitScore(score) {
 
 function gameCompleted(attempts) {
   gameOver = true;
+  const plural = attempts === 1 ? "raaiskoot" : "raaiskote";
   const emojiGrid = buildEmojiGrid();
-  const msg = `Ek het vandag se DILEMMA in ${attempts} raaiskote opgelos. Speel by www.kriptiek.com\n${emojiGrid}`;
-  resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${attempts} raaiskote gekry!`;
-  shareBtn.onclick = () => navigator.clipboard.writeText(msg);
+  const shortLink = "www.kriptiek.com";
+  const fullLink = window.location.href;
+
+  resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${attempts} ${plural} gekry!`;
   modal.style.display = "flex";
+
+  const shareMessage = `Ek het vandag se DILEMMA in ${attempts} ${plural} opgelos. Speel by ${shortLink}\n${emojiGrid}`;
+
+  shareBtn.onclick = () => {
+    navigator.clipboard.writeText(shareMessage);
+    navigator.clipboard.writeText(shareMessage).then(() => {
+      const tempLink = document.createElement("a");
+      tempLink.href = fullLink;
+      tempLink.textContent = shortLink;
+      tempLink.style.display = "none";
+      document.body.appendChild(tempLink);
+    });
+  };
+
   submitScore(attempts);
   lockoutMessage.style.display = "block";
 }
@@ -331,13 +347,29 @@ function gameCompleted(attempts) {
 function gameFailed() {
   gameOver = true;
   const emojiGrid = buildEmojiGrid();
-  const msg = `Ek kon nie vandag se DILEMMA oplos nie. Speel by www.kriptiek.com\n${emojiGrid}`;
+  const shortLink = "www.kriptiek.com";
+  const fullLink = window.location.href;
+
   resultMsg.textContent = `Jammer, ${storedName}! Vandag se oplossing is ${targetWord}.`;
-  shareBtn.onclick = () => navigator.clipboard.writeText(msg);
   modal.style.display = "flex";
+
+  const shareMessage = `Ek kon nie vandag se DILEMMA oplos nie. Speel by ${shortLink}\n${emojiGrid}`;
+
+  shareBtn.onclick = () => {
+    navigator.clipboard.writeText(shareMessage);
+    navigator.clipboard.writeText(shareMessage).then(() => {
+      const tempLink = document.createElement("a");
+      tempLink.href = fullLink;
+      tempLink.textContent = shortLink;
+      tempLink.style.display = "none";
+      document.body.appendChild(tempLink);
+    });
+  };
+
   submitScore(gridRows);
   lockoutMessage.style.display = "block";
 }
+
 
 function closeModal() {
   modal.style.display = "none";
