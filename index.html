@@ -307,7 +307,7 @@
 
     const cookieConsent = localStorage.getItem('cookieConsent');
     if (!cookieConsent) {
-      document.getElementById('cookie-banner').style.display = 'block';
+   document.getElementById('cookie-banner').classList.remove('hidden');
     }
   });
 
@@ -322,4 +322,5 @@
 </script>
 </body>
 </html>
+
 
