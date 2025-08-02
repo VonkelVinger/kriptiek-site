@@ -332,7 +332,9 @@ async function submitScore(score) {
 
 function gameCompleted(attempts) {
   gameOver = true;
-  resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${attempts} raaiskote gekry!`;
+  const raaiskootText = attempts === 1 ? '1 raaiskoot' : `${attempts} raaiskote`;
+resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${raaiskootText} gekry!`;
+
   modal.style.display = "flex";
   shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het vandag se DILEMMA in ${attempts} raaiskote opgelos. Speel by ${gameUrl}`);
   submitScore(attempts);
