@@ -13,14 +13,14 @@
   <link rel="manifest" href="/assets/site.webmanifest?v=3">
 
   <!-- Social Share Image -->
-  <meta property="og:image" content="https://www.kriptiek.com/assets/share-logo.png?v=1" />
-  <meta name="twitter:image" content="https://www.kriptiek.com/assets/share-logo.png?v=1" />
+<meta property="og:image" content="https://www.kriptiek.com/assets/share-logo.png?v=1" />
+<meta name="twitter:image" content="https://www.kriptiek.com/assets/share-logo.png?v=1" />
   <meta property="og:title" content="Kriptiek – Tuiste van DILEMMA" />
   <meta property="og:description" content="Speel DILEMMA aanlyn" />
   <meta property="og:url" content="https://www.kriptiek.com/" />
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="image" content="https://www.kriptiek.com/assets/share-logo.png?v=1" />
+<meta name="image" content="https://www.kriptiek.com/assets/share-logo.png?v=1" />
 
   <!-- Styles -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -28,9 +28,326 @@
   <style>
     body { font-family: 'Montserrat', sans-serif; }
     /* your CSS continues below... */
+    .logo-container {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: fit-content;
+      margin: 1rem auto;
+      padding: 1rem;
+      border-radius: 1rem;
+      background-color: white;
+      overflow: hidden;
+    }
+    .crossword-grid {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(40px, 1fr));
+      gap: 4px;
+      position: relative;
+      z-index: 10;
+    }
+    .letter-box {
+      width: 50px;
+      height: 50px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #374151;
+      color: white;
+      font-size: 1.8rem;
+      font-weight: bold;
+      border: 2px solid #1f2937;
+      border-radius: 0.375rem;
+      text-transform: uppercase;
+      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    }
+    .flipped-k { transform: scaleX(-1); }
+    .background-crossword {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
+      grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
+      opacity: 0.5;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .bg-letter-box {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #9ca3af;
+      border: 1px solid #e5e7eb;
+      background-color: transparent;
+      user-select: none;
+    }
+
+    /* Animations */
+    @keyframes fadeRow {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes shimmer {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    @keyframes pulseLetter {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 5px rgba(255, 255, 255, 0.3); }
+      50% { box-shadow: 0 0 12px rgba(255, 255, 255, 0.8); }
+    }
+
+    #dilemma-preview {
+      position: relative;
+      opacity: 0.95;
+      pointer-events: none;
+      max-width: 350px;
+      margin: 0 auto 2rem auto;
+      border: 2px solid #888;
+      border-radius: 8px;
+      background: linear-gradient(to bottom, #ffffff, #f3f4f6);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      padding: 8px;
+      animation: fadeRow 1s ease-in forwards;
+    }
+    .preview-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      margin-bottom: 8px;
+      padding: 0 4px;
+    }
+    .preview-tile {
+      width: 40px;
+      height: 40px;
+      border: 2px solid #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      background: #f8f8f8;
+      color: #333;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .preview-tile:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+
+    /* Colorful gradient rows with dark blue */
+    .preview-tile.colorful {
+      background: linear-gradient(45deg, #ff7eb9, #1e3a8a, #3b82f6);
+      background-size: 200% 200%;
+      color: #fff;
+      animation: shimmer 3s infinite, pulseLetter 2s infinite ease-in-out;
+    }
+
+    /* Middle row stronger dark blue glow */
+    .preview-tile.darker {
+      background: linear-gradient(45deg, #1e3a8a, #1e40af, #3b82f6);
+      background-size: 200% 200%;
+      color: #fff;
+      animation: shimmer 4s infinite, glow 2s infinite alternate;
+    }
+
+    .dark-blue-text {
+      color: #1e3a8a;
+      font-weight: bold;
+    }
+    .message-text {
+      max-width: 400px;
+      margin: 0 auto;
+      text-align: center;
+    }
   </style>
 </head>
-<body>
-  <!-- Full body content included above -->
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+<header class="bg-white shadow p-4">
+  <div class="logo-container">
+    <div id="backgroundCrossword" class="background-crossword"></div>
+    <div class="crossword-grid">
+      <div class="letter-box flipped-k">K</div>
+      <div class="letter-box flipped-k">R</div>
+      <div class="letter-box">I</div>
+      <div class="letter-box flipped-k">P</div>
+      <div class="letter-box">T</div>
+      <div class="letter-box">I</div>
+      <div class="letter-box flipped-k">E</div>
+      <div class="letter-box">K</div>
+    </div>
+  </div>
+</header>
+
+<section id="dilemma-preview" class="text-center mt-4">
+  <div class="preview-grid">
+    <div class="preview-tile colorful">D</div>
+    <div class="preview-tile colorful">I</div>
+    <div class="preview-tile colorful">L</div>
+    <div class="preview-tile colorful">E</div>
+    <div class="preview-tile colorful">M</div>
+    <div class="preview-tile colorful">M</div>
+    <div class="preview-tile colorful">A</div>
+  </div>
+  <div class="preview-grid">
+    <div class="preview-tile darker">D</div>
+    <div class="preview-tile darker">I</div>
+    <div class="preview-tile darker">L</div>
+    <div class="preview-tile darker">E</div>
+    <div class="preview-tile darker">M</div>
+    <div class="preview-tile darker">M</div>
+    <div class="preview-tile darker">A</div>
+  </div>
+  <div class="preview-grid">
+    <div class="preview-tile colorful">D</div>
+    <div class="preview-tile colorful">I</div>
+    <div class="preview-tile colorful">L</div>
+    <div class="preview-tile colorful">E</div>
+    <div class="preview-tile colorful">M</div>
+    <div class="preview-tile colorful">M</div>
+    <div class="preview-tile colorful">A</div>
+  </div>
+</section>
+
+<main class="flex-grow p-6 text-center">
+  <p class="text-3xl font-bold dark-blue-text mb-4">WELKOM BY KRIPTIEK</p>
+  <p class="message-text">
+    Kriptiek.com is die tuiste van DILEMMA en binnekort ook ander Afrikaanse raaisels en woordspeletjies.
+    Kies onder watter DILEMMA jy wil speel, <a href="/subscribe.html" class="underline font-bold text-[#1e3a8a]">of lees meer oor ons planne vorentoe.</a>
+  </p>
+  <div class="flex flex-wrap justify-center gap-4 mb-8"></div>
+  <div id="dilemma-buttons" class="flex flex-col items-center gap-4 mt-4"></div>
+</main>
+
+<footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
+  &copy; 2025 Kriptiek. Alle regte voorbehou. |
+  <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
+  <a href="/terms.html" class="underline">Voorwaardes</a> |
+  <a href="/faq.html" class="underline">Gereelde vrae</a> |
+  <a href="/about.html" class="underline">Oor Kriptiek</a> |
+  <a href="/contact.html" class="underline">Kontak ons</a>
+</footer>
+
+<div id="cookie-banner" class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-300 shadow-md p-4 text-sm text-gray-800 text-center z-50 hidden">
+  <p class="mb-2">
+    Ons gebruik koekies om jou ervaring te verbeter en die webwerf beter te laat werk.
+    Lees meer in ons <a href="/privacy.html" class="underline text-blue-700 font-medium">Privaatheidsbeleid</a>.
+  </p>
+  <div class="flex justify-center gap-4">
+    <button onclick="acceptCookies()" class="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition">Ja, ek aanvaar dit so</button>
+    <button onclick="declineCookies()" class="bg-gray-300 text-gray-800 px-4 py-1 rounded hover:bg-gray-400 transition">Nee dankie</button>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const backgroundCrossword = document.getElementById('backgroundCrossword');
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+    function getRandomLetter() {
+      return letters[Math.floor(Math.random() * letters.length)];
+    }
+
+    function generateBackgroundGrid() {
+      backgroundCrossword.innerHTML = '';
+      const numRows = Math.ceil(backgroundCrossword.offsetHeight / 30);
+      const numCols = Math.ceil(backgroundCrossword.offsetWidth / 30);
+      const totalCells = (numRows * numCols) || 300;
+      for (let i = 0; i < totalCells; i++) {
+        const bgLetterBox = document.createElement('div');
+        bgLetterBox.classList.add('bg-letter-box');
+        bgLetterBox.textContent = getRandomLetter();
+        backgroundCrossword.appendChild(bgLetterBox);
+      }
+    }
+
+    generateBackgroundGrid();
+    window.addEventListener('resize', generateBackgroundGrid);
+
+    const today = new Date().toISOString().split('T')[0];
+    const isRegistered = localStorage.getItem('userRegistered') === 'true';
+    const main = document.querySelector('main');
+    const buttonContainer = document.querySelector('.flex.flex-wrap.justify-center.gap-4.mb-8');
+    const dilemmaButtons = document.getElementById('dilemma-buttons');
+
+    buttonContainer.innerHTML = '';
+    dilemmaButtons.innerHTML = '';
+
+    const message = document.createElement('div');
+    message.className = 'text-center text-black font-semibold mb-6';
+    main.insertBefore(message, buttonContainer);
+
+    const actionButton = document.createElement('a');
+    actionButton.className = 'bg-blue-600 text-white px-4 py-2 rounded';
+
+    if (!isRegistered) {
+      message.innerHTML = `Jy moet <a href="/register.html" class="underline font-bold text-blue-600">registreer</a> voordat jy kan speel. Dis vinnig en gratis.`;
+      actionButton.href = "/register.html";
+      actionButton.textContent = "Registreer nou";
+    } else {
+      actionButton.href = `/dilemmagame.html?gameId=Game${today}`;
+      actionButton.textContent = "Speel VANDAG SE DILEMMA";
+
+      const olderBtn = document.createElement('a');
+      olderBtn.href = "/dilemma-argief.html";
+      olderBtn.textContent = "Speel OUER DILEMMAS";
+      olderBtn.className = 'bg-[#1e3a8a] text-white px-4 py-2 rounded transition transform hover:scale-105 duration-300';
+      actionButton.className += ' transition transform hover:scale-105 duration-300';
+
+      const buttonGroup = document.createElement('div');
+      buttonGroup.className = 'flex flex-col sm:flex-row justify-center gap-4';
+      buttonGroup.appendChild(actionButton);
+      buttonGroup.appendChild(olderBtn);
+      dilemmaButtons.appendChild(buttonGroup);
+
+      const logoutBtn = document.createElement('button');
+      logoutBtn.textContent = "MELD AF";
+      logoutBtn.className = "mt-4 no-underline text-sm text-gray-500 hover:text-black";
+      logoutBtn.onclick = () => {
+        localStorage.removeItem('userRegistered');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('userName');
+        location.reload();
+      };
+      main.appendChild(logoutBtn);
+    }
+
+    const cookieConsent = localStorage.getItem('cookieConsent');
+    if (!cookieConsent) {
+   document.getElementById('cookie-banner').classList.remove('hidden');
+    }
+  });
+
+  function acceptCookies() {
+    localStorage.setItem('cookieConsent', 'accepted');
+    document.getElementById('cookie-banner').style.display = 'none';
+  }
+  function declineCookies() {
+    localStorage.setItem('cookieConsent', 'declined');
+    document.getElementById('cookie-banner').style.display = 'none';
+  }
+</script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
