@@ -87,74 +87,23 @@
       user-select: none;
     }
 
-    @keyframes fadeRow {
-      from { opacity: 0; transform: translateY(5px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes shimmer {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    @keyframes pulseLetter {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.08); }
-    }
-    @keyframes glow {
-      0%, 100% { box-shadow: 0 0 5px rgba(255, 255, 255, 0.3); }
-      50% { box-shadow: 0 0 12px rgba(255, 255, 255, 0.8); }
+    .gesels-saam-wrapper {
+      display: inline-block;
+      margin: 0 auto 2rem auto;
+      transition: transform 0.3s ease;
     }
 
-    #dilemma-preview {
-      position: relative;
-      opacity: 0.95;
-      pointer-events: none;
-      max-width: 350px;
-      margin: 0 auto 2rem auto;
-      border: 2px solid #888;
-      border-radius: 8px;
-      background: linear-gradient(to bottom, #ffffff, #f3f4f6);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
-      transition: opacity 0.3s ease, transform 0.3s ease;
-      padding: 8px;
-      animation: fadeRow 1s ease-in forwards;
-    }
-    .preview-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 4px;
-      margin-bottom: 8px;
-      padding: 0 4px;
-    }
-    .preview-tile {
-      width: 40px;
-      height: 40px;
-      border: 2px solid #333;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-weight: bold;
-      font-size: 1.2rem;
-      text-transform: uppercase;
-      background: #f8f8f8;
-      color: #333;
+    .gesels-saam-logo {
+      width: 160px;
+      height: auto;
+      border-radius: 0.5rem;
+      box-shadow: 6px 6px 14px rgba(0, 0, 0, 0.35);
       transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
-    .preview-tile:hover {
-      transform: scale(1.1);
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
-    }
-    .preview-tile.colorful {
-      background: linear-gradient(45deg, #ff7eb9, #1e3a8a, #3b82f6);
-      background-size: 200% 200%;
-      color: #fff;
-      animation: shimmer 3s infinite, pulseLetter 2s infinite ease-in-out;
-    }
-    .preview-tile.darker {
-      background: linear-gradient(45deg, #1e3a8a, #1e40af, #3b82f6);
-      background-size: 200% 200%;
-      color: #fff;
-      animation: shimmer 4s infinite, glow 2s infinite alternate;
+
+    .gesels-saam-wrapper:hover .gesels-saam-logo {
+      transform: scale(1.05);
+      box-shadow: 8px 8px 20px rgba(0, 0, 0, 0.4);
     }
 
     .dark-blue-text {
@@ -185,34 +134,10 @@
     </div>
   </header>
 
-  <section id="dilemma-preview" class="text-center mt-4">
-    <div class="preview-grid">
-      <div class="preview-tile colorful">D</div>
-      <div class="preview-tile colorful">I</div>
-      <div class="preview-tile colorful">L</div>
-      <div class="preview-tile colorful">E</div>
-      <div class="preview-tile colorful">M</div>
-      <div class="preview-tile colorful">M</div>
-      <div class="preview-tile colorful">A</div>
-    </div>
-    <div class="preview-grid">
-      <div class="preview-tile darker">D</div>
-      <div class="preview-tile darker">I</div>
-      <div class="preview-tile darker">L</div>
-      <div class="preview-tile darker">E</div>
-      <div class="preview-tile darker">M</div>
-      <div class="preview-tile darker">M</div>
-      <div class="preview-tile darker">A</div>
-    </div>
-    <div class="preview-grid">
-      <div class="preview-tile colorful">D</div>
-      <div class="preview-tile colorful">I</div>
-      <div class="preview-tile colorful">L</div>
-      <div class="preview-tile colorful">E</div>
-      <div class="preview-tile colorful">M</div>
-      <div class="preview-tile colorful">M</div>
-      <div class="preview-tile colorful">A</div>
-    </div>
+  <section class="text-center mt-4">
+    <a href="/forum.html" class="gesels-saam-wrapper block mx-auto w-fit">
+      <img src="/assets/gesels-saam.png" alt="Gesels saam" class="gesels-saam-logo" />
+    </a>
   </section>
 
   <main class="flex-grow p-6 text-center">
