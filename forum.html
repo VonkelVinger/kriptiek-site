@@ -72,14 +72,15 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_BUCKET",
-      messagingSenderId: "YOUR_MSG_ID",
-      appId: "YOUR_APP_ID"
-    };
+const firebaseConfig = {
+  apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+  authDomain: "kriptiek-c9ea2.firebaseapp.com",
+  projectId: "kriptiek-c9ea2",
+  storageBucket: "kriptiek-c9ea2.firebasestorage.app",
+  messagingSenderId: "620450620939",
+  appId: "1:620450620939:web:e93a18ac23b53b33db890e",
+  measurementId: "G-S9V4CMP1FP"
+};
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
