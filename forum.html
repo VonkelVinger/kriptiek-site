@@ -108,7 +108,7 @@
       <h2 class="text-lg font-semibold mb-2">Nuwe plasing</h2>
       <input type="text" id="postTitle" maxlength="80" placeholder="Titel" class="w-full p-2 border rounded mb-2">
       <textarea id="postContent" maxlength="500" rows="4" placeholder="Tik jou boodskap (maks. 500 karakters)" class="w-full p-2 border rounded mb-2"></textarea>
-      <button onclick="submitPost()" id="submitBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Plaas</button>
+      <button onclick="submitPost()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Plaas</button>
       <p id="formMsg" class="text-sm text-red-600 mt-2"></p>
     </div>
 
@@ -145,9 +145,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const userRegistered = localStorage.getItem('userRegistered') === 'true';
-    document.getElementById('new-post').style.display = userRegistered ? 'block' : 'none';
-
     async function submitPost() {
       const title = document.getElementById('postTitle').value.trim();
       const content = document.getElementById('postContent').value.trim();
@@ -158,6 +155,7 @@
         msg.textContent = 'Titel en boodskap is verpligtend.';
         return;
       }
+
       msg.textContent = '';
 
       await addDoc(collection(db, 'forumPosts'), {
