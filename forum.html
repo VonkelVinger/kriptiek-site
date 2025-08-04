@@ -21,17 +21,20 @@
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
       grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
-      opacity: 0.05;
-      z-index: 0;
+      opacity: 0.5;
+      z-index: 1;
       pointer-events: none;
     }
     .bg-letter-box {
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 0.85rem;
+      font-size: 1.1rem;
       font-weight: bold;
       color: #9ca3af;
+      border: 1px solid #e5e7eb;
+      background-color: transparent;
+      user-select: none;
     }
     .logo-container {
       position: relative;
@@ -68,6 +71,7 @@
       box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
     }
     .flipped-k { transform: scaleX(-1); }
+
     @media (max-width: 640px) {
       .letter-box {
         width: 38px;
@@ -84,10 +88,9 @@
   </style>
 </head>
 <body class="relative">
-  <div class="background-crossword" id="backgroundCrossword"></div>
-
   <header class="bg-white shadow p-4 text-center z-10 relative">
     <a href="/index.html" class="logo-container">
+      <div id="backgroundCrossword" class="background-crossword"></div>
       <div class="crossword-grid">
         <div class="letter-box flipped-k">K</div>
         <div class="letter-box flipped-k">R</div>
@@ -108,7 +111,7 @@
       <h2 class="text-lg font-semibold mb-2">Nuwe plasing</h2>
       <input type="text" id="postTitle" maxlength="80" placeholder="Titel" class="w-full p-2 border rounded mb-2">
       <textarea id="postContent" maxlength="500" rows="4" placeholder="Tik jou boodskap (maks. 500 karakters)" class="w-full p-2 border rounded mb-2"></textarea>
-      <button onclick="submitPost()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Plaas</button>
+      <button id="submitBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Plaas</button>
       <p id="formMsg" class="text-sm text-red-600 mt-2"></p>
     </div>
 
@@ -145,6 +148,9 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    const userRegistered = localStorage.getItem('userRegistered') === 'true';
+    document.getElementById('new-post').style.display = userRegistered ? 'block' : 'none';
+
     async function submitPost() {
       const title = document.getElementById('postTitle').value.trim();
       const content = document.getElementById('postContent').value.trim();
@@ -155,7 +161,6 @@
         msg.textContent = 'Titel en boodskap is verpligtend.';
         return;
       }
-
       msg.textContent = '';
 
       await addDoc(collection(db, 'forumPosts'), {
@@ -185,29 +190,36 @@
         div.innerHTML = `
           <h3 class="text-lg font-bold text-gray-800 mb-1">${post.title}</h3>
           <p class="text-gray-700 whitespace-pre-line mb-2">${post.content}</p>
-          <p class="text-xs text-gray-500">Geplaas deur ${post.userName} | ${post.timestamp?.toDate().toLocaleString() || 'nou'}</p>
+          <p class="text-xs text-gray-500">Gepos deur ${post.userName} | ${post.timestamp?.toDate().toLocaleString() || 'nou'}</p>
         `;
         postsContainer.appendChild(div);
       });
     }
 
     loadPosts();
+  </script>
 
-    const bg = document.getElementById('backgroundCrossword');
+  <script>
+    const backgroundCrossword = document.getElementById('backgroundCrossword');
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
     function getRandomLetter() {
       return letters[Math.floor(Math.random() * letters.length)];
     }
+
     function generateBackgroundGrid() {
-      bg.innerHTML = '';
-      const num = 300;
-      for (let i = 0; i < num; i++) {
-        const el = document.createElement('div');
-        el.className = 'bg-letter-box';
-        el.textContent = getRandomLetter();
-        bg.appendChild(el);
+      backgroundCrossword.innerHTML = '';
+      const numRows = Math.ceil(backgroundCrossword.offsetHeight / 30);
+      const numCols = Math.ceil(backgroundCrossword.offsetWidth / 30);
+      const totalCells = (numRows * numCols) || 300;
+      for (let i = 0; i < totalCells; i++) {
+        const bgLetterBox = document.createElement('div');
+        bgLetterBox.classList.add('bg-letter-box');
+        bgLetterBox.textContent = getRandomLetter();
+        backgroundCrossword.appendChild(bgLetterBox);
       }
     }
+
     generateBackgroundGrid();
     window.addEventListener('resize', generateBackgroundGrid);
   </script>
