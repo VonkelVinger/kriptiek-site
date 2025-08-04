@@ -98,7 +98,8 @@ storageBucket: "kriptiek-c9ea2.appspot.com",
         msg.textContent = 'Titel en boodskap is verpligtend.';
         return;
       }
-      msg.textContent = '';
+window.submitPost = submitPost;      
+msg.textContent = '';
 
       await addDoc(collection(db, 'forumPosts'), {
         title,
