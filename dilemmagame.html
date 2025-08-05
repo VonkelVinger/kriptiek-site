@@ -4,20 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DILEMMA – Kriptiek</title>
-<!-- Favicon and App Icons -->
-<link rel="icon" href="/assets/favicon.ico" type="image/x-icon" />
-<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
-<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-<link rel="manifest" href="/assets/site.webmanifest">
-<meta property="og:title" content="KRIPTIEK" />
-<meta property="og:description" content="Tuiste van DILEMMA en ander Afrikaanse woordraaisels" />
-<meta property="og:url" content="https://www.kriptiek.com/" />
-<meta property="og:type" content="website" />
-<meta name="twitter:card" content="summary_large_image" />
-<meta property="og:image" content="https://www.kriptiek.com/assets/WAshare-logo.png" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
+  <link rel="icon" href="/assets/favicon.ico" type="image/x-icon" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="manifest" href="/assets/site.webmanifest">
+  <meta property="og:title" content="KRIPTIEK" />
+  <meta property="og:description" content="Tuiste van DILEMMA en ander Afrikaanse woordraaisels" />
+  <meta property="og:url" content="https://www.kriptiek.com/" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta property="og:image" content="https://www.kriptiek.com/assets/WAshare-logo.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
   <style>
@@ -78,30 +77,30 @@
   <div id="game-grid" class="mb-6"></div>
   <div id="keyboard" class="mb-6"></div>
   <p id="lockoutMessage"><span class="icon">🔒</span>Jy kan môre weer speel</p>
-<!-- HOE OM DILEMMA TE SPEEL section -->
-<div class="mt-6 bg-white rounded shadow p-4">
-  <h2 class="text-xl font-bold mb-2">HOE OM DILEMMA TE SPEEL</h2>
-  <p class="text-gray-700 leading-relaxed mb-2">
-    Jy het ses kanse om die woord te raai.<br>
-    Jy mag vir elke probeerslag enige letters in enige volgorde kies, maar elke raaiskoot moet dieselfde aantal letters hê as die woord waarna jy soek. Dit hoef nie ook 'n woord te vorm nie.<br>
-    Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER.
-  </p>
-  <p class="text-gray-700 italic mb-2">
-    WENK: Op kleiner skerms kan jy Dilemma soos 'n foto met jou vingers kleiner trek totdat dit heeltemal inpas.
-  </p>
-  <p class="text-gray-700 leading-relaxed">
-    <span class="font-bold text-green-700">GROEN</span>: Die letter is in die antwoord en in die regte blokkie.<br>
-    <span class="font-bold text-yellow-600">GEEL</span>: Die letter is in die antwoord, maar nie in die regte blokkie nie.<br>
-    <span class="font-bold text-gray-500">GRYS</span>: Die letter is glad nie in die antwoord nie.
-  </p>
-</div>
-<!-- Leaderboard -->
-<div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
-  <h2 class="text-xl font-bold mb-2">Vandag se beste spelers</h2>
-  <ul id="leaderboardList" class="text-gray-700 text-left">
-    <li>Jy kan eerste op die leierbord wees!</li>
-  </ul>
-</div>
+  <!-- HOE OM TE SPEEL section -->
+  <div class="mt-6 bg-white rounded shadow p-4">
+    <h2 class="text-xl font-bold mb-2">HOE OM DILEMMA TE SPEEL</h2>
+    <p class="text-gray-700 leading-relaxed mb-2">
+      Jy het ses kanse om die woord te raai.<br>
+      Jy mag vir elke probeerslag enige letters in enige volgorde kies, maar elke raaiskoot moet dieselfde aantal letters hê as die woord waarna jy soek. Dit hoef nie ook 'n woord te vorm nie.<br>
+      Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER.
+    </p>
+    <p class="text-gray-700 italic mb-2">
+      WENK: Op kleiner skerms kan jy Dilemma soos 'n foto met jou vingers kleiner trek totdat dit heeltemal inpas.
+    </p>
+    <p class="text-gray-700 leading-relaxed">
+      <span class="font-bold text-green-700">GROEN</span>: Die letter is in die antwoord en in die regte blokkie.<br>
+      <span class="font-bold text-yellow-600">GEEL</span>: Die letter is in die antwoord, maar nie in die regte blokkie nie.<br>
+      <span class="font-bold text-gray-500">GRYS</span>: Die letter is glad nie in die antwoord nie.
+    </p>
+  </div>
+  <!-- Leaderboard -->
+  <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
+    <h2 class="text-xl font-bold mb-2">Vandag se beste spelers</h2>
+    <ul id="leaderboardList" class="text-gray-700 text-left">
+      <li>Jy kan eerste op die leierbord wees!</li>
+    </ul>
+  </div>
 </main>
 
 <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
@@ -163,6 +162,7 @@ const params = new URLSearchParams(window.location.search);
 const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
 const localKey = `lastGameTime_${gameId}`;
 const gameUrl = window.location.href;
+const guessesKey = `guesses_${gameId}`;
 
 function disableGame(message = "Jy het hierdie een reeds vandag gespeel") {
   gameOver = true;
@@ -238,6 +238,20 @@ function createKeyboard() {
   });
 }
 
+function restoreSavedGuesses() {
+  const savedGuesses = JSON.parse(localStorage.getItem(guessesKey)) || [];
+  savedGuesses.forEach(({ guess, states }, rowIndex) => {
+    const letters = guess.split("");
+    for (let i = 0; i < letters.length; i++) {
+      const tile = board[rowIndex][i];
+      tile.textContent = letters[i];
+      tile.classList.add(states[i]);
+      updateKeyboard(letters[i], states[i]);
+    }
+    currentRow++;
+    currentCol = 0;
+  });
+}
 function handleKey(letter) {
   if (gameOver) return;
   if (currentCol < gridCols && currentRow < gridRows) {
@@ -285,6 +299,11 @@ function checkGuessWithFlip(guess) {
       letterCounts[letter]--;
     }
   }
+
+  // Save this guess
+  let savedGuesses = JSON.parse(localStorage.getItem(guessesKey)) || [];
+  savedGuesses.push({ guess, states });
+  localStorage.setItem(guessesKey, JSON.stringify(savedGuesses));
 
   states.forEach((state, i) => {
     const tile = board[currentRow][i];
@@ -348,11 +367,11 @@ async function submitScore(score) {
 function gameCompleted(attempts) {
   gameOver = true;
   const raaiskootText = attempts === 1 ? '1 raaiskoot' : `${attempts} raaiskote`;
-resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${raaiskootText} gekry!`;
-
+  resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${raaiskootText} gekry!`;
   modal.style.display = "flex";
   shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het vandag se DILEMMA in ${attempts} raaiskote opgelos. Speel by ${gameUrl}`);
   submitScore(attempts);
+  localStorage.removeItem(guessesKey);
   lockoutMessage.style.display = "block";
 }
 
@@ -362,6 +381,7 @@ function gameFailed() {
   modal.style.display = "flex";
   shareBtn.onclick = () => navigator.clipboard.writeText(`Ek kon nie vandag se DILEMMA oplos nie. Speel by: ${gameUrl}`);
   submitScore(gridRows);
+  localStorage.removeItem(guessesKey);
   lockoutMessage.style.display = "block";
 }
 
@@ -378,6 +398,7 @@ document.addEventListener("keydown", keyHandler);
 await loadGameData();
 createGrid();
 createKeyboard();
+restoreSavedGuesses();
 await loadLeaderboard();
 await checkDailyLimit();
 </script>
