@@ -25,6 +25,34 @@
   <!-- Styles -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+      authDomain: "kriptiek-c9ea2.firebaseapp.com",
+      projectId: "kriptiek-c9ea2",
+      storageBucket: "kriptiek-c9ea2.appspot.com",
+      messagingSenderId: "620450620939",
+      appId: "1:620450620939:web:e93a18ac23b53b33db890e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const userIsLocal = localStorage.getItem('userRegistered') === 'true';
+
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          localStorage.setItem('userRegistered', 'true');
+          localStorage.setItem('userId', user.uid);
+          localStorage.setItem('userEmail', user.email);
+        }
+      });
+    });
+  </script>
   <style>
     body { font-family: 'Montserrat', sans-serif; }
     .logo-container {
@@ -149,11 +177,10 @@
     <div class="flex flex-wrap justify-center gap-4 mb-8"></div>
     <div id="dilemma-buttons" class="flex flex-col items-center gap-4 mt-4"></div>
   </main>
-
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
     &copy; 2025 Kriptiek. Alle regte voorbehou. |
-<a href="/forum.html" class="underline">Gesels saam</a> |    
-<a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
+    <a href="/forum.html" class="underline">Gesels saam</a> |    
+    <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
     <a href="/terms.html" class="underline">Voorwaardes</a> |
     <a href="/faq.html" class="underline">Gereelde vrae</a> |
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
@@ -236,9 +263,7 @@
         logoutBtn.textContent = "MELD AF";
         logoutBtn.className = "mt-4 no-underline text-sm text-gray-500 hover:text-black";
         logoutBtn.onclick = () => {
-          localStorage.removeItem('userRegistered');
-          localStorage.removeItem('userEmail');
-          localStorage.removeItem('userName');
+          localStorage.clear();
           location.reload();
         };
         main.appendChild(logoutBtn);
@@ -261,4 +286,3 @@
   </script>
 </body>
 </html>
-
