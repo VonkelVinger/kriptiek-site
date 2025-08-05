@@ -175,8 +175,6 @@
       loadPosts();
     }
 
-    window.submitPost = submitPost;
-
     async function loadPosts() {
       const postsContainer = document.getElementById('forumPosts');
       postsContainer.innerHTML = '';
@@ -197,6 +195,7 @@
     }
 
     loadPosts();
+    document.getElementById('submitBtn').addEventListener('click', submitPost);
   </script>
 
   <script>
