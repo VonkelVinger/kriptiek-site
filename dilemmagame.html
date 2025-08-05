@@ -94,7 +94,6 @@
       <span class="font-bold text-gray-500">GRYS</span>: Die letter is glad nie in die antwoord nie.
     </p>
   </div>
-  <!-- Leaderboard -->
   <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
     <h2 class="text-xl font-bold mb-2">Vandag se beste spelers</h2>
     <ul id="leaderboardList" class="text-gray-700 text-left">
@@ -114,7 +113,6 @@
   <a href="/contact.html" class="underline">Kontak ons</a>
 </footer>
 
-<!-- Modal -->
 <div id="resultModal">
   <div class="modal-content">
     <p id="resultMessage" class="mb-4 font-bold"></p>
@@ -125,8 +123,10 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } 
-  from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+import {
+  getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs,
+  query, orderBy, limit, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -140,6 +140,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// DOM elements
 const gameGrid = document.getElementById("game-grid");
 const keyboard = document.getElementById("keyboard");
 const leaderboardList = document.getElementById("leaderboardList");
@@ -149,35 +150,28 @@ const resultMsg = document.getElementById("resultMessage");
 const shareBtn = document.getElementById("modalShareBtn");
 const closeBtn = document.getElementById("closeModalBtn");
 
+// User identification
 const storedName = localStorage.getItem('userName') || 'Speler';
+const userId = localStorage.getItem('userId') || 'anon';
 document.getElementById("playerName").textContent = storedName;
 
+// Game config
 let gridRows = 6, gridCols = 5;
 let currentRow = 0, currentCol = 0;
 let board = [];
 let targetWord = "";
 let gameOver = false;
 
+// Game identifiers
 const params = new URLSearchParams(window.location.search);
 const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
-const localKey = `lastGameTime_${gameId}`;
 const gameUrl = window.location.href;
-const guessesKey = `guesses_${gameId}`;
 
 function disableGame(message = "Jy het hierdie een reeds vandag gespeel") {
   gameOver = true;
   document.getElementById('clue').textContent = message;
   lockoutMessage.style.display = "block";
   document.querySelectorAll('.key').forEach(key => key.disabled = true);
-}
-
-async function checkDailyLimit() {
-  const lastGameTime = localStorage.getItem(localKey);
-  if (lastGameTime && Date.now() - parseInt(lastGameTime) < 24 * 60 * 60 * 1000) {
-    disableGame();
-    return false;
-  }
-  return true;
 }
 
 async function loadGameData() {
@@ -238,18 +232,40 @@ function createKeyboard() {
   });
 }
 
-function restoreSavedGuesses() {
-  const savedGuesses = JSON.parse(localStorage.getItem(guessesKey)) || [];
-  savedGuesses.forEach(({ guess, states }, rowIndex) => {
-    const letters = guess.split("");
-    for (let i = 0; i < letters.length; i++) {
-      const tile = board[rowIndex][i];
-      tile.textContent = letters[i];
-      tile.classList.add(states[i]);
-      updateKeyboard(letters[i], states[i]);
+async function restoreGuessesFromFirestore() {
+  const attemptRef = doc(db, 'games', gameId, 'attempts', userId);
+  const docSnap = await getDoc(attemptRef);
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+    if (data.completed) {
+      disableGame("Jy het hierdie een reeds vandag gespeel");
+      return;
     }
-    currentRow++;
-    currentCol = 0;
+    if (Array.isArray(data.guesses)) {
+      data.guesses.forEach(({ guess, states }, rowIndex) => {
+        const letters = guess.split("");
+        for (let i = 0; i < letters.length; i++) {
+          const tile = board[rowIndex][i];
+          tile.textContent = letters[i];
+          tile.classList.add(states[i]);
+          updateKeyboard(letters[i], states[i]);
+        }
+        currentRow++;
+        currentCol = 0;
+      });
+    }
+  }
+}
+
+async function saveGuessToFirestore(guess, states) {
+  const attemptRef = doc(db, 'games', gameId, 'attempts', userId);
+  const existing = await getDoc(attemptRef);
+  const prevGuesses = (existing.exists() && Array.isArray(existing.data().guesses)) ? existing.data().guesses : [];
+  prevGuesses.push({ guess, states });
+  await setDoc(attemptRef, {
+    guesses: prevGuesses,
+    completed: false,
+    startedAt: serverTimestamp()
   });
 }
 function handleKey(letter) {
@@ -300,10 +316,7 @@ function checkGuessWithFlip(guess) {
     }
   }
 
-  // Save this guess
-  let savedGuesses = JSON.parse(localStorage.getItem(guessesKey)) || [];
-  savedGuesses.push({ guess, states });
-  localStorage.setItem(guessesKey, JSON.stringify(savedGuesses));
+  saveGuessToFirestore(guess, states);
 
   states.forEach((state, i) => {
     const tile = board[currentRow][i];
@@ -360,7 +373,9 @@ async function submitScore(score) {
     score,
     timestamp: serverTimestamp()
   });
-  localStorage.setItem(localKey, Date.now());
+  await setDoc(doc(db, 'games', gameId, 'attempts', userId), {
+    completed: true
+  }, { merge: true });
   await loadLeaderboard();
 }
 
@@ -371,7 +386,6 @@ function gameCompleted(attempts) {
   modal.style.display = "flex";
   shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het vandag se DILEMMA in ${attempts} raaiskote opgelos. Speel by ${gameUrl}`);
   submitScore(attempts);
-  localStorage.removeItem(guessesKey);
   lockoutMessage.style.display = "block";
 }
 
@@ -381,7 +395,6 @@ function gameFailed() {
   modal.style.display = "flex";
   shareBtn.onclick = () => navigator.clipboard.writeText(`Ek kon nie vandag se DILEMMA oplos nie. Speel by: ${gameUrl}`);
   submitScore(gridRows);
-  localStorage.removeItem(guessesKey);
   lockoutMessage.style.display = "block";
 }
 
@@ -398,9 +411,8 @@ document.addEventListener("keydown", keyHandler);
 await loadGameData();
 createGrid();
 createKeyboard();
-restoreSavedGuesses();
+await restoreGuessesFromFirestore();
 await loadLeaderboard();
-await checkDailyLimit();
 </script>
 </body>
 </html>
