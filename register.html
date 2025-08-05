@@ -4,17 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Registreer – Kriptiek</title>
-<!-- Favicon and App Icons -->
-<link rel="icon" href="/assets/favicon.ico" type="image/x-icon" />
-<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
-<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-<link rel="manifest" href="/assets/site.webmanifest">
+  <link rel="icon" href="/assets/favicon.ico" type="image/x-icon" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="manifest" href="/assets/site.webmanifest">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import {
+      getFirestore, collection, addDoc, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import {
+      getAuth, createUserWithEmailAndPassword
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -27,6 +31,7 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
 
     document.addEventListener('DOMContentLoaded', () => {
       const form = document.getElementById('registerForm');
@@ -34,32 +39,39 @@
         e.preventDefault();
         const name = form.name.value.trim();
         const email = form.email.value.trim();
+        const password = form.password.value;
 
-        if (!email) return alert('E-posadres is verpligtend.');
-
-        localStorage.setItem('userRegistered', 'true');
-        localStorage.setItem('userName', name);
-        localStorage.setItem('userEmail', email);
+        if (!email || !password) return alert('E-pos en wagwoord is verpligtend.');
 
         try {
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const userId = userCredential.user.uid;
+
+          localStorage.setItem('userRegistered', 'true');
+          localStorage.setItem('userName', name);
+          localStorage.setItem('userEmail', email);
+          localStorage.setItem('userId', userId);
+
           await addDoc(collection(db, 'registrations'), {
+            userId,
             name,
             email,
             timestamp: serverTimestamp()
           });
+
+          alert('Welkom by Kriptiek! Jy is nou geregistreer.');
+
+          const redirectUrl = localStorage.getItem('redirectAfterRegister');
+          if (redirectUrl) {
+            localStorage.removeItem('redirectAfterRegister');
+            window.location.href = redirectUrl;
+          } else {
+            window.location.href = '/index.html';
+          }
+
         } catch (error) {
-          console.error("Firestore add failed:", error);
-        }
-
-        alert('Welkom by Kriptiek! Jy is nou geregistreer.');
-
-        // --- Redirect logic ---
-        const redirectUrl = localStorage.getItem('redirectAfterRegister');
-        if (redirectUrl) {
-          localStorage.removeItem('redirectAfterRegister');
-          window.location.href = redirectUrl;
-        } else {
-          window.location.href = '/index.html';
+          console.error("Fout tydens registrasie:", error.message);
+          alert("Kon nie registreer nie: " + error.message);
         }
       });
     });
@@ -126,6 +138,10 @@
       <label class="block text-left">
         <span class="text-gray-700">E-posadres *</span>
         <input type="email" name="email" required class="mt-1 block w-full border border-gray-300 rounded p-2">
+      </label>
+      <label class="block text-left">
+        <span class="text-gray-700">Kies 'n wagwoord *</span>
+        <input type="password" name="password" required minlength="6" class="mt-1 block w-full border border-gray-300 rounded p-2">
       </label>
       <button type="submit" class="bg-green-700 text-white px-4 py-2 rounded">Registreer</button>
     </form>
