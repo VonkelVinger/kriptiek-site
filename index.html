@@ -236,27 +236,38 @@
       message.className = 'text-center text-black font-semibold mb-6';
       main.insertBefore(message, buttonContainer);
 
-      const actionButton = document.createElement('a');
-      actionButton.className = 'bg-blue-600 text-white px-4 py-2 rounded';
+      const registerBtn = document.createElement('a');
+      registerBtn.href = "/register.html";
+      registerBtn.textContent = "Registreer";
+      registerBtn.className = "bg-blue-600 text-white px-4 py-2 rounded transition hover:bg-blue-700";
+
+      const loginBtn = document.createElement('a');
+      loginBtn.href = "/login.html";
+      loginBtn.textContent = "Meld aan";
+      loginBtn.className = "bg-gray-600 text-white px-4 py-2 rounded transition hover:bg-gray-700";
 
       if (!isRegistered) {
-        message.innerHTML = `Jy moet <a href="/register.html" class="underline font-bold text-blue-600">registreer</a> voordat jy kan speel. Dis vinnig en gratis.`;
-        actionButton.href = "/register.html";
-        actionButton.textContent = "Registreer nou";
+        message.innerHTML = "Jy moet registreer of aanmeld voordat jy kan speel.";
+        const buttonGroup = document.createElement('div');
+        buttonGroup.className = 'flex gap-4 justify-center';
+        buttonGroup.appendChild(registerBtn);
+        buttonGroup.appendChild(loginBtn);
+        dilemmaButtons.appendChild(buttonGroup);
       } else {
-        actionButton.href = `/dilemmagame.html?gameId=Game${today}`;
-        actionButton.textContent = "Speel VANDAG SE DILEMMA";
+        const playBtn = document.createElement('a');
+        playBtn.href = `/dilemmagame.html?gameId=Game${today}`;
+        playBtn.textContent = "Speel VANDAG SE DILEMMA";
+        playBtn.className = "bg-blue-600 text-white px-4 py-2 rounded transition transform hover:scale-105 duration-300";
 
-        const olderBtn = document.createElement('a');
-        olderBtn.href = "/dilemma-argief.html";
-        olderBtn.textContent = "Speel OUER DILEMMAS";
-        olderBtn.className = 'bg-[#1e3a8a] text-white px-4 py-2 rounded transition transform hover:scale-105 duration-300';
-        actionButton.className += ' transition transform hover:scale-105 duration-300';
+        const archiveBtn = document.createElement('a');
+        archiveBtn.href = "/dilemma-argief.html";
+        archiveBtn.textContent = "Speel OUER DILEMMAS";
+        archiveBtn.className = "bg-[#1e3a8a] text-white px-4 py-2 rounded transition transform hover:scale-105 duration-300";
 
         const buttonGroup = document.createElement('div');
         buttonGroup.className = 'flex flex-col sm:flex-row justify-center gap-4';
-        buttonGroup.appendChild(actionButton);
-        buttonGroup.appendChild(olderBtn);
+        buttonGroup.appendChild(playBtn);
+        buttonGroup.appendChild(archiveBtn);
         dilemmaButtons.appendChild(buttonGroup);
 
         const logoutBtn = document.createElement('button');
