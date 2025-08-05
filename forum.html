@@ -131,7 +131,96 @@
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
 
-  <script type="module" src="/scripts/forum-replies.js"></script>
-  <script src="/scripts/bg-crossword.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+      authDomain: "kriptiek-c9ea2.firebaseapp.com",
+      projectId: "kriptiek-c9ea2",
+      storageBucket: "kriptiek-c9ea2.appspot.com",
+      messagingSenderId: "620450620939",
+      appId: "1:620450620939:web:e93a18ac23b53b33db890e",
+      measurementId: "G-S9V4CMP1FP"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const userRegistered = localStorage.getItem('userRegistered') === 'true';
+    document.getElementById('new-post').style.display = userRegistered ? 'block' : 'none';
+
+    async function submitPost() {
+      const title = document.getElementById('postTitle').value.trim();
+      const content = document.getElementById('postContent').value.trim();
+      const userName = localStorage.getItem('userName') || 'Anoniem';
+      const msg = document.getElementById('formMsg');
+
+      if (!title || !content) {
+        msg.textContent = 'Titel en boodskap is verpligtend.';
+        return;
+      }
+      msg.textContent = '';
+
+      await addDoc(collection(db, 'forumPosts'), {
+        title,
+        content,
+        userName,
+        timestamp: serverTimestamp()
+      });
+
+      document.getElementById('postTitle').value = '';
+      document.getElementById('postContent').value = '';
+      loadPosts();
+    }
+
+    async function loadPosts() {
+      const postsContainer = document.getElementById('forumPosts');
+      postsContainer.innerHTML = '';
+      const q = query(collection(db, 'forumPosts'), orderBy('timestamp', 'desc'));
+      const snapshot = await getDocs(q);
+
+      snapshot.forEach(doc => {
+        const post = doc.data();
+        const div = document.createElement('div');
+        div.className = 'mb-6 p-4 border rounded bg-white shadow';
+        div.innerHTML = `
+          <h3 class="text-lg font-bold text-gray-800 mb-1">${post.title}</h3>
+          <p class="text-gray-700 whitespace-pre-line mb-2">${post.content}</p>
+          <p class="text-xs text-gray-500">Geplaas deur ${post.userName} | ${post.timestamp?.toDate().toLocaleString() || 'nou'}</p>
+        `;
+        postsContainer.appendChild(div);
+      });
+    }
+
+    loadPosts();
+    document.getElementById('submitBtn').addEventListener('click', submitPost);
+  </script>
+
+  <script>
+    const backgroundCrossword = document.getElementById('backgroundCrossword');
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+    function getRandomLetter() {
+      return letters[Math.floor(Math.random() * letters.length)];
+    }
+
+    function generateBackgroundGrid() {
+      backgroundCrossword.innerHTML = '';
+      const numRows = Math.ceil(backgroundCrossword.offsetHeight / 30);
+      const numCols = Math.ceil(backgroundCrossword.offsetWidth / 30);
+      const totalCells = (numRows * numCols) || 300;
+      for (let i = 0; i < totalCells; i++) {
+        const bgLetterBox = document.createElement('div');
+        bgLetterBox.classList.add('bg-letter-box');
+        bgLetterBox.textContent = getRandomLetter();
+        backgroundCrossword.appendChild(bgLetterBox);
+      }
+    }
+
+    generateBackgroundGrid();
+    window.addEventListener('resize', generateBackgroundGrid);
+  </script>
 </body>
 </html>
