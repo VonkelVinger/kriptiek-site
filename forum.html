@@ -235,8 +235,15 @@
       const div = document.createElement("div");
       div.className = "mb-6 p-4 border rounded bg-white shadow";
 
-      const initials = post.userName.slice(0, 2).toUpperCase();
-      const timestamp = post.timestamp?.toDate() || new Date();
+      const initials = (post.userName || "??").slice(0, 2).toUpperCase();
+
+let timestamp = new Date();
+if (post.timestamp?.toDate) {
+  timestamp = post.timestamp.toDate();
+} else if (typeof post.timestamp === "string") {
+  timestamp = new Date(post.timestamp);
+}
+
 
       div.innerHTML = `
         <div class="flex items-center justify-between mb-2">
