@@ -361,7 +361,8 @@ async function loadLeaderboard() {
     const li = document.createElement('li');
     li.className = "leaderboard-entry";
     const crown = index === 0 ? '<span class="crown">👑</span>' : '';
-    li.innerHTML = `${crown}<strong>${data.name}</strong>: ${data.score} ${data.score === 1 ? 'raaiskoot' : 'raaiskote'}`;
+li.innerHTML = `${crown}<strong>${data.userName || 'Speler'}</strong>: ${data.score} ${data.score === 1 ? 'raaiskoot' : 'raaiskote'}`;
+
     leaderboardList.appendChild(li);
   });
   if (entries === 0) leaderboardList.innerHTML = "<li>Jy kan eerste op die leierbord wees!</li>";
@@ -369,10 +370,11 @@ async function loadLeaderboard() {
 
 async function submitScore(score) {
   await addDoc(collection(db, 'games', gameId, 'leaderboard'), {
-    name: storedName,
-    score,
-    timestamp: serverTimestamp()
-  });
+  userName: storedName,
+  score,
+  streak: 0, // optional, or replace with actual value
+  date: serverTimestamp()
+});
   await setDoc(doc(db, 'games', gameId, 'attempts', userId), {
     completed: true
   }, { merge: true });
