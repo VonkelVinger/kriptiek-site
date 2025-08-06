@@ -310,10 +310,19 @@ if (post.timestamp?.toDate) {
 
     document.querySelectorAll(".delete-btn").forEach(btn => {
       btn.onclick = async () => {
-        if (confirm("Is jy seker jy wil hierdie plasing verwyder?")) {
-          await deleteDoc(doc(db, "forumPosts", btn.dataset.id));
-          loadPosts(true);
-        }
+  const id = btn.dataset.id;
+  const likedKey = `forumLiked_${id}`;
+
+  if (localStorage.getItem(likedKey)) {
+    alert("Jy het reeds gestem.");
+    return;
+  }
+
+  await updateDoc(doc(db, "forumPosts", id), { likes: increment(1) });
+  localStorage.setItem(likedKey, "true");
+  loadPosts(true);
+};
+
       };
     });
   }
