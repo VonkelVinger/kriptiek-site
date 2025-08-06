@@ -201,7 +201,7 @@
 
   async function loadPosts(reset = false) {
     const container = document.getElementById("forumPosts");
-    const searchTerm = document.getElementById("searchInput").value.toLowerCase();
+    const searchTerm = document.getElementById("searchInput").value.trim().toLowerCase();
     const loadMoreBtn = document.getElementById("loadMoreBtn");
 
     if (reset) {
