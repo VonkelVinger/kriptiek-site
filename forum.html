@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kriptiek Gesels</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
   <style>
     body {
       font-family: 'Montserrat', sans-serif;
@@ -14,10 +14,8 @@
     }
     .background-crossword {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
       grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
@@ -26,64 +24,38 @@
       pointer-events: none;
     }
     .bg-letter-box {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 1.1rem;
-      font-weight: bold;
-      color: #9ca3af;
-      border: 1px solid #e5e7eb;
+      display: flex; justify-content: center; align-items: center;
+      font-size: 1.1rem; font-weight: bold;
+      color: #9ca3af; border: 1px solid #e5e7eb;
       background-color: transparent;
       user-select: none;
     }
     .logo-container {
-      position: relative;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: fit-content;
-      margin: 1rem auto;
-      padding: 1rem;
-      border-radius: 1rem;
-      background-color: white;
+      position: relative; display: flex; justify-content: center; align-items: center;
+      width: fit-content; margin: 1rem auto; padding: 1rem;
+      border-radius: 1rem; background-color: white;
       overflow: hidden;
     }
     .crossword-grid {
       display: grid;
       grid-template-columns: repeat(8, minmax(40px, 1fr));
-      gap: 4px;
-      position: relative;
-      z-index: 10;
+      gap: 4px; position: relative; z-index: 10;
     }
     .letter-box {
-      width: 50px;
-      height: 50px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background-color: #374151;
-      color: white;
-      font-size: 1.8rem;
-      font-weight: bold;
-      border: 2px solid #1f2937;
-      border-radius: 0.375rem;
+      width: 50px; height: 50px;
+      display: flex; justify-content: center; align-items: center;
+      background-color: #374151; color: white;
+      font-size: 1.8rem; font-weight: bold;
+      border: 2px solid #1f2937; border-radius: 0.375rem;
       text-transform: uppercase;
       box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
     }
     .flipped-k { transform: scaleX(-1); }
 
     @media (max-width: 640px) {
-      .letter-box {
-        width: 38px;
-        height: 38px;
-        font-size: 1.2rem;
-      }
-      .crossword-grid {
-        gap: 2px;
-      }
-      .logo-container {
-        padding: 0.5rem;
-      }
+      .letter-box { width: 38px; height: 38px; font-size: 1.2rem; }
+      .crossword-grid { gap: 2px; }
+      .logo-container { padding: 0.5rem; }
     }
   </style>
 </head>
@@ -103,21 +75,27 @@
       </div>
     </a>
     <h1 class="text-2xl font-bold text-gray-800 mt-2">GESELS SAAM</h1>
-    <p class="text-sm text-gray-600">Spog, kla of skinder</p>
+    <p class="text-sm text-gray-600">As jy iets op die hart het, kry dit af!</p>
   </header>
 
   <main class="max-w-xl mx-auto p-6 relative z-10">
     <div id="new-post" class="mb-6">
       <h2 class="text-lg font-semibold mb-2">Nuwe plasing</h2>
       <input type="text" id="postTitle" maxlength="80" placeholder="Titel" class="w-full p-2 border rounded mb-2">
-      <textarea id="postContent" maxlength="500" rows="4" placeholder="Tik jou boodskap (maks. 500 karakters)" class="w-full p-2 border rounded mb-2"></textarea>
+      <textarea id="postContent" maxlength="500" rows="4" placeholder="Tik jou boodskap (maks. 500 karakters)" class="w-full p-2 border rounded mb-1"></textarea>
+      <div class="text-sm text-gray-500 mb-2"><span id="charCount">0</span>/500 karakters</div>
       <button id="submitBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Stuur</button>
       <p id="formMsg" class="text-sm text-red-600 mt-2"></p>
+    </div>
+
+    <div id="post-tools" class="mb-6 flex items-center justify-between gap-2">
+      <input type="text" id="searchInput" placeholder="Soek titels of inhoud..." class="w-full p-2 border rounded" />
     </div>
 
     <div id="postsList">
       <h2 class="text-lg font-semibold mb-4">Onlangse gesprekke</h2>
       <div id="forumPosts"></div>
+      <button id="loadMoreBtn" class="hidden mt-4 w-full text-center text-sm text-blue-700 hover:underline">Laai meer...</button>
     </div>
   </main>
 
@@ -130,97 +108,221 @@
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getFirestore, collection, addDoc, getDocs, serverTimestamp,
+    query, orderBy, updateDoc, doc, arrayUnion, increment, deleteDoc, limit, startAfter
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+    authDomain: "kriptiek-c9ea2.firebaseapp.com",
+    projectId: "kriptiek-c9ea2",
+    storageBucket: "kriptiek-c9ea2.appspot.com",
+    messagingSenderId: "620450620939",
+    appId: "1:620450620939:web:e93a18ac23b53b33db890e"
+  };
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
-      authDomain: "kriptiek-c9ea2.firebaseapp.com",
-      projectId: "kriptiek-c9ea2",
-      storageBucket: "kriptiek-c9ea2.appspot.com",
-      messagingSenderId: "620450620939",
-      appId: "1:620450620939:web:e93a18ac23b53b33db890e",
-      measurementId: "G-S9V4CMP1FP"
-    };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+  const postsRef = collection(db, "forumPosts");
+  const userName = localStorage.getItem("userName") || "Anoniem";
+  const userRegistered = localStorage.getItem("userRegistered") === "true";
+  document.getElementById('new-post').style.display = userRegistered ? 'block' : 'none';
 
-    const userRegistered = localStorage.getItem('userRegistered') === 'true';
-    document.getElementById('new-post').style.display = userRegistered ? 'block' : 'none';
+  const postLimit = 5;
+  let lastVisible = null;
+  let allLoaded = false;
 
-    async function submitPost() {
-      const title = document.getElementById('postTitle').value.trim();
-      const content = document.getElementById('postContent').value.trim();
-      const userName = localStorage.getItem('userName') || 'Anoniem';
-      const msg = document.getElementById('formMsg');
+  // Format helper
+  function relativeTime(date) {
+    const rtf = new Intl.RelativeTimeFormat("af", { numeric: "auto" });
+    const diff = (new Date() - date) / 1000;
+    if (diff < 60) return "nou";
+    if (diff < 3600) return rtf.format(-Math.floor(diff / 60), "minute");
+    if (diff < 86400) return rtf.format(-Math.floor(diff / 3600), "uur");
+    return rtf.format(-Math.floor(diff / 86400), "dag");
+  }
 
-      if (!title || !content) {
-        msg.textContent = 'Titel en boodskap is verpligtend.';
-        return;
-      }
-      msg.textContent = '';
+  function applyFormatting(text) {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/_(.*?)_/g, '<em>$1</em>')
+      .replace(/\n/g, "<br>");
+  }
 
-      await addDoc(collection(db, 'forumPosts'), {
-        title,
-        content,
-        userName,
-        timestamp: serverTimestamp()
-      });
+  async function submitPost() {
+    const title = document.getElementById('postTitle').value.trim();
+    const content = document.getElementById('postContent').value.trim();
+    const msg = document.getElementById('formMsg');
 
-      document.getElementById('postTitle').value = '';
-      document.getElementById('postContent').value = '';
-      loadPosts();
+    if (!title || !content) {
+      msg.textContent = 'Titel en boodskap is verpligtend.';
+      return;
+    }
+    msg.textContent = '';
+
+    await addDoc(postsRef, {
+      title, content, userName,
+      timestamp: serverTimestamp(),
+      likes: 0,
+      replies: []
+    });
+
+    document.getElementById('postTitle').value = '';
+    document.getElementById('postContent').value = '';
+    document.getElementById('charCount').textContent = '0';
+    lastVisible = null;
+    loadPosts(true);
+  }
+
+  async function loadPosts(reset = false) {
+    const container = document.getElementById("forumPosts");
+    const searchTerm = document.getElementById("searchInput").value.toLowerCase();
+    const loadMoreBtn = document.getElementById("loadMoreBtn");
+
+    if (reset) {
+      container.innerHTML = "";
+      lastVisible = null;
+      allLoaded = false;
+    }
+    if (allLoaded) return;
+
+    let q = query(postsRef, orderBy("timestamp", "desc"), limit(postLimit));
+    if (lastVisible) q = query(postsRef, orderBy("timestamp", "desc"), startAfter(lastVisible), limit(postLimit));
+    const snap = await getDocs(q);
+
+    if (snap.empty) {
+      loadMoreBtn.classList.add("hidden");
+      allLoaded = true;
+      return;
     }
 
-    async function loadPosts() {
-      const postsContainer = document.getElementById('forumPosts');
-      postsContainer.innerHTML = '';
-      const q = query(collection(db, 'forumPosts'), orderBy('timestamp', 'desc'));
-      const snapshot = await getDocs(q);
+    lastVisible = snap.docs[snap.docs.length - 1];
+    loadMoreBtn.classList.remove("hidden");
 
-      snapshot.forEach(doc => {
-        const post = doc.data();
-        const div = document.createElement('div');
-        div.className = 'mb-6 p-4 border rounded bg-white shadow';
-        div.innerHTML = `
-          <h3 class="text-lg font-bold text-gray-800 mb-1">${post.title}</h3>
-          <p class="text-gray-700 whitespace-pre-line mb-2">${post.content}</p>
-          <p class="text-xs text-gray-500">Geplaas deur ${post.userName} | ${post.timestamp?.toDate().toLocaleString() || 'nou'}</p>
-        `;
-        postsContainer.appendChild(div);
-      });
+    snap.forEach(docSnap => {
+      const post = docSnap.data();
+      if (
+        searchTerm &&
+        !post.title.toLowerCase().includes(searchTerm) &&
+        !post.content.toLowerCase().includes(searchTerm)
+      ) return;
+
+      const div = document.createElement("div");
+      div.className = "mb-6 p-4 border rounded bg-white shadow";
+
+      const initials = post.userName.slice(0, 2).toUpperCase();
+      const timestamp = post.timestamp?.toDate() || new Date();
+
+      div.innerHTML = `
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-blue-700 text-white text-sm flex items-center justify-center font-bold">${initials}</div>
+            <div class="text-xs text-gray-500">${post.userName} • ${relativeTime(timestamp)}</div>
+          </div>
+          ${post.userName === userName ? `<button class="text-red-500 text-xs delete-btn" data-id="${docSnap.id}">Verwyder</button>` : ""}
+        </div>
+        <h3 class="text-lg font-bold text-gray-800 mb-1">${post.title}</h3>
+        <p class="text-gray-700 whitespace-pre-line mb-2">${applyFormatting(post.content)}</p>
+        <div class="flex items-center gap-4 text-sm text-gray-600 mb-2">
+          <button class="like-btn" data-id="${docSnap.id}">👍 ${post.likes || 0}</button>
+          <button class="reply-toggle" data-id="${docSnap.id}">💬 Reageer</button>
+        </div>
+        <div class="reply-box hidden mt-2" id="reply-${docSnap.id}">
+          <textarea class="w-full p-2 border rounded mb-1 reply-input" rows="2" maxlength="300" placeholder="Jou antwoord..."></textarea>
+          <button class="send-reply bg-blue-600 text-white px-2 py-1 rounded text-sm" data-id="${docSnap.id}">Stuur</button>
+        </div>
+        <div class="replies text-sm mt-2 space-y-1">
+          ${(post.replies || []).map(r =>
+            `<div class="border-l-4 border-blue-300 pl-2">
+              <span class="font-semibold">${r.userName}</span>: ${applyFormatting(r.content)}
+            </div>`
+          ).join("")}
+        </div>
+      `;
+      container.appendChild(div);
+    });
+
+    attachPostEvents();
+  }
+
+  function attachPostEvents() {
+    document.querySelectorAll(".reply-toggle").forEach(btn => {
+      btn.onclick = () => {
+        const box = document.getElementById("reply-" + btn.dataset.id);
+        box.classList.toggle("hidden");
+      };
+    });
+
+    document.querySelectorAll(".send-reply").forEach(btn => {
+      btn.onclick = async () => {
+        const id = btn.dataset.id;
+        const replyBox = document.getElementById("reply-" + id);
+        const input = replyBox.querySelector(".reply-input");
+        const content = input.value.trim();
+        if (!content) return;
+        await updateDoc(doc(db, "forumPosts", id), {
+          replies: arrayUnion({ content, userName })
+        });
+        input.value = "";
+        loadPosts(true);
+      };
+    });
+
+    document.querySelectorAll(".like-btn").forEach(btn => {
+      btn.onclick = async () => {
+        const id = btn.dataset.id;
+        await updateDoc(doc(db, "forumPosts", id), { likes: increment(1) });
+        loadPosts(true);
+      };
+    });
+
+    document.querySelectorAll(".delete-btn").forEach(btn => {
+      btn.onclick = async () => {
+        if (confirm("Is jy seker jy wil hierdie plasing verwyder?")) {
+          await deleteDoc(doc(db, "forumPosts", btn.dataset.id));
+          loadPosts(true);
+        }
+      };
+    });
+  }
+
+  // Live character counter
+  document.getElementById("postContent").addEventListener("input", e => {
+    document.getElementById("charCount").textContent = e.target.value.length;
+  });
+
+  document.getElementById("submitBtn").addEventListener("click", submitPost);
+  document.getElementById("loadMoreBtn").addEventListener("click", () => loadPosts());
+  document.getElementById("searchInput").addEventListener("input", () => loadPosts(true));
+
+  loadPosts();
+</script>
+
+<script>
+  const backgroundCrossword = document.getElementById('backgroundCrossword');
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  function getRandomLetter() {
+    return letters[Math.floor(Math.random() * letters.length)];
+  }
+  function generateBackgroundGrid() {
+    backgroundCrossword.innerHTML = '';
+    const numRows = Math.ceil(backgroundCrossword.offsetHeight / 30);
+    const numCols = Math.ceil(backgroundCrossword.offsetWidth / 30);
+    const totalCells = (numRows * numCols) || 300;
+    for (let i = 0; i < totalCells; i++) {
+      const bgLetterBox = document.createElement('div');
+      bgLetterBox.classList.add('bg-letter-box');
+      bgLetterBox.textContent = getRandomLetter();
+      backgroundCrossword.appendChild(bgLetterBox);
     }
-
-    loadPosts();
-    document.getElementById('submitBtn').addEventListener('click', submitPost);
-  </script>
-
-  <script>
-    const backgroundCrossword = document.getElementById('backgroundCrossword');
-    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-
-    function getRandomLetter() {
-      return letters[Math.floor(Math.random() * letters.length)];
-    }
-
-    function generateBackgroundGrid() {
-      backgroundCrossword.innerHTML = '';
-      const numRows = Math.ceil(backgroundCrossword.offsetHeight / 30);
-      const numCols = Math.ceil(backgroundCrossword.offsetWidth / 30);
-      const totalCells = (numRows * numCols) || 300;
-      for (let i = 0; i < totalCells; i++) {
-        const bgLetterBox = document.createElement('div');
-        bgLetterBox.classList.add('bg-letter-box');
-        bgLetterBox.textContent = getRandomLetter();
-        backgroundCrossword.appendChild(bgLetterBox);
-      }
-    }
-
-    generateBackgroundGrid();
-    window.addEventListener('resize', generateBackgroundGrid);
-  </script>
+  }
+  generateBackgroundGrid();
+  window.addEventListener('resize', generateBackgroundGrid);
+</script>
 </body>
 </html>
+
