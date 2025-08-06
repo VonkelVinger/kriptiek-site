@@ -360,8 +360,8 @@ const q = query(collection(db, 'games', gameId, 'leaderboard'), orderBy('streak'
     entries++;
     const li = document.createElement('li');
     li.className = "leaderboard-entry";
-    const crown = index === 0 ? '<span class="crown">👑</span>' : '';
-li.innerHTML = `${crown}<strong>${data.userName || 'Speler'}</strong>: ${data.streak} ${data.streak === 1 ? 'dag' : 'dae'} se wenreeks`;
+    const streak = typeof data.streak === 'number' ? data.streak : 0;
+li.innerHTML = `${crown}<strong>${data.userName || 'Speler'}</strong>: ${streak} ${streak === 1 ? 'dag' : 'dae'} se wenreeks`;
 
     leaderboardList.appendChild(li);
   });
