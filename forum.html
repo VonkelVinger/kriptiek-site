@@ -320,7 +320,8 @@
   document.getElementById("loadMoreBtn").addEventListener("click", () => loadPosts());
   document.getElementById("searchInput").addEventListener("input", () => loadPosts(true));
 
-  loadPosts();
+document.getElementById("searchInput").value = "";
+loadPosts(true);
 </script>
 
 <script>
