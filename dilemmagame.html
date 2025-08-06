@@ -36,16 +36,7 @@
     .key { min-width: 30px; padding: 10px 12px; margin: 2px; border-radius: 4px; background-color: #374151; color: white; font-weight: bold; cursor: pointer; text-transform: uppercase; }
     .key.bg-green-600 { background-color: #16a34a !important; }
     .key.bg-red-600 { background-color: #1e3a8a !important; }
-    #lockoutMessage {
-      display: none;
-      text-align: center;
-      margin-top: 10px;
-      font-weight: bold;
-      color: #1e3a8a;
-      font-size: 1.1rem;
-      opacity: 0;
-      animation: fadeIn 1s forwards;
-    }
+    #lockoutMessage { display: none; text-align: center; margin-top: 10px; font-weight: bold; color: #1e3a8a; font-size: 1.1rem; opacity: 0; animation: fadeIn 1s forwards; }
     #lockoutMessage .icon { margin-right: 6px; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px);} to { opacity: 1; transform: translateY(0);} }
     #leaderboard { border: 1px solid #e5e7eb; }
@@ -77,6 +68,7 @@
   <div id="game-grid" class="mb-6"></div>
   <div id="keyboard" class="mb-6"></div>
   <p id="lockoutMessage"><span class="icon">🔒</span>Jy kan môre weer speel</p>
+
   <!-- HOE OM TE SPEEL section -->
   <div class="mt-6 bg-white rounded shadow p-4">
     <h2 class="text-xl font-bold mb-2">HOE OM DILEMMA TE SPEEL</h2>
@@ -94,6 +86,7 @@
       <span class="font-bold text-gray-500">GRYS</span>: Die letter is glad nie in die antwoord nie.
     </p>
   </div>
+
   <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
     <h2 class="text-xl font-bold mb-2">Vandag se beste spelers</h2>
     <ul id="leaderboardList" class="text-gray-700 text-left">
@@ -120,7 +113,6 @@
     <button id="closeModalBtn" class="btn-close">SLUIT</button>
   </div>
 </div>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
 import {
@@ -140,48 +132,43 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// DOM elements
+// UI & Player info
 const gameGrid = document.getElementById("game-grid");
 const keyboard = document.getElementById("keyboard");
-const leaderboardList = document.getElementById("leaderboardList");
 const lockoutMessage = document.getElementById("lockoutMessage");
 const modal = document.getElementById("resultModal");
 const resultMsg = document.getElementById("resultMessage");
 const shareBtn = document.getElementById("modalShareBtn");
 const closeBtn = document.getElementById("closeModalBtn");
+const leaderboardList = document.getElementById("leaderboardList");
 
-// User identification
-const storedName = localStorage.getItem('userName') || 'Speler';
-const userId = localStorage.getItem('userId') || 'anon';
+const storedName = localStorage.getItem("userName") || "Speler";
+const userId = localStorage.getItem("userId") || "anon";
 document.getElementById("playerName").textContent = storedName;
 
-// Game config
 let gridRows = 6, gridCols = 5;
 let currentRow = 0, currentCol = 0;
-let board = [];
-let targetWord = "";
-let gameOver = false;
+let board = [], targetWord = "", gameOver = false;
 
-// Game identifiers
 const params = new URLSearchParams(window.location.search);
 const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
 const gameUrl = window.location.href;
 
 function disableGame(message = "Jy het hierdie een reeds vandag gespeel") {
   gameOver = true;
-  document.getElementById('clue').textContent = message;
+  document.getElementById("clue").textContent = message;
   lockoutMessage.style.display = "block";
-  document.querySelectorAll('.key').forEach(key => key.disabled = true);
+  document.querySelectorAll(".key").forEach(key => key.disabled = true);
 }
 
 async function loadGameData() {
-  const gameDocRef = doc(db, 'games', gameId);
-  const gameDocSnap = await getDoc(gameDocRef);
-  if (gameDocSnap.exists()) {
-    const data = gameDocSnap.data();
-    targetWord = (data.word || "XXXXX").toUpperCase();
+  const gameRef = doc(db, "games", gameId);
+  const snap = await getDoc(gameRef);
+  if (snap.exists()) {
+    const data = snap.data();
+    targetWord = data.word.toUpperCase();
     gridCols = targetWord.length;
-    document.getElementById('clue').textContent = data.clue || "Geen leidraad beskikbaar nie.";
+    document.getElementById("clue").textContent = data.clue || "Geen leidraad beskikbaar nie.";
   }
 }
 
@@ -189,24 +176,24 @@ function createGrid() {
   gameGrid.innerHTML = "";
   board = [];
   for (let r = 0; r < gridRows; r++) {
-    const rowDiv = document.createElement("div");
-    rowDiv.className = "tile-row";
-    const row = [];
+    const row = document.createElement("div");
+    row.className = "tile-row";
+    const rowTiles = [];
     for (let c = 0; c < gridCols; c++) {
       const tile = document.createElement("div");
       tile.className = "letter-tile";
-      rowDiv.appendChild(tile);
-      row.push(tile);
+      row.appendChild(tile);
+      rowTiles.push(tile);
     }
-    gameGrid.appendChild(rowDiv);
-    board.push(row);
+    board.push(rowTiles);
+    gameGrid.appendChild(row);
   }
 }
 
-const keyLayout = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
 function createKeyboard() {
   keyboard.innerHTML = "";
-  keyLayout.forEach(row => {
+  const layout = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
+  layout.forEach(row => {
     const rowDiv = document.createElement("div");
     rowDiv.className = "keyboard-row";
     [...row].forEach(letter => {
@@ -232,42 +219,17 @@ function createKeyboard() {
   });
 }
 
-async function restoreGuessesFromFirestore() {
-  const attemptRef = doc(db, 'games', gameId, 'attempts', userId);
-  const docSnap = await getDoc(attemptRef);
-  if (docSnap.exists()) {
-    const data = docSnap.data();
-    if (data.completed) {
-      disableGame("Jy het hierdie een reeds vandag gespeel");
-      return;
-    }
-    if (Array.isArray(data.guesses)) {
-      data.guesses.forEach(({ guess, states }, rowIndex) => {
-        const letters = guess.split("");
-        for (let i = 0; i < letters.length; i++) {
-          const tile = board[rowIndex][i];
-          tile.textContent = letters[i];
-          tile.classList.add(states[i]);
-          updateKeyboard(letters[i], states[i]);
-        }
-        currentRow++;
-        currentCol = 0;
-      });
-    }
+function updateKeyboard(letter, state) {
+  const keyBtn = [...document.querySelectorAll(".key")].find(k => k.textContent === letter);
+  if (!keyBtn) return;
+  if (state === "correct" || (state === "present" && !keyBtn.classList.contains("correct"))) {
+    keyBtn.classList.remove("present", "absent");
+    keyBtn.classList.add(state);
+  } else if (state === "absent" && !keyBtn.classList.contains("correct") && !keyBtn.classList.contains("present")) {
+    keyBtn.classList.add("absent");
   }
 }
 
-async function saveGuessToFirestore(guess, states) {
-  const attemptRef = doc(db, 'games', gameId, 'attempts', userId);
-  const existing = await getDoc(attemptRef);
-  const prevGuesses = (existing.exists() && Array.isArray(existing.data().guesses)) ? existing.data().guesses : [];
-  prevGuesses.push({ guess, states });
-  await setDoc(attemptRef, {
-    guesses: prevGuesses,
-    completed: false,
-    startedAt: serverTimestamp()
-  });
-}
 function handleKey(letter) {
   if (gameOver) return;
   if (currentCol < gridCols && currentRow < gridRows) {
@@ -277,59 +239,50 @@ function handleKey(letter) {
 }
 
 function handleBackspace() {
-  if (gameOver) return;
-  if (currentCol > 0) {
-    currentCol--;
-    board[currentRow][currentCol].textContent = "";
-  }
+  if (gameOver || currentCol === 0) return;
+  currentCol--;
+  board[currentRow][currentCol].textContent = "";
 }
 
 function handleEnter() {
   if (gameOver) return;
-  if (currentCol < gridCols || !board[currentRow]) {
-  alert("Vul al die letters in!");
-  return;
-}
-  const guess = board[currentRow].map(tile => tile.textContent).join("");
+  if (currentCol < gridCols) return alert("Vul al die letters in!");
+  const guess = board[currentRow].map(t => t.textContent).join("");
   checkGuessWithFlip(guess);
 }
 
 function checkGuessWithFlip(guess) {
-  const target = targetWord;
   const guessLetters = guess.split("");
-  const letterCounts = {};
-  for (let ch of target) letterCounts[ch] = (letterCounts[ch] || 0) + 1;
-
   const states = new Array(gridCols).fill("absent");
+  const letterCounts = {};
+  for (let ch of targetWord) letterCounts[ch] = (letterCounts[ch] || 0) + 1;
+
   for (let i = 0; i < gridCols; i++) {
-    if (guessLetters[i] === target[i]) {
+    if (guess[i] === targetWord[i]) {
       states[i] = "correct";
-      letterCounts[guessLetters[i]]--;
+      letterCounts[guess[i]]--;
     }
   }
   for (let i = 0; i < gridCols; i++) {
     if (states[i] === "correct") continue;
-    const letter = guessLetters[i];
-    if (letterCounts[letter] > 0) {
+    if (letterCounts[guess[i]] > 0) {
       states[i] = "present";
-      letterCounts[letter]--;
+      letterCounts[guess[i]]--;
     }
   }
 
-  saveGuessToFirestore(guess, states);
-
-  states.forEach((state, i) => {
+  states.forEach((s, i) => {
     const tile = board[currentRow][i];
-    const letter = guessLetters[i];
     setTimeout(() => {
-      tile.classList.add("flip");
-      tile.classList.add(state);
-      updateKeyboard(letter, state);
+      tile.classList.add("flip", s);
+      updateKeyboard(guess[i], s);
     }, i * 350);
   });
 
+  saveLocalProgress();
+
   setTimeout(() => {
-    if (guess === target) gameCompleted(currentRow + 1);
+    if (guess === targetWord) gameCompleted(currentRow + 1);
     else {
       currentRow++;
       currentCol = 0;
@@ -338,80 +291,91 @@ function checkGuessWithFlip(guess) {
   }, gridCols * 350);
 }
 
-function updateKeyboard(letter, state) {
-  const keyBtn = [...document.querySelectorAll('.key')].find(k => k.textContent === letter);
-  if (keyBtn) {
-    if (state === "correct" || (state === "present" && !keyBtn.classList.contains("correct"))) {
-      keyBtn.classList.remove("present", "absent");
-      keyBtn.classList.add(state);
-    } else if (state === "absent" && !keyBtn.classList.contains("correct") && !keyBtn.classList.contains("present")) {
-      keyBtn.classList.add("absent");
-    }
+function saveLocalProgress() {
+  const localGuesses = [];
+  for (let r = 0; r <= currentRow; r++) {
+    const guess = board[r].map(t => t.textContent).join("");
+    const states = board[r].map(t =>
+      t.classList.contains("correct") ? "correct" :
+      t.classList.contains("present") ? "present" : "absent"
+    );
+    if (guess.trim()) localGuesses.push({ guess, states });
   }
+  localStorage.setItem(`dilemma-${gameId}`, JSON.stringify(localGuesses));
+}
+
+function restoreLocalProgress() {
+  const saved = localStorage.getItem(`dilemma-${gameId}`);
+  if (!saved) return;
+  const data = JSON.parse(saved);
+  data.forEach(({ guess, states }) => {
+    const letters = guess.split("");
+    for (let i = 0; i < letters.length; i++) {
+      const tile = board[currentRow][i];
+      tile.textContent = letters[i];
+      tile.classList.add(states[i]);
+      updateKeyboard(letters[i], states[i]);
+    }
+    currentRow++;
+    currentCol = 0;
+  });
 }
 
 async function loadLeaderboard() {
-  leaderboardList.innerHTML = '';
-const q = query(collection(db, 'games', gameId, 'leaderboard'), orderBy('streak', 'desc'), limit(10));
-  const querySnapshot = await getDocs(q);
-  let entries = 0;
-  querySnapshot.forEach((docSnap, index) => {
-    const data = docSnap.data();
-    entries++;
-    const li = document.createElement('li');
-    li.className = "leaderboard-entry";
-    const streak = typeof data.streak === 'number' ? data.streak : 0;
-const crown = index === 0 ? '<span class="crown">👑</span>' : '';
-li.innerHTML = `${crown}<strong>${data.userName || 'Speler'}</strong>: ${streak} ${streak === 1 ? 'dag' : 'dae'} se wenreeks`;
-
+  const q = query(collection(db, "games", gameId, "leaderboard"), orderBy("streak", "desc"), limit(10));
+  const snapshot = await getDocs(q);
+  leaderboardList.innerHTML = "";
+  let count = 0;
+  snapshot.forEach((docSnap, i) => {
+    count++;
+    const d = docSnap.data();
+    const streak = d.streak || 0;
+    const li = document.createElement("li");
+    const crown = i === 0 ? '<span class=\"crown\">👑</span>' : '';
+    li.innerHTML = `${crown}<strong>${d.userName || 'Speler'}</strong>: ${streak} ${streak === 1 ? 'dag' : 'dae'} se wenreeks`;
     leaderboardList.appendChild(li);
   });
-  if (entries === 0) leaderboardList.innerHTML = "<li>Jy kan eerste op die leierbord wees!</li>";
+  if (count === 0) leaderboardList.innerHTML = "<li>Jy kan eerste op die leierbord wees!</li>";
 }
+
 async function submitScore(score) {
-  await addDoc(collection(db, 'games', gameId, 'leaderboard'), {
+  await addDoc(collection(db, "games", gameId, "leaderboard"), {
     userName: storedName,
     streak: score,
     date: serverTimestamp()
   });
-  await setDoc(doc(db, 'games', gameId, 'attempts', userId), {
-    completed: true
-  }, { merge: true });
-  await loadLeaderboard();
 }
-function gameCompleted(attempts) {
+
+function gameCompleted(score) {
   gameOver = true;
-  const raaiskootText = attempts === 1 ? '1 raaiskoot' : `${attempts} raaiskote`;
-  resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${raaiskootText} gekry!`;
+  resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${score === 1 ? "1 raaiskoot" : score + " raaiskote"} gekry!`;
   modal.style.display = "flex";
-  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het vandag se DILEMMA in ${attempts} raaiskote opgelos. Speel by ${gameUrl}`);
-  submitScore(attempts);
+  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het DILEMMA in ${score} raaiskote opgelos: ${gameUrl}`);
   lockoutMessage.style.display = "block";
+  submitScore(score);
 }
 
 function gameFailed() {
   gameOver = true;
   resultMsg.textContent = `Jammer, ${storedName}! Vandag se oplossing is ${targetWord}.`;
   modal.style.display = "flex";
-  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek kon nie vandag se DILEMMA oplos nie. Speel by: ${gameUrl}`);
-  submitScore(gridRows);
+  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek kon nie DILEMMA oplos nie. Probeer self: ${gameUrl}`);
   lockoutMessage.style.display = "block";
+  submitScore(gridRows);
 }
 
 closeBtn.onclick = () => modal.style.display = "none";
-
-function keyHandler(e) {
+document.addEventListener("keydown", e => {
   if (e.key === "Enter") handleEnter();
   else if (e.key === "Backspace") handleBackspace();
   else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
-}
+});
 
-document.addEventListener("keydown", keyHandler);
-
+// INIT
 await loadGameData();
 createGrid();
 createKeyboard();
-await restoreGuessesFromFirestore();
+restoreLocalProgress();
 await loadLeaderboard();
 </script>
 </body>
