@@ -14,7 +14,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import {
-      getFirestore, collection, addDoc, serverTimestamp
+      getFirestore, doc, setDoc, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
     import {
       getAuth, createUserWithEmailAndPassword
@@ -52,12 +52,12 @@
           localStorage.setItem('userEmail', email);
           localStorage.setItem('userId', userId);
 
-          await addDoc(collection(db, 'registrations'), {
+          await setDoc(doc(db, 'registrations', userId), {
             userId,
-            name,
+            userName: name,
             email,
             timestamp: serverTimestamp()
-          });
+          }, { merge: true });
 
           alert('Welkom by Kriptiek! Jy is nou geregistreer.');
 
@@ -133,6 +133,7 @@
     <form id="registerForm" class="space-y-4">
       <label class="block text-left">
         <span class="text-gray-700">Noemnaam (opsioneel)</span>
+        <small class="block text-gray-500">Jy sal dit later kan verander.</small>
         <input type="text" name="name" class="mt-1 block w-full border border-gray-300 rounded p-2">
       </label>
       <label class="block text-left">
