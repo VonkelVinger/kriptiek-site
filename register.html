@@ -52,12 +52,11 @@
           localStorage.setItem('userEmail', email);
           localStorage.setItem('userId', userId);
 
-          await setDoc(doc(db, 'registrations', userId), {
-            userId,
-            userName: name,
+          await setDoc(doc(db, 'registrations', userId, 'profile', 'info'), {
+            name,
             email,
             timestamp: serverTimestamp()
-          }, { merge: true });
+          });
 
           alert('Welkom by Kriptiek! Jy is nou geregistreer.');
 
@@ -82,58 +81,20 @@
       background-color: #f3f4f6;
       color: #1f2937;
     }
-    .letter-box {
-      width: 50px; height: 50px;
-      display: flex; justify-content: center; align-items: center;
-      background-color: #374151; color: white;
-      font-size: 1.8rem; font-weight: bold;
-      border: 2px solid #1f2937; border-radius: 0.375rem;
-      text-transform: uppercase;
-    }
-    .flipped-k { transform: scaleX(-1); }
-    .crossword-grid {
-      display: grid;
-      grid-template-columns: repeat(8, minmax(40px, 1fr));
-      gap: 4px;
-    }
-    .background-crossword {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
-      grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
-      opacity: 0.5; pointer-events: none; z-index: 1;
-    }
-    .bg-letter-box {
-      display: flex; justify-content: center; align-items: center;
-      font-size: 1.1rem; font-weight: bold;
-      color: #9ca3af; border: 1px solid #e5e7eb;
-      background-color: transparent;
-    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
   <header class="bg-white shadow p-4">
-    <div class="logo-container relative flex justify-center items-center w-fit mx-auto p-4 rounded-xl bg-white overflow-hidden">
-      <div id="backgroundCrossword" class="background-crossword"></div>
-      <div class="crossword-grid">
-        <div class="letter-box flipped-k">K</div>
-        <div class="letter-box flipped-k">R</div>
-        <div class="letter-box">I</div>
-        <div class="letter-box flipped-k">P</div>
-        <div class="letter-box">T</div>
-        <div class="letter-box">I</div>
-        <div class="letter-box flipped-k">E</div>
-        <div class="letter-box">K</div>
-      </div>
-    </div>
+    <div class="text-center font-bold text-xl">KRIPTIEK</div>
   </header>
 
   <main class="flex-grow p-6 max-w-md mx-auto">
     <h1 class="text-2xl font-bold mb-4">Registreer as 'n gratis gebruiker</h1>
     <p class="mb-6">Jy het toegang tot die speletjies sodra jy geregistreer het. Dis vinnig en gratis!</p>
+    <p class="mb-6 text-sm text-gray-600 italic">Jy sal jou noemnaam later kan verander op jou profielblad.</p>
     <form id="registerForm" class="space-y-4">
       <label class="block text-left">
         <span class="text-gray-700">Noemnaam (opsioneel)</span>
-        <small class="block text-gray-500">Jy sal dit later kan verander.</small>
         <input type="text" name="name" class="mt-1 block w-full border border-gray-300 rounded p-2">
       </label>
       <label class="block text-left">
@@ -156,26 +117,5 @@
     <a href="/faq.html" class="underline">Gereelde vrae</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const bg = document.getElementById('backgroundCrossword');
-      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      function rand() { return letters[Math.floor(Math.random() * letters.length)]; }
-      function grid() {
-        bg.innerHTML = '';
-        const rows = Math.ceil(bg.offsetHeight / 30);
-        const cols = Math.ceil(bg.offsetWidth / 30);
-        for (let i = 0; i < rows * cols; i++) {
-          const box = document.createElement('div');
-          box.classList.add('bg-letter-box');
-          box.textContent = rand();
-          bg.appendChild(box);
-        }
-      }
-      grid();
-      window.addEventListener('resize', grid);
-    });
-  </script>
 </body>
 </html>
