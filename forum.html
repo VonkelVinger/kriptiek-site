@@ -158,12 +158,12 @@
   if (seconds < 60) return "nou";
 
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes} minuut${minutes === 1 ? "" : "e"} gelede`;
+  if (minutes < 60) return ${minutes} minuut${minutes === 1 ? "" : "e"} gelede;
 
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} uur gelede`;
+  if (hours < 24) return ${hours} uur gelede;
 
-  return `${days} dag${days === 1 ? "" : "e"} gelede`;
+  return ${days} dag${days === 1 ? "" : "e"} gelede;
 }
 
 
@@ -235,23 +235,16 @@
       const div = document.createElement("div");
       div.className = "mb-6 p-4 border rounded bg-white shadow";
 
-      const initials = (post.userName || "??").slice(0, 2).toUpperCase();
+      const initials = post.userName.slice(0, 2).toUpperCase();
+      const timestamp = post.timestamp?.toDate() || new Date();
 
-let timestamp = new Date();
-if (post.timestamp?.toDate) {
-  timestamp = post.timestamp.toDate();
-} else if (typeof post.timestamp === "string") {
-  timestamp = new Date(post.timestamp);
-}
-
-
-      div.innerHTML = `
+      div.innerHTML = 
         <div class="flex items-center justify-between mb-2">
           <div class="flex items-center gap-2">
             <div class="w-8 h-8 rounded-full bg-blue-700 text-white text-sm flex items-center justify-center font-bold">${initials}</div>
             <div class="text-xs text-gray-500">${post.userName} • ${relativeTime(timestamp)}</div>
           </div>
-          ${post.userName === userName ? `<button class="text-red-500 text-xs delete-btn" data-id="${docSnap.id}">Verwyder</button>` : ""}
+          ${post.userName === userName ? <button class="text-red-500 text-xs delete-btn" data-id="${docSnap.id}">Verwyder</button> : ""}
         </div>
         <h3 class="text-lg font-bold text-gray-800 mb-1">${post.title}</h3>
         <p class="text-gray-700 whitespace-pre-line mb-2">${applyFormatting(post.content)}</p>
@@ -265,12 +258,12 @@ if (post.timestamp?.toDate) {
         </div>
         <div class="replies text-sm mt-2 space-y-1">
           ${(post.replies || []).map(r =>
-            `<div class="border-l-4 border-blue-300 pl-2">
+            <div class="border-l-4 border-blue-300 pl-2">
               <span class="font-semibold">${r.userName}</span>: ${applyFormatting(r.content)}
-            </div>`
+            </div>
           ).join("")}
         </div>
-      `;
+      ;
       container.appendChild(div);
     });
 
@@ -310,19 +303,10 @@ if (post.timestamp?.toDate) {
 
     document.querySelectorAll(".delete-btn").forEach(btn => {
       btn.onclick = async () => {
-  const id = btn.dataset.id;
-  const likedKey = `forumLiked_${id}`;
-
-  if (localStorage.getItem(likedKey)) {
-    alert("Jy het reeds gestem.");
-    return;
-  }
-
-  await updateDoc(doc(db, "forumPosts", id), { likes: increment(1) });
-  localStorage.setItem(likedKey, "true");
-  loadPosts(true);
-};
-
+        if (confirm("Is jy seker jy wil hierdie plasing verwyder?")) {
+          await deleteDoc(doc(db, "forumPosts", btn.dataset.id));
+          loadPosts(true);
+        }
       };
     });
   }
@@ -362,4 +346,3 @@ if (post.timestamp?.toDate) {
 </script>
 </body>
 </html>
-
