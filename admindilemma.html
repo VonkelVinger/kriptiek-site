@@ -1,69 +1,117 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Create DILEMMA Game</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin – Create DILEMMA Game</title>
   <script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
-  import { getFirestore, doc, setDoc, collection, addDoc } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
+    import {
+      getFirestore, doc, setDoc, collection, addDoc
+    } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
+    import {
+      getAuth, signInWithEmailAndPassword, onAuthStateChanged
+    } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
-    authDomain: "kriptiek-c9ea2.firebaseapp.com",
-    projectId: "kriptiek-c9ea2",
-    storageBucket: "kriptiek-c9ea2.appspot.com",
-    messagingSenderId: "620450620939",
-    appId: "1:620450620939:web:e93a18ac23b53b33db890e",
-    measurementId: "G-S9V4CMP1FP"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+      authDomain: "kriptiek-c9ea2.firebaseapp.com",
+      projectId: "kriptiek-c9ea2",
+      storageBucket: "kriptiek-c9ea2.appspot.com",
+      messagingSenderId: "620450620939",
+      appId: "1:620450620939:web:e93a18ac23b53b33db890e"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
 
-  window.saveGame = async () => {
-    const date = document.getElementById('date').value;
-    const word = document.getElementById('word').value.toUpperCase().trim();
-    const clue = document.getElementById('clue').value.trim();
+    const adminUID = "qc3T16NfnfahGXsMFW09CJLDoO22";
 
-    if (!date || !word || !clue) {
-      alert("Please complete all fields.");
-      return;
-    }
+    const loginForm = document.getElementById('loginForm');
+    const adminForm = document.getElementById('adminForm');
+    const notAllowed = document.getElementById('notAllowed');
 
-    const docId = `Game${date}`;
+    onAuthStateChanged(auth, (user) => {
+      if (user && user.uid === adminUID) {
+        loginForm.style.display = "none";
+        adminForm.style.display = "block";
+        notAllowed.style.display = "none";
+      } else if (user) {
+        loginForm.style.display = "none";
+        adminForm.style.display = "none";
+        notAllowed.style.display = "block";
+      } else {
+        loginForm.style.display = "block";
+        adminForm.style.display = "none";
+        notAllowed.style.display = "none";
+      }
+    });
 
-    try {
-      // Create the main game document
-      await setDoc(doc(db, 'games', docId), {
-        date,
-        word,
-        clue,
-        created: new Date().toISOString()
-      });
+    window.login = async () => {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (error) {
+        alert("Aanmelding het misluk: " + error.message);
+      }
+    };
 
-      // Create an empty leaderboard subcollection with a placeholder
-      await addDoc(collection(db, 'games', docId, 'leaderboard'), {
-        name: "Jy kan eerste op die leierbord wees!",
-        email: "",
-        
-        timestamp: new Date().toISOString()
-      });
+    window.saveGame = async () => {
+      const date = document.getElementById('date').value;
+      const word = document.getElementById('word').value.toUpperCase().trim();
+      const clue = document.getElementById('clue').value.trim();
 
-      alert(`Game '${docId}' successfully saved with a placeholder leaderboard.`);
-    } catch (e) {
-      console.error("Error writing document: ", e);
-      alert("Failed to save game. Check console for details.");
-    }
-  };
-</script>
+      if (!date || !word || !clue) {
+        alert("Please complete all fields.");
+        return;
+      }
 
+      const docId = `Game${date}`;
+
+      try {
+        await setDoc(doc(db, 'games', docId), {
+          date,
+          word,
+          clue,
+          created: new Date().toISOString()
+        });
+
+        await addDoc(collection(db, 'games', docId, 'leaderboard'), {
+          userName: "Jy kan eerste op die leierbord wees!",
+          streak: 0,
+          date: new Date()
+        });
+
+        alert(`Game '${docId}' successfully saved.`);
+      } catch (e) {
+        console.error("Error writing document: ", e);
+        alert("Failed to save game. Check console for details.");
+      }
+    };
+  </script>
 </head>
+
 <body style="font-family: sans-serif; max-width: 600px; margin: 40px auto;">
-  <h1>🧩 Create New DILEMMA Game</h1>
-  <label>Date (YYYY-MM-DD):<br><input type="date" id="date" required></label><br><br>
-  <label>Target Word:<br><input type="text" id="word" maxlength="14" placeholder="e.g. DWAALSPOOR" required></label><br><br>
-  <label>Cryptic Clue:<br><textarea id="clue" rows="4" style="width: 100%;" placeholder="Enter clue here..." required></textarea></label><br><br>
-  <button onclick="saveGame()" style="padding: 10px 20px; font-weight: bold;">Save Game</button>
+  <h1>🔐 Admin: Skep Nuwe DILEMMA</h1>
+
+  <div id="loginForm" style="display: none;">
+    <p>Meld aan om voort te gaan:</p>
+    <input id="email" type="email" placeholder="E-pos" /><br><br>
+    <input id="password" type="password" placeholder="Wagwoord" /><br><br>
+    <button onclick="login()">Meld aan</button>
+  </div>
+
+  <div id="notAllowed" style="display: none; color: red;">
+    <p>🚫 Jy is aangemeld, maar het nie toegang nie.</p>
+  </div>
+
+  <div id="adminForm" style="display: none;">
+    <label>Date (YYYY-MM-DD):<br><input type="date" id="date" required></label><br><br>
+    <label>Target Word:<br><input type="text" id="word" maxlength="14" placeholder="bv. DWAALSPOOR" required></label><br><br>
+    <label>Cryptic Clue:<br><textarea id="clue" rows="4" style="width: 100%;" placeholder="Tik leidraad hier..." required></textarea></label><br><br>
+    <button onclick="saveGame()" style="padding: 10px 20px; font-weight: bold;">Stoor Speletjie</button>
+  </div>
 </body>
 </html>
