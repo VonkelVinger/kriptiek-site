@@ -367,9 +367,7 @@ li.innerHTML = `${crown}<strong>${data.userName || 'Speler'}</strong>: ${data.st
   });
   if (entries === 0) leaderboardList.innerHTML = "<li>Jy kan eerste op die leierbord wees!</li>";
 }
-
 async function submitScore(score) {
-  async function submitScore(score) {
   await addDoc(collection(db, 'games', gameId, 'leaderboard'), {
     userName: storedName,
     streak: score,
@@ -380,12 +378,6 @@ async function submitScore(score) {
   }, { merge: true });
   await loadLeaderboard();
 }
-  await setDoc(doc(db, 'games', gameId, 'attempts', userId), {
-    completed: true
-  }, { merge: true });
-  await loadLeaderboard();
-}
-
 function gameCompleted(attempts) {
   gameOver = true;
   const raaiskootText = attempts === 1 ? '1 raaiskoot' : `${attempts} raaiskote`;
