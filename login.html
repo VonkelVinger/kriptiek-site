@@ -56,7 +56,7 @@
           }
         } catch (error) {
           console.error("Fout tydens aanmelding:", error.message);
-          alert("Kon nie inteken nie: " + error.message);
+          alert("Kon nie aanmeld nie: " + error.message);
         }
       });
     });
@@ -71,7 +71,7 @@
 </head>
 <body class="min-h-screen flex flex-col">
   <header class="bg-white shadow p-4">
-    <h1 class="text-center text-2xl font-bold">Teken in op Kriptiek</h1>
+    <h1 class="text-center text-2xl font-bold">Meld aan</h1>
   </header>
 
   <main class="flex-grow p-6 max-w-md mx-auto">
@@ -84,7 +84,7 @@
         <span class="text-gray-700">Wagwoord</span>
         <input type="password" name="password" required class="mt-1 block w-full border border-gray-300 rounded p-2">
       </label>
-      <button type="submit" class="bg-green-700 text-white px-4 py-2 rounded">Teken in</button>
+      <button type="submit" class="bg-green-700 text-white px-4 py-2 rounded">Meld aan</button>
     </form>
   </main>
 
