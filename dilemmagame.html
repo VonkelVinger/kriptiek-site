@@ -20,44 +20,220 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Montserrat', sans-serif; background-color: #f9fafb; color: #1f2937; }
-    header { background-color: #ffffff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); padding: 1rem; text-align: center; }
-    .logo-container { display: flex; justify-content: center; align-items: center; margin-bottom: 10px; }
-    .logo-container .letter-box { width: 40px; height: 40px; margin: 2px; display: flex; justify-content: center; align-items: center; background-color: #374151; color: white; font-size: 1.5rem; font-weight: bold; border-radius: 4px; }
-    .game-container { max-width: 640px; margin: 0 auto; padding: 1rem; }
-    .tile-row { display: flex; justify-content: center; margin-bottom: 5px; }
-    .letter-tile { width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; border: 2px solid #374151; font-size: 1.5rem; font-weight: bold; text-transform: uppercase; margin: 2px; background-color: white; color: #1f2937; transition: transform 0.3s ease; }
-    .letter-tile.flip { animation: flipAnim 0.5s ease forwards; }
-    @keyframes flipAnim { 0% { transform: rotateX(0); } 50% { transform: rotateX(90deg); } 100% { transform: rotateX(0); } }
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: #f9fafb;
+      color: #1f2937;
+    }
+    header {
+      background-color: #ffffff;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      padding: 1rem;
+      text-align: center;
+    }
+    .logo-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .logo-container .letter-box {
+      width: 40px;
+      height: 40px;
+      margin: 2px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #374151;
+      color: white;
+      font-size: 1.5rem;
+      font-weight: bold;
+      border-radius: 4px;
+    }
+    .game-container {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    .tile-row {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 5px;
+    }
+    .letter-tile {
+      width: 50px;
+      height: 50px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 2px solid #374151;
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin: 2px;
+      background-color: white;
+      color: #1f2937;
+      transition: transform 0.3s ease;
+    }
+    .letter-tile.flip {
+      animation: flipAnim 0.5s ease forwards;
+    }
+    @keyframes flipAnim {
+      0% { transform: rotateX(0); }
+      50% { transform: rotateX(90deg); }
+      100% { transform: rotateX(0); }
+    }
     .correct { background-color: #16a34a !important; color: white !important; }
     .present { background-color: #facc15 !important; color: black !important; }
-    .absent { background-color: #9ca3af !important; color: white !important; }
-    .keyboard-row { display: flex; justify-content: center; margin: 5px 0; }
-    .key { min-width: 30px; padding: 10px 12px; margin: 2px; border-radius: 4px; background-color: #374151; color: white; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+    .absent  { background-color: #9ca3af !important; color: white !important; }
+    .keyboard-row {
+      display: flex;
+      justify-content: center;
+      margin: 5px 0;
+    }
+    .key {
+      min-width: 30px;
+      padding: 10px 12px;
+      margin: 2px;
+      border-radius: 4px;
+      background-color: #374151;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
     .key.bg-green-600 { background-color: #16a34a !important; }
-    .key.bg-red-600 { background-color: #1e3a8a !important; }
-    #lockoutMessage { display: none; text-align: center; margin-top: 10px; font-weight: bold; color: #1e3a8a; font-size: 1.1rem; opacity: 0; animation: fadeIn 1s forwards; }
+    .key.bg-red-600   { background-color: #1e3a8a !important; }
+    #lockoutMessage {
+      display: none;
+      text-align: center;
+      margin-top: 10px;
+      font-weight: bold;
+      color: #1e3a8a;
+      font-size: 1.1rem;
+      opacity: 0;
+      animation: fadeIn 1s forwards;
+    }
     #lockoutMessage .icon { margin-right: 6px; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px);} to { opacity: 1; transform: translateY(0);} }
-    #leaderboard { border: 1px solid #e5e7eb; }
-    #leaderboardList li { padding: 6px 8px; transition: background-color 0.2s ease; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    #leaderboard {
+      border: 1px solid #e5e7eb;
+    }
+    #leaderboardList li {
+      padding: 6px 8px;
+      transition: background-color 0.2s ease;
+    }
     #leaderboardList li:nth-child(odd) { background-color: #f9fafb; }
     #leaderboardList li:nth-child(even) { background-color: #ffffff; }
     #leaderboardList li:hover { background-color: #e0e7ff; }
-    #leaderboardList li:first-child { background-color: #d1fae5; font-weight: bold; }
-    #resultModal { display: none; position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.5); align-items: center; justify-content: center; z-index: 1000; }
-    #resultModal .modal-content { background: white; padding: 1.5rem; border-radius: 8px; text-align: center; max-width: 300px; width: 100%; }
-    #resultModal button { margin: 5px; padding: 8px 16px; border-radius: 4px; font-weight: bold; }
+    #leaderboardList li:first-child {
+      background-color: #d1fae5;
+      font-weight: bold;
+    }
+    #resultModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    #resultModal .modal-content {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      text-align: center;
+      max-width: 300px;
+      width: 100%;
+    }
+    #resultModal button {
+      margin: 5px;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
     .btn-share { background-color: #1e3a8a; color: white; }
     .btn-close { background-color: #6b7280; color: white; }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
+<header>
+  <div class="logo-container">
+    <div class="letter-box">D</div><div class="letter-box">I</div><div class="letter-box">L</div>
+    <div class="letter-box">E</div><div class="letter-box">M</div><div class="letter-box">M</div>
+    <div class="letter-box">A</div>
+  </div>
+  <p class="text-sm text-gray-500">
+    Welkom terug, <span id="playerName" class="font-semibold text-green-700"></span>!
+  </p>
+</header>
+<main class="flex-grow game-container">
+  <div id="clue" class="text-center text-lg mb-4 text-gray-700 font-semibold">Laai die leidraad...</div>
+  <div id="game-grid" class="mb-6"></div>
+  <div id="keyboard" class="mb-6"></div>
+  <p id="lockoutMessage"><span class="icon">🔒</span>Jy kan môre weer speel</p>
+
+  <div class="mt-6 bg-white rounded shadow p-4">
+    <h2 class="text-xl font-bold mb-2">HOE OM DILEMMA TE SPEEL</h2>
+    <p class="text-gray-700 leading-relaxed mb-2">
+      Jy het ses kanse om die woord te raai.<br>
+      Jy mag vir elke probeerslag enige letters in enige volgorde kies, maar elke raaiskoot moet dieselfde aantal letters hê as die woord waarna jy soek. Dit hoef nie ook 'n woord te vorm nie.<br>
+      Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER.
+    </p>
+    <p class="text-gray-700 italic mb-2">
+      WENK: Op kleiner skerms kan jy Dilemma soos 'n foto met jou vingers kleiner trek totdat dit heeltemal inpas.
+    </p>
+    <p class="text-gray-700 leading-relaxed">
+      <span class="font-bold text-green-700">GROEN</span>: Die letter is in die antwoord en in die regte blokkie.<br>
+      <span class="font-bold text-yellow-600">GEEL</span>: Die letter is in die antwoord, maar nie in die regte blokkie nie.<br>
+      <span class="font-bold text-gray-500">GRYS</span>: Die letter is glad nie in die antwoord nie.
+    </p>
+  </div>
+
+  <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
+    <h2 class="text-xl font-bold mb-2">Vandag se beste spelers</h2>
+    <ul id="leaderboardList" class="text-gray-700 text-left">
+      <li>Laai...</li>
+    </ul>
+  </div>
+</main>
+
+<footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
+  &copy; 2025 Kriptiek. Alle regte voorbehou. |
+  <a href="/index.html" class="underline">Tuis</a>
+  <a href="/forum.html" class="underline">Gesels saam</a>
+  <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
+  <a href="/terms.html" class="underline">Voorwaardes</a> |
+  <a href="/faq.html" class="underline">Gereelde vrae</a> |
+  <a href="/about.html" class="underline">Oor Kriptiek</a> |
+  <a href="/contact.html" class="underline">Kontak ons</a>
+</footer>
+
+<div id="resultModal">
+  <div class="modal-content">
+    <p id="resultMessage" class="mb-4 font-bold"></p>
+    <button id="modalShareBtn" class="btn-share">DEEL</button>
+    <button id="closeModalBtn" class="btn-close">SLUIT</button>
+  </div>
+</div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
 import {
-  getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs,
-  query, orderBy, limit, serverTimestamp
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  orderBy,
+  limit,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -85,12 +261,16 @@ const storedName = localStorage.getItem("userName") || "Speler";
 const userId = localStorage.getItem("userId") || "anon";
 document.getElementById("playerName").textContent = storedName;
 
-let gridRows = 6, gridCols = 5;
-let currentRow = 0, currentCol = 0;
-let board = [], targetWord = "", gameOver = false;
+let gridRows = 6,
+    gridCols = 5,
+    currentRow = 0,
+    currentCol = 0,
+    board = [],
+    targetWord = "",
+    gameOver = false;
 
 const params = new URLSearchParams(window.location.search);
-const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
+const gameId = params.get("gameId") || `Game${new Date().toISOString().split("T")[0]}`;
 const gameUrl = window.location.href;
 
 function disableGame(message = "Jy het hierdie een reeds vandag gespeel") {
@@ -190,7 +370,6 @@ function handleEnter() {
 }
 
 function checkGuessWithFlip(guess) {
-  const guessLetters = guess.split("");
   const states = new Array(gridCols).fill("absent");
   const letterCounts = {};
   for (let ch of targetWord) letterCounts[ch] = (letterCounts[ch] || 0) + 1;
@@ -220,8 +399,9 @@ function checkGuessWithFlip(guess) {
   saveLocalProgress();
 
   setTimeout(() => {
-    if (guess === targetWord) gameCompleted(currentRow + 1);
-    else {
+    if (guess === targetWord) {
+      gameCompleted(currentRow + 1);
+    } else {
       currentRow++;
       currentCol = 0;
       if (currentRow >= gridRows) gameFailed();
@@ -259,6 +439,36 @@ function restoreLocalProgress() {
   });
 }
 
+async function loadLeaderboard() {
+  const q = query(
+    collection(db, "games", gameId, "leaderboard"),
+    orderBy("streak", "desc"),
+    limit(10)
+  );
+  const snapshot = await getDocs(q);
+  leaderboardList.innerHTML = "";
+  let validEntries = [];
+
+  snapshot.forEach(docSnap => {
+    const d = docSnap.data();
+    const name = d.userName?.toLowerCase() || "";
+    if (!name.includes("leierbord") && d.streak > 0) {
+      validEntries.push(d);
+    }
+  });
+
+  if (validEntries.length === 0) {
+    leaderboardList.innerHTML = `<li>Jy kan eerste op die leierbord wees!</li>`;
+    return;
+  }
+
+  validEntries.forEach(d => {
+    const li = document.createElement("li");
+    li.innerHTML = `<strong>${d.userName}</strong>: ${d.streak} ${d.streak === 1 ? "dag" : "dae"} van sukses`;
+    leaderboardList.appendChild(li);
+  });
+}
+
 async function submitScore(score) {
   await addDoc(collection(db, "games", gameId, "leaderboard"), {
     userName: storedName,
@@ -273,7 +483,6 @@ function gameCompleted(score) {
   modal.style.display = "flex";
   shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het DILEMMA in ${score} raaiskote opgelos: ${gameUrl}`);
   lockoutMessage.style.display = "block";
-  document.querySelectorAll(".key").forEach(key => key.disabled = true);
   submitScore(score);
 }
 
@@ -283,7 +492,6 @@ function gameFailed() {
   modal.style.display = "flex";
   shareBtn.onclick = () => navigator.clipboard.writeText(`Ek kon nie DILEMMA oplos nie. Probeer self: ${gameUrl}`);
   lockoutMessage.style.display = "block";
-  document.querySelectorAll(".key").forEach(key => key.disabled = true);
   submitScore(gridRows);
 }
 
@@ -294,42 +502,12 @@ document.addEventListener("keydown", e => {
   else if (e.key === "Backspace") handleBackspace();
   else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
 });
-async function loadLeaderboard() {
-  const q = query(
-    collection(db, "games", gameId, "leaderboard"),
-    orderBy("streak", "desc"),
-    limit(10)
-  );
-  const snapshot = await getDocs(q);
 
-  leaderboardList.innerHTML = "";
-  let entries = [];
-
-  snapshot.forEach(docSnap => {
-    const d = docSnap.data();
-    const isPlaceholder = d.userName.toLowerCase().includes("leierbord") || d.streak === 0;
-    if (!isPlaceholder) entries.push(d);
-  });
-
-  if (entries.length === 0) {
-    leaderboardList.innerHTML = `<li>Jy kan eerste op die leierbord wees!</li>`;
-    return;
-  }
-
-  entries.forEach(d => {
-    const li = document.createElement("li");
-    li.innerHTML = `<strong>${d.userName}</strong>: ${d.streak} ${d.streak === 1 ? 'dag' : 'dae'} van sukses`;
-    leaderboardList.appendChild(li);
-  });
-}
-// INIT
-(async () => {
-  await loadGameData();
-  createGrid();
-  createKeyboard();
-  restoreLocalProgress();
-  await loadLeaderboard();
-})();
+await loadGameData();
+createGrid();
+createKeyboard();
+restoreLocalProgress();
+await loadLeaderboard();
 </script>
 </body>
 </html>
