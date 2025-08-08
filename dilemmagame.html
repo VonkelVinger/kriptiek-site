@@ -332,7 +332,7 @@ async function loadLeaderboard() {
     const streak = d.streak || 0;
     const li = document.createElement("li");
     const crown = i === 0 ? '<span class=\"crown\">👑</span>' : '';
-    li.innerHTML = `${crown}<strong>${d.userName || 'Speler'}</strong>: ${streak} ${streak === 1 ? 'dag' : 'dae'} se wenreeks`;
+    li.innerHTML = `${crown}<strong>${d.userName || 'Speler'}</strong>: ${streak} ${streak === 1 ? 'dag' : 'dae'} van sukses`;
     leaderboardList.appendChild(li);
   });
   if (count === 0) leaderboardList.innerHTML = "<li>Jy kan eerste op die leierbord wees!</li>";
