@@ -348,7 +348,6 @@ async function loadLeaderboard() {
     leaderboardList.appendChild(li);
   });
 }
-}
 async function submitScore(score) {
   await addDoc(collection(db, "games", gameId, "leaderboard"), {
     userName: storedName,
