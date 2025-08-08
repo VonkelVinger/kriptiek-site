@@ -322,20 +322,30 @@ async function loadLeaderboard() {
   const q = query(collection(db, "games", gameId, "leaderboard"), orderBy("streak", "desc"), limit(10));
   const snapshot = await getDocs(q);
   leaderboardList.innerHTML = "";
-  let count = 0;
+  let validEntryCount = 0;
+
   snapshot.forEach((docSnap, i) => {
     const d = docSnap.data();
     const streak = d.streak || 0;
     const userName = d.userName || "Speler";
+
+    // Skip placeholder entries
     if (streak === 0 && userName.includes("leierbord")) return;
-    count++;
+
+    // Valid entry found
+    validEntryCount++;
+
     const li = document.createElement("li");
-    const crown = i === 0 ? '<span class="crown">👑</span>' : '';
+    const crown = validEntryCount === 1 ? '<span class="crown">👑</span>' : '';
     li.innerHTML = `${crown}<strong>${userName}</strong>: ${streak} ${streak === 1 ? "dag" : "dae"} van sukses`;
     leaderboardList.appendChild(li);
   });
-  if (count === 0) leaderboardList.innerHTML = "<li>Jy het tans geen inskrywings nie.</li>";
+
+  if (validEntryCount === 0) {
+    leaderboardList.innerHTML = "<li>Geen telling is nog aangeteken nie</li>";
+  }
 }
+
 
 async function submitScore(score) {
   await addDoc(collection(db, "games", gameId, "leaderboard"), {
