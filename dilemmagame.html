@@ -406,12 +406,18 @@ async function loadLeaderboard() {
     leaderboardList.innerHTML = `<li>Jy kan eerste op die leierbord wees!</li>`;
     return;
   }
+entries.forEach((d, index) => {
+  // Avoid duplicate by checking if already displayed
+  const isSelf = d.userName === storedName;
 
-  entries.forEach(d => {
-    const li = document.createElement("li");
-    li.innerHTML = `<strong>${d.userName}</strong>: ${d.streak} ${d.streak === 1 ? 'dag' : 'dae'} van sukses`;
-    leaderboardList.appendChild(li);
-  });
+  // Only highlight the top entry
+  const li = document.createElement("li");
+  li.className = index === 0 ? "font-bold bg-green-100" : "";
+  li.innerHTML = `<strong>${d.userName}</strong>: ${d.streak} ${d.streak === 1 ? 'dag' : 'dae'} van sukses`;
+
+  // Only append if not already present
+  if (!isSelf || index === 0) leaderboardList.appendChild(li);
+});
 }
 
 async function submitScore(score) {
@@ -425,27 +431,26 @@ async function submitScore(score) {
     console.error("Kon nie score stoor nie:", e);
   }
 }
-
-function gameCompleted(score) {
+async function gameCompleted(score) {
   gameOver = true;
   resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${score === 1 ? "1 raaiskoot" : score + " raaiskote"} gekry!`;
   modal.style.display = "flex";
   shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het DILEMMA in ${score} raaiskote opgelos: ${gameUrl}`);
   lockoutMessage.style.display = "block";
-  submitScore(score);
+  await submitScore(score);
+  await loadLeaderboard();
   document.querySelectorAll(".key").forEach(key => key.disabled = true);
 }
-
-function gameFailed() {
+async function gameFailed() {
   gameOver = true;
   resultMsg.textContent = `Jammer, ${storedName}! Vandag se oplossing is ${targetWord}.`;
   modal.style.display = "flex";
   shareBtn.onclick = () => navigator.clipboard.writeText(`Ek kon nie DILEMMA oplos nie. Probeer self: ${gameUrl}`);
   lockoutMessage.style.display = "block";
-  submitScore(gridRows);
+  await submitScore(gridRows);
+  await loadLeaderboard();
   document.querySelectorAll(".key").forEach(key => key.disabled = true);
 }
-
 closeBtn.onclick = () => modal.style.display = "none";
 
 document.addEventListener("keydown", e => {
