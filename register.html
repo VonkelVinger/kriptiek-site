@@ -1,24 +1,39 @@
 <!DOCTYPE html>
 <html lang="af">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Registreer – Kriptiek</title>
-  <link rel="icon" href="/assets/favicon.ico" type="image/x-icon" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
-  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  <link rel="manifest" href="/assets/site.webmanifest">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Montserrat', sans-serif; }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white shadow-lg rounded-xl p-6 w-full max-w-md">
+    <h2 class="text-xl font-bold text-center mb-6 text-[#1e3a8a]">Registreer</h2>
+    <form id="registerForm" class="space-y-4">
+      <label class="block">
+        <span class="text-gray-700 font-semibold">Noemnaam</span>
+        <input type="text" id="userName" required class="mt-1 block w-full border border-gray-300 rounded p-2" />
+      </label>
+      <label class="block">
+        <span class="text-gray-700 font-semibold">E-posadres</span>
+        <input type="email" id="email" required class="mt-1 block w-full border border-gray-300 rounded p-2" />
+      </label>
+      <label class="block">
+        <span class="text-gray-700 font-semibold">Wagwoord</span>
+        <input type="password" id="password" required class="mt-1 block w-full border border-gray-300 rounded p-2" />
+      </label>
+      <button type="submit" class="w-full bg-gray-800 hover:bg-gray-900 text-white py-2 px-4 rounded transition">REGISTREER</button>
+    </form>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import {
-      getFirestore, doc, setDoc, serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
-    import {
-      getAuth, createUserWithEmailAndPassword
-    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -30,92 +45,50 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
     const auth = getAuth(app);
+    const db = getFirestore(app);
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const form = document.getElementById('registerForm');
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const name = form.name.value.trim();
-        const email = form.email.value.trim();
-        const password = form.password.value;
+    const form = document.getElementById('registerForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const userName = document.getElementById('userName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
 
-        if (!email || !password) return alert('E-pos en wagwoord is verpligtend.');
+      if (!userName || !email || !password) {
+        alert("Vul asseblief al die velde in.");
+        return;
+      }
+
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        const user = cred.user;
 
         try {
-          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-          const userId = userCredential.user.uid;
-
-          localStorage.setItem('userRegistered', 'true');
-          localStorage.setItem('userName', name);
-          localStorage.setItem('userEmail', email);
-          localStorage.setItem('userId', userId);
-
-          await setDoc(doc(db, 'registrations', userId, 'profile', 'info'), {
-            name,
+          await setDoc(doc(db, "registrations", user.uid), {
+            userName,
             email,
+            userId: user.uid,
             timestamp: serverTimestamp()
           });
 
-          alert('Welkom by Kriptiek! Jy is nou geregistreer.');
+          localStorage.setItem("userName", userName);
+          localStorage.setItem("userId", user.uid);
+          localStorage.setItem("userEmail", email);
+          alert("Welkom by Kriptiek!");
+          window.location.href = "/index.html";
 
-          const redirectUrl = localStorage.getItem('redirectAfterRegister');
-          if (redirectUrl) {
-            localStorage.removeItem('redirectAfterRegister');
-            window.location.href = redirectUrl;
-          } else {
-            window.location.href = '/index.html';
-          }
-
-        } catch (error) {
-          console.error("Fout tydens registrasie:", error.message);
-          alert("Kon nie registreer nie: " + error.message);
+        } catch (firestoreError) {
+          console.error("Firestore write failed:", firestoreError);
+          await user.delete(); // Roll back the user creation
+          alert("Registrasie het misluk: " + firestoreError.message);
         }
-      });
+
+      } catch (authError) {
+        console.error("Auth error:", authError);
+        alert("Kon nie registreer nie: " + authError.message);
+      }
     });
   </script>
-  <style>
-    body {
-      font-family: 'Montserrat', sans-serif;
-      background-color: #f3f4f6;
-      color: #1f2937;
-    }
-  </style>
-</head>
-<body class="min-h-screen flex flex-col">
-  <header class="bg-white shadow p-4">
-    <div class="text-center font-bold text-xl">KRIPTIEK</div>
-  </header>
-
-  <main class="flex-grow p-6 max-w-md mx-auto">
-    <h1 class="text-2xl font-bold mb-4">Registreer as 'n gratis gebruiker</h1>
-    <p class="mb-6">Jy het toegang tot die speletjies sodra jy geregistreer het. Dis vinnig en gratis!</p>
-    <p class="mb-6 text-sm text-gray-600 italic">Jy sal jou noemnaam later kan verander op jou profielblad.</p>
-    <form id="registerForm" class="space-y-4">
-      <label class="block text-left">
-        <span class="text-gray-700">Noemnaam (opsioneel)</span>
-        <input type="text" name="name" class="mt-1 block w-full border border-gray-300 rounded p-2">
-      </label>
-      <label class="block text-left">
-        <span class="text-gray-700">E-posadres *</span>
-        <input type="email" name="email" required class="mt-1 block w-full border border-gray-300 rounded p-2">
-      </label>
-      <label class="block text-left">
-        <span class="text-gray-700">Kies 'n wagwoord *</span>
-        <input type="password" name="password" required minlength="6" class="mt-1 block w-full border border-gray-300 rounded p-2">
-      </label>
-      <button type="submit" class="bg-green-700 text-white px-4 py-2 rounded">Registreer</button>
-    </form>
-  </main>
-
-  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
-    &copy; 2025 Kriptiek. Alle regte voorbehou. |
-    <a href="/index.html" class="underline">Tuis</a> |
-    <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
-    <a href="/terms.html" class="underline">Voorwaardes</a> |
-    <a href="/faq.html" class="underline">Gereelde vrae</a> |
-    <a href="/contact.html" class="underline">Kontak ons</a>
-  </footer>
 </body>
 </html>
