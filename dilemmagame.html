@@ -4,19 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DILEMMA – Kriptiek</title>
-  <link rel="icon" href="/assets/favicon.ico" type="image/x-icon" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
-  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  <link rel="manifest" href="/assets/site.webmanifest">
-  <meta property="og:title" content="KRIPTIEK" />
-  <meta property="og:description" content="Tuiste van DILEMMA en ander Afrikaanse woordraaisels" />
-  <meta property="og:url" content="https://www.kriptiek.com/" />
-  <meta property="og:type" content="website" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta property="og:image" content="https://www.kriptiek.com/assets/WAshare-logo.png" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
+<!-- Favicon and App Icons -->
+<link rel="icon" href="/assets/favicon.ico" type="image/x-icon" />
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<link rel="manifest" href="/assets/site.webmanifest">
+<meta property="og:title" content="KRIPTIEK" />
+<meta property="og:description" content="Tuiste van DILEMMA en ander Afrikaanse woordraaisels" />
+<meta property="og:url" content="https://www.kriptiek.com/" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta property="og:image" content="https://www.kriptiek.com/assets/WAshare-logo.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
   <style>
@@ -36,7 +37,16 @@
     .key { min-width: 30px; padding: 10px 12px; margin: 2px; border-radius: 4px; background-color: #374151; color: white; font-weight: bold; cursor: pointer; text-transform: uppercase; }
     .key.bg-green-600 { background-color: #16a34a !important; }
     .key.bg-red-600 { background-color: #1e3a8a !important; }
-    #lockoutMessage { display: none; text-align: center; margin-top: 10px; font-weight: bold; color: #1e3a8a; font-size: 1.1rem; opacity: 0; animation: fadeIn 1s forwards; }
+    #lockoutMessage {
+      display: none;
+      text-align: center;
+      margin-top: 10px;
+      font-weight: bold;
+      color: #1e3a8a;
+      font-size: 1.1rem;
+      opacity: 0;
+      animation: fadeIn 1s forwards;
+    }
     #lockoutMessage .icon { margin-right: 6px; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px);} to { opacity: 1; transform: translateY(0);} }
     #leaderboard { border: 1px solid #e5e7eb; }
@@ -62,35 +72,36 @@
   </div>
   <p class="text-sm text-gray-500">Welkom terug, <span id="playerName" class="font-semibold text-green-700"></span>!</p>
 </header>
+
 <main class="flex-grow game-container">
   <div id="clue" class="text-center text-lg mb-4 text-gray-700 font-semibold">Laai die leidraad...</div>
   <div id="game-grid" class="mb-6"></div>
   <div id="keyboard" class="mb-6"></div>
   <p id="lockoutMessage"><span class="icon">🔒</span>Jy kan môre weer speel</p>
-  <!-- HOE OM TE SPEEL section -->
-  <div class="mt-6 bg-white rounded shadow p-4">
-    <h2 class="text-xl font-bold mb-2">HOE OM DILEMMA TE SPEEL</h2>
-    <p class="text-gray-700 leading-relaxed mb-2">
-      Jy het ses kanse om die woord te raai.<br>
-      Jy mag vir elke probeerslag enige letters in enige volgorde kies, maar elke raaiskoot moet dieselfde aantal letters hê as die woord waarna jy soek. Dit hoef nie ook 'n woord te vorm nie.<br>
-      Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER.
-    </p>
-    <p class="text-gray-700 italic mb-2">
-      WENK: Op kleiner skerms kan jy Dilemma soos 'n foto met jou vingers kleiner trek totdat dit heeltemal inpas.
-    </p>
-    <p class="text-gray-700 leading-relaxed">
-      <span class="font-bold text-green-700">GROEN</span>: Die letter is in die antwoord en in die regte blokkie.<br>
-      <span class="font-bold text-yellow-600">GEEL</span>: Die letter is in die antwoord, maar nie in die regte blokkie nie.<br>
-      <span class="font-bold text-gray-500">GRYS</span>: Die letter is glad nie in die antwoord nie.
-    </p>
-  </div>
-
-  <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
-    <h2 class="text-xl font-bold mb-2">Vandag se beste spelers</h2>
-    <ul id="leaderboardList" class="text-gray-700 text-left">
-      <li>Laai tans...</li>
-    </ul>
-  </div>
+<!-- HOE OM DILEMMA TE SPEEL section -->
+<div class="mt-6 bg-white rounded shadow p-4">
+  <h2 class="text-xl font-bold mb-2">HOE OM DILEMMA TE SPEEL</h2>
+  <p class="text-gray-700 leading-relaxed mb-2">
+    Jy het ses kanse om die woord te raai.<br>
+    Jy mag vir elke probeerslag enige letters in enige volgorde kies, maar elke raaiskoot moet dieselfde aantal letters hê as die woord waarna jy soek. Dit hoef nie ook 'n woord te vorm nie.<br>
+    Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER.
+  </p>
+  <p class="text-gray-700 italic mb-2">
+    WENK: Op kleiner skerms kan jy Dilemma soos 'n foto met jou vingers kleiner trek totdat dit heeltemal inpas.
+  </p>
+  <p class="text-gray-700 leading-relaxed">
+    <span class="font-bold text-green-700">GROEN</span>: Die letter is in die antwoord en in die regte blokkie.<br>
+    <span class="font-bold text-yellow-600">GEEL</span>: Die letter is in die antwoord, maar nie in die regte blokkie nie.<br>
+    <span class="font-bold text-gray-500">GRYS</span>: Die letter is glad nie in die antwoord nie.
+  </p>
+</div>
+<!-- Leaderboard -->
+<div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
+  <h2 class="text-xl font-bold mb-2">Vandag se beste spelers</h2>
+  <ul id="leaderboardList" class="text-gray-700 text-left">
+    <li>Jy kan eerste op die leierbord wees!</li>
+  </ul>
+</div>
 </main>
 
 <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
@@ -104,6 +115,7 @@
   <a href="/contact.html" class="underline">Kontak ons</a>
 </footer>
 
+<!-- Modal -->
 <div id="resultModal">
   <div class="modal-content">
     <p id="resultMessage" class="mb-4 font-bold"></p>
@@ -111,12 +123,11 @@
     <button id="closeModalBtn" class="btn-close">SLUIT</button>
   </div>
 </div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-import {
-  getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs,
-  query, orderBy, limit, serverTimestamp
-} from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } 
+  from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -130,67 +141,78 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// UI & player info
 const gameGrid = document.getElementById("game-grid");
 const keyboard = document.getElementById("keyboard");
+const leaderboardList = document.getElementById("leaderboardList");
 const lockoutMessage = document.getElementById("lockoutMessage");
 const modal = document.getElementById("resultModal");
 const resultMsg = document.getElementById("resultMessage");
 const shareBtn = document.getElementById("modalShareBtn");
 const closeBtn = document.getElementById("closeModalBtn");
-const leaderboardList = document.getElementById("leaderboardList");
 
-const storedName = localStorage.getItem("userName") || "Speler";
-const userId = localStorage.getItem("userId") || "anon";
+const storedName = localStorage.getItem('userName') || 'Speler';
 document.getElementById("playerName").textContent = storedName;
 
 let gridRows = 6, gridCols = 5;
 let currentRow = 0, currentCol = 0;
-let board = [], targetWord = "", gameOver = false;
+let board = [];
+let targetWord = "";
+let gameOver = false;
 
 const params = new URLSearchParams(window.location.search);
 const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
+const localKey = `lastGameTime_${gameId}`;
 const gameUrl = window.location.href;
 
 function disableGame(message = "Jy het hierdie een reeds vandag gespeel") {
   gameOver = true;
-  document.getElementById("clue").textContent = message;
+  document.getElementById('clue').textContent = message;
   lockoutMessage.style.display = "block";
-  document.querySelectorAll(".key").forEach(key => key.disabled = true);
+  document.querySelectorAll('.key').forEach(key => key.disabled = true);
+}
+
+async function checkDailyLimit() {
+  const lastGameTime = localStorage.getItem(localKey);
+  if (lastGameTime && Date.now() - parseInt(lastGameTime) < 24 * 60 * 60 * 1000) {
+    disableGame();
+    return false;
+  }
+  return true;
 }
 
 async function loadGameData() {
-  const gameRef = doc(db, "games", gameId);
-  const snap = await getDoc(gameRef);
-  if (snap.exists()) {
-    const data = snap.data();
-    targetWord = data.word.toUpperCase();
+  const gameDocRef = doc(db, 'games', gameId);
+  const gameDocSnap = await getDoc(gameDocRef);
+  if (gameDocSnap.exists()) {
+    const data = gameDocSnap.data();
+    targetWord = (data.word || "XXXXX").toUpperCase();
     gridCols = targetWord.length;
-    document.getElementById("clue").textContent = data.clue || "Geen leidraad beskikbaar nie.";
+    document.getElementById('clue').textContent = data.clue || "Geen leidraad beskikbaar nie.";
   }
 }
+
 function createGrid() {
   gameGrid.innerHTML = "";
   board = [];
   for (let r = 0; r < gridRows; r++) {
-    const row = document.createElement("div");
-    row.className = "tile-row";
-    const rowTiles = [];
+    const rowDiv = document.createElement("div");
+    rowDiv.className = "tile-row";
+    const row = [];
     for (let c = 0; c < gridCols; c++) {
       const tile = document.createElement("div");
       tile.className = "letter-tile";
-      row.appendChild(tile);
-      rowTiles.push(tile);
+      rowDiv.appendChild(tile);
+      row.push(tile);
     }
-    board.push(rowTiles);
-    gameGrid.appendChild(row);
+    gameGrid.appendChild(rowDiv);
+    board.push(row);
   }
 }
 
+const keyLayout = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
 function createKeyboard() {
   keyboard.innerHTML = "";
-  const layout = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
-  layout.forEach(row => {
+  keyLayout.forEach(row => {
     const rowDiv = document.createElement("div");
     rowDiv.className = "keyboard-row";
     [...row].forEach(letter => {
@@ -216,17 +238,6 @@ function createKeyboard() {
   });
 }
 
-function updateKeyboard(letter, state) {
-  const keyBtn = [...document.querySelectorAll(".key")].find(k => k.textContent === letter);
-  if (!keyBtn) return;
-  if (state === "correct" || (state === "present" && !keyBtn.classList.contains("correct"))) {
-    keyBtn.classList.remove("present", "absent");
-    keyBtn.classList.add(state);
-  } else if (state === "absent" && !keyBtn.classList.contains("correct") && !keyBtn.classList.contains("present")) {
-    keyBtn.classList.add("absent");
-  }
-}
-
 function handleKey(letter) {
   if (gameOver) return;
   if (currentCol < gridCols && currentRow < gridRows) {
@@ -236,50 +247,57 @@ function handleKey(letter) {
 }
 
 function handleBackspace() {
-  if (gameOver || currentCol === 0) return;
-  currentCol--;
-  board[currentRow][currentCol].textContent = "";
+  if (gameOver) return;
+  if (currentCol > 0) {
+    currentCol--;
+    board[currentRow][currentCol].textContent = "";
+  }
 }
 
 function handleEnter() {
   if (gameOver) return;
-  if (currentCol < gridCols) return alert("Vul al die letters in!");
-  const guess = board[currentRow].map(t => t.textContent).join("");
+  if (currentCol < gridCols) {
+    alert("Vul al die letters in!");
+    return;
+  }
+  const guess = board[currentRow].map(tile => tile.textContent).join("");
   checkGuessWithFlip(guess);
 }
 
 function checkGuessWithFlip(guess) {
+  const target = targetWord;
   const guessLetters = guess.split("");
-  const states = new Array(gridCols).fill("absent");
   const letterCounts = {};
-  for (let ch of targetWord) letterCounts[ch] = (letterCounts[ch] || 0) + 1;
+  for (let ch of target) letterCounts[ch] = (letterCounts[ch] || 0) + 1;
 
+  const states = new Array(gridCols).fill("absent");
   for (let i = 0; i < gridCols; i++) {
-    if (guess[i] === targetWord[i]) {
+    if (guessLetters[i] === target[i]) {
       states[i] = "correct";
-      letterCounts[guess[i]]--;
+      letterCounts[guessLetters[i]]--;
     }
   }
   for (let i = 0; i < gridCols; i++) {
     if (states[i] === "correct") continue;
-    if (letterCounts[guess[i]] > 0) {
+    const letter = guessLetters[i];
+    if (letterCounts[letter] > 0) {
       states[i] = "present";
-      letterCounts[guess[i]]--;
+      letterCounts[letter]--;
     }
   }
 
-  states.forEach((s, i) => {
+  states.forEach((state, i) => {
     const tile = board[currentRow][i];
+    const letter = guessLetters[i];
     setTimeout(() => {
-      tile.classList.add("flip", s);
-      updateKeyboard(guess[i], s);
+      tile.classList.add("flip");
+      tile.classList.add(state);
+      updateKeyboard(letter, state);
     }, i * 350);
   });
 
-  saveLocalProgress();
-
   setTimeout(() => {
-    if (guess === targetWord) gameCompleted(currentRow + 1);
+    if (guess === target) gameCompleted(currentRow + 1);
     else {
       currentRow++;
       currentCol = 0;
@@ -288,104 +306,80 @@ function checkGuessWithFlip(guess) {
   }, gridCols * 350);
 }
 
-function saveLocalProgress() {
-  const localGuesses = [];
-  for (let r = 0; r <= currentRow; r++) {
-    const guess = board[r].map(t => t.textContent).join("");
-    const states = board[r].map(t =>
-      t.classList.contains("correct") ? "correct" :
-      t.classList.contains("present") ? "present" : "absent"
-    );
-    if (guess.trim()) localGuesses.push({ guess, states });
-  }
-  localStorage.setItem(`dilemma-${gameId}`, JSON.stringify(localGuesses));
-}
-
-function restoreLocalProgress() {
-  const saved = localStorage.getItem(`dilemma-${gameId}`);
-  if (!saved) return;
-  const data = JSON.parse(saved);
-  data.forEach(({ guess, states }) => {
-    const letters = guess.split("");
-    for (let i = 0; i < letters.length; i++) {
-      const tile = board[currentRow][i];
-      tile.textContent = letters[i];
-      tile.classList.add(states[i]);
-      updateKeyboard(letters[i], states[i]);
+function updateKeyboard(letter, state) {
+  const keyBtn = [...document.querySelectorAll('.key')].find(k => k.textContent === letter);
+  if (keyBtn) {
+    if (state === "correct" || (state === "present" && !keyBtn.classList.contains("correct"))) {
+      keyBtn.classList.remove("present", "absent");
+      keyBtn.classList.add(state);
+    } else if (state === "absent" && !keyBtn.classList.contains("correct") && !keyBtn.classList.contains("present")) {
+      keyBtn.classList.add("absent");
     }
-    currentRow++;
-    currentCol = 0;
-  });
+  }
 }
 
 async function loadLeaderboard() {
-  const q = query(collection(db, "games", gameId, "leaderboard"), orderBy("streak", "desc"), limit(10));
-  const snapshot = await getDocs(q);
-  leaderboardList.innerHTML = "";
-  let validEntryCount = 0;
-
-  snapshot.forEach((docSnap, i) => {
-    const d = docSnap.data();
-    const streak = d.streak || 0;
-    const userName = d.userName || "Speler";
-
-    // Skip placeholder entries
-    if (streak === 0 && userName.includes("leierbord")) return;
-
-    // Valid entry found
-    validEntryCount++;
-
-    const li = document.createElement("li");
-    const crown = validEntryCount === 1 ? '<span class="crown">👑</span>' : '';
-    li.innerHTML = `${crown}<strong>${userName}</strong>: ${streak} ${streak === 1 ? "dag" : "dae"} van sukses`;
+  leaderboardList.innerHTML = '';
+  const q = query(collection(db, 'games', gameId, 'leaderboard'), orderBy('score', 'asc'), limit(10));
+  const querySnapshot = await getDocs(q);
+  let entries = 0;
+  querySnapshot.forEach((docSnap, index) => {
+    const data = docSnap.data();
+    entries++;
+    const li = document.createElement('li');
+    li.className = "leaderboard-entry";
+    const crown = index === 0 ? '<span class="crown">👑</span>' : '';
+    li.innerHTML = `${crown}<strong>${data.name}</strong>: ${data.score} ${data.score === 1 ? 'raaiskoot' : 'raaiskote'}`;
     leaderboardList.appendChild(li);
   });
-
-  if (validEntryCount === 0) {
-    leaderboardList.innerHTML = "<li>Geen telling is nog aangeteken nie</li>";
-  }
+  if (entries === 0) leaderboardList.innerHTML = "<li>Jy kan eerste op die leierbord wees!</li>";
 }
-
 
 async function submitScore(score) {
-  await addDoc(collection(db, "games", gameId, "leaderboard"), {
-    userName: storedName,
-    streak: score,
-    date: serverTimestamp()
+  await addDoc(collection(db, 'games', gameId, 'leaderboard'), {
+    name: storedName,
+    score,
+    timestamp: serverTimestamp()
   });
+  localStorage.setItem(localKey, Date.now());
+  await loadLeaderboard();
 }
 
-function gameCompleted(score) {
+function gameCompleted(attempts) {
   gameOver = true;
-  resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${score === 1 ? "1 raaiskoot" : score + " raaiskote"} gekry!`;
+  const raaiskootText = attempts === 1 ? '1 raaiskoot' : `${attempts} raaiskote`;
+resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${raaiskootText} gekry!`;
+
   modal.style.display = "flex";
-  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het DILEMMA in ${score} raaiskote opgelos: ${gameUrl}`);
+  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het vandag se DILEMMA in ${attempts} raaiskote opgelos. Speel by ${gameUrl}`);
+  submitScore(attempts);
   lockoutMessage.style.display = "block";
-  submitScore(score);
 }
 
 function gameFailed() {
   gameOver = true;
   resultMsg.textContent = `Jammer, ${storedName}! Vandag se oplossing is ${targetWord}.`;
   modal.style.display = "flex";
-  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek kon nie DILEMMA oplos nie. Probeer self: ${gameUrl}`);
-  lockoutMessage.style.display = "block";
+  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek kon nie vandag se DILEMMA oplos nie. Speel by: ${gameUrl}`);
   submitScore(gridRows);
+  lockoutMessage.style.display = "block";
 }
 
 closeBtn.onclick = () => modal.style.display = "none";
-document.addEventListener("keydown", e => {
+
+function keyHandler(e) {
   if (e.key === "Enter") handleEnter();
   else if (e.key === "Backspace") handleBackspace();
   else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
-});
+}
 
-// INIT
+document.addEventListener("keydown", keyHandler);
+
 await loadGameData();
 createGrid();
 createKeyboard();
-restoreLocalProgress();
 await loadLeaderboard();
+await checkDailyLimit();
 </script>
 </body>
 </html>
