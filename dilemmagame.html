@@ -368,7 +368,6 @@ function saveLocalProgress() {
   }
   localStorage.setItem(`dilemma-${gameId}`, JSON.stringify(localGuesses));
 }
-
 function restoreLocalProgress() {
   const saved = localStorage.getItem(`dilemma-${gameId}`);
   if (!saved) return;
@@ -378,7 +377,7 @@ function restoreLocalProgress() {
     for (let i = 0; i < letters.length; i++) {
       const tile = board[currentRow][i];
       tile.textContent = letters[i];
-      tile.classList.add(states[i]);
+      tile.classList.add(states[i], "flip"); // ✅ Add flip and color state
       updateKeyboard(letters[i], states[i]);
     }
     currentRow++;
