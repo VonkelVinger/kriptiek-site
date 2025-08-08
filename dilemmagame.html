@@ -181,7 +181,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
 import {
-  getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs,
+  getFirestore, doc, getDoc, collection, addDoc, getDocs,
   query, orderBy, limit, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
@@ -406,20 +406,18 @@ async function loadLeaderboard() {
     leaderboardList.innerHTML = `<li>Jy kan eerste op die leierbord wees!</li>`;
     return;
   }
-entries.forEach((d, index) => {
-  // Avoid duplicate by checking if already displayed
-  const isSelf = d.userName === storedName;
+const seen = new Set();
 
-  // Only highlight the top entry
+entries.forEach((d, index) => {
+  if (seen.has(d.userName)) return; // ❌ skip if already added
+  seen.add(d.userName);             // ✅ track seen names
+
   const li = document.createElement("li");
   li.className = index === 0 ? "font-bold bg-green-100" : "";
   li.innerHTML = `<strong>${d.userName}</strong>: ${d.streak} ${d.streak === 1 ? 'dag' : 'dae'} van sukses`;
-
-  // Only append if not already present
-  if (!isSelf || index === 0) leaderboardList.appendChild(li);
+  leaderboardList.appendChild(li);
 });
 }
-
 async function submitScore(score) {
   try {
     await addDoc(collection(db, "games", gameId, "leaderboard"), {
@@ -463,7 +461,10 @@ document.addEventListener("keydown", e => {
 await loadGameData();
 createGrid();
 createKeyboard();
-restoreLocalProgress();
+await restoreLocalProgress();
+if (currentRow >= gridRows || board.some(row => row.every(tile => tile.classList.contains("correct")))) {
+  disableGame();
+}
 await loadLeaderboard();
 </script>
 </body>
