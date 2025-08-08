@@ -430,7 +430,7 @@ entries.forEach((d, index) => {
 
   const li = document.createElement("li");
   li.className = index === 0 ? "font-bold bg-green-100" : "";
-  li.innerHTML = `<strong>${d.userName}</strong>: ${d.streak} ${d.streak === 1 ? 'dag' : 'dae'} van sukses`;
+li.innerHTML = `<strong>${d.userName}</strong>: ${d.guesses} ${d.guesses === 1 ? 'raaiskoot' : 'raaiskote'}`;
   leaderboardList.appendChild(li);
 });
 }
@@ -438,8 +438,15 @@ async function submitScore(score) {
   try {
     await addDoc(collection(db, "games", gameId, "leaderboard"), {
       userName: storedName,
-      streak: score,
+      guesses: score,  // ✅ Save number of guesses for today
       date: serverTimestamp()
+    });
+
+    // Optional: update streak in user profile
+    const userRef = doc(db, "users", userId);
+    await updateDoc(userRef, {
+      streak: increment(1),
+      lastPlayed: serverTimestamp()
     });
   } catch (e) {
     console.error("Kon nie score stoor nie:", e);
