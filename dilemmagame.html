@@ -377,24 +377,25 @@ function restoreLocalProgress() {
     const letters = guess.split("");
     for (let i = 0; i < letters.length; i++) {
       const tile = board[currentRow][i];
+      const state = states[i];
       tile.textContent = letters[i];
-      tile.classList.add(states[i]);
-const state = states[i];
-const keyBtn = [...document.querySelectorAll(".key")].find(k => k.textContent === letters[i]);
-if (keyBtn) {
-  if (state === "correct") {
-    keyBtn.classList.remove("present", "absent");
-    keyBtn.classList.add("correct");
-  } else if (state === "present" && !keyBtn.classList.contains("correct")) {
-    keyBtn.classList.remove("absent");
-    keyBtn.classList.add("present");
-  } else if (state === "absent" && !keyBtn.classList.contains("correct") && !keyBtn.classList.contains("present")) {
-    keyBtn.classList.add("absent");
-  }
-}
-      // Force reflow for flip to apply correctly on reload
+      tile.classList.add(state);
       void tile.offsetWidth;
       tile.classList.add("flip");
+
+      // ✅ Ensure keyboard reflects saved states too
+      const keyBtn = [...document.querySelectorAll(".key")].find(k => k.textContent === letters[i]);
+      if (keyBtn) {
+        if (state === "correct") {
+          keyBtn.classList.remove("present", "absent");
+          keyBtn.classList.add("correct");
+        } else if (state === "present" && !keyBtn.classList.contains("correct")) {
+          keyBtn.classList.remove("absent");
+          keyBtn.classList.add("present");
+        } else if (state === "absent" && !keyBtn.classList.contains("correct") && !keyBtn.classList.contains("present")) {
+          keyBtn.classList.add("absent");
+        }
+      }
     }
     currentRow++;
     currentCol = 0;
