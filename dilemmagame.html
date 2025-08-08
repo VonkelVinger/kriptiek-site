@@ -368,7 +368,6 @@ function saveLocalProgress() {
   }
   localStorage.setItem(`dilemma-${gameId}`, JSON.stringify(localGuesses));
 }
-
 function restoreLocalProgress() {
   const saved = localStorage.getItem(`dilemma-${gameId}`);
   if (!saved) return;
@@ -379,19 +378,15 @@ function restoreLocalProgress() {
     for (let i = 0; i < letters.length; i++) {
       const tile = board[currentRow][i];
       tile.textContent = letters[i];
-     tile.classList.add("flip"); // Ensures visual flip
-tile.classList.remove("correct", "present", "absent"); // Clear any existing state
-tile.classList.add(states[i]); // Apply correct state
-updateKeyboard(letters[i], states[i]); // Update keyboard color
-      updateKeyboard(letters[i], states[i]);
-      void tile.offsetWidth;
+      tile.classList.remove("correct", "present", "absent");
+      tile.classList.add(states[i]);
       tile.classList.add("flip");
+      updateKeyboard(letters[i], states[i]);
     }
     currentRow++;
     currentCol = 0;
   });
 }
-
 async function loadLeaderboard() {
   const q = query(
     collection(db, "games", gameId, "leaderboard"),
