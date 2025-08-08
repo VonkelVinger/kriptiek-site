@@ -371,14 +371,18 @@ function saveLocalProgress() {
 function restoreLocalProgress() {
   const saved = localStorage.getItem(`dilemma-${gameId}`);
   if (!saved) return;
+
   const data = JSON.parse(saved);
   data.forEach(({ guess, states }) => {
     const letters = guess.split("");
     for (let i = 0; i < letters.length; i++) {
       const tile = board[currentRow][i];
       tile.textContent = letters[i];
-      tile.classList.add(states[i], "flip"); // ✅ Add flip and color state
+      tile.classList.add(states[i]);
       updateKeyboard(letters[i], states[i]);
+      // Force reflow for flip to apply correctly on reload
+      void tile.offsetWidth;
+      tile.classList.add("flip");
     }
     currentRow++;
     currentCol = 0;
@@ -461,7 +465,11 @@ await loadGameData();
 createGrid();
 createKeyboard();
 await restoreLocalProgress();
-if (currentRow >= gridRows || board.some(row => row.every(tile => tile.classList.contains("correct")))) {
+
+const gameWasWon = board.some(row => row.every(tile => tile.classList.contains("correct")));
+const gameWasLost = currentRow >= gridRows && !gameWasWon;
+
+if (gameWasWon || gameWasLost) {
   disableGame();
 }
 await loadLeaderboard();
