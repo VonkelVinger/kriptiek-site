@@ -45,7 +45,6 @@
     #leaderboardList li:nth-child(even) { background-color: #ffffff; }
     #leaderboardList li:hover { background-color: #e0e7ff; }
     #leaderboardList li:first-child { background-color: #d1fae5; font-weight: bold; }
-    #leaderboardList li:first-child .crown { margin-right: 4px; color: #f59e0b; }
     #resultModal { display: none; position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.5); align-items: center; justify-content: center; z-index: 1000; }
     #resultModal .modal-content { background: white; padding: 1.5rem; border-radius: 8px; text-align: center; max-width: 300px; width: 100%; }
     #resultModal button { margin: 5px; padding: 8px 16px; border-radius: 4px; font-weight: bold; }
@@ -54,66 +53,6 @@
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
-<header>
-  <div class="logo-container">
-    <div class="letter-box">D</div><div class="letter-box">I</div><div class="letter-box">L</div>
-    <div class="letter-box">E</div><div class="letter-box">M</div><div class="letter-box">M</div>
-    <div class="letter-box">A</div>
-  </div>
-  <p class="text-sm text-gray-500">Welkom terug, <span id="playerName" class="font-semibold text-green-700"></span>!</p>
-</header>
-<main class="flex-grow game-container">
-  <div id="clue" class="text-center text-lg mb-4 text-gray-700 font-semibold">Laai die leidraad...</div>
-  <div id="game-grid" class="mb-6"></div>
-  <div id="keyboard" class="mb-6"></div>
-  <p id="lockoutMessage"><span class="icon">🔒</span>Jy kan môre weer speel</p>
-
-  <!-- HOE OM TE SPEEL section -->
-  <div class="mt-6 bg-white rounded shadow p-4">
-    <h2 class="text-xl font-bold mb-2">HOE OM DILEMMA TE SPEEL</h2>
-    <p class="text-gray-700 leading-relaxed mb-2">
-      Jy het ses kanse om die woord te raai.<br>
-      Jy mag vir elke probeerslag enige letters in enige volgorde kies, maar elke raaiskoot moet dieselfde aantal letters hê as die woord waarna jy soek. Dit hoef nie ook 'n woord te vorm nie.<br>
-      Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER.
-    </p>
-    <p class="text-gray-700 italic mb-2">
-      WENK: Op kleiner skerms kan jy Dilemma soos 'n foto met jou vingers kleiner trek totdat dit heeltemal inpas.
-    </p>
-    <p class="text-gray-700 leading-relaxed">
-      <span class="font-bold text-green-700">GROEN</span>: Die letter is in die antwoord en in die regte blokkie.<br>
-      <span class="font-bold text-yellow-600">GEEL</span>: Die letter is in die antwoord, maar nie in die regte blokkie nie.<br>
-      <span class="font-bold text-gray-500">GRYS</span>: Die letter is glad nie in die antwoord nie.
-    </p>
-  </div>
-
-  <!-- LEADERBOARD -->
-  <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
-    <h2 class="text-xl font-bold mb-2">Vandag se beste spelers</h2>
-    <ul id="leaderboardList" class="text-gray-700 text-left">
-      <li>Laai...</li>
-    </ul>
-  </div>
-</main>
-
-<footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
-  &copy; 2025 Kriptiek. Alle regte voorbehou. |
-  <a href="/index.html" class="underline">Tuis</a>
-  <a href="/forum.html" class="underline">Gesels saam</a>
-  <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
-  <a href="/terms.html" class="underline">Voorwaardes</a> |
-  <a href="/faq.html" class="underline">Gereelde vrae</a> |
-  <a href="/about.html" class="underline">Oor Kriptiek</a> |
-  <a href="/contact.html" class="underline">Kontak ons</a>
-</footer>
-
-<!-- RESULT MODAL -->
-<div id="resultModal">
-  <div class="modal-content">
-    <p id="resultMessage" class="mb-4 font-bold"></p>
-    <button id="modalShareBtn" class="btn-share">DEEL</button>
-    <button id="closeModalBtn" class="btn-close">SLUIT</button>
-  </div>
-</div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
 import {
@@ -171,6 +110,7 @@ async function loadGameData() {
     document.getElementById("clue").textContent = data.clue || "Geen leidraad beskikbaar nie.";
   }
 }
+
 function createGrid() {
   gameGrid.innerHTML = "";
   board = [];
@@ -217,7 +157,6 @@ function createKeyboard() {
     keyboard.appendChild(rowDiv);
   });
 }
-
 function updateKeyboard(letter, state) {
   const keyBtn = [...document.querySelectorAll(".key")].find(k => k.textContent === letter);
   if (!keyBtn) return;
@@ -320,6 +259,41 @@ function restoreLocalProgress() {
   });
 }
 
+async function submitScore(score) {
+  await addDoc(collection(db, "games", gameId, "leaderboard"), {
+    userName: storedName,
+    streak: score,
+    date: serverTimestamp()
+  });
+}
+
+function gameCompleted(score) {
+  gameOver = true;
+  resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${score === 1 ? "1 raaiskoot" : score + " raaiskote"} gekry!`;
+  modal.style.display = "flex";
+  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het DILEMMA in ${score} raaiskote opgelos: ${gameUrl}`);
+  lockoutMessage.style.display = "block";
+  document.querySelectorAll(".key").forEach(key => key.disabled = true);
+  submitScore(score);
+}
+
+function gameFailed() {
+  gameOver = true;
+  resultMsg.textContent = `Jammer, ${storedName}! Vandag se oplossing is ${targetWord}.`;
+  modal.style.display = "flex";
+  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek kon nie DILEMMA oplos nie. Probeer self: ${gameUrl}`);
+  lockoutMessage.style.display = "block";
+  document.querySelectorAll(".key").forEach(key => key.disabled = true);
+  submitScore(gridRows);
+}
+
+closeBtn.onclick = () => modal.style.display = "none";
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Enter") handleEnter();
+  else if (e.key === "Backspace") handleBackspace();
+  else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
+});
 async function loadLeaderboard() {
   const q = query(
     collection(db, "games", gameId, "leaderboard"),
@@ -348,41 +322,8 @@ async function loadLeaderboard() {
     leaderboardList.appendChild(li);
   });
 }
-async function submitScore(score) {
-  await addDoc(collection(db, "games", gameId, "leaderboard"), {
-    userName: storedName,
-    streak: score,
-    date: serverTimestamp()
-  });
-}
 
-function gameCompleted(score) {
-  gameOver = true;
-  resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${score === 1 ? "1 raaiskoot" : score + " raaiskote"} gekry!`;
-  modal.style.display = "flex";
-  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het DILEMMA in ${score} raaiskote opgelos: ${gameUrl}`);
-  lockoutMessage.style.display = "block";
-  submitScore(score);
-}
-
-function gameFailed() {
-  gameOver = true;
-  resultMsg.textContent = `Jammer, ${storedName}! Vandag se oplossing is ${targetWord}.`;
-  modal.style.display = "flex";
-  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek kon nie DILEMMA oplos nie. Probeer self: ${gameUrl}`);
-  lockoutMessage.style.display = "block";
-  submitScore(gridRows);
-}
-
-closeBtn.onclick = () => modal.style.display = "none";
-
-document.addEventListener("keydown", e => {
-  if (e.key === "Enter") handleEnter();
-  else if (e.key === "Backspace") handleBackspace();
-  else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
-});
-
-// INITIALIZE
+// INIT
 await loadGameData();
 createGrid();
 createKeyboard();
