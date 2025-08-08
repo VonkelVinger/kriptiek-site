@@ -322,13 +322,14 @@ async function loadLeaderboard() {
     leaderboardList.appendChild(li);
   });
 }
-
 // INIT
-await loadGameData();
-createGrid();
-createKeyboard();
-restoreLocalProgress();
-await loadLeaderboard();
+(async () => {
+  await loadGameData();
+  createGrid();
+  createKeyboard();
+  restoreLocalProgress();
+  await loadLeaderboard();
+})();
 </script>
 </body>
 </html>
