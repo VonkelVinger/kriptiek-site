@@ -62,13 +62,11 @@
   </div>
   <p class="text-sm text-gray-500">Welkom terug, <span id="playerName" class="font-semibold text-green-700"></span>!</p>
 </header>
-
 <main class="flex-grow game-container">
   <div id="clue" class="text-center text-lg mb-4 text-gray-700 font-semibold">Laai die leidraad...</div>
   <div id="game-grid" class="mb-6"></div>
   <div id="keyboard" class="mb-6"></div>
   <p id="lockoutMessage"><span class="icon">🔒</span>Jy kan môre weer speel</p>
-
   <!-- HOE OM TE SPEEL section -->
   <div class="mt-6 bg-white rounded shadow p-4">
     <h2 class="text-xl font-bold mb-2">HOE OM DILEMMA TE SPEEL</h2>
@@ -90,7 +88,7 @@
   <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
     <h2 class="text-xl font-bold mb-2">Vandag se beste spelers</h2>
     <ul id="leaderboardList" class="text-gray-700 text-left">
-      <li>Jou naam kan hier wees</li>
+      <li>Laai tans...</li>
     </ul>
   </div>
 </main>
@@ -132,7 +130,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// UI & Player info
+// UI Elements
 const gameGrid = document.getElementById("game-grid");
 const keyboard = document.getElementById("keyboard");
 const lockoutMessage = document.getElementById("lockoutMessage");
@@ -166,13 +164,7 @@ async function loadGameData() {
   const snap = await getDoc(gameRef);
   if (snap.exists()) {
     const data = snap.data();
-    targetWord = data.word.toUpperCase();
-    gridCols = targetWord.length;
-    document.getElementById("clue").textContent = data.clue || "Geen leidraad beskikbaar nie.";
-  }
-}
-
-function createGrid() {
+    targetWord = data.word.toUpperCase();function createGrid() {
   gameGrid.innerHTML = "";
   board = [];
   for (let r = 0; r < gridRows; r++) {
@@ -327,15 +319,17 @@ async function loadLeaderboard() {
   leaderboardList.innerHTML = "";
   let count = 0;
   snapshot.forEach((docSnap, i) => {
-    count++;
     const d = docSnap.data();
     const streak = d.streak || 0;
+    const userName = d.userName || "Speler";
+    if (streak === 0 && userName.includes("leierbord")) return;
+    count++;
     const li = document.createElement("li");
-    const crown = i === 0 ? '<span class=\"crown\">👑</span>' : '';
-    li.innerHTML = `${crown}<strong>${d.userName || 'Speler'}</strong>: ${streak} ${streak === 1 ? 'dag' : 'dae'} van sukses`;
+    const crown = i === 0 ? '<span class="crown">👑</span>' : '';
+    li.innerHTML = `${crown}<strong>${userName}</strong>: ${streak} ${streak === 1 ? 'dag' : 'dae'} van sukses`;
     leaderboardList.appendChild(li);
   });
-  if (count === 0) leaderboardList.innerHTML = "<li>Jy het tans:</li>";
+  if (count === 0) leaderboardList.innerHTML = "<li>Jy het tans geen inskrywings nie.</li>";
 }
 
 async function submitScore(score) {
@@ -380,3 +374,8 @@ await loadLeaderboard();
 </script>
 </body>
 </html>
+
+    gridCols = targetWord.length;
+    document.getElementById("clue").textContent = data.clue || "Geen leidraad beskikbaar nie.";
+  }
+}
