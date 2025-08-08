@@ -335,7 +335,7 @@ async function loadLeaderboard() {
     li.innerHTML = `${crown}<strong>${d.userName || 'Speler'}</strong>: ${streak} ${streak === 1 ? 'dag' : 'dae'} van sukses`;
     leaderboardList.appendChild(li);
   });
-  if (count === 0) leaderboardList.innerHTML = "<li>Jy kan eerste op die leierbord wees!</li>";
+  if (count === 0) leaderboardList.innerHTML = "<li>Jy kan eerste op die leierbord wees</li>";
 }
 
 async function submitScore(score) {
