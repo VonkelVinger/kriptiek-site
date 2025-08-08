@@ -348,11 +348,6 @@ async function loadLeaderboard() {
     leaderboardList.appendChild(li);
   });
 }
-
-
-  if (validCount === 0) {
-    leaderboardList.innerHTML = "<li>Jy kan eerste op die leierbord wees!</li>";
-  }
 }
 async function submitScore(score) {
   await addDoc(collection(db, "games", gameId, "leaderboard"), {
