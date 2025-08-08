@@ -321,25 +321,34 @@ function restoreLocalProgress() {
 }
 
 async function loadLeaderboard() {
-  const q = query(collection(db, "games", gameId, "leaderboard"), orderBy("streak", "desc"), limit(10));
+  const q = query(
+    collection(db, "games", gameId, "leaderboard"),
+    orderBy("streak", "desc"),
+    limit(10)
+  );
   const snapshot = await getDocs(q);
+
   leaderboardList.innerHTML = "";
-  let validCount = 0;
+  let entries = [];
 
-  snapshot.forEach((docSnap, i) => {
+  snapshot.forEach(docSnap => {
     const d = docSnap.data();
-    const streak = d.streak || 0;
-    const userName = d.userName || "Speler";
+    const isPlaceholder = d.userName.toLowerCase().includes("leierbord") || d.streak === 0;
+    if (!isPlaceholder) entries.push(d);
+  });
 
-    // skip invalid placeholder-style entries
-    if (streak === 0 && userName.toLowerCase().includes("leierbord")) return;
+  if (entries.length === 0) {
+    leaderboardList.innerHTML = `<li>Jy kan eerste op die leierbord wees!</li>`;
+    return;
+  }
 
-    validCount++;
+  entries.forEach(d => {
     const li = document.createElement("li");
-    const crown = validCount === 1 ? '<span class="crown">👑</span>' : '';
-    li.innerHTML = `${crown}<strong>${userName}</strong>: ${streak} ${streak === 1 ? 'dag' : 'dae'} van sukses`;
+    li.innerHTML = `<strong>${d.userName}</strong>: ${d.streak} ${d.streak === 1 ? 'dag' : 'dae'} van sukses`;
     leaderboardList.appendChild(li);
   });
+}
+
 
   if (validCount === 0) {
     leaderboardList.innerHTML = "<li>Jy kan eerste op die leierbord wees!</li>";
