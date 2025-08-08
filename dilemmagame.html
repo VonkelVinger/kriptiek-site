@@ -62,11 +62,13 @@
   </div>
   <p class="text-sm text-gray-500">Welkom terug, <span id="playerName" class="font-semibold text-green-700"></span>!</p>
 </header>
+
 <main class="flex-grow game-container">
   <div id="clue" class="text-center text-lg mb-4 text-gray-700 font-semibold">Laai die leidraad...</div>
   <div id="game-grid" class="mb-6"></div>
   <div id="keyboard" class="mb-6"></div>
   <p id="lockoutMessage"><span class="icon">🔒</span>Jy kan môre weer speel</p>
+
   <!-- HOE OM TE SPEEL section -->
   <div class="mt-6 bg-white rounded shadow p-4">
     <h2 class="text-xl font-bold mb-2">HOE OM DILEMMA TE SPEEL</h2>
@@ -88,7 +90,7 @@
   <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
     <h2 class="text-xl font-bold mb-2">Vandag se beste spelers</h2>
     <ul id="leaderboardList" class="text-gray-700 text-left">
-      <li>Laai tans...</li>
+      <li>Jou naam kan hier wees</li>
     </ul>
   </div>
 </main>
@@ -130,7 +132,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// UI Elements
+// UI & Player info
 const gameGrid = document.getElementById("game-grid");
 const keyboard = document.getElementById("keyboard");
 const lockoutMessage = document.getElementById("lockoutMessage");
@@ -149,7 +151,7 @@ let currentRow = 0, currentCol = 0;
 let board = [], targetWord = "", gameOver = false;
 
 const params = new URLSearchParams(window.location.search);
-const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
+const gameId = params.get("gameId") || Game${new Date().toISOString().split('T')[0]};
 const gameUrl = window.location.href;
 
 function disableGame(message = "Jy het hierdie een reeds vandag gespeel") {
@@ -164,7 +166,13 @@ async function loadGameData() {
   const snap = await getDoc(gameRef);
   if (snap.exists()) {
     const data = snap.data();
-    targetWord = data.word.toUpperCase();function createGrid() {
+    targetWord = data.word.toUpperCase();
+    gridCols = targetWord.length;
+    document.getElementById("clue").textContent = data.clue || "Geen leidraad beskikbaar nie.";
+  }
+}
+
+function createGrid() {
   gameGrid.innerHTML = "";
   board = [];
   for (let r = 0; r < gridRows; r++) {
@@ -293,11 +301,11 @@ function saveLocalProgress() {
     );
     if (guess.trim()) localGuesses.push({ guess, states });
   }
-  localStorage.setItem(`dilemma-${gameId}`, JSON.stringify(localGuesses));
+  localStorage.setItem(dilemma-${gameId}, JSON.stringify(localGuesses));
 }
 
 function restoreLocalProgress() {
-  const saved = localStorage.getItem(`dilemma-${gameId}`);
+  const saved = localStorage.getItem(dilemma-${gameId});
   if (!saved) return;
   const data = JSON.parse(saved);
   data.forEach(({ guess, states }) => {
@@ -319,17 +327,15 @@ async function loadLeaderboard() {
   leaderboardList.innerHTML = "";
   let count = 0;
   snapshot.forEach((docSnap, i) => {
+    count++;
     const d = docSnap.data();
     const streak = d.streak || 0;
-    const userName = d.userName || "Speler";
-    if (streak === 0 && userName.includes("leierbord")) return;
-    count++;
     const li = document.createElement("li");
-    const crown = i === 0 ? '<span class="crown">👑</span>' : '';
-    li.innerHTML = `${crown}<strong>${userName}</strong>: ${streak} ${streak === 1 ? 'dag' : 'dae'} van sukses`;
+    const crown = i === 0 ? '<span class=\"crown\">👑</span>' : '';
+    li.innerHTML = ${crown}<strong>${d.userName || 'Speler'}</strong>: ${streak} ${streak === 1 ? 'dag' : 'dae'} van sukses;
     leaderboardList.appendChild(li);
   });
-  if (count === 0) leaderboardList.innerHTML = "<li>Jy het tans geen inskrywings nie.</li>";
+  if (count === 0) leaderboardList.innerHTML = "<li>Jy het tans:</li>";
 }
 
 async function submitScore(score) {
@@ -342,18 +348,18 @@ async function submitScore(score) {
 
 function gameCompleted(score) {
   gameOver = true;
-  resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${score === 1 ? "1 raaiskoot" : score + " raaiskote"} gekry!`;
+  resultMsg.textContent = Veels geluk, ${storedName}, jy het die woord in ${score === 1 ? "1 raaiskoot" : score + " raaiskote"} gekry!;
   modal.style.display = "flex";
-  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het DILEMMA in ${score} raaiskote opgelos: ${gameUrl}`);
+  shareBtn.onclick = () => navigator.clipboard.writeText(Ek het DILEMMA in ${score} raaiskote opgelos: ${gameUrl});
   lockoutMessage.style.display = "block";
   submitScore(score);
 }
 
 function gameFailed() {
   gameOver = true;
-  resultMsg.textContent = `Jammer, ${storedName}! Vandag se oplossing is ${targetWord}.`;
+  resultMsg.textContent = Jammer, ${storedName}! Vandag se oplossing is ${targetWord}.;
   modal.style.display = "flex";
-  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek kon nie DILEMMA oplos nie. Probeer self: ${gameUrl}`);
+  shareBtn.onclick = () => navigator.clipboard.writeText(Ek kon nie DILEMMA oplos nie. Probeer self: ${gameUrl});
   lockoutMessage.style.display = "block";
   submitScore(gridRows);
 }
@@ -374,8 +380,3 @@ await loadLeaderboard();
 </script>
 </body>
 </html>
-
-    gridCols = targetWord.length;
-    document.getElementById("clue").textContent = data.clue || "Geen leidraad beskikbaar nie.";
-  }
-}
