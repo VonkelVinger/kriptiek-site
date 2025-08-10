@@ -72,43 +72,20 @@
       from { opacity: 0; transform: translateY(-5px);}
       to { opacity: 1; transform: translateY(0);}
     }
-    #leaderboard {
-      border: 1px solid #e5e7eb;
-    }
-    #leaderboardList li {
-      padding: 6px 8px;
-      transition: background-color 0.2s ease;
-    }
+    #leaderboard { border: 1px solid #e5e7eb; }
+    #leaderboardList li { padding: 6px 8px; transition: background-color 0.2s ease; }
     #leaderboardList li:nth-child(odd) { background-color: #f9fafb; }
     #leaderboardList li:nth-child(even) { background-color: #ffffff; }
     #leaderboardList li:hover { background-color: #e0e7ff; }
-    #leaderboardList li:first-child {
-      background-color: #d1fae5;
-      font-weight: bold;
-    }
+    #leaderboardList li:first-child { background-color: #d1fae5; font-weight: bold; }
     #resultModal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background-color: rgba(0, 0, 0, 0.5);
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
+      display: none; position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.5);
+      align-items: center; justify-content: center; z-index: 1000;
     }
     #resultModal .modal-content {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 8px;
-      text-align: center;
-      max-width: 300px;
-      width: 100%;
+      background: white; padding: 1.5rem; border-radius: 8px; text-align: center; max-width: 300px; width: 100%;
     }
-    #resultModal button {
-      margin: 5px;
-      padding: 8px 16px;
-      border-radius: 4px;
-      font-weight: bold;
-    }
+    #resultModal button { margin: 5px; padding: 8px 16px; border-radius: 4px; font-weight: bold; }
     .btn-share { background-color: #1e3a8a; color: white; }
     .btn-close { background-color: #6b7280; color: white; }
   </style>
@@ -344,9 +321,10 @@ function checkGuessWithFlip(guess) {
     }, i * 350);
   });
 
-  saveLocalProgress();
-
+  // ✅ Save AFTER flip classes are applied so states persist correctly
   setTimeout(() => {
+    saveLocalProgress();
+
     if (guess === targetWord) gameCompleted(currentRow + 1);
     else {
       currentRow++;
