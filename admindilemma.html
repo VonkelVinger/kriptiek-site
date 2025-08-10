@@ -7,7 +7,8 @@
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import {
-      getFirestore, doc, setDoc, collection, addDoc
+      getFirestore, doc, setDoc, collection, addDoc,
+      query, where, getDocs
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
     import {
       getAuth, signInWithEmailAndPassword, onAuthStateChanged
@@ -68,6 +69,21 @@
         return;
       }
 
+      // ---------- Duplicate target-word check (Option A) ----------
+      try {
+        const dupQ = query(collection(db, 'games'), where('word', '==', word));
+        const dupSnap = await getDocs(dupQ);
+        if (!dupSnap.empty) {
+          alert("That target word has already been used. Choose another word.");
+          return;
+        }
+      } catch (e) {
+        console.error("Duplicate check failed:", e);
+        alert("Could not verify duplicates right now. Please try again.");
+        return;
+      }
+      // ------------------------------------------------------------
+
       const docId = `Game${date}`;
 
       try {
@@ -105,7 +121,6 @@
 
       const len = (wordEl.value || "").trim().toUpperCase().length;
       const x = len > 0 ? len : "x";
-      // Only set if empty / forced / previously autofilled
       if (force || !clueEl.value.trim() || clueEl.dataset.autofilled === "true") {
         clueEl.value = `${TEMPLATE_PREFIX}XXXX (${x} letters).`;
         clueEl.dataset.autofilled = "true";
