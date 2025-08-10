@@ -90,9 +90,42 @@
         alert("Failed to save game. Check console for details.");
       }
     };
+
+    // ---------- Auto-fill the clue field ----------
+    // Prefills: "VANDAG SE MISLEIDRAAD: XXXX (x letters)."
+    const TEMPLATE_PREFIX = "VANDAG SE MISLEIDRAAD: ";
+
+    function updateClueTemplate(force = false) {
+      const wordEl = document.getElementById('word');
+      const clueEl = document.getElementById('clue');
+      if (!wordEl || !clueEl) return;
+
+      const userIsEditing = clueEl.dataset.autofilled === "false";
+      if (userIsEditing && !force) return;
+
+      const len = (wordEl.value || "").trim().toUpperCase().length;
+      const x = len > 0 ? len : "x";
+      // Only set if empty / forced / previously autofilled
+      if (force || !clueEl.value.trim() || clueEl.dataset.autofilled === "true") {
+        clueEl.value = `${TEMPLATE_PREFIX}XXXX (${x} letters).`;
+        clueEl.dataset.autofilled = "true";
+      }
+    }
+
+    function initClueAutofill() {
+      const wordEl = document.getElementById('word');
+      const clueEl = document.getElementById('clue');
+      if (!wordEl || !clueEl) return;
+
+      clueEl.addEventListener("input", () => { clueEl.dataset.autofilled = "false"; });
+      wordEl.addEventListener("input", () => updateClueTemplate());
+      if (!clueEl.value.trim()) updateClueTemplate(true);
+    }
+
+    document.addEventListener("DOMContentLoaded", initClueAutofill);
+    // ---------------------------------------------
   </script>
 </head>
-
 <body style="font-family: sans-serif; max-width: 600px; margin: 40px auto;">
   <h1>🔐 Admin: Skep Nuwe DILEMMA</h1>
 
