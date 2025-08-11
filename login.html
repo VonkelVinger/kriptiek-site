@@ -16,11 +16,21 @@
 
   <style>
     body { font-family: 'Montserrat', sans-serif; }
-    .logo-container { position: relative; display: flex; justify-content: center; align-items: center; width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden; }
+    .logo-container {
+      position: relative; display: flex; justify-content: center; align-items: center;
+      width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
+    }
     .crossword-grid { display: grid; grid-template-columns: repeat(8, minmax(40px, 1fr)); gap: 4px; position: relative; z-index: 10; }
-    .letter-box { width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; background-color: #374151; color: white; font-size: 1.8rem; font-weight: bold; border: 2px solid #1f2937; border-radius: 0.375rem; text-transform: uppercase; box-shadow: inset 0 0 5px rgba(0,0,0,0.2); }
+    .letter-box {
+      width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
+      background-color: #374151; color: white; font-size: 1.8rem; font-weight: bold; border: 2px solid #1f2937; border-radius: 0.375rem; text-transform: uppercase; box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+    }
     .flipped-k { transform: scaleX(-1); }
-    .background-crossword { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid; grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); grid-template-rows: repeat(auto-fill, minmax(30px, 1fr)); opacity: 0.5; z-index: 1; pointer-events: none; }
+    .background-crossword {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
+      opacity: 0.5; z-index: 1; pointer-events: none;
+    }
     .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
   </style>
 </head>
@@ -47,10 +57,9 @@
 
       <form id="loginForm" class="space-y-6">
         <label class="block text-left">
-          <span class="text-gray-700 font-semibold">Gebruikersnaam</span>
-          <!-- shows cached name if available -->
-          <input type="text" id="nickname" name="nickname" readonly
-                 class="mt-1 block w-full border border-gray-300 rounded p-2 bg-gray-100 text-gray-500 cursor-not-allowed" />
+          <span class="text-gray-700 font-semibold">Naam (kan 'n skuilnaam wees)</span>
+          <input type="text" id="nameInput" name="nameInput" minlength="2" maxlength="40" required
+                 class="mt-1 block w-full border border-gray-300 rounded p-2" />
         </label>
         <label class="block text-left">
           <span class="text-gray-700 font-semibold">E-posadres</span>
@@ -100,18 +109,20 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    // Prefill name from localStorage if present
     document.addEventListener('DOMContentLoaded', () => {
-      const nicknameInput = document.getElementById('nickname');
-      // ✅ Standardize on userName (drop userNickname)
-      const cachedName = localStorage.getItem('userName');
-      if (cachedName) nicknameInput.value = cachedName;
+      const nameInput = document.getElementById('nameInput');
+      const cached = (localStorage.getItem('userName') || "").trim();
+      if (cached) nameInput.value = cached;
 
       const form = document.getElementById('loginForm');
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        const nameEntered = nameInput.value.trim();
         const email = form.email.value.trim();
         const password = form.password.value;
 
+        if (nameEntered.length < 2) { alert("Jou naam moet minstens 2 karakters wees."); return; }
         if (!email || !password) { alert("Vul alle velde asseblief in."); return; }
 
         try {
@@ -122,36 +133,44 @@
           localStorage.setItem('userId', user.uid);
           localStorage.setItem('userEmail', user.email || email);
 
-          // 🔎 Get the saved name from Firestore (registrations/{uid})
-          let nameToUse = cachedName || "";
-          try {
-            const regSnap = await getDoc(doc(db, "registrations", user.uid));
-            if (regSnap.exists() && typeof regSnap.data().userName === "string" && regSnap.data().userName.trim()) {
-              nameToUse = regSnap.data().userName.trim();
-            } else if (user.displayName && user.displayName.trim()) {
-              nameToUse = user.displayName.trim();
+          // Read/verify name in registrations/{uid}
+          const regRef = doc(db, "registrations", user.uid);
+          const regSnap = await getDoc(regRef);
+          let finalName = nameEntered;
+
+          const norm = s => (s || "").trim().toLowerCase();
+          if (regSnap.exists()) {
+            const stored = (regSnap.data().userName || "").trim();
+            if (stored) {
+              if (norm(stored) !== norm(nameEntered)) {
+                const ok = confirm(`Die naam op rekord is “${stored}”. Wil jy dit verander na “${nameEntered}”?`);
+                if (ok) {
+                  await setDoc(regRef, { userName: nameEntered, email: user.email || email, userId: user.uid }, { merge: true });
+                  finalName = nameEntered;
+                } else {
+                  finalName = stored;
+                }
+              } else {
+                finalName = stored; // identical
+              }
+            } else {
+              await setDoc(regRef, { userName: nameEntered, email: user.email || email, userId: user.uid }, { merge: true });
+              finalName = nameEntered;
             }
-          } catch(e) {
-            console.warn("Kon nie naam uit Firestore lees nie:", e);
+          } else {
+            await setDoc(regRef, { userName: nameEntered, email: user.email || email, userId: user.uid, timestamp: serverTimestamp() });
+            finalName = nameEntered;
           }
 
-          // Fallback if still empty
-          if (!nameToUse) nameToUse = "Speler";
+          // Persist standardized key for gameplay
+          localStorage.setItem('userName', finalName);
 
-          // ✅ Persist standardized key for gameplay
-          localStorage.setItem('userName', nameToUse);
-          nicknameInput.value = nameToUse;
-
-          // 🗂 Ensure users/{uid} exists with same field names used by games
-          try {
-            await setDoc(
-              doc(db, "users", user.uid),
-              { userName: nameToUse, email: user.email || email, lastLogin: serverTimestamp() },
-              { merge: true }
-            );
-          } catch(e) {
-            console.warn("Kon nie users/{uid} opdateer nie:", e);
-          }
+          // Ensure users/{uid} exists (games use this for streaks etc.)
+          await setDoc(
+            doc(db, "users", user.uid),
+            { userName: finalName, email: user.email || email, lastLogin: serverTimestamp() },
+            { merge: true }
+          );
 
           alert("Welkom terug by Kriptiek!");
           const redirectUrl = localStorage.getItem('redirectAfterLogin');
