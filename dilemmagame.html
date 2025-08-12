@@ -368,37 +368,14 @@ function restoreLocalProgress() {
   } catch {}
 }
 
-async function loadLeaderboard() {
-  const snap = await getDocs(collection(db, "games", gameId, "leaderboard"));
-  const entries = [];
-  snap.forEach(d => {
-    const v = d.data();
-    const ok = typeof v.userName === "string" && v.guesses >= 1 && v.guesses <= gridRows;
-    if (ok) entries.push({ name: v.userName, guesses: v.guesses, date: v.date?.seconds || 0 });
-  });
-
-  leaderboardList.innerHTML = "";
-  if (entries.length === 0) {
-    leaderboardList.innerHTML = `<li class="bg-green-100 font-medium px-2 py-1 rounded">Jy kan eerste op die leierbord wees!</li>`;
+async function submitScore(guessCount, didWin) {
+  if (!currentUid) {
+    console.warn("No auth; skipping leaderboard write.");
     return;
   }
 
-  // Best scores first, ties by earliest write
-  entries.sort((a,b) => (a.guesses - b.guesses) || (a.date - b.date));
-  entries.forEach((e, idx) => {
-    const li = document.createElement("li");
-    if (idx === 0) li.className = "font-bold bg-green-100";
-    li.innerHTML = `<strong>${e.name}</strong>: ${e.guesses} raaiskote`;
-    leaderboardList.appendChild(li);
-  });
-}
-
-// ---------- Score submit (AUTH REQUIRED) ----------
-async function submitScore(guessCount, didWin) {
-  if (!currentUid) return; // not signed in: skip leaderboard safely
-
   try {
-    // 1) Make sure we have a display name from Firestore if available
+    // 1) Ensure a displayName from Firestore if available
     try {
       const uDoc = await getDoc(doc(db, "users", currentUid));
       if (uDoc.exists() && typeof uDoc.data().userName === "string") {
@@ -406,22 +383,25 @@ async function submitScore(guessCount, didWin) {
         playerNameEl.textContent = displayName;
         localStorage.setItem("userName", displayName);
       }
-    } catch {}
+    } catch (e) {
+      console.warn("Could not read users doc:", e);
+    }
 
     // 2) Update aggregated stats (users/{uid})
     const uref = doc(db, "users", currentUid);
     const before = await getDoc(uref);
-    let payload;
 
+    let payload;
     if (before.exists()) {
       const u = before.data() || {};
-      const newGames = (u.gamesPlayed || 0) + 1;
-      const newWins  = (u.wins || 0) + (didWin ? 1 : 0);
+      const newGames  = (u.gamesPlayed || 0) + 1;
+      const newWins   = (u.wins || 0) + (didWin ? 1 : 0);
       const newStreak = didWin ? (u.streak || 0) + 1 : 0;
-      const newBest = Math.max(u.bestStreak || 0, newStreak);
-      const dist = Object.assign({ "1":0,"2":0,"3":0,"4":0,"5":0,"6":0 }, u.guessDist || {});
-      if (didWin && guessCount >=1 && guessCount <=6) dist[String(guessCount)] = (dist[String(guessCount)] || 0) + 1;
-
+      const newBest   = Math.max(u.bestStreak || 0, newStreak);
+      const dist = { "1":0,"2":0,"3":0,"4":0,"5":0,"6":0, ...(u.guessDist || {}) };
+      if (didWin && guessCount >= 1 && guessCount <= 6) {
+        dist[String(guessCount)] = (dist[String(guessCount)] || 0) + 1;
+      }
       payload = {
         userName: displayName,
         gamesPlayed: newGames,
@@ -438,30 +418,34 @@ async function submitScore(guessCount, didWin) {
         wins: didWin ? 1 : 0,
         streak: didWin ? 1 : 0,
         bestStreak: didWin ? 1 : 0,
-        guessDist: { "1":0,"2":0,"3":0,"4":0,"5":0,"6":0, [String(guessCount)]: didWin ? 1 : 0 },
+        guessDist: { "1":0,"2":0,"3":0,"4":0,"5":0,"6":0, ...(didWin && guessCount>=1 && guessCount<=6 ? { [String(guessCount)]: 1 } : {}) },
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
     }
     await setDoc(uref, payload, { merge: true });
 
-    // 3) Compute successRate and write leaderboard doc *with id == currentUid*
+    // 3) Compute successRate safely and write leaderboard doc (id == uid)
     const after = await getDoc(uref);
     const nd = after.data() || {};
-    const successRate = (nd.gamesPlayed > 0) ? Math.round((nd.wins / nd.gamesPlayed) * 100) : 0;
+    const games = Number(nd.gamesPlayed || 0);
+    const wins  = Number(nd.wins || 0);
+    const successRate = games > 0 ? Math.round((wins / games) * 100) : 0;
 
-    await setDoc(doc(db, "games", gameId, "leaderboard", currentUid), {
+    const lbDocRef = doc(db, "games", gameId, "leaderboard", currentUid);
+    const toWrite = {
       userName: displayName,
-      guesses: guessCount,
-      successRate,
-      date: serverTimestamp()
-    }, { merge: true });
-
+      guesses: Number(guessCount),
+      successRate: Number(successRate),
+      date: serverTimestamp(),      // required by rules
+      createdAtMs: Date.now()       // for stable tie‑break in UI
+    };
+    console.log("Writing leaderboard:", lbDocRef.path, toWrite);
+    await setDoc(lbDocRef, toWrite, { merge: true });
   } catch (e) {
     console.error("Kon nie telling stoor nie:", e);
   }
 }
-
 // ---------- Game end flows ----------
 async function gameCompleted(guessCount) {
   gameOver = true;
