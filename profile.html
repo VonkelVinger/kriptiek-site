@@ -2,19 +2,96 @@
 <html lang="af">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Profiel – Kriptiek</title>
+
   <link rel="icon" href="/assets/favicon.ico" type="image/x-icon" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
-  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  <link rel="manifest" href="/assets/site.webmanifest">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Montserrat', sans-serif; }
+    .stat { display:grid; grid-template-columns:auto 1fr; gap:.5rem 1rem; }
+    .bar { height: 22px; background:#1d4ed8; border-radius:4px; transition:width .4s ease; }
+    .bar.bg-muted { background:#94a3b8; }
+    .mono { font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+  <header class="bg-white shadow p-4 text-center">
+    <h1 class="text-xl font-bold text-[#1e3a8a]">Jou Profiel</h1>
+  </header>
+
+  <main class="flex-grow p-4">
+    <div class="max-w-3xl mx-auto grid md:grid-cols-2 gap-6">
+      <!-- Editable profile -->
+      <section class="bg-white shadow rounded-xl p-5">
+        <h2 class="text-lg font-bold mb-4">Profiel</h2>
+        <form id="profileForm" class="space-y-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700">Naam (kan 'n skuilnaam wees)</label>
+            <input id="nameInput" type="text" minlength="2" maxlength="40" required
+                   class="mt-1 w-full border border-gray-300 rounded p-2"/>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700">E-posadres</label>
+            <input id="emailInput" type="email" required
+                   class="mt-1 w-full border border-gray-300 rounded p-2"/>
+            <p class="text-xs text-gray-500 mt-1">Let wel: Om jou e-pos te verander vereis dalk her‑verifikasie.</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button type="submit"
+                    class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded">STOOR</button>
+            <button id="resetPwBtn" type="button"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+              Stuur wagwoordherstel
+            </button>
+          </div>
+          <p id="formMsg" class="text-sm mt-2"></p>
+        </form>
+      </section>
+
+      <!-- Read-only stats -->
+      <section class="bg-white shadow rounded-xl p-5">
+        <h2 class="text-lg font-bold mb-4">Statistiek</h2>
+        <div class="grid grid-cols-2 gap-3 text-center mb-4">
+          <div class="bg-gray-50 rounded p-3">
+            <div class="text-2xl font-bold mono" id="gamesPlayed">0</div>
+            <div class="text-xs text-gray-500">Potte gespeel</div>
+          </div>
+          <div class="bg-gray-50 rounded p-3">
+            <div class="text-2xl font-bold mono" id="successRate">0%</div>
+            <div class="text-xs text-gray-500">Sukseskoers</div>
+          </div>
+          <div class="bg-gray-50 rounded p-3">
+            <div class="text-2xl font-bold mono" id="streak">0</div>
+            <div class="text-xs text-gray-500">Huidige lopie</div>
+          </div>
+          <div class="bg-gray-50 rounded p-3">
+            <div class="text-2xl font-bold mono" id="bestStreak">0</div>
+            <div class="text-xs text-gray-500">Beste lopie</div>
+          </div>
+        </div>
+
+        <h3 class="font-semibold mb-2">Suksesverdeling</h3>
+        <div id="distList" class="space-y-2">
+          <!-- rows injected -->
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
+    &copy; 2025 Kriptiek
+    · <a href="/index.html" class="underline">Tuis</a>
+  </footer>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, updateEmail, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
+    // --- Firebase ---
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
       authDomain: "kriptiek-c9ea2.firebaseapp.com",
@@ -23,64 +100,140 @@
       messagingSenderId: "620450620939",
       appId: "1:620450620939:web:e93a18ac23b53b33db890e"
     };
-
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const userEmail = document.getElementById('userEmail');
-      const logoutBtn = document.getElementById('logoutBtn');
-      const streakCount = document.getElementById('streakCount');
+    // --- UI refs ---
+    const nameInput = document.getElementById('nameInput');
+    const emailInput = document.getElementById('emailInput');
+    const resetPwBtn = document.getElementById('resetPwBtn');
+    const formMsg = document.getElementById('formMsg');
 
-      onAuthStateChanged(auth, (user) => {
-        if (user) {
-          localStorage.setItem('userId', user.uid);
-          localStorage.setItem('userEmail', user.email);
-          userEmail.textContent = user.email;
-          // TODO: Fetch and update streak and stats from Firestore
-        } else {
-          alert("Jy is nie aangemeld nie. Teken asseblief in.");
-          window.location.href = "/login.html";
+    const el = (id)=>document.getElementById(id);
+
+    // Build guess distribution rows
+    function renderDist(dist) {
+      const container = document.getElementById('distList');
+      container.innerHTML = "";
+      const totalWins = Object.values(dist).reduce((a,b)=>a+(b||0),0) || 0;
+      for (let i=1;i<=6;i++){
+        const n = dist?.[String(i)] || 0;
+        const pct = totalWins ? Math.round((n/totalWins)*100) : 0;
+        const row = document.createElement('div');
+        row.className = "stat items-center";
+        row.innerHTML = `
+          <div class="text-sm text-gray-600 w-5">${i}</div>
+          <div class="w-full">
+            <div class="bar" style="width:${Math.max(pct, 5)}%"></div>
+          </div>
+          <div class="text-sm text-gray-600 text-right mono w-10">${n}</div>
+        `;
+        container.appendChild(row);
+      }
+    }
+
+    // Load user + stats
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        // bounce to login and come back
+        localStorage.setItem('redirectAfterLogin','/profile.html');
+        window.location.href = '/login.html';
+        return;
+      }
+
+      // Prefill editable fields
+      emailInput.value = user.email || '';
+      const cachedName = localStorage.getItem('userName') || '';
+      if (cachedName) nameInput.value = cachedName;
+
+      // Ensure a users/{uid} doc exists
+      const userRef = doc(db, 'users', user.uid);
+      const snap = await getDoc(userRef);
+      if (!snap.exists()) {
+        await setDoc(userRef, {
+          userName: cachedName || 'Speler',
+          email: user.email || '',
+          gamesPlayed: 0, wins: 0,
+          streak: 0, bestStreak: 0,
+          guessDist: { "1":0, "2":0, "3":0, "4":0, "5":0, "6":0 },
+          createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+        }, { merge: true });
+      }
+      const data = (await getDoc(userRef)).data();
+
+      // Prefer Firestore name if present
+      if (data.userName) nameInput.value = data.userName;
+
+      // Stats UI
+      const gamesPlayed = data.gamesPlayed || 0;
+      const wins = data.wins || 0;
+      const successRate = gamesPlayed ? Math.round((wins/gamesPlayed)*100) : 0;
+
+      el('gamesPlayed').textContent = gamesPlayed;
+      el('successRate').textContent = `${successRate}%`;
+      el('streak').textContent = data.streak || 0;
+      el('bestStreak').textContent = data.bestStreak || 0;
+      renderDist(data.guessDist || {});
+    });
+
+    // Save profile changes
+    document.getElementById('profileForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const name = nameInput.value.trim();
+      const newEmail = emailInput.value.trim();
+      if (name.length < 2){ formMsg.textContent = "Naam te kort."; formMsg.className="text-red-600"; return;}
+
+      try {
+        // Update email in Auth if changed
+        if (newEmail && newEmail !== (user.email || '')) {
+          await updateEmail(user, newEmail); // may require recent login
         }
-      });
 
-      logoutBtn.addEventListener('click', async () => {
-        try {
-          await signOut(auth);
-          localStorage.clear();
-          alert("Jy is suksesvol afgemeld.");
-          window.location.href = "/index.html";
-        } catch (error) {
-          console.error("Fout met afmelding:", error);
-          alert("Kon nie afmeld nie.");
-        }
-      });
+        // Update Firestore (users + registrations)
+        const payload = {
+          userName: name,
+          email: newEmail || user.email || '',
+          updatedAt: serverTimestamp()
+        };
+        await setDoc(doc(db,'users', user.uid), payload, { merge:true });
+        await setDoc(doc(db,'registrations', user.uid), {
+          ...payload, userId: user.uid
+        }, { merge:true });
+
+        localStorage.setItem('userName', name);
+
+        formMsg.textContent = "Profiel gestoor.";
+        formMsg.className = "text-green-600";
+      } catch (err) {
+        // Common: auth/requires-recent-login for updateEmail
+        formMsg.textContent = "Kon nie stoor nie: " + err.message;
+        formMsg.className = "text-red-600";
+      }
+    });
+
+    // Password reset (will work once your custom domain verifies; safe to call now)
+    resetPwBtn.addEventListener('click', async ()=>{
+      const user = auth.currentUser;
+      if (!user || !user.email){
+        formMsg.textContent = "Geen e-pos gevind vir jou rekening nie.";
+        formMsg.className = "text-red-600"; return;
+      }
+      try {
+        await sendPasswordResetEmail(auth, user.email, {
+          url: 'https://www.kriptiek.com/login.html',
+          handleCodeInApp: false
+        });
+        formMsg.textContent = "Wagwoordherstel-e-pos is gestuur (kyk ook jou spam).";
+        formMsg.className = "text-green-600";
+      } catch (err) {
+        formMsg.textContent = "Kon nie e-pos stuur nie: " + err.message;
+        formMsg.className = "text-red-600";
+      }
     });
   </script>
-  <style>
-    body {
-      font-family: 'Montserrat', sans-serif;
-      background-color: #f9fafb;
-      color: #1f2937;
-    }
-  </style>
-</head>
-<body class="min-h-screen flex flex-col">
-  <header class="bg-white shadow p-4 text-center">
-    <h1 class="text-2xl font-bold">Jou Kriptiek Profiel</h1>
-  </header>
-
-  <main class="flex-grow p-6 max-w-md mx-auto">
-    <p class="mb-4">👤 <strong>E-posadres:</strong> <span id="userEmail">Laai...</span></p>
-    <p class="mb-4">🔥 <strong>Streak:</strong> <span id="streakCount">binnekort beskikbaar</span></p>
-    <button id="logoutBtn" class="mt-6 bg-red-600 text-white px-4 py-2 rounded">Meld af</button>
-  </main>
-
-  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
-    &copy; 2025 Kriptiek. Alle regte voorbehou. |
-    <a href="/index.html" class="underline">Tuis</a> |
-    <a href="/faq.html" class="underline">Gereelde vrae</a> |
-    <a href="/contact.html" class="underline">Kontak ons</a>
-  </footer>
 </body>
 </html>
