@@ -46,11 +46,7 @@
       transition: transform 0.3s ease;
     }
     .letter-tile.flip { animation: flipAnim 0.5s ease forwards; }
-    @keyframes flipAnim {
-      0% { transform: rotateX(0); }
-      50% { transform: rotateX(90deg); }
-      100% { transform: rotateX(0); }
-    }
+    @keyframes flipAnim { 0% { transform: rotateX(0); } 50% { transform: rotateX(90deg); } 100% { transform: rotateX(0); } }
     .correct { background-color: #16a34a !important; color: white !important; }
     .present { background-color: #facc15 !important; color: black !important; }
     .absent { background-color: #9ca3af !important; color: white !important; }
@@ -62,29 +58,17 @@
     }
     .key.bg-green-600 { background-color: #16a34a !important; }
     .key.bg-red-600 { background-color: #1e3a8a !important; }
-    #lockoutMessage {
-      display: none; text-align: center; margin-top: 10px;
-      font-weight: bold; color: #1e3a8a; font-size: 1.1rem;
-      opacity: 0; animation: fadeIn 1s forwards;
-    }
+    #lockoutMessage { display: none; text-align: center; margin-top: 10px; font-weight: bold; color: #1e3a8a; font-size: 1.1rem; opacity: 0; animation: fadeIn 1s forwards; }
     #lockoutMessage .icon { margin-right: 6px; }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-5px);}
-      to { opacity: 1; transform: translateY(0);}
-    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px);} to { opacity: 1; transform: translateY(0);} }
     #leaderboard { border: 1px solid #e5e7eb; }
     #leaderboardList li { padding: 6px 8px; transition: background-color 0.2s ease; }
     #leaderboardList li:nth-child(odd) { background-color: #f9fafb; }
     #leaderboardList li:nth-child(even) { background-color: #ffffff; }
     #leaderboardList li:hover { background-color: #e0e7ff; }
     #leaderboardList li:first-child { background-color: #d1fae5; font-weight: bold; }
-    #resultModal {
-      display: none; position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.5);
-      align-items: center; justify-content: center; z-index: 1000;
-    }
-    #resultModal .modal-content {
-      background: white; padding: 1.5rem; border-radius: 8px; text-align: center; max-width: 300px; width: 100%;
-    }
+    #resultModal { display: none; position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.5); align-items: center; justify-content: center; z-index: 1000; }
+    #resultModal .modal-content { background: white; padding: 1.5rem; border-radius: 8px; text-align: center; max-width: 300px; width: 100%; }
     #resultModal button { margin: 5px; padding: 8px 16px; border-radius: 4px; font-weight: bold; }
     .btn-share { background-color: #1e3a8a; color: white; }
     .btn-close { background-color: #6b7280; color: white; }
@@ -127,8 +111,16 @@
     </p>
   </div>
 
+  <!-- GESELS SAAM button (between HOW TO and leaderboard) -->
+  <div class="flex justify-center mt-4 mb-2">
+    <a href="/forum.html"
+       class="inline-flex items-center px-5 py-2 rounded-md font-bold text-white bg-[#1e3a8a] hover:bg-[#162b63] shadow">
+      GESELS SAAM
+    </a>
+  </div>
+
   <!-- LEADERBOARD -->
-  <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
+  <div id="leaderboard" class="mt-4 bg-white rounded shadow p-4">
     <h2 class="text-xl font-bold mb-2">Vandag se beste spelers</h2>
     <ul id="leaderboardList" class="text-gray-700 text-left">
       <li>Laai...</li>
@@ -155,12 +147,14 @@
     <button id="closeModalBtn" class="btn-close">SLUIT</button>
   </div>
 </div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
 import {
   getFirestore, doc, getDoc, collection, addDoc, getDocs,
   query, orderBy, limit, serverTimestamp, updateDoc, setDoc
 } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -173,6 +167,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 const gameGrid = document.getElementById("game-grid");
 const keyboard = document.getElementById("keyboard");
@@ -183,9 +178,27 @@ const shareBtn = document.getElementById("modalShareBtn");
 const closeBtn = document.getElementById("closeModalBtn");
 const leaderboardList = document.getElementById("leaderboardList");
 
-const storedName = localStorage.getItem("userName") || "Speler";
-const userId = localStorage.getItem("userId") || "anon";
-document.getElementById("playerName").textContent = storedName;
+let storedName = localStorage.getItem("userName") || "Speler";
+let authedUid = null;
+
+// Keep playerName updated from Auth (if available)
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    authedUid = user.uid;
+    // prefer Firestore profile name if present
+    try {
+      const snap = await getDoc(doc(db, "users", user.uid));
+      const data = snap.exists() ? snap.data() : null;
+      if (data?.userName) {
+        storedName = data.userName;
+        localStorage.setItem("userName", storedName);
+      }
+    } catch {}
+  } else {
+    authedUid = null; // still allow playing; we just won't record results
+  }
+  document.getElementById("playerName").textContent = storedName;
+});
 
 let gridRows = 6, gridCols = 5;
 let currentRow = 0, currentCol = 0;
@@ -207,9 +220,14 @@ async function loadGameData() {
   const snap = await getDoc(gameRef);
   if (snap.exists()) {
     const data = snap.data();
-    targetWord = data.word.toUpperCase();
-    gridCols = targetWord.length;
+    targetWord = (data.word || "").toUpperCase();
+    gridCols = targetWord.length || 5;
     document.getElementById("clue").textContent = data.clue || "Geen leidraad beskikbaar nie.";
+  } else {
+    // fallback for local testing
+    targetWord = "WATER";
+    gridCols = 5;
+    document.getElementById("clue").textContent = "Proef-speletjie";
   }
 }
 
@@ -321,10 +339,9 @@ function checkGuessWithFlip(guess) {
     }, i * 350);
   });
 
-  // ✅ Save AFTER flip classes are applied so states persist correctly
-  setTimeout(() => {
-    saveLocalProgress();
+  saveLocalProgress();
 
+  setTimeout(() => {
     if (guess === targetWord) gameCompleted(currentRow + 1);
     else {
       currentRow++;
@@ -365,10 +382,11 @@ function restoreLocalProgress() {
     currentCol = 0;
   });
 }
+
 async function loadLeaderboard() {
   const q = query(
     collection(db, "games", gameId, "leaderboard"),
-    orderBy("date", "asc"),
+    orderBy("guesses", "asc"),
     limit(50)
   );
   const snapshot = await getDocs(q);
@@ -381,67 +399,82 @@ async function loadLeaderboard() {
     const validName = typeof d.userName === "string";
     const validGuesses = d.guesses >= 1 && d.guesses <= gridRows;
     if (validName && validGuesses) {
-      entries.push({ name: d.userName, guesses: d.guesses });
+      entries.push({ name: d.userName, guesses: d.guesses, rate: d.successRate ?? null });
     }
   });
 
   if (entries.length === 0) {
-    leaderboardList.innerHTML = `<li>Jy kan eerste op die leierbord wees!</li>`;
+    leaderboardList.innerHTML = `<li class="bg-green-100 font-semibold px-2 py-1 rounded">Jy kan eerste op die leierbord wees!</li>`;
     return;
   }
 
-  entries.sort((a, b) => a.guesses - b.guesses);
-
   const seen = new Set();
-  entries.forEach((entry, index) => {
+  entries.forEach((entry) => {
     if (seen.has(entry.name)) return;
     seen.add(entry.name);
-
+    const rate = (entry.rate !== null && entry.rate !== undefined) ? ` · ${Math.round(entry.rate)}%` : "";
     const li = document.createElement("li");
-    li.className = index === 0 ? "font-bold bg-green-100" : "";
-    li.innerHTML = `<strong>${entry.name}</strong>: ${entry.guesses} raaiskote`;
+    li.innerHTML = `<strong>${entry.name}</strong>: ${entry.guesses} raaiskote${rate}`;
     leaderboardList.appendChild(li);
   });
 }
-async function submitScore(guessCount) {
-  try {
-    await addDoc(collection(db, "games", gameId, "leaderboard"), {
-      userName: storedName,
-      guesses: guessCount,
-      date: serverTimestamp()
-    });
 
-    // Also store/update user streak separately
-    const userRef = doc(db, "users", userId);
-    const userSnap = await getDoc(userRef);
-    const today = new Date().toISOString().split("T")[0];
+// ====== Recording helpers ======
 
-    if (userSnap.exists()) {
-      const userData = userSnap.data();
-      const lastPlayed = userData.lastPlayedDate;
-      let newStreak = userData.streak || 0;
-
-      if (lastPlayed !== today) {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const expected = yesterday.toISOString().split("T")[0];
-        newStreak = lastPlayed === expected ? newStreak + 1 : 1;
-      }
-
-      await updateDoc(userRef, {
-        streak: newStreak,
-        lastPlayedDate: today
-      });
-    } else {
-      await setDoc(userRef, {
-        userName: storedName,
-        streak: 1,
-        lastPlayedDate: today
-      });
-    }
-  } catch (e) {
-    console.error("Kon nie telling stoor nie:", e);
+async function recordUserPlay({ solved, guesses }) {
+  if (!authedUid) {
+    console.info("Not signed in – skipping score recording.");
+    return;
   }
+
+  // 1) upsert play doc
+  await setDoc(doc(db, "userGames", authedUid, "plays", gameId), {
+    gameId,
+    guesses,
+    solved,
+    date: serverTimestamp(),
+    wordLength: gridCols
+  }, { merge: true });
+
+  // 2) update aggregates in users/{uid}
+  const userRef = doc(db, "users", authedUid);
+  const snap = await getDoc(userRef);
+  const data = snap.exists() ? snap.data() : {};
+
+  const prevGames = data.gamesPlayed || 0;
+  const prevWins = data.wins || 0;
+  const prevStreak = data.streak || 0;
+  const bestStreak = data.bestStreak || 0;
+  const guessDist = Object.assign({ "1":0,"2":0,"3":0,"4":0,"5":0,"6":0 }, data.guessDist || {});
+
+  const newGames = prevGames + 1;
+  const newWins = solved ? prevWins + 1 : prevWins;
+  const newStreak = solved ? (prevStreak + 1) : 0;
+  const newBest = Math.max(bestStreak, newStreak);
+
+  if (solved) {
+    const key = String(Math.min(Math.max(guesses,1),6));
+    guessDist[key] = (guessDist[key] || 0) + 1;
+  }
+
+  await setDoc(userRef, {
+    gamesPlayed: newGames,
+    wins: newWins,
+    streak: newStreak,
+    bestStreak: newBest,
+    guessDist,
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+
+  const successRate = newGames ? (newWins / newGames) * 100 : 0;
+
+  // 3) upsert leaderboard
+  await setDoc(doc(db, "games", gameId, "leaderboard", authedUid), {
+    userName: storedName,
+    guesses: Math.min(guesses, 6),
+    successRate: successRate,
+    date: serverTimestamp()
+  }, { merge: true });
 }
 
 async function gameCompleted(guessCount) {
@@ -451,7 +484,10 @@ async function gameCompleted(guessCount) {
   shareBtn.onclick = () =>
     navigator.clipboard.writeText(`Ek het DILEMMA in ${guessCount} raaiskote opgelos: ${gameUrl}`);
   lockoutMessage.style.display = "block";
-  await submitScore(guessCount);
+
+  try { await recordUserPlay({ solved: true, guesses: guessCount }); }
+  catch (e) { console.error("Kon nie telling stoor nie:", e); }
+
   await loadLeaderboard();
   document.querySelectorAll(".key").forEach(k => k.disabled = true);
 }
@@ -463,14 +499,15 @@ async function gameFailed() {
   shareBtn.onclick = () =>
     navigator.clipboard.writeText(`Ek kon nie DILEMMA oplos nie. Probeer self: ${gameUrl}`);
   lockoutMessage.style.display = "block";
-  await submitScore(gridRows);
+
+  try { await recordUserPlay({ solved: false, guesses: gridRows }); }
+  catch (e) { console.error("Kon nie telling stoor nie:", e); }
+
   await loadLeaderboard();
   document.querySelectorAll(".key").forEach(k => k.disabled = true);
 }
 
-closeBtn.onclick = () => {
-  modal.style.display = "none";
-};
+closeBtn.onclick = () => { modal.style.display = "none"; };
 
 document.addEventListener("keydown", e => {
   if (e.key === "Enter") handleEnter();
@@ -486,10 +523,7 @@ await restoreLocalProgress();
 
 const gameWasWon = board.some(row => row.every(tile => tile.classList.contains("correct")));
 const gameWasLost = currentRow >= gridRows && !gameWasWon;
-
-if (gameWasWon || gameWasLost) {
-  disableGame();
-}
+if (gameWasWon || gameWasLost) disableGame();
 
 await loadLeaderboard();
 </script>
