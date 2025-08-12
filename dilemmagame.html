@@ -141,13 +141,15 @@
     <button id="closeModalBtn" class="btn-close">SLUIT</button>
   </div>
 </div>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
 import {
   getFirestore, doc, getDoc, collection, setDoc, getDocs,
-  query, orderBy, limit, serverTimestamp, updateDoc, increment
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+import {
+  getAuth, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -160,8 +162,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-// UI refs
+// ---------- UI refs ----------
 const gameGrid = document.getElementById("game-grid");
 const keyboard = document.getElementById("keyboard");
 const lockoutMessage = document.getElementById("lockoutMessage");
@@ -170,14 +173,16 @@ const resultMsg = document.getElementById("resultMessage");
 const shareBtn = document.getElementById("modalShareBtn");
 const closeBtn = document.getElementById("closeModalBtn");
 const leaderboardList = document.getElementById("leaderboardList");
+const playerNameEl = document.getElementById("playerName");
 
-const storedName = localStorage.getItem("userName") || "Speler";
-const userId = localStorage.getItem("userId") || "anon";
-document.getElementById("playerName").textContent = storedName;
-
+// ---------- State ----------
 let gridRows = 6, gridCols = 5;
 let currentRow = 0, currentCol = 0;
 let board = [], targetWord = "", gameOver = false;
+
+// These now come from Auth (with localStorage as a fallback for the greeting only)
+let currentUid = null;
+let displayName = localStorage.getItem("userName") || "Speler";
 
 const params = new URLSearchParams(window.location.search);
 const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
@@ -185,7 +190,9 @@ const doneKey = `dilemma-${gameId}-done`;
 const progressKey = `dilemma-${gameId}-progress`;
 const gameUrl = window.location.href;
 
-// Helpers
+playerNameEl.textContent = displayName;
+
+// ---------- Helpers ----------
 function disableGame(message = "Jy het hierdie een reeds vandag gespeel") {
   gameOver = true;
   document.getElementById("clue").textContent = message;
@@ -202,7 +209,6 @@ async function loadGameData() {
     gridCols = targetWord.length || 5;
     document.getElementById("clue").textContent = data.clue || "Geen leidraad beskikbaar nie.";
   } else {
-    // fallback (dev safety)
     targetWord = "WATER";
     gridCols = targetWord.length;
     document.getElementById("clue").textContent = "Geen leidraad beskikbaar nie.";
@@ -321,9 +327,8 @@ function applyStatesWithFlip(rowIndex, guess, states) {
   });
 }
 
-// Save/restore progress
+// ---- Save/restore progress ----
 function saveLocalProgress(done=false) {
-  // gather rows that have states applied
   const rows = [];
   for (let r = 0; r < gridRows; r++) {
     const guess = board[r].map(t => t.textContent).join("");
@@ -364,7 +369,6 @@ function restoreLocalProgress() {
 }
 
 async function loadLeaderboard() {
-  // Pull all & sort best first, then earliest first (client-side to avoid composite index)
   const snap = await getDocs(collection(db, "games", gameId, "leaderboard"));
   const entries = [];
   snap.forEach(d => {
@@ -379,6 +383,7 @@ async function loadLeaderboard() {
     return;
   }
 
+  // Best scores first, ties by earliest write
   entries.sort((a,b) => (a.guesses - b.guesses) || (a.date - b.date));
   entries.forEach((e, idx) => {
     const li = document.createElement("li");
@@ -388,24 +393,37 @@ async function loadLeaderboard() {
   });
 }
 
+// ---------- Score submit (AUTH REQUIRED) ----------
 async function submitScore(guessCount, didWin) {
-  try {
-    // 1) Update user's aggregated stats
-    const uref = doc(db, "users", userId);
-    const usnap = await getDoc(uref);
+  if (!currentUid) return; // not signed in: skip leaderboard safely
 
-    let payload = {};
-    if (usnap.exists()) {
-      const u = usnap.data() || {};
+  try {
+    // 1) Make sure we have a display name from Firestore if available
+    try {
+      const uDoc = await getDoc(doc(db, "users", currentUid));
+      if (uDoc.exists() && typeof uDoc.data().userName === "string") {
+        displayName = uDoc.data().userName || displayName;
+        playerNameEl.textContent = displayName;
+        localStorage.setItem("userName", displayName);
+      }
+    } catch {}
+
+    // 2) Update aggregated stats (users/{uid})
+    const uref = doc(db, "users", currentUid);
+    const before = await getDoc(uref);
+    let payload;
+
+    if (before.exists()) {
+      const u = before.data() || {};
       const newGames = (u.gamesPlayed || 0) + 1;
-      const newWins = (u.wins || 0) + (didWin ? 1 : 0);
+      const newWins  = (u.wins || 0) + (didWin ? 1 : 0);
       const newStreak = didWin ? (u.streak || 0) + 1 : 0;
       const newBest = Math.max(u.bestStreak || 0, newStreak);
       const dist = Object.assign({ "1":0,"2":0,"3":0,"4":0,"5":0,"6":0 }, u.guessDist || {});
       if (didWin && guessCount >=1 && guessCount <=6) dist[String(guessCount)] = (dist[String(guessCount)] || 0) + 1;
 
       payload = {
-        userName: storedName,
+        userName: displayName,
         gamesPlayed: newGames,
         wins: newWins,
         streak: newStreak,
@@ -415,7 +433,7 @@ async function submitScore(guessCount, didWin) {
       };
     } else {
       payload = {
-        userName: storedName,
+        userName: displayName,
         gamesPlayed: 1,
         wins: didWin ? 1 : 0,
         streak: didWin ? 1 : 0,
@@ -427,14 +445,13 @@ async function submitScore(guessCount, didWin) {
     }
     await setDoc(uref, payload, { merge: true });
 
-    // compute success rate for leaderboard
-    const newSnap = await getDoc(uref);
-    const nd = newSnap.data() || {};
+    // 3) Compute successRate and write leaderboard doc *with id == currentUid*
+    const after = await getDoc(uref);
+    const nd = after.data() || {};
     const successRate = (nd.gamesPlayed > 0) ? Math.round((nd.wins / nd.gamesPlayed) * 100) : 0;
 
-    // 2) Write leaderboard entry with required doc id == uid
-    await setDoc(doc(db, "games", gameId, "leaderboard", userId), {
-      userName: storedName,
+    await setDoc(doc(db, "games", gameId, "leaderboard", currentUid), {
+      userName: displayName,
       guesses: guessCount,
       successRate,
       date: serverTimestamp()
@@ -445,15 +462,15 @@ async function submitScore(guessCount, didWin) {
   }
 }
 
+// ---------- Game end flows ----------
 async function gameCompleted(guessCount) {
   gameOver = true;
-  resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${guessCount} raaiskote gekry!`;
+  resultMsg.textContent = `Veels geluk, ${displayName}, jy het die woord in ${guessCount} raaiskote gekry!`;
   modal.style.display = "flex";
   shareBtn.onclick = () =>
     navigator.clipboard.writeText(`Ek het DILEMMA in ${guessCount} raaiskote opgelos: ${gameUrl}`);
   lockoutMessage.style.display = "block";
 
-  // persist done + leaderboard
   saveLocalProgress(true);
   await submitScore(guessCount, true);
   await loadLeaderboard();
@@ -462,7 +479,7 @@ async function gameCompleted(guessCount) {
 
 async function gameFailed() {
   gameOver = true;
-  resultMsg.textContent = `Jammer, ${storedName}! Vandag se oplossing is ${targetWord}.`;
+  resultMsg.textContent = `Jammer, ${displayName}! Vandag se oplossing is ${targetWord}.`;
   modal.style.display = "flex";
   shareBtn.onclick = () =>
     navigator.clipboard.writeText(`Ek kon nie DILEMMA oplos nie. Probeer self: ${gameUrl}`);
@@ -482,16 +499,12 @@ document.addEventListener("keydown", e => {
   else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
 });
 
-// Core guess check
 function checkGuessWithFlip(guess) {
   const states = computeStates(guess);
   applyStatesWithFlip(currentRow, guess, states);
 
-  // wait until flips done, then decide and save
   setTimeout(async () => {
-    // ensure tiles carry final classes before saving
     saveLocalProgress(false);
-
     if (guess === targetWord) {
       await gameCompleted(currentRow + 1);
     } else {
@@ -500,31 +513,46 @@ function checkGuessWithFlip(guess) {
       if (currentRow >= gridRows) {
         await gameFailed();
       } else {
-        // also save intermediate progress after advancing to next row
         saveLocalProgress(false);
       }
     }
   }, gridCols * 350 + 20);
 }
 
-// INIT
-await loadGameData();
-createGrid();
-createKeyboard();
+// ---------- Init sequence (wait for Auth so writes are authenticated) ----------
+onAuthStateChanged(auth, async (user) => {
+  currentUid = user?.uid || null;
 
-// If already finished earlier, lock out immediately (still restore to show board)
-const alreadyDone = localStorage.getItem(doneKey) === "true";
-restoreLocalProgress();
-if (alreadyDone) {
-  disableGame();
-} else {
-  // If restored state already shows a completed row of 'correct', lock out too
-  const someWin = board.some(row => row.length && row.every(t => t.classList.contains("correct")));
-  const reachedMax = currentRow >= gridRows && !someWin;
-  if (someWin || reachedMax) disableGame();
-}
+  // Prefer Firestore-stored name if signed in
+  if (currentUid) {
+    try {
+      const uDoc = await getDoc(doc(db, "users", currentUid));
+      const nm = uDoc.exists() ? uDoc.data()?.userName : null;
+      if (typeof nm === "string" && nm.trim()) {
+        displayName = nm.trim();
+        localStorage.setItem("userName", displayName);
+      }
+    } catch {}
+  }
+  playerNameEl.textContent = displayName;
 
+  await loadGameData();
+  createGrid();
+  createKeyboard();
+  restoreLocalProgress();
+
+  const alreadyDone = localStorage.getItem(doneKey) === "true";
+  if (alreadyDone) {
+    disableGame();
+  } else {
+    const someWin = board.some(row => row.length && row.every(t => t.classList.contains("correct")));
+    const reachedMax = currentRow >= gridRows && !someWin;
+    if (someWin || reachedMax) disableGame();
+  }
 await loadLeaderboard();
+});
 </script>
+
+
 </body>
 </html>
