@@ -446,6 +446,48 @@ async function submitScore(guessCount, didWin) {
     console.error("Kon nie telling stoor nie:", e);
   }
 }
+async function loadLeaderboard() {
+  try {
+    const snap = await getDocs(collection(db, "games", gameId, "leaderboard"));
+    const entries = [];
+    snap.forEach(d => {
+      const v = d.data() || {};
+      const ok =
+        typeof v.userName === "string" &&
+        typeof v.guesses === "number" &&
+        v.guesses >= 1 && v.guesses <= gridRows;
+
+      if (ok) {
+        // prefer server time if present; fall back to createdAtMs
+        const ts = v.date?.seconds ? v.date.seconds * 1000 :
+                   (typeof v.createdAtMs === "number" ? v.createdAtMs : 0);
+        entries.push({ name: v.userName, guesses: v.guesses, when: ts });
+      }
+    });
+
+    leaderboardList.innerHTML = "";
+    if (!entries.length) {
+      leaderboardList.innerHTML =
+        `<li class="bg-green-100 font-medium px-2 py-1 rounded">
+           Jy kan eerste op die leierbord wees!
+         </li>`;
+      return;
+    }
+
+    // Best (fewest guesses) first; ties = earlier write first
+    entries.sort((a, b) => (a.guesses - b.guesses) || (a.when - b.when));
+
+    entries.forEach((e, idx) => {
+      const li = document.createElement("li");
+      if (idx === 0) li.className = "font-bold bg-green-100";
+      li.innerHTML = `<strong>${e.name}</strong>: ${e.guesses} raaiskote`;
+      leaderboardList.appendChild(li);
+    });
+  } catch (err) {
+    console.error("Kon nie leierbord laai nie:", err);
+    leaderboardList.innerHTML = `<li class="text-red-600">Kon nie leierbord laai nie.</li>`;
+  }
+}
 // ---------- Game end flows ----------
 async function gameCompleted(guessCount) {
   gameOver = true;
