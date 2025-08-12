@@ -27,51 +27,36 @@
   <!-- Core Styles -->
   <style>
     body { font-family: 'Montserrat', sans-serif; background-color: #f9fafb; color: #1f2937; }
-    header { background-color: #ffffff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); padding: 1rem; text-align: center; }
-    .logo-container { display: flex; justify-content: center; align-items: center; margin-bottom: 10px; }
-    .logo-container .letter-box {
-      width: 40px; height: 40px; margin: 2px;
-      display: flex; justify-content: center; align-items: center;
-      background-color: #374151; color: white;
-      font-size: 1.5rem; font-weight: bold; border-radius: 4px;
-    }
+    header { background-color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,.1); padding: 1rem; text-align: center; }
+    .logo-container { display:flex; justify-content:center; align-items:center; margin-bottom:10px; }
+    .logo-container .letter-box{ width:40px; height:40px; margin:2px; display:flex; justify-content:center; align-items:center; background:#374151; color:#fff; font-size:1.5rem; font-weight:700; border-radius:4px; }
     .game-container { max-width: 640px; margin: 0 auto; padding: 1rem; }
-    .tile-row { display: flex; justify-content: center; margin-bottom: 5px; }
-    .letter-tile {
-      width: 50px; height: 50px;
-      display: flex; justify-content: center; align-items: center;
-      border: 2px solid #374151;
-      font-size: 1.5rem; font-weight: bold; text-transform: uppercase;
-      margin: 2px; background-color: white; color: #1f2937;
-      transition: transform 0.3s ease;
-    }
-    .letter-tile.flip { animation: flipAnim 0.5s ease forwards; }
-    @keyframes flipAnim { 0% { transform: rotateX(0); } 50% { transform: rotateX(90deg); } 100% { transform: rotateX(0); } }
-    .correct { background-color: #16a34a !important; color: white !important; }
-    .present { background-color: #facc15 !important; color: black !important; }
-    .absent { background-color: #9ca3af !important; color: white !important; }
-    .keyboard-row { display: flex; justify-content: center; margin: 5px 0; }
-    .key {
-      min-width: 30px; padding: 10px 12px; margin: 2px;
-      border-radius: 4px; background-color: #374151;
-      color: white; font-weight: bold; cursor: pointer; text-transform: uppercase;
-    }
-    .key.bg-green-600 { background-color: #16a34a !important; }
-    .key.bg-red-600 { background-color: #1e3a8a !important; }
-    #lockoutMessage { display: none; text-align: center; margin-top: 10px; font-weight: bold; color: #1e3a8a; font-size: 1.1rem; opacity: 0; animation: fadeIn 1s forwards; }
-    #lockoutMessage .icon { margin-right: 6px; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px);} to { opacity: 1; transform: translateY(0);} }
-    #leaderboard { border: 1px solid #e5e7eb; }
-    #leaderboardList li { padding: 6px 8px; transition: background-color 0.2s ease; }
-    #leaderboardList li:nth-child(odd) { background-color: #f9fafb; }
-    #leaderboardList li:nth-child(even) { background-color: #ffffff; }
-    #leaderboardList li:hover { background-color: #e0e7ff; }
-    #leaderboardList li:first-child { background-color: #d1fae5; font-weight: bold; }
-    #resultModal { display: none; position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.5); align-items: center; justify-content: center; z-index: 1000; }
-    #resultModal .modal-content { background: white; padding: 1.5rem; border-radius: 8px; text-align: center; max-width: 300px; width: 100%; }
-    #resultModal button { margin: 5px; padding: 8px 16px; border-radius: 4px; font-weight: bold; }
-    .btn-share { background-color: #1e3a8a; color: white; }
-    .btn-close { background-color: #6b7280; color: white; }
+    .tile-row{ display:flex; justify-content:center; margin-bottom:5px; }
+    .letter-tile{ width:50px; height:50px; display:flex; justify-content:center; align-items:center; border:2px solid #374151; font-size:1.5rem; font-weight:700; text-transform:uppercase; margin:2px; background:#fff; color:#1f2937; transition:transform .3s ease; }
+    .letter-tile.flip{ animation:flipAnim .5s ease forwards; }
+    @keyframes flipAnim{ 0%{transform:rotateX(0)} 50%{transform:rotateX(90deg)} 100%{transform:rotateX(0)} }
+    .correct{ background:#16a34a !important; color:#fff !important; }
+    .present{ background:#facc15 !important; color:#000 !important; }
+    .absent{ background:#9ca3af !important; color:#fff !important; }
+    .keyboard-row{ display:flex; justify-content:center; margin:5px 0; }
+    .key{ min-width:30px; padding:10px 12px; margin:2px; border-radius:4px; background:#374151; color:#fff; font-weight:700; cursor:pointer; text-transform:uppercase; }
+    .key.bg-green-600{ background:#16a34a !important; }
+    .key.bg-red-600{ background:#1e3a8a !important; }
+    #lockoutMessage{ display:none; text-align:center; margin-top:10px; font-weight:700; color:#1e3a8a; font-size:1.1rem; opacity:0; animation:fadeIn 1s forwards; }
+    #lockoutMessage .icon{ margin-right:6px; }
+    @keyframes fadeIn{ from{opacity:0; transform:translateY(-5px)} to{opacity:1; transform:translateY(0)} }
+    #leaderboard{ border:1px solid #e5e7eb; }
+    #leaderboardList li{ padding:6px 8px; transition:background-color .2s ease; }
+    #leaderboardList li:nth-child(odd){ background:#f9fafb; }
+    #leaderboardList li:nth-child(even){ background:#fff; }
+    #leaderboardList li:hover{ background:#e0e7ff; }
+    #leaderboardList li:first-child{ background:#d1fae5; font-weight:700; }
+    #resultModal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); align-items:center; justify-content:center; z-index:1000; }
+    #resultModal .modal-content{ background:#fff; padding:1.5rem; border-radius:8px; text-align:center; max-width:300px; width:100%; }
+    #resultModal button{ margin:5px; padding:8px 16px; border-radius:4px; font-weight:700; }
+    .btn-share{ background:#1e3a8a; color:#fff; }
+    .btn-close{ background:#6b7280; color:#fff; }
+    .cta-forum{ display:inline-block; margin-top:10px; background:#1e3a8a; color:#fff; font-weight:700; padding:.5rem .75rem; border-radius:.375rem; }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -93,7 +78,7 @@
   <div id="keyboard" class="mb-6"></div>
   <p id="lockoutMessage"><span class="icon">🔒</span>Jy kan môre weer speel</p>
 
-  <!-- HOE OM TE SPEEL section -->
+  <!-- HOE OM TE SPEEL -->
   <div class="mt-6 bg-white rounded shadow p-4">
     <h2 class="text-xl font-bold mb-2">HOE OM DILEMMA TE SPEEL</h2>
     <p class="text-gray-700 leading-relaxed mb-2">
@@ -109,18 +94,15 @@
       <span class="font-bold text-yellow-600">GEEL</span>: Die letter is in die antwoord, maar nie in die regte blokkie nie.<br>
       <span class="font-bold text-gray-500">GRYS</span>: Die letter is glad nie in die antwoord nie.
     </p>
-  </div>
 
-  <!-- GESELS SAAM button (between HOW TO and leaderboard) -->
-  <div class="flex justify-center mt-4 mb-2">
-    <a href="/forum.html"
-       class="inline-flex items-center px-5 py-2 rounded-md font-bold text-white bg-[#1e3a8a] hover:bg-[#162b63] shadow">
-      GESELS SAAM
-    </a>
+    <!-- Gesels Saam call-to-action -->
+    <div class="mt-4">
+      <a class="cta-forum" href="/forum.html">GESELS SAAM</a>
+    </div>
   </div>
 
   <!-- LEADERBOARD -->
-  <div id="leaderboard" class="mt-4 bg-white rounded shadow p-4">
+  <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
     <h2 class="text-xl font-bold mb-2">Vandag se beste spelers</h2>
     <ul id="leaderboardList" class="text-gray-700 text-left">
       <li>Laai...</li>
@@ -150,12 +132,13 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-import {
-  getFirestore, doc, getDoc, collection, addDoc, getDocs,
-  query, orderBy, limit, serverTimestamp, updateDoc, setDoc
-} from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, collection, getDocs, setDoc, updateDoc,
+  query, orderBy, limit, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
+/* ---------------- Firebase ---------------- */
 const firebaseConfig = {
   apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
   authDomain: "kriptiek-c9ea2.firebaseapp.com",
@@ -164,11 +147,11 @@ const firebaseConfig = {
   messagingSenderId: "620450620939",
   appId: "1:620450620939:web:e93a18ac23b53b33db890e"
 };
-
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
+/* ---------------- DOM refs ---------------- */
 const gameGrid = document.getElementById("game-grid");
 const keyboard = document.getElementById("keyboard");
 const lockoutMessage = document.getElementById("lockoutMessage");
@@ -178,27 +161,10 @@ const shareBtn = document.getElementById("modalShareBtn");
 const closeBtn = document.getElementById("closeModalBtn");
 const leaderboardList = document.getElementById("leaderboardList");
 
+/* ---------------- User + game context ---------------- */
+let currentUser = null;
 let storedName = localStorage.getItem("userName") || "Speler";
-let authedUid = null;
-
-// Keep playerName updated from Auth (if available)
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    authedUid = user.uid;
-    // prefer Firestore profile name if present
-    try {
-      const snap = await getDoc(doc(db, "users", user.uid));
-      const data = snap.exists() ? snap.data() : null;
-      if (data?.userName) {
-        storedName = data.userName;
-        localStorage.setItem("userName", storedName);
-      }
-    } catch {}
-  } else {
-    authedUid = null; // still allow playing; we just won't record results
-  }
-  document.getElementById("playerName").textContent = storedName;
-});
+document.getElementById("playerName").textContent = storedName;
 
 let gridRows = 6, gridCols = 5;
 let currentRow = 0, currentCol = 0;
@@ -207,7 +173,9 @@ let board = [], targetWord = "", gameOver = false;
 const params = new URLSearchParams(window.location.search);
 const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
 const gameUrl = window.location.href;
+const progressKey = `dilemma-${gameId}-progress`; // JSON of {rows:[{guess,states}], status:'won'|'lost'|null}
 
+/* ---------------- Utilities ---------------- */
 function disableGame(message = "Jy het hierdie een reeds vandag gespeel") {
   gameOver = true;
   document.getElementById("clue").textContent = message;
@@ -220,14 +188,14 @@ async function loadGameData() {
   const snap = await getDoc(gameRef);
   if (snap.exists()) {
     const data = snap.data();
-    targetWord = (data.word || "").toUpperCase();
+    targetWord = String(data.word || "").toUpperCase();
     gridCols = targetWord.length || 5;
     document.getElementById("clue").textContent = data.clue || "Geen leidraad beskikbaar nie.";
   } else {
-    // fallback for local testing
-    targetWord = "WATER";
+    // Fallback (still playable)
+    targetWord = "KRIPT";
     gridCols = 5;
-    document.getElementById("clue").textContent = "Proef-speletjie";
+    document.getElementById("clue").textContent = "Geen leidraad beskikbaar nie.";
   }
 }
 
@@ -289,6 +257,7 @@ function updateKeyboard(letter, state) {
   }
 }
 
+/* ---------------- Input ---------------- */
 function handleKey(letter) {
   if (gameOver) return;
   if (currentCol < gridCols && currentRow < gridRows) {
@@ -296,13 +265,11 @@ function handleKey(letter) {
     currentCol++;
   }
 }
-
 function handleBackspace() {
   if (gameOver || currentCol === 0) return;
   currentCol--;
   board[currentRow][currentCol].textContent = "";
 }
-
 function handleEnter() {
   if (gameOver) return;
   if (currentCol < gridCols) return alert("Vul al die letters in!");
@@ -310,19 +277,61 @@ function handleEnter() {
   checkGuessWithFlip(guess);
 }
 
+/* ---------------- Save/Restore ---------------- */
+function readProgress() {
+  try { return JSON.parse(localStorage.getItem(progressKey) || "{}"); }
+  catch { return {}; }
+}
+function writeProgress(data) {
+  localStorage.setItem(progressKey, JSON.stringify(data || {}));
+}
+function appendRowToProgress(guess, states) {
+  const existing = readProgress();
+  const rows = existing.rows || [];
+  rows.push({ guess, states });
+  writeProgress({ ...existing, rows });
+}
+function setStatus(status) {
+  const existing = readProgress();
+  writeProgress({ ...existing, status });
+}
+
+function restoreLocalProgress() {
+  const saved = readProgress();
+  if (!saved?.rows?.length) return;
+  saved.rows.forEach(({ guess, states }) => {
+    const letters = guess.split("");
+    for (let i = 0; i < letters.length; i++) {
+      const tile = board[currentRow][i];
+      tile.textContent = letters[i];
+      tile.classList.remove("correct","present","absent");
+      tile.classList.add(states[i]);
+      tile.classList.add("flip");
+      updateKeyboard(letters[i], states[i]);
+    }
+    currentRow++;
+    currentCol = 0;
+  });
+
+  if (saved.status === "won" || saved.status === "lost") {
+    disableGame();
+  }
+}
+
+/* ---------------- Core checking ---------------- */
 function checkGuessWithFlip(guess) {
-  const guessLetters = guess.split("");
   const states = new Array(gridCols).fill("absent");
   const letterCounts = {};
   for (let ch of targetWord) letterCounts[ch] = (letterCounts[ch] || 0) + 1;
 
+  // greens
   for (let i = 0; i < gridCols; i++) {
     if (guess[i] === targetWord[i]) {
       states[i] = "correct";
       letterCounts[guess[i]]--;
     }
   }
-
+  // yellows
   for (let i = 0; i < gridCols; i++) {
     if (states[i] === "correct") continue;
     if (letterCounts[guess[i]] > 0) {
@@ -331,6 +340,7 @@ function checkGuessWithFlip(guess) {
     }
   }
 
+  // Flip UI & keyboard progressively
   states.forEach((s, i) => {
     const tile = board[currentRow][i];
     setTimeout(() => {
@@ -339,10 +349,12 @@ function checkGuessWithFlip(guess) {
     }, i * 350);
   });
 
-  saveLocalProgress();
+  // Persist EXACT states for this row (do not rely on CSS after timers)
+  appendRowToProgress(guess, states);
 
+  // Move next / finish
   setTimeout(() => {
-    if (guess === targetWord) gameCompleted(currentRow + 1);
+    if (guess === targetWord) gameCompleted(currentRow + 1, states);
     else {
       currentRow++;
       currentCol = 0;
@@ -351,132 +363,134 @@ function checkGuessWithFlip(guess) {
   }, gridCols * 350);
 }
 
-function saveLocalProgress() {
-  const localGuesses = [];
-  for (let r = 0; r <= currentRow; r++) {
-    const guess = board[r].map(t => t.textContent).join("");
-    const states = board[r].map(t =>
-      t.classList.contains("correct") ? "correct" :
-      t.classList.contains("present") ? "present" : "absent"
-    );
-    if (guess.trim()) localGuesses.push({ guess, states });
-  }
-  localStorage.setItem(`dilemma-${gameId}`, JSON.stringify(localGuesses));
-}
-function restoreLocalProgress() {
-  const saved = localStorage.getItem(`dilemma-${gameId}`);
-  if (!saved) return;
-
-  const data = JSON.parse(saved);
-  data.forEach(({ guess, states }) => {
-    const letters = guess.split("");
-    for (let i = 0; i < letters.length; i++) {
-      const tile = board[currentRow][i];
-      tile.textContent = letters[i];
-      tile.classList.remove("correct", "present", "absent");
-      tile.classList.add(states[i]);
-      tile.classList.add("flip");
-      updateKeyboard(letters[i], states[i]);
-    }
-    currentRow++;
-    currentCol = 0;
-  });
-}
-
+/* ---------------- Stats + Leaderboard ---------------- */
 async function loadLeaderboard() {
-  const q = query(
-    collection(db, "games", gameId, "leaderboard"),
-    orderBy("guesses", "asc"),
-    limit(50)
-  );
+  const q = query(collection(db, "games", gameId, "leaderboard"), orderBy("date", "asc"), limit(50));
   const snapshot = await getDocs(q);
 
   leaderboardList.innerHTML = "";
   const entries = [];
-
   snapshot.forEach(docSnap => {
     const d = docSnap.data();
     const validName = typeof d.userName === "string";
     const validGuesses = d.guesses >= 1 && d.guesses <= gridRows;
     if (validName && validGuesses) {
-      entries.push({ name: d.userName, guesses: d.guesses, rate: d.successRate ?? null });
+      entries.push({ name: d.userName, guesses: d.guesses, sr: d.successRate ?? null });
     }
   });
 
   if (entries.length === 0) {
-    leaderboardList.innerHTML = `<li class="bg-green-100 font-semibold px-2 py-1 rounded">Jy kan eerste op die leierbord wees!</li>`;
+    leaderboardList.innerHTML = `<li>Jy kan eerste op die leierbord wees!</li>`;
     return;
   }
 
+  entries.sort((a, b) => a.guesses - b.guesses);
   const seen = new Set();
-  entries.forEach((entry) => {
+  entries.forEach((entry, index) => {
     if (seen.has(entry.name)) return;
     seen.add(entry.name);
-    const rate = (entry.rate !== null && entry.rate !== undefined) ? ` · ${Math.round(entry.rate)}%` : "";
+    const srTxt = entry.sr != null ? ` · ${Math.round(entry.sr)}%` : "";
     const li = document.createElement("li");
-    li.innerHTML = `<strong>${entry.name}</strong>: ${entry.guesses} raaiskote${rate}`;
+    li.className = index === 0 ? "font-bold bg-green-100" : "";
+    li.innerHTML = `<strong>${entry.name}</strong>: ${entry.guesses} raaiskote${srTxt}`;
     leaderboardList.appendChild(li);
   });
 }
 
-// ====== Recording helpers ======
+async function updateUserAggregatesOnWin(guessCount) {
+  if (!currentUser) return { successRate: null };
+  const uref = doc(db, "users", currentUser.uid);
+  const usnap = await getDoc(uref);
+  const today = new Date().toISOString().split("T")[0];
 
-async function recordUserPlay({ solved, guesses }) {
-  if (!authedUid) {
-    console.info("Not signed in – skipping score recording.");
-    return;
+  let data = {
+    gamesPlayed: 0, wins: 0, streak: 0, bestStreak: 0,
+    lastPlayedDate: null,
+    guessDist: { "1":0, "2":0, "3":0, "4":0, "5":0, "6":0 }
+  };
+  if (usnap.exists()) data = { ...data, ...usnap.data() };
+
+  // streak calc
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+  const expected = yesterday.toISOString().split("T")[0];
+  let streak = data.streak || 0;
+  if (data.lastPlayedDate === today) {
+    // already counted; keep as-is
+  } else if (data.lastPlayedDate === expected) {
+    streak = streak + 1;
+  } else {
+    streak = 1;
   }
 
-  // 1) upsert play doc
-  await setDoc(doc(db, "userGames", authedUid, "plays", gameId), {
-    gameId,
-    guesses,
-    solved,
-    date: serverTimestamp(),
-    wordLength: gridCols
-  }, { merge: true });
+  const newGames = (data.gamesPlayed || 0) + 1;
+  const newWins  = (data.wins || 0) + 1;
+  const dist = { ...(data.guessDist || {}) };
+  const key = String(Math.min(Math.max(guessCount,1),6));
+  dist[key] = (dist[key] || 0) + 1;
 
-  // 2) update aggregates in users/{uid}
-  const userRef = doc(db, "users", authedUid);
-  const snap = await getDoc(userRef);
-  const data = snap.exists() ? snap.data() : {};
-
-  const prevGames = data.gamesPlayed || 0;
-  const prevWins = data.wins || 0;
-  const prevStreak = data.streak || 0;
-  const bestStreak = data.bestStreak || 0;
-  const guessDist = Object.assign({ "1":0,"2":0,"3":0,"4":0,"5":0,"6":0 }, data.guessDist || {});
-
-  const newGames = prevGames + 1;
-  const newWins = solved ? prevWins + 1 : prevWins;
-  const newStreak = solved ? (prevStreak + 1) : 0;
-  const newBest = Math.max(bestStreak, newStreak);
-
-  if (solved) {
-    const key = String(Math.min(Math.max(guesses,1),6));
-    guessDist[key] = (guessDist[key] || 0) + 1;
-  }
-
-  await setDoc(userRef, {
+  await setDoc(uref, {
+    userName: storedName,
+    email: currentUser.email || "",
     gamesPlayed: newGames,
     wins: newWins,
-    streak: newStreak,
-    bestStreak: newBest,
-    guessDist,
+    streak,
+    bestStreak: Math.max(data.bestStreak || 0, streak),
+    lastPlayedDate: today,
+    guessDist: dist,
     updatedAt: serverTimestamp()
-  }, { merge: true });
+  }, { merge:true });
 
   const successRate = newGames ? (newWins / newGames) * 100 : 0;
-
-  // 3) upsert leaderboard
-  await setDoc(doc(db, "games", gameId, "leaderboard", authedUid), {
-    userName: storedName,
-    guesses: Math.min(guesses, 6),
-    successRate: successRate,
-    date: serverTimestamp()
-  }, { merge: true });
+  return { successRate };
 }
 
+async function updateUserAggregatesOnLoss() {
+  if (!currentUser) return;
+  const uref = doc(db, "users", currentUser.uid);
+  const usnap = await getDoc(uref);
+  const today = new Date().toISOString().split("T")[0];
+
+  let data = { gamesPlayed: 0, wins: 0, streak: 0, bestStreak: 0, lastPlayedDate: null };
+  if (usnap.exists()) data = { ...data, ...usnap.data() };
+
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+  const expected = yesterday.toISOString().split("T")[0];
+  let streak = 0; // loses reset streak
+
+  const newGames = (data.gamesPlayed || 0) + 1;
+
+  await setDoc(uref, {
+    userName: storedName,
+    email: currentUser?.email || "",
+    gamesPlayed: newGames,
+    wins: data.wins || 0,
+    streak,
+    bestStreak: Math.max(data.bestStreak || 0, streak),
+    lastPlayedDate: today,
+    updatedAt: serverTimestamp()
+  }, { merge:true });
+}
+
+async function submitScore(guessCount, successRateMaybe) {
+  // If no auth user, silently skip Firestore write (user can still play).
+  if (!currentUser) return;
+
+  const uref = doc(db, "users", currentUser.uid);
+  const usnap = await getDoc(uref);
+  const games = usnap.exists() ? (usnap.data().gamesPlayed || 0) : 0;
+  const wins  = usnap.exists() ? (usnap.data().wins || 0) : 0;
+  const sr = successRateMaybe != null ? successRateMaybe : (games ? (wins/games)*100 : null);
+
+  // IMPORTANT: Rules expect leaderboard doc id == UID
+  await setDoc(doc(db, "games", gameId, "leaderboard", currentUser.uid), {
+    userName: storedName,
+    guesses: guessCount,
+    successRate: sr != null ? Math.round(sr) : null,
+    date: serverTimestamp()
+  }, { merge:true });
+}
+
+/* ---------------- Game outcomes ---------------- */
 async function gameCompleted(guessCount) {
   gameOver = true;
   resultMsg.textContent = `Veels geluk, ${storedName}, jy het die woord in ${guessCount} raaiskote gekry!`;
@@ -484,10 +498,11 @@ async function gameCompleted(guessCount) {
   shareBtn.onclick = () =>
     navigator.clipboard.writeText(`Ek het DILEMMA in ${guessCount} raaiskote opgelos: ${gameUrl}`);
   lockoutMessage.style.display = "block";
+  setStatus("won");
 
-  try { await recordUserPlay({ solved: true, guesses: guessCount }); }
-  catch (e) { console.error("Kon nie telling stoor nie:", e); }
-
+  let sr = null;
+  try { const res = await updateUserAggregatesOnWin(guessCount); sr = res.successRate; } catch {}
+  try { await submitScore(guessCount, sr); } catch (e) { console.error("Leaderboard write:", e); }
   await loadLeaderboard();
   document.querySelectorAll(".key").forEach(k => k.disabled = true);
 }
@@ -499,33 +514,49 @@ async function gameFailed() {
   shareBtn.onclick = () =>
     navigator.clipboard.writeText(`Ek kon nie DILEMMA oplos nie. Probeer self: ${gameUrl}`);
   lockoutMessage.style.display = "block";
+  setStatus("lost");
 
-  try { await recordUserPlay({ solved: false, guesses: gridRows }); }
-  catch (e) { console.error("Kon nie telling stoor nie:", e); }
-
+  try { await updateUserAggregatesOnLoss(); } catch {}
+  // On a fail we do not post to leaderboard, but you could post with guesses=6 if you prefer.
   await loadLeaderboard();
   document.querySelectorAll(".key").forEach(k => k.disabled = true);
 }
 
+/* ---------------- Events ---------------- */
 closeBtn.onclick = () => { modal.style.display = "none"; };
-
 document.addEventListener("keydown", e => {
   if (e.key === "Enter") handleEnter();
   else if (e.key === "Backspace") handleBackspace();
   else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
 });
 
-// INIT
+/* ---------------- Init ---------------- */
+onAuthStateChanged(auth, async (user) => {
+  currentUser = user || null;
+
+  // Prefer Firestore name if available
+  try {
+    if (currentUser) {
+      const uref = doc(db, "users", currentUser.uid);
+      const u = await getDoc(uref);
+      if (u.exists() && u.data().userName) {
+        storedName = u.data().userName;
+        localStorage.setItem("userName", storedName);
+      }
+    }
+  } catch {}
+  document.getElementById("playerName").textContent = storedName;
+});
+
 await loadGameData();
 createGrid();
 createKeyboard();
-await restoreLocalProgress();
-
-const gameWasWon = board.some(row => row.every(tile => tile.classList.contains("correct")));
-const gameWasLost = currentRow >= gridRows && !gameWasWon;
-if (gameWasWon || gameWasLost) disableGame();
-
+restoreLocalProgress();
 await loadLeaderboard();
+
+// Double-safety: if saved status indicates finished, lock now.
+const st = readProgress().status;
+if (st === "won" || st === "lost") disableGame();
 </script>
 </body>
 </html>
