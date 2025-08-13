@@ -188,7 +188,7 @@ const gameUrl = window.location.href;
 playerNameEl.textContent = displayName;
 
 // ---------- Helpers ----------
-function disableGame(message = "Jy het hierdie een reeds vandag gespeel") {
+function disableGame(message = "Jy het hierdie een reeds gespeel") {
   gameOver = true;
   document.getElementById("clue").textContent = message;
   lockoutMessage.style.display = "block";
