@@ -532,7 +532,8 @@ async function loadLeaderboard() {
 // ---------- Game end flows ----------
 async function gameCompleted(guessCount) {
   gameOver = true;
-  resultMsg.textContent = `Veels geluk, ${displayName}, jy het die woord in ${guessCount} raaiskote gekry!`;
+const raaiswoord = guessCount === 1 ? 'raaiskoot' : 'raaiskote';
+resultMsg.textContent = `Veels geluk, ${displayName}, jy het die woord in ${guessCount} ${raaiswoord} gekry!`;
   modal.style.display = "flex";
   shareBtn.onclick = () =>
     navigator.clipboard.writeText(`Ek het DILEMMA in ${guessCount} raaiskote opgelos: ${gameUrl}`);
