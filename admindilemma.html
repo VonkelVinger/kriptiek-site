@@ -7,8 +7,7 @@
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import {
-      getFirestore, doc, setDoc, collection, addDoc,
-      query, where, getDocs
+      getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, serverTimestamp
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
     import {
       getAuth, signInWithEmailAndPassword, onAuthStateChanged
@@ -27,14 +26,23 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    const adminUID = "jI7f0Wk4MqfPq7p69vjl8OlJUvS2";
+    const ADMIN_UID = "jI7f0Wk4MqfPq7p69vjl8OlJUvS2";
+    const ADMIN_EMAILS = new Set([
+      // Add whitelisted admin emails here if using email-based admin in rules
+      // "you@yourdomain.com",
+    ]);
+
+    function isAdminClient(user) {
+      if (!user) return false;
+      return user.uid === ADMIN_UID || (user.email && ADMIN_EMAILS.has(user.email));
+    }
 
     const loginForm = document.getElementById('loginForm');
     const adminForm = document.getElementById('adminForm');
     const notAllowed = document.getElementById('notAllowed');
 
     onAuthStateChanged(auth, (user) => {
-      if (user && user.uid === adminUID) {
+      if (isAdminClient(user)) {
         loginForm.style.display = "none";
         adminForm.style.display = "block";
         notAllowed.style.display = "none";
@@ -61,54 +69,65 @@
 
     window.saveGame = async () => {
       const date = document.getElementById('date').value;
-      const word = document.getElementById('word').value.toUpperCase().trim();
+      const word = document.getElementById('word').value.trim();
+      const wordUpper = word.toUpperCase();
+      const wordLower = word.toLowerCase();
       const clue = document.getElementById('clue').value.trim();
 
-      if (!date || !word || !clue) {
+      if (!date || !wordUpper || !clue) {
         alert("Please complete all fields.");
         return;
       }
 
-      // ---------- Duplicate target-word check (Option A) ----------
+      // 1) Check duplicates in /words
       try {
-        const dupQ = query(collection(db, 'games'), where('word', '==', word));
+        const wordDocRef = doc(db, 'words', wordLower);
+        const wordDoc = await getDoc(wordDocRef);
+        if (wordDoc.exists()) {
+          alert("That target word has already been used. Choose another word.");
+          return;
+        }
+      } catch (e) {
+        console.error("Duplicate check (words) failed:", e);
+        alert("Could not verify duplicates right now. Please try again.");
+        return;
+      }
+
+      // 2) Extra check in /games
+      try {
+        const dupQ = query(collection(db, 'games'), where('word', '==', wordUpper));
         const dupSnap = await getDocs(dupQ);
         if (!dupSnap.empty) {
           alert("That target word has already been used. Choose another word.");
           return;
         }
       } catch (e) {
-        console.error("Duplicate check failed:", e);
-        alert("Could not verify duplicates right now. Please try again.");
-        return;
+        console.warn("Secondary duplicate query failed:", e);
       }
-      // ------------------------------------------------------------
 
-      const docId = `Game${date}`;
+      const gameId = `Game${date}`;
 
       try {
-        await setDoc(doc(db, 'games', docId), {
+        await setDoc(doc(db, 'games', gameId), {
           date,
-          word,
+          word: wordUpper,
           clue,
-          created: new Date().toISOString()
+          created: serverTimestamp()
         });
 
-        await addDoc(collection(db, 'games', docId, 'leaderboard'), {
-          userName: "Jy kan eerste op die leierbord wees!",
-          streak: 0,
-          date: new Date()
+        await setDoc(doc(db, 'words', wordLower), {
+          word: wordLower,
+          created: serverTimestamp()
         });
 
-        alert(`Game '${docId}' successfully saved.`);
+        alert(`Game '${gameId}' successfully saved.`);
       } catch (e) {
-        console.error("Error writing document: ", e);
-        alert("Failed to save game. Check console for details.");
+        console.error("Error writing document:", e);
+        alert(`Failed to save game. ${e?.message || ''}`);
       }
     };
 
     // ---------- Auto-fill the clue field ----------
-    // Prefills: "VANDAG SE MISLEIDRAAD: XXXX (x letters)."
     const TEMPLATE_PREFIX = "VANDAG SE MISLEIDRAAD: ";
 
     function updateClueTemplate(force = false) {
@@ -138,7 +157,6 @@
     }
 
     document.addEventListener("DOMContentLoaded", initClueAutofill);
-    // ---------------------------------------------
   </script>
 </head>
 <body style="font-family: sans-serif; max-width: 600px; margin: 40px auto;">
