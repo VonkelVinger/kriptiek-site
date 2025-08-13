@@ -493,7 +493,7 @@ async function loadLeaderboard() {
       if (idx === 0) li.className = "font-bold bg-green-100";
       li.innerHTML =
         `<strong>${e.name}</strong>: ${e.guesses} raaiskote` +
-        (Number.isFinite(e.sr) ? ` · ${e.sr}% suksesvol` : "");
+        (Number.isFinite(e.sr) ? ` · ${e.sr}% sukseskoers` : "");
       leaderboardList.appendChild(li);
     });
   } catch (err) {
