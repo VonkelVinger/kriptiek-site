@@ -4,12 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DILEMMA Argief – Kriptiek</title>
-<!-- Favicon and App Icons -->
-<link rel="icon" href="/assets/favicon.ico" type="image/x-icon" />
-<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
-<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-<link rel="manifest" href="/assets/site.webmanifest">
+  <!-- Favicon and App Icons -->
+  <link rel="icon" href="/assets/favicon.ico" type="image/x-icon" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="manifest" href="/assets/site.webmanifest">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
   <style>
@@ -27,17 +27,14 @@
       padding: 0.5rem;
       border-radius: 4px;
     }
+    /* Neutral base for links; colors are applied dynamically via Tailwind classes in JS */
     .calendar-grid a {
       display: block;
       padding: 0.5rem;
       border-radius: 4px;
-      background-color: #bfdbfe;
-      color: #1e3a8a;
       font-weight: bold;
       text-decoration: none;
-    }
-    .calendar-grid a:hover {
-      background-color: #93c5fd;
+      transition: background-color 150ms ease, box-shadow 150ms ease;
     }
     .day-header {
       font-weight: bold;
@@ -47,9 +44,22 @@
 </head>
 <body class="min-h-screen p-4 text-gray-800 bg-[#f8f5f2]">
   <header class="text-center mb-6">
-    <h1 class="text-3xl font-bold mb-2"> Dilemma-argief</h1>
+    <h1 class="text-3xl font-bold mb-2">Dilemma-argief</h1>
     <p class="text-sm text-gray-600">Kies 'n datum om 'n vorige Dilemma te speel</p>
   </header>
+
+  <!-- Legend -->
+  <div class="max-w-3xl mx-auto mb-4 text-sm text-gray-700 flex items-center gap-4">
+    <span class="inline-flex items-center gap-2">
+      <span class="inline-block w-3 h-3 rounded bg-green-200 border border-green-600"></span> Gespeel
+    </span>
+    <span class="inline-flex items-center gap-2">
+      <span class="inline-block w-3 h-3 rounded bg-blue-200 border border-blue-600"></span> Nie gespeel nie
+    </span>
+    <span class="inline-flex items-center gap-2">
+      <span class="inline-block w-3 h-3 rounded bg-blue-200 border border-blue-600 ring-2 ring-offset-2 ring-[#1e3a8a]"></span> Vandag
+    </span>
+  </div>
 
   <main class="max-w-3xl mx-auto">
     <!-- Month navigation -->
@@ -60,11 +70,11 @@
     <div id="archiveList" class="space-y-10"></div>
   </main>
 
-  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
+  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500 mt-8">
     &copy; 2025 Kriptiek. Alle regte voorbehou. |
-    <a href="/index.html" class="underline">Tuis</a> |  
-    <a href="/profile.html" class="underline">My profiel</a> |    
-<a href="/forum.html" class="underline">Gesels saam</a> |  
+    <a href="/index.html" class="underline">Tuis</a> |
+    <a href="/profile.html" class="underline">My profiel</a> |
+    <a href="/forum.html" class="underline">Gesels saam</a> |
     <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
     <a href="/terms.html" class="underline">Voorwaardes</a> |
     <a href="/faq.html" class="underline">Gereelde vrae</a> |
@@ -75,6 +85,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -87,13 +98,30 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    // Tailwind helper classes
+    const BASE = "block px-2 py-2 rounded font-bold transition-colors border";
+    const CLR_NOT_PLAYED = "bg-blue-200 text-[#1e3a8a] hover:bg-blue-300 border-blue-600";
+    const CLR_PLAYED = "bg-green-200 text-green-900 hover:bg-green-300 border-green-600";
+    const RING_TODAY = "ring-2 ring-offset-2 ring-[#1e3a8a]";
 
     let monthKeys = [];
     let currentMonthIndex = 0;
+    let grouped = {};
+    let playedIds = new Set();
 
-    function renderMonth(monthKey, grouped) {
+    const todayStr = (() => {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    })();
+
+    function renderMonth(monthKey) {
       const container = document.getElementById("archiveList");
-      container.innerHTML = ""; // Clear previous
+      container.innerHTML = "";
 
       const [year, month] = monthKey.split("-");
       const monthName = new Date(`${year}-${month}-01`).toLocaleString("af-ZA", { month: "long", year: "numeric" });
@@ -120,28 +148,38 @@
       // Prepare days
       const firstDay = new Date(`${year}-${month}-01`);
       const totalDays = new Date(year, month, 0).getDate();
-      const startDay = (firstDay.getDay() + 6) % 7; // Monday-start index
+      const startDay = (firstDay.getDay() + 6) % 7; // Monday-start
 
-      // Fill empty cells
+      // Leading blanks
       for (let i = 0; i < startDay; i++) {
         const empty = document.createElement("div");
         calendar.appendChild(empty);
       }
 
-      // Fill days with links
+      // Day cells
       for (let day = 1; day <= totalDays; day++) {
-        const dateStr = `${year}-${month}-${String(day).padStart(2, '0')}`;
+        const dateStr = `${year}-${month}-${String(day).padStart(2, "0")}`;
         const cell = document.createElement("div");
-        const game = grouped[monthKey].find(g => g.date === dateStr);
+        const game = (grouped[monthKey] || []).find(g => g.date === dateStr);
 
         if (game) {
-          const link = document.createElement("a");
-          link.href = `/dilemmagame.html?gameId=${game.gameId}`;
-          link.textContent = day;
-          cell.appendChild(link);
+          const a = document.createElement("a");
+          a.href = `/dilemmagame.html?gameId=${game.gameId}`;
+          a.textContent = day;
+
+          const isPlayed = playedIds.has(game.gameId);
+          const isToday = dateStr === todayStr;
+          a.className = `${BASE} ${isPlayed ? CLR_PLAYED : CLR_NOT_PLAYED} ${isToday ? RING_TODAY : ""}`;
+          a.setAttribute("aria-label", isPlayed ? `Gespeel op ${dateStr}` : `Nie gespeel nie op ${dateStr}`);
+
+          cell.appendChild(a);
         } else {
-          cell.textContent = day;
+          const span = document.createElement("span");
+          span.textContent = day;
+          span.className = "text-gray-400";
+          cell.appendChild(span);
         }
+
         calendar.appendChild(cell);
       }
 
@@ -154,61 +192,75 @@
     function updateNavButtons() {
       const prevBtn = document.getElementById("prevMonth");
       const nextBtn = document.getElementById("nextMonth");
-
       prevBtn.disabled = currentMonthIndex === monthKeys.length - 1;
       nextBtn.disabled = currentMonthIndex === 0;
     }
 
     async function loadArchive() {
+      // 1) Load all games
       const gamesCol = collection(db, "games");
       const snap = await getDocs(gamesCol);
-      if (snap.empty) return;
+      if (!snap.empty) {
+        const entries = [];
+        snap.forEach(doc => {
+          const data = doc.data();
+          if (data?.date) entries.push({ date: data.date, gameId: doc.id });
+        });
 
-      const entries = [];
-      snap.forEach(doc => {
-        const data = doc.data();
-        if (data.date) {
-          entries.push({
-            date: data.date,
-            gameId: doc.id
-          });
-        }
-      });
+        // Sort desc by date
+        entries.sort((a, b) => b.date.localeCompare(a.date));
 
-      // Sort descending by date
-      entries.sort((a, b) => b.date.localeCompare(a.date));
+        // Group by YYYY-MM
+        grouped = {};
+        entries.forEach(({ date, gameId }) => {
+          const [y, m] = date.split("-");
+          const key = `${y}-${m}`;
+          if (!grouped[key]) grouped[key] = [];
+          grouped[key].push({ date, gameId });
+        });
 
-      // Group by year-month
-      const grouped = {};
-      entries.forEach(({ date, gameId }) => {
-        const [year, month] = date.split("-");
-        const monthKey = `${year}-${month}`;
-        if (!grouped[monthKey]) grouped[monthKey] = [];
-        grouped[monthKey].push({ date, gameId });
-      });
-
-      monthKeys = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
-
-      if (monthKeys.length > 1) {
-        document.getElementById("monthNav").classList.remove("hidden");
+        monthKeys = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
       }
 
-      // Show most recent month
-      renderMonth(monthKeys[currentMonthIndex], grouped);
+      // 2) If signed in, fetch played gameIds
+      await new Promise(resolve => {
+        onAuthStateChanged(auth, async (user) => {
+          playedIds = new Set();
+          if (user) {
+            try {
+              const playsCol = collection(db, `userGames/${user.uid}/plays`);
+              const playsSnap = await getDocs(playsCol);
+              playsSnap.forEach(doc => playedIds.add(doc.id)); // doc.id === gameId
+            } catch (e) {
+              console.warn("Kon nie gespeelde speletjies laai nie:", e);
+            }
+          }
+          resolve();
+        });
+      });
 
-      // Event listeners for navigation
+      // 3) Initial render (most recent month)
+      if (monthKeys.length) {
+        renderMonth(monthKeys[currentMonthIndex]);
+      }
+
+      // Month nav listeners
       document.getElementById("prevMonth").addEventListener("click", () => {
         if (currentMonthIndex < monthKeys.length - 1) {
           currentMonthIndex++;
-          renderMonth(monthKeys[currentMonthIndex], grouped);
+          renderMonth(monthKeys[currentMonthIndex]);
         }
       });
       document.getElementById("nextMonth").addEventListener("click", () => {
         if (currentMonthIndex > 0) {
           currentMonthIndex--;
-          renderMonth(monthKeys[currentMonthIndex], grouped);
+          renderMonth(monthKeys[currentMonthIndex]);
         }
       });
+
+      if (monthKeys.length > 1) {
+        document.getElementById("monthNav").classList.remove("hidden");
+      }
     }
 
     loadArchive();
