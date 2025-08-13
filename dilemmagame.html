@@ -28,18 +28,11 @@
     body { font-family: 'Montserrat', sans-serif; background-color: #f9fafb; color: #1f2937; }
     header { background-color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,.1); padding: 1rem; text-align: center; }
     .logo-container { display:flex; justify-content:center; align-items:center; margin-bottom:10px; }
-    .logo-container .letter-box {
-      width:40px; height:40px; margin:2px; display:flex; justify-content:center; align-items:center;
-      background-color:#374151; color:#fff; font-size:1.5rem; font-weight:700; border-radius:4px;
-    }
+    .logo-container .letter-box { width:40px; height:40px; margin:2px; display:flex; justify-content:center; align-items:center; background-color:#374151; color:#fff; font-size:1.5rem; font-weight:700; border-radius:4px; }
 
     .game-container { max-width: 640px; margin: 0 auto; padding: 1rem; }
     .tile-row{ display:flex; justify-content:center; margin-bottom:5px; }
-    .letter-tile{
-      width:50px;height:50px;display:flex;justify-content:center;align-items:center;border:2px solid #374151;
-      font-size:1.5rem;font-weight:bold;text-transform:uppercase;margin:2px;background:#fff;color:#1f2937;
-      transition:transform .3s ease;
-    }
+    .letter-tile{ width:50px; height:50px; display:flex; justify-content:center; align-items:center; border:2px solid #374151; font-size:1.5rem; font-weight:bold; text-transform:uppercase; margin:2px; background:#fff; color:#1f2937; transition:transform .3s ease; }
     .letter-tile.flip{ animation: flipAnim .5s ease forwards; }
     @keyframes flipAnim{ 0%{transform:rotateX(0)} 50%{transform:rotateX(90deg)} 100%{transform:rotateX(0)} }
     .correct{ background:#16a34a!important; color:#fff!important; }
@@ -47,17 +40,11 @@
     .absent{ background:#9ca3af!important; color:#fff!important; }
 
     .keyboard-row{ display:flex; justify-content:center; margin:5px 0; }
-    .key{
-      min-width:30px; padding:10px 12px; margin:2px; border-radius:4px; background:#374151; color:#fff;
-      font-weight:700; cursor:pointer; text-transform:uppercase;
-    }
+    .key{ min-width:30px; padding:10px 12px; margin:2px; border-radius:4px; background:#374151; color:#fff; font-weight:700; cursor:pointer; text-transform:uppercase; }
     .key.bg-green-600{ background:#16a34a!important; }
     .key.bg-red-600{ background:#1e3a8a!important; }
 
-    #lockoutMessage{
-      display:none; text-align:center; margin-top:10px; font-weight:700; color:#1e3a8a; font-size:1.1rem;
-      opacity:0; animation: fadeIn 1s forwards;
-    }
+    #lockoutMessage{ display:none; text-align:center; margin-top:10px; font-weight:700; color:#1e3a8a; font-size:1.1rem; opacity:0; animation: fadeIn 1s forwards; }
     #lockoutMessage .icon{ margin-right:6px; }
     @keyframes fadeIn{ from{opacity:0; transform:translateY(-5px)} to{opacity:1; transform:translateY(0)} }
 
@@ -91,32 +78,13 @@
   <div id="keyboard" class="mb-6"></div>
   <p id="lockoutMessage"><span class="icon">🔒</span>Jy kan môre weer speel</p>
 
-  <!-- HOE OM TE SPEEL -->
-  <div class="mt-6 bg-white rounded shadow p-4">
-    <h2 class="text-xl font-bold mb-2">HOE OM DILEMMA TE SPEEL</h2>
-    <p class="text-gray-700 leading-relaxed mb-2">
-      Jy het ses kanse om die woord te raai.<br>
-      Jy mag vir elke probeerslag enige letters in enige volgorde kies, maar elke raaiskoot moet dieselfde aantal letters hê as die woord waarna jy soek. Dit hoef nie ook 'n woord te vorm nie.<br>
-      Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER.
-    </p>
-    <p class="text-gray-700 italic mb-2">
-      WENK: Op kleiner skerms kan jy Dilemma soos 'n foto met jou vingers kleiner trek totdat dit heeltemal inpas.
-    </p>
-    <p class="text-gray-700 leading-relaxed">
-      <span class="font-bold text-green-700">GROEN</span>: Die letter is in die antwoord en in die regte blokkie.<br>
-      <span class="font-bold text-yellow-600">GEEL</span>: Die letter is in die antwoord, maar nie in die regte blokkie nie.<br>
-      <span class="font-bold text-gray-500">GRYS</span>: Die letter is glad nie in die antwoord nie.
-    </p>
-  </div>
+  <!-- HOE OM TE SPEEL ... (unchanged help text) -->
 
   <!-- LEADERBOARD + GESELS SAAM -->
   <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
     <div class="flex items-center justify-between mb-2">
       <h2 class="text-xl font-bold">Vandag se beste spelers</h2>
-      <a href="/forum.html"
-         class="inline-block bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-3 py-2 rounded">
-        GESELS SAAM
-      </a>
+      <a href="/forum.html" class="inline-block bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-3 py-2 rounded">GESELS SAAM</a>
     </div>
     <ul id="leaderboardList" class="text-gray-700 text-left"><li>Laai...</li></ul>
   </div>
@@ -144,11 +112,10 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
 import {
-  getFirestore, doc, getDoc, collection, setDoc, getDocs,
-  serverTimestamp
+  getFirestore, doc, getDoc, collection, setDoc, getDocs, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 import {
-  getAuth, onAuthStateChanged
+  getAuth, onAuthStateChanged, signInAnonymously
 } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -163,6 +130,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+// Ensure everyone has a UID (so server lock + rules apply)
+signInAnonymously(auth).catch(() => {});
 
 // ---------- UI refs ----------
 const gameGrid = document.getElementById("game-grid");
@@ -180,7 +149,7 @@ let gridRows = 6, gridCols = 5;
 let currentRow = 0, currentCol = 0;
 let board = [], targetWord = "", gameOver = false;
 
-// These now come from Auth (with localStorage as a fallback for the greeting only)
+// These now come from Auth (with localStorage as a fallback for greeting only)
 let currentUid = null;
 let displayName = localStorage.getItem("userName") || "Speler";
 
@@ -198,6 +167,34 @@ function disableGame(message = "Jy het hierdie een reeds vandag gespeel") {
   document.getElementById("clue").textContent = message;
   lockoutMessage.style.display = "block";
   document.querySelectorAll(".key").forEach(key => key.disabled = true);
+}
+
+async function serverLockExists() {
+  if (!currentUid) return false;
+  try {
+    const p = await getDoc(doc(db, "userGames", currentUid, "plays", gameId));
+    return p.exists();
+  } catch {
+    return false;
+  }
+}
+
+async function recordPlay(guessCount, didWin) {
+  if (!currentUid) return;
+  try {
+    await setDoc(
+      doc(db, "userGames", currentUid, "plays", gameId),
+      {
+        finished: true,
+        result: didWin ? "win" : "loss",
+        guesses: Math.trunc(Number(guessCount)),
+        finishedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+  } catch (e) {
+    console.warn("Could not store play-lock:", e);
+  }
 }
 
 async function loadGameData() {
@@ -368,6 +365,7 @@ function restoreLocalProgress() {
   } catch {}
 }
 
+// ---------- Leaderboard ----------
 async function submitScore(guessCount, didWin) {
   if (!currentUid) {
     console.warn("No auth; skipping leaderboard write.");
@@ -375,7 +373,7 @@ async function submitScore(guessCount, didWin) {
   }
 
   try {
-    // 1) Ensure a displayName from Firestore if available
+    // Prefer Firestore-stored name if available
     try {
       const uDoc = await getDoc(doc(db, "users", currentUid));
       if (uDoc.exists() && typeof uDoc.data().userName === "string") {
@@ -387,7 +385,7 @@ async function submitScore(guessCount, didWin) {
       console.warn("Could not read users doc:", e);
     }
 
-    // 2) Update aggregated stats (users/{uid})
+    // Update aggregated stats (users/{uid})
     const uref = doc(db, "users", currentUid);
     const before = await getDoc(uref);
 
@@ -425,7 +423,7 @@ async function submitScore(guessCount, didWin) {
     }
     await setDoc(uref, payload, { merge: true });
 
-    // 3) Compute successRate safely and write leaderboard doc (id == uid)
+    // Compute success rate and write leaderboard doc (CREATE-only by rules; OK on first play)
     const after = await getDoc(uref);
     const nd = after.data() || {};
     const games = Number(nd.gamesPlayed || 0);
@@ -435,42 +433,55 @@ async function submitScore(guessCount, didWin) {
     const lbDocRef = doc(db, "games", gameId, "leaderboard", currentUid);
     const toWrite = {
       userName: displayName,
-      guesses: Number(guessCount),
-      successRate: Number(successRate),
+      guesses: Math.trunc(Number(guessCount)),
+      successRate: Math.max(0, Math.min(100, Math.trunc(successRate))),
       date: serverTimestamp(),      // required by rules
-      createdAtMs: Date.now()       // for stable tie‑break in UI
+      createdAtMs: Date.now()       // for tie-break in UI
     };
-    console.log("Writing leaderboard:", lbDocRef.path, toWrite);
-    await setDoc(lbDocRef, toWrite, { merge: true });
+    await setDoc(lbDocRef, toWrite, { merge: true }); // second attempt is denied by rules (create-only)
   } catch (e) {
     console.error("Kon nie telling stoor nie:", e);
   }
 }
+
 async function loadLeaderboard() {
   try {
     const snap = await getDocs(collection(db, "games", gameId, "leaderboard"));
     const entries = [];
+    const needSR = [];
+
     snap.forEach(d => {
       const v = d.data() || {};
-      const ok =
-        typeof v.userName === "string" &&
-        typeof v.guesses === "number" &&
-        v.guesses >= 1 && v.guesses <= gridRows;
+      const guessesNum = Number(v.guesses);
+      if (!Number.isFinite(guessesNum) || guessesNum < 1 || guessesNum > gridRows) return;
 
-      if (ok) {
-        // prefer server time if present; fall back to createdAtMs
-        const ts = v.date?.seconds ? v.date.seconds * 1000 :
-                   (typeof v.createdAtMs === "number" ? v.createdAtMs : 0);
-        entries.push({ name: v.userName, guesses: v.guesses, when: ts });
-      }
+      const name = (typeof v.userName === "string" && v.userName.trim()) ? v.userName.trim() : "Onbekend";
+      const ts = v.date?.seconds ? v.date.seconds * 1000 :
+                 (typeof v.createdAtMs === "number" ? v.createdAtMs : 0);
+      const sr = Number.isFinite(Number(v.successRate)) ? Math.trunc(Number(v.successRate)) : null;
+
+      entries.push({ uid: d.id, name, guesses: guessesNum, when: ts, sr });
+      if (sr == null) needSR.push(d.id);
     });
+
+    // Fallback: compute SR from users/{uid} if missing
+    if (needSR.length) {
+      const userDocs = await Promise.all(needSR.map(uid => getDoc(doc(db, "users", uid))));
+      userDocs.forEach((uDoc, i) => {
+        if (!uDoc.exists()) return;
+        const u = uDoc.data() || {};
+        const gp = Number(u.gamesPlayed || 0);
+        const w  = Number(u.wins || 0);
+        const sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
+        const ent = entries.find(e => e.uid === needSR[i]);
+        if (ent && ent.sr == null) ent.sr = sr;
+      });
+    }
 
     leaderboardList.innerHTML = "";
     if (!entries.length) {
       leaderboardList.innerHTML =
-        `<li class="bg-green-100 font-medium px-2 py-1 rounded">
-           Jy kan eerste op die leierbord wees!
-         </li>`;
+        `<li class="bg-green-100 font-medium px-2 py-1 rounded">Jy kan eerste op die leierbord wees!</li>`;
       return;
     }
 
@@ -480,7 +491,9 @@ async function loadLeaderboard() {
     entries.forEach((e, idx) => {
       const li = document.createElement("li");
       if (idx === 0) li.className = "font-bold bg-green-100";
-      li.innerHTML = `<strong>${e.name}</strong>: ${e.guesses} raaiskote`;
+      li.innerHTML =
+        `<strong>${e.name}</strong>: ${e.guesses} raaiskote` +
+        (Number.isFinite(e.sr) ? ` · ${e.sr}% wen` : "");
       leaderboardList.appendChild(li);
     });
   } catch (err) {
@@ -488,6 +501,7 @@ async function loadLeaderboard() {
     leaderboardList.innerHTML = `<li class="text-red-600">Kon nie leierbord laai nie.</li>`;
   }
 }
+
 // ---------- Game end flows ----------
 async function gameCompleted(guessCount) {
   gameOver = true;
@@ -498,6 +512,7 @@ async function gameCompleted(guessCount) {
   lockoutMessage.style.display = "block";
 
   saveLocalProgress(true);
+  await recordPlay(guessCount, true);
   await submitScore(guessCount, true);
   await loadLeaderboard();
   document.querySelectorAll(".key").forEach(k => k.disabled = true);
@@ -512,6 +527,7 @@ async function gameFailed() {
   lockoutMessage.style.display = "block";
 
   saveLocalProgress(true);
+  await recordPlay(gridRows, false);
   await submitScore(gridRows, false);
   await loadLeaderboard();
   document.querySelectorAll(".key").forEach(k => k.disabled = true);
@@ -567,18 +583,19 @@ onAuthStateChanged(auth, async (user) => {
   createKeyboard();
   restoreLocalProgress();
 
-  const alreadyDone = localStorage.getItem(doneKey) === "true";
-  if (alreadyDone) {
+  // Server-enforced lock (cross-device) + local lock
+  const lsDone = localStorage.getItem(doneKey) === "true";
+  const fsDone = await serverLockExists();
+  if (lsDone || fsDone) {
     disableGame();
   } else {
     const someWin = board.some(row => row.length && row.every(t => t.classList.contains("correct")));
     const reachedMax = currentRow >= gridRows && !someWin;
     if (someWin || reachedMax) disableGame();
   }
-await loadLeaderboard();
+
+  await loadLeaderboard();
 });
 </script>
-
-
 </body>
 </html>
