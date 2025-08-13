@@ -13,59 +13,54 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
   <style>
-    body {
-      font-family: 'Montserrat', sans-serif;
-      background-color: #f8f5f2;
-    }
+    body { font-family: 'Montserrat', sans-serif; background-color: #f8f5f2; }
     .calendar-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       gap: 4px;
       text-align: center;
     }
-    .calendar-grid div {
-      padding: 0.5rem;
-      border-radius: 4px;
-    }
-    /* Neutral base for links; colors are applied dynamically via Tailwind classes in JS */
+    .calendar-grid div { padding: 0.5rem; border-radius: 4px; }
+    /* Neutral base for links; colors set via JS classes */
     .calendar-grid a {
       display: block;
       padding: 0.5rem;
       border-radius: 4px;
       font-weight: bold;
       text-decoration: none;
-      transition: background-color 150ms ease, box-shadow 150ms ease;
+      transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
     }
-    .day-header {
-      font-weight: bold;
-      color: #374151;
-    }
+    .calendar-grid a:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .day-header { font-weight: bold; color: #374151; }
   </style>
 </head>
-<body class="min-h-screen p-4 text-gray-800 bg-[#f8f5f2]">
+<body class="min-h-screen p-4 text-gray-100 bg-[#f8f5f2]">
   <header class="text-center mb-6">
-    <h1 class="text-3xl font-bold mb-2">Dilemma-argief</h1>
+    <h1 class="text-3xl font-bold mb-2 text-[#374151]">Dilemma-argief</h1>
     <p class="text-sm text-gray-600">Kies 'n datum om 'n vorige Dilemma te speel</p>
   </header>
 
   <!-- Legend -->
   <div class="max-w-3xl mx-auto mb-4 text-sm text-gray-700 flex items-center gap-4">
     <span class="inline-flex items-center gap-2">
-      <span class="inline-block w-3 h-3 rounded bg-green-200 border border-green-600"></span> Gespeel
+      <span class="inline-flex items-center justify-center w-5 h-5 rounded text-white" style="background-color:#374151; border:2px solid #374151;">&nbsp;</span>
+      Vandag
     </span>
     <span class="inline-flex items-center gap-2">
-      <span class="inline-block w-3 h-3 rounded bg-blue-200 border border-blue-600"></span> Nie gespeel nie
+      <span class="inline-flex items-center justify-center w-5 h-5 rounded text-white" style="background-color:#374151;">&nbsp;</span>
+      Gespeel
     </span>
     <span class="inline-flex items-center gap-2">
-      <span class="inline-block w-3 h-3 rounded bg-blue-200 border border-blue-600 ring-2 ring-offset-2 ring-[#1e3a8a]"></span> Vandag
+      <span class="inline-flex items-center justify-center w-5 h-5 rounded text-white" style="background-color:#166534;">&nbsp;</span>
+      Nog nie gespeel nie
     </span>
   </div>
 
   <main class="max-w-3xl mx-auto">
     <!-- Month navigation -->
     <div id="monthNav" class="flex justify-between mb-4 hidden">
-      <button id="prevMonth" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">← Vorige maand</button>
-      <button id="nextMonth" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Volgende maand →</button>
+      <button id="prevMonth" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-[#374151]">← Vorige maand</button>
+      <button id="nextMonth" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-[#374151]">Volgende maand →</button>
     </div>
     <div id="archiveList" class="space-y-10"></div>
   </main>
@@ -100,11 +95,15 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    // Tailwind helper classes
-    const BASE = "block px-2 py-2 rounded font-bold transition-colors border";
-    const CLR_NOT_PLAYED = "bg-blue-200 text-[#1e3a8a] hover:bg-blue-300 border-blue-600";
-    const CLR_PLAYED = "bg-green-200 text-green-900 hover:bg-green-300 border-green-600";
-    const RING_TODAY = "ring-2 ring-offset-2 ring-[#1e3a8a]";
+    // Colors (match site palette)
+    // Dark blue (#374151) and dark green (#166534)
+    const BASE = "block px-2 py-2 rounded font-bold";
+    const CLR_TODAY = "text-white border-2";
+    const CLR_PLAYED = "text-white";
+    const CLR_NOT_PLAYED = "text-white";
+
+    const BLUE = "#374151";
+    const GREEN = "#166534";
 
     let monthKeys = [];
     let currentMonthIndex = 0;
@@ -137,8 +136,7 @@
       calendar.className = "calendar-grid";
 
       // Day headers
-      const daysOfWeek = ["Ma", "Di", "Wo", "Do", "Vr", "Sa", "So"];
-      daysOfWeek.forEach(d => {
+      ["Ma","Di","Wo","Do","Vr","Sa","So"].forEach(d => {
         const header = document.createElement("div");
         header.className = "day-header";
         header.textContent = d;
@@ -152,8 +150,7 @@
 
       // Leading blanks
       for (let i = 0; i < startDay; i++) {
-        const empty = document.createElement("div");
-        calendar.appendChild(empty);
+        calendar.appendChild(document.createElement("div"));
       }
 
       // Day cells
@@ -169,8 +166,21 @@
 
           const isPlayed = playedIds.has(game.gameId);
           const isToday = dateStr === todayStr;
-          a.className = `${BASE} ${isPlayed ? CLR_PLAYED : CLR_NOT_PLAYED} ${isToday ? RING_TODAY : ""}`;
-          a.setAttribute("aria-label", isPlayed ? `Gespeel op ${dateStr}` : `Nie gespeel nie op ${dateStr}`);
+
+          a.className = `${BASE} ${isToday ? CLR_TODAY : (isPlayed ? CLR_PLAYED : CLR_NOT_PLAYED)}`;
+          // Apply brand colors inline so hover states don't change hues
+          if (isToday) {
+            a.style.backgroundColor = BLUE;
+            a.style.borderColor = BLUE;
+          } else if (isPlayed) {
+            a.style.backgroundColor = BLUE;
+          } else {
+            a.style.backgroundColor = GREEN;
+          }
+
+          a.setAttribute("aria-label",
+            isToday ? `Vandag – ${dateStr}` :
+            (isPlayed ? `Gespeel op ${dateStr}` : `Nie gespeel op ${dateStr}`));
 
           cell.appendChild(a);
         } else {
@@ -222,7 +232,7 @@
         monthKeys = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
       }
 
-      // 2) If signed in, fetch played gameIds
+      // 2) Get played gameIds for signed-in user
       await new Promise(resolve => {
         onAuthStateChanged(auth, async (user) => {
           playedIds = new Set();
@@ -244,7 +254,7 @@
         renderMonth(monthKeys[currentMonthIndex]);
       }
 
-      // Month nav listeners
+      // Month nav
       document.getElementById("prevMonth").addEventListener("click", () => {
         if (currentMonthIndex < monthKeys.length - 1) {
           currentMonthIndex++;
