@@ -569,7 +569,7 @@ async function gameFailed() {
   resultMsg.textContent = `Jammer, ${displayName}! Vandag se oplossing is ${targetWord}.`;
   modal.style.display = "flex";
   shareBtn.onclick = () =>
-    navigator.clipboard.writeText(`Ek kon nie DILEMMA oplos nie. Probeer self: ${gameUrl}`);
+    navigator.clipboard.writeText(`Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${gameUrl}`);
 
   saveLocalProgress(true);
   await recordPlay(gridRows, false);
