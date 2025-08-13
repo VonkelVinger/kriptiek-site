@@ -79,11 +79,37 @@
   <p id="lockoutMessage"><span class="icon">🔒</span>Jy kan môre weer speel</p>
 
   <!-- HOE OM TE SPEEL ... (unchanged help text) -->
-
+<div class="mt-6 bg-white rounded shadow p-4">
+  <h2 class="text-xl font-bold mb-2">HOE OM DILEMMA TE SPEEL</h2>
+  <p class="text-gray-700 leading-relaxed mb-2">
+    Jy het ses kanse om die woord te raai.<br>
+    Jy mag vir elke probeerslag enige letters in enige volgorde kies, maar elke raaiskoot moet dieselfde aantal letters hê as die woord waarna jy soek. Dit hoef nie ook 'n woord te vorm nie.<br>
+    Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER.
+  </p>
+  <p class="text-gray-700 italic mb-2">
+    WENK: Op kleiner skerms kan jy Dilemma soos 'n foto met jou vingers kleiner trek totdat dit heeltemal inpas.
+  </p>
+  <p class="text-gray-700 leading-relaxed">
+    <span class="font-bold text-green-700">GROEN</span>: Die letter is in die antwoord en in die regte blokkie.<br>
+    <span class="font-bold text-yellow-600">GEEL</span>: Die letter is in die antwoord, maar nie in die regte blokkie nie.<br>
+    <span class="font-bold text-gray-500">GRYS</span>: Die letter is glad nie in die antwoord nie.
+  </p>
+<h3 class="text-lg font-bold mt-4">Jou statistiek</h3>
+<ul class="list-disc pl-6 text-gray-700 space-y-1">
+  <li><strong>Een poging per raaisel:</strong> Sodra jy klaar gespeel het (wen of verloor), word daardie raaisel vir jou gesluit.</li>
+  <li><strong>Ouer raaisels is oop:</strong> Jy kan enige vroeëre Dilemma steeds aanpak as jy dit nog nie gedoen het nie.</li>
+  <li><strong>Alles tel vir jou statistiek:</strong> Elke voltooide raaisel word ingereken by jou <strong>sukseskoers</strong> (% opgelos), dit wil sê al die Dilemmas wat jy kon oplos as 'n persentasie van die totale aantal wat jy al gespeel het.</li>
+  <li><strong>Wenlopie:</strong> Dit is jou lopie van suksesvolle opeenvolgende Dilemmas gespeel, in enige volgorde waarin jy kies om hulle te speel (dus nie noodwendig chronologies nie).</li>
+  <li><strong>Leierbord:</strong> Omdat jy elke raaisel net <em>een keer</em> mag speel, kan jou naam nie meer as een keer op daardie dag se leierbord verskyn nie.</li>
+</ul>
+<p class="text-sm text-gray-500 mt-2">
+  Let wel: Jou vordering is aan hierdie blaaier en toestel gekoppel, maar sal ook beskikbaar wees as jy elders met dieselfde besonderhede aanmeld.
+</p>
+</div>
   <!-- LEADERBOARD + GESELS SAAM -->
   <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
     <div class="flex items-center justify-between mb-2">
-      <h2 class="text-xl font-bold">Beste spelers:</h2>
+      <h2 class="text-xl font-bold">Vandag se bestes:</h2>
       <a href="/forum.html" class="inline-block bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-3 py-2 rounded">GESELS SAAM</a>
     </div>
     <ul id="leaderboardList" class="text-gray-700 text-left"><li>Laai...</li></ul>
