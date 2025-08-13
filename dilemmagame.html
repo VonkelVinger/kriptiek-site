@@ -44,16 +44,7 @@
     .key.bg-green-600{ background:#16a34a!important; }
     .key.bg-red-600{ background:#1e3a8a!important; }
 
-    #lockoutMessage{ display:none; text-align:center; margin-top:10px; font-weight:700; color:#1e3a8a; font-size:1.1rem; opacity:0; animation: fadeIn 1s forwards; }
-    #lockoutMessage .icon{ margin-right:6px; }
-    @keyframes fadeIn{ from{opacity:0; transform:translateY(-5px)} to{opacity:1; transform:translateY(0)} }
-
-    #leaderboard{ border:1px solid #e5e7eb; }
-    #leaderboardList li{ padding:6px 8px; transition: background-color .2s ease; }
-    #leaderboardList li:nth-child(odd){ background:#f9fafb; }
-    #leaderboardList li:nth-child(even){ background:#fff; }
-    #leaderboardList li:hover{ background:#e0e7ff; }
-
+    /* Result modal */
     #resultModal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); align-items:center; justify-content:center; z-index:1000; }
     #resultModal .modal-content{ background:#fff; padding:1.5rem; border-radius:8px; text-align:center; max-width:300px; width:100%; }
     #resultModal button{ margin:5px; padding:8px 16px; border-radius:4px; font-weight:700; }
@@ -75,42 +66,50 @@
 <main class="flex-grow game-container">
   <div id="clue" class="text-center text-lg mb-4 text-gray-700 font-semibold">Laai die leidraad...</div>
   <div id="game-grid" class="mb-6"></div>
-  <div id="keyboard" class="mb-6"></div>
-  <p id="lockoutMessage"><span class="icon">🔒</span>Jy kan môre weer speel</p>
+  <div id="keyboard" class="mb-4"></div>
 
-  <!-- HOE OM TE SPEEL ... (unchanged help text) -->
-<div class="mt-6 bg-white rounded shadow p-4">
-  <h2 class="text-xl font-bold mb-2">HOE OM DILEMMA TE SPEEL</h2>
-  <p class="text-gray-700 leading-relaxed mb-2">
-    Jy het ses kanse om die woord te raai.<br>
-    Jy mag vir elke probeerslag enige letters in enige volgorde kies, maar elke raaiskoot moet dieselfde aantal letters hê as die woord waarna jy soek. Dit hoef nie ook 'n woord te vorm nie.<br>
-    Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER.
-  </p>
-  <p class="text-gray-700 italic mb-2">
-    WENK: Op kleiner skerms kan jy Dilemma soos 'n foto met jou vingers kleiner trek totdat dit heeltemal inpas.
-  </p>
-  <p class="text-gray-700 leading-relaxed">
-    <span class="font-bold text-green-700">GROEN</span>: Die letter is in die antwoord en in die regte blokkie.<br>
-    <span class="font-bold text-yellow-600">GEEL</span>: Die letter is in die antwoord, maar nie in die regte blokkie nie.<br>
-    <span class="font-bold text-gray-500">GRYS</span>: Die letter is glad nie in die antwoord nie.
-  </p>
-<h3 class="text-lg font-bold mt-4">JOU STATISTIEK</h3>
-<ul class="list-disc pl-6 text-gray-700 space-y-1">
-  <li><strong>Een poging per raaisel:</strong> Sodra jy klaar gespeel het (wen of verloor), word daardie raaisel vir jou gesluit.</li>
-  <li><strong>Ouer raaisels is oop:</strong> Jy kan enige vroeëre Dilemma steeds aanpak as jy dit nog nie gedoen het nie.</li>
-  <li><strong>Alles tel vir jou statistiek:</strong> Elke voltooide raaisel word ingereken by jou <strong>sukseskoers</strong> (% opgelos), dit wil sê al die Dilemmas wat jy kon oplos as 'n persentasie van die totale aantal wat jy al gespeel het.</li>
-  <li><strong>Wenlopie:</strong> Dit is jou lopie van suksesvolle opeenvolgende Dilemmas gespeel, in enige volgorde waarin jy kies om hulle te speel (dus nie noodwendig chronologies nie).</li>
-  <li><strong>Leierbord:</strong> Omdat jy elke raaisel <em>net een keer</em> mag speel, kan jou naam nie meer as een keer op daardie dag se leierbord verskyn nie.</li>
-</ul>
-<p class="text-sm text-gray-500 mt-2">
-  Let wel: Jou vordering is aan hierdie blaaier en toestel gekoppel, maar sal ook beskikbaar wees as jy elders met dieselfde besonderhede aanmeld.
-</p>
-</div>
-  <!-- LEADERBOARD + GESELS SAAM -->
+  <!-- GESELS SAAM button moved here -->
+  <div class="mb-6 flex justify-center">
+    <a href="/forum.html" id="chatButton"
+       class="inline-block bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-4 py-2 rounded">
+      GESELS SAAM
+    </a>
+  </div>
+
+  <!-- HOE OM TE SPEEL -->
+  <div class="mt-2 bg-white rounded shadow p-4">
+    <h2 class="text-xl font-bold mb-2">HOE OM DILEMMA TE SPEEL</h2>
+    <p class="text-gray-700 leading-relaxed mb-2">
+      Jy het ses kanse om die woord te raai.<br>
+      Jy mag vir elke probeerslag enige letters in enige volgorde kies, maar elke raaiskoot moet dieselfde aantal letters hê as die woord waarna jy soek. Dit hoef nie ook 'n woord te vorm nie.<br>
+      Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER.
+    </p>
+    <p class="text-gray-700 italic mb-2">
+      WENK: Op kleiner skerms kan jy Dilemma soos 'n foto met jou vingers kleiner trek totdat dit heeltemal inpas.
+    </p>
+    <p class="text-gray-700 leading-relaxed">
+      <span class="font-bold text-green-700">GROEN</span>: Die letter is in die antwoord en in die regte blokkie.<br>
+      <span class="font-bold text-yellow-600">GEEL</span>: Die letter is in die antwoord, maar nie in die regte blokkie nie.<br>
+      <span class="font-bold text-gray-500">GRYS</span>: Die letter is glad nie in die antwoord nie.
+    </p>
+    <h3 class="text-lg font-bold mt-4">JOU STATISTIEK</h3>
+    <ul class="list-disc pl-6 text-gray-700 space-y-1">
+      <li><strong>Een poging per raaisel:</strong> Sodra jy klaar gespeel het (wen of verloor), word daardie raaisel vir jou gesluit.</li>
+      <li><strong>Ouer raaisels is oop:</strong> Jy kan enige vroeëre Dilemma steeds aanpak as jy dit nog nie gedoen het nie.</li>
+      <li><strong>Alles tel vir jou statistiek:</strong> Elke voltooide raaisel word ingereken by jou <strong>sukseskoers</strong> (% opgelos), dit wil sê al die Dilemmas wat jy kon oplos as 'n persentasie van die totale aantal wat jy al gespeel het.</li>
+      <li><strong>Wenlopie:</strong> Dit is jou lopie van suksesvolle opeenvolgende Dilemmas gespeel, in enige volgorde waarin jy kies om hulle te speel (dus nie noodwendig chronologies nie).</li>
+      <li><strong>Leierbord:</strong> Omdat jy elke raaisel <em>net een keer</em> mag speel, kan jou naam nie meer as een keer op daardie dag se leierbord verskyn nie.</li>
+    </ul>
+    <p class="text-sm text-gray-500 mt-2">
+      Let wel: Jou vordering is aan hierdie blaaier en toestel gekoppel, maar sal ook beskikbaar wees as jy elders met dieselfde besonderhede aanmeld.
+    </p>
+  </div>
+
+  <!-- LEADERBOARD (button removed here) -->
   <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
     <div class="flex items-center justify-between mb-2">
       <h2 class="text-xl font-bold">Vandag se bestes:</h2>
-      <a href="/forum.html" class="inline-block bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-3 py-2 rounded">GESELS SAAM</a>
+      <!-- (button moved; nothing here now) -->
     </div>
     <ul id="leaderboardList" class="text-gray-700 text-left"><li>Laai...</li></ul>
   </div>
@@ -118,14 +117,14 @@
 
 <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
   &copy; 2025 Kriptiek. Alle regte voorbehou. |
-<a href="/index.html" class="underline">Tuis</a> |
-<a href="/profile.html" class="underline">My profiel</a> |
-<a href="/forum.html" class="underline">Gesels saam</a> |
-<a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
-<a href="/terms.html" class="underline">Voorwaardes</a> |
-<a href="/faq.html" class="underline">Gereelde vrae</a> |
-<a href="/about.html" class="underline">Oor Kriptiek</a> |
-<a href="/contact.html" class="underline">Kontak ons</a>
+  <a href="/index.html" class="underline">Tuis</a> |
+  <a href="/profile.html" class="underline">My profiel</a> |
+  <a href="/forum.html" class="underline">Gesels saam</a> |
+  <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
+  <a href="/terms.html" class="underline">Voorwaardes</a> |
+  <a href="/faq.html" class="underline">Gereelde vrae</a> |
+  <a href="/about.html" class="underline">Oor Kriptiek</a> |
+  <a href="/contact.html" class="underline">Kontak ons</a>
 </footer>
 
 <!-- RESULT MODAL -->
@@ -157,13 +156,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
-// Ensure everyone has a UID (so server lock + rules apply)
 signInAnonymously(auth).catch(() => {});
 
 // ---------- UI refs ----------
 const gameGrid = document.getElementById("game-grid");
 const keyboard = document.getElementById("keyboard");
-const lockoutMessage = document.getElementById("lockoutMessage");
 const modal = document.getElementById("resultModal");
 const resultMsg = document.getElementById("resultMessage");
 const shareBtn = document.getElementById("modalShareBtn");
@@ -176,7 +173,6 @@ let gridRows = 6, gridCols = 5;
 let currentRow = 0, currentCol = 0;
 let board = [], targetWord = "", gameOver = false;
 
-// These now come from Auth (with localStorage as a fallback for greeting only)
 let currentUid = null;
 let displayName = localStorage.getItem("userName") || "Speler";
 
@@ -189,10 +185,8 @@ const gameUrl = window.location.href;
 playerNameEl.textContent = displayName;
 
 // ---------- Helpers ----------
-function disableGame(message = "Jy het hierdie een reeds gespeel") {
+function disableGame() {
   gameOver = true;
-  document.getElementById("clue").textContent = message;
-  lockoutMessage.style.display = "block";
   document.querySelectorAll(".key").forEach(key => key.disabled = true);
 }
 
@@ -450,7 +444,7 @@ async function submitScore(guessCount, didWin) {
     }
     await setDoc(uref, payload, { merge: true });
 
-    // Compute success rate and write leaderboard doc (CREATE-only by rules; OK on first play)
+    // Compute success rate and write leaderboard doc
     const after = await getDoc(uref);
     const nd = after.data() || {};
     const games = Number(nd.gamesPlayed || 0);
@@ -462,10 +456,10 @@ async function submitScore(guessCount, didWin) {
       userName: displayName,
       guesses: Math.trunc(Number(guessCount)),
       successRate: Math.max(0, Math.min(100, Math.trunc(successRate))),
-      date: serverTimestamp(),      // required by rules
-      createdAtMs: Date.now()       // for tie-break in UI
+      date: serverTimestamp(),
+      createdAtMs: Date.now()
     };
-    await setDoc(lbDocRef, toWrite, { merge: true }); // second attempt is denied by rules (create-only)
+    await setDoc(lbDocRef, toWrite, { merge: true });
   } catch (e) {
     console.error("Kon nie telling stoor nie:", e);
   }
@@ -491,7 +485,6 @@ async function loadLeaderboard() {
       if (sr == null) needSR.push(d.id);
     });
 
-    // Fallback: compute SR from users/{uid} if missing
     if (needSR.length) {
       const userDocs = await Promise.all(needSR.map(uid => getDoc(doc(db, "users", uid))));
       userDocs.forEach((uDoc, i) => {
@@ -512,18 +505,17 @@ async function loadLeaderboard() {
       return;
     }
 
-    // Best (fewest guesses) first; ties = earlier write first
     entries.sort((a, b) => (a.guesses - b.guesses) || (a.when - b.when));
 
     entries.forEach((e, idx) => {
-  const li = document.createElement("li");
-  if (idx === 0) li.className = "font-bold bg-green-100";
-  const woord = e.guesses === 1 ? 'raaiskoot' : 'raaiskote';
-  li.innerHTML =
-    `<strong>${e.name}</strong>: ${e.guesses} ${woord}` +
-    (Number.isFinite(e.sr) ? ` · ${e.sr}% sukseskoers` : "");
-  leaderboardList.appendChild(li);
-});
+      const li = document.createElement("li");
+      if (idx === 0) li.className = "font-bold bg-green-100";
+      const woord = e.guesses === 1 ? 'raaiskoot' : 'raaiskote';
+      li.innerHTML =
+        `<strong>${e.name}</strong>: ${e.guesses} ${woord}` +
+        (Number.isFinite(e.sr) ? ` · ${e.sr}% sukseskoers` : "");
+      leaderboardList.appendChild(li);
+    });
   } catch (err) {
     console.error("Kon nie leierbord laai nie:", err);
     leaderboardList.innerHTML = `<li class="text-red-600">Kon nie leierbord laai nie.</li>`;
@@ -533,13 +525,11 @@ async function loadLeaderboard() {
 // ---------- Game end flows ----------
 async function gameCompleted(guessCount) {
   gameOver = true;
-const raaiswoord = guessCount === 1 ? 'raaiskoot' : 'raaiskote';
-resultMsg.textContent = `Veels geluk, ${displayName}, jy het die woord in ${guessCount} ${raaiswoord} gekry!`;
+  const raaiswoord = guessCount === 1 ? 'raaiskoot' : 'raaiskote';
+  resultMsg.textContent = `Veels geluk, ${displayName}, jy het die woord in ${guessCount} ${raaiswoord} gekry!`;
   modal.style.display = "flex";
-  // after setting raaiswoord
-shareBtn.onclick = () =>
-  navigator.clipboard.writeText(`Ek het DILEMMA in ${guessCount} ${raaiswoord} opgelos: ${gameUrl}`);
-  lockoutMessage.style.display = "block";
+  shareBtn.onclick = () =>
+    navigator.clipboard.writeText(`Ek het DILEMMA in ${guessCount} ${raaiswoord} opgelos: ${gameUrl}`);
 
   saveLocalProgress(true);
   await recordPlay(guessCount, true);
@@ -554,7 +544,6 @@ async function gameFailed() {
   modal.style.display = "flex";
   shareBtn.onclick = () =>
     navigator.clipboard.writeText(`Ek kon nie DILEMMA oplos nie. Probeer self: ${gameUrl}`);
-  lockoutMessage.style.display = "block";
 
   saveLocalProgress(true);
   await recordPlay(gridRows, false);
@@ -591,11 +580,10 @@ function checkGuessWithFlip(guess) {
   }, gridCols * 350 + 20);
 }
 
-// ---------- Init sequence (wait for Auth so writes are authenticated) ----------
+// ---------- Init sequence ----------
 onAuthStateChanged(auth, async (user) => {
   currentUid = user?.uid || null;
 
-  // Prefer Firestore-stored name if signed in
   if (currentUid) {
     try {
       const uDoc = await getDoc(doc(db, "users", currentUid));
