@@ -43,7 +43,7 @@
   <!-- Legend -->
   <div class="max-w-3xl mx-auto mb-4 text-sm text-gray-700 flex items-center gap-4">
     <span class="inline-flex items-center gap-2">
-      <span class="inline-flex items-center justify-center w-5 h-5 rounded text-white" style="background-color:#374151; border:2px solid #374151;">&nbsp;</span>
+      <span class="inline-flex items-center justify-center w-5 h-5 rounded text-white" style="background-color:#374151; border:2px solid #ffffff;">&nbsp;</span>
       Vandag
     </span>
     <span class="inline-flex items-center gap-2">
@@ -96,14 +96,14 @@
     const auth = getAuth(app);
 
     // Colors (match site palette)
-    // Dark blue (#374151) and dark green (#166534)
-    const BASE = "block px-2 py-2 rounded font-bold";
-const CLR_TODAY = "text-white border-4 border-white box-border";
-    const CLR_PLAYED = "text-white";
-    const CLR_NOT_PLAYED = "text-white";
+    const BLUE = "#374151";  // dark blue
+    const GREEN = "#166534"; // dark green
 
-    const BLUE = "#374151";
-    const GREEN = "#166534";
+    // Class helpers
+    const BASE = "block px-2 py-2 rounded font-bold text-white";
+    const CLR_TODAY = "border-4 box-border"; // white border set in JS
+    const CLR_PLAYED = "";
+    const CLR_NOT_PLAYED = "";
 
     let monthKeys = [];
     let currentMonthIndex = 0;
@@ -167,21 +167,24 @@ const CLR_TODAY = "text-white border-4 border-white box-border";
           const isPlayed = playedIds.has(game.gameId);
           const isToday = dateStr === todayStr;
 
-          a.className = `${BASE} ${isToday ? CLR_TODAY : (isPlayed ? CLR_PLAYED : CLR_NOT_PLAYED)}`;
-          // Apply brand colors inline so hover states don't change hues
-         if (isToday) {
-  a.className = `${BASE} ${CLR_TODAY}`;
-  a.style.backgroundColor = BLUE;  // #374151
-}
-        } else if (isPlayed) {
+          if (isToday) {
+            a.className = `${BASE} ${CLR_TODAY}`;
+            a.style.backgroundColor = BLUE;
+            a.style.borderColor = "#ffffff"; // distinct white inner border
+          } else if (isPlayed) {
+            a.className = `${BASE} ${CLR_PLAYED}`;
             a.style.backgroundColor = BLUE;
           } else {
+            a.className = `${BASE} ${CLR_NOT_PLAYED}`;
             a.style.backgroundColor = GREEN;
           }
 
-          a.setAttribute("aria-label",
-            isToday ? `Vandag – ${dateStr}` :
-            (isPlayed ? `Gespeel op ${dateStr}` : `Nie gespeel op ${dateStr}`));
+          a.setAttribute(
+            "aria-label",
+            isToday
+              ? `Vandag – ${dateStr}`
+              : (isPlayed ? `Gespeel op ${dateStr}` : `Nie gespeel op ${dateStr}`)
+          );
 
           cell.appendChild(a);
         } else {
