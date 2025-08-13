@@ -527,7 +527,7 @@ async function loadLeaderboard() {
       const woord = e.guesses === 1 ? 'raaiskoot' : 'raaiskote';
       li.innerHTML =
         `<strong>${e.name}</strong>: ${e.guesses} ${woord}` +
-        (Number.isFinite(e.sr) ? ` · ${e.sr}% sukseskoers` : "");
+        (Number.isFinite(e.sr) ? ` · ${e.sr}%-sukseskoers` : "");
       leaderboardList.appendChild(li);
     });
   } catch (err) {
