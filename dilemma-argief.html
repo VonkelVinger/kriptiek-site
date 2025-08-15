@@ -52,7 +52,7 @@
   <header class="text-center mb-6">
     <h1 class="text-3xl font-bold mb-3 text-[#374151]">Dilemma-argief</h1>
 
-    <!-- Legend moved here -->
+    <!-- Legend -->
     <div class="max-w-3xl mx-auto text-sm text-gray-700 flex items-center justify-center gap-6">
       <span class="inline-flex items-center gap-2">
         <span class="legend-swatch today-indicator" style="background-color:#374151;"></span>
@@ -92,7 +92,9 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import {
+      getFirestore, collection, getDocs, query, where, orderBy
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -111,8 +113,6 @@
     // Brand colors
     const BLUE = "#374151";  // dark blue
     const GREEN = "#166534"; // dark green
-
-    // Base classes for day links
     const BASE = "block px-2 py-2 rounded font-bold text-white";
 
     let monthKeys = [];
@@ -120,13 +120,18 @@
     let grouped = {};
     let playedIds = new Set();
 
-    const todayStr = (() => {
-      const d = new Date();
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-      return `${y}-${m}-${day}`;
-    })();
+    // --- Get today's dateKey in SAST (Africa/Johannesburg) ---
+    function todayKeySAST() {
+      const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Africa/Johannesburg',
+        year: 'numeric', month: '2-digit', day: '2-digit'
+      }).formatToParts(new Date());
+      const y = parts.find(p => p.type === 'year').value;
+      const m = parts.find(p => p.type === 'month').value;
+      const d = parts.find(p => p.type === 'day').value;
+      return `${y}-${m}-${d}`;
+    }
+    const todayKey = todayKeySAST();
 
     function renderMonth(monthKey) {
       const container = document.getElementById("archiveList");
@@ -167,7 +172,7 @@
       for (let day = 1; day <= totalDays; day++) {
         const dateStr = `${year}-${month}-${String(day).padStart(2, "0")}`;
         const cell = document.createElement("div");
-        const game = (grouped[monthKey] || []).find(g => g.date === dateStr);
+        const game = (grouped[monthKey] || []).find(g => g.dateKey === dateStr);
 
         if (game) {
           const a = document.createElement("a");
@@ -178,11 +183,10 @@
           a.style.borderRadius = "4px";
 
           const isPlayed = playedIds.has(game.gameId);
-          const isToday = dateStr === todayStr;
+          const isToday = dateStr === todayKey; // today won't render anyway (excluded), but keep logic harmless
 
           if (isToday) {
             a.style.backgroundColor = BLUE;
-            // clear border; use clear dot marker instead
             a.style.border = "none";
             a.classList.add("today-indicator");
           } else if (isPlayed) {
@@ -225,29 +229,36 @@
     }
 
     async function loadArchive() {
-      // 1) Load all games
-      const gamesCol = collection(db, "games");
-      const snap = await getDocs(gamesCol);
+      // 1) Load only PAST games (dateKey < todayKey) ordered by dateKey desc
+      const gamesQ = query(
+        collection(db, "games"),
+        where("dateKey", "<", todayKey),
+        orderBy("dateKey", "desc")
+      );
+      const snap = await getDocs(gamesQ);
+
       if (!snap.empty) {
         const entries = [];
-        snap.forEach(doc => {
-          const data = doc.data();
-          if (data?.date) entries.push({ date: data.date, gameId: doc.id });
+        snap.forEach(docSnap => {
+          const data = docSnap.data();
+          if (data?.dateKey) {
+            entries.push({ dateKey: data.dateKey, gameId: docSnap.id }); // doc ID == dateKey
+          }
         });
-
-        // Sort desc by date
-        entries.sort((a, b) => b.date.localeCompare(a.date));
 
         // Group by YYYY-MM
         grouped = {};
-        entries.forEach(({ date, gameId }) => {
-          const [y, m] = date.split("-");
+        entries.forEach(({ dateKey, gameId }) => {
+          const [y, m] = dateKey.split("-");
           const key = `${y}-${m}`;
           if (!grouped[key]) grouped[key] = [];
-          grouped[key].push({ date, gameId });
+          grouped[key].push({ dateKey, gameId });
         });
 
+        // Sort month buckets desc (most recent first)
         monthKeys = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+        // Sort each month's days asc for a natural calendar feel
+        monthKeys.forEach(k => grouped[k].sort((a, b) => a.dateKey.localeCompare(b.dateKey)));
       }
 
       // 2) Get played gameIds for signed-in user
@@ -256,9 +267,10 @@
           playedIds = new Set();
           if (user) {
             try {
+              // Note: doc.id should equal gameId (dateKey)
               const playsCol = collection(db, `userGames/${user.uid}/plays`);
               const playsSnap = await getDocs(playsCol);
-              playsSnap.forEach(doc => playedIds.add(doc.id)); // doc.id === gameId
+              playsSnap.forEach(doc => playedIds.add(doc.id));
             } catch (e) {
               console.warn("Kon nie gespeelde speletjies laai nie:", e);
             }
