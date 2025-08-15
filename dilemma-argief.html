@@ -10,6 +10,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="manifest" href="/assets/site.webmanifest">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
   <style>
@@ -41,7 +42,7 @@
       display: inline-block;
       box-sizing: border-box;
     }
-    /* Clear "today" marker: small white dot in the top-right corner */
+    /* "Today" marker: subtle white dot in the top-right corner */
     .today-indicator {
       background-image: radial-gradient(circle at 85% 20%, #ffffff 0 3px, transparent 4px);
       background-repeat: no-repeat;
@@ -76,6 +77,7 @@
       <button id="nextMonth" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-[#374151]">Volgende maand →</button>
     </div>
     <div id="archiveList" class="space-y-10"></div>
+    <div id="emptyMsg" class="text-center text-gray-500 hidden">Geen vorige speletjies om te wys nie.</div>
   </main>
 
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500 mt-8">
@@ -93,7 +95,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import {
-      getFirestore, collection, getDocs, query, where, orderBy
+      getFirestore, collection, getDocs
     } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
@@ -120,7 +122,7 @@
     let grouped = {};
     let playedIds = new Set();
 
-    // --- Get today's dateKey in SAST (Africa/Johannesburg) ---
+    // --- Today's date in SAST (Africa/Johannesburg) as YYYY-MM-DD ---
     function todayKeySAST() {
       const parts = new Intl.DateTimeFormat('en-CA', {
         timeZone: 'Africa/Johannesburg',
@@ -176,14 +178,14 @@
 
         if (game) {
           const a = document.createElement("a");
-          a.href = `/dilemmagame.html?gameId=${game.gameId}`;
+          a.href = `/dilemmagame.html?gameId=${game.gameId}`; // gameId = doc.id (old or new)
           a.textContent = day;
           a.className = BASE;
           a.style.boxSizing = "border-box";
           a.style.borderRadius = "4px";
 
           const isPlayed = playedIds.has(game.gameId);
-          const isToday = dateStr === todayKey; // today won't render anyway (excluded), but keep logic harmless
+          const isToday = dateStr === todayKey; // today excluded by filter, but harmless
 
           if (isToday) {
             a.style.backgroundColor = BLUE;
@@ -229,48 +231,49 @@
     }
 
     async function loadArchive() {
-      // 1) Load only PAST games (dateKey < todayKey) ordered by dateKey desc
-      const gamesQ = query(
-        collection(db, "games"),
-        where("dateKey", "<", todayKey),
-        orderBy("dateKey", "desc")
-      );
-      const snap = await getDocs(gamesQ);
+      // 1) Load ALL games (supports both old and new docs) then filter client-side.
+      //    This avoids index errors and handles missing 'dateKey' gracefully.
+      const gamesCol = collection(db, "games");
+      const snap = await getDocs(gamesCol);
 
-      if (!snap.empty) {
-        const entries = [];
-        snap.forEach(docSnap => {
-          const data = docSnap.data();
-          if (data?.dateKey) {
-            entries.push({ dateKey: data.dateKey, gameId: docSnap.id }); // doc ID == dateKey
-          }
-        });
+      const entries = [];
+      snap.forEach(docSnap => {
+        const data = docSnap.data();
+        // Prefer new 'dateKey', fall back to old 'date', then to ID without "Game" prefix
+        const dk = data?.dateKey || data?.date || docSnap.id.replace(/^Game/, "");
+        if (!dk) return;
 
-        // Group by YYYY-MM
-        grouped = {};
-        entries.forEach(({ dateKey, gameId }) => {
-          const [y, m] = dateKey.split("-");
-          const key = `${y}-${m}`;
-          if (!grouped[key]) grouped[key] = [];
-          grouped[key].push({ dateKey, gameId });
-        });
+        // Only include past games (strictly before today in SAST)
+        if (dk < todayKey) {
+          entries.push({ dateKey: dk, gameId: docSnap.id });
+        }
+      });
 
-        // Sort month buckets desc (most recent first)
-        monthKeys = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
-        // Sort each month's days asc for a natural calendar feel
-        monthKeys.forEach(k => grouped[k].sort((a, b) => a.dateKey.localeCompare(b.dateKey)));
+      if (!entries.length) {
+        document.getElementById("emptyMsg").classList.remove("hidden");
       }
 
-      // 2) Get played gameIds for signed-in user
+      // Group by YYYY-MM
+      grouped = {};
+      entries.forEach(({ dateKey, gameId }) => {
+        const [y, m] = dateKey.split("-");
+        const key = `${y}-${m}`;
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push({ dateKey, gameId });
+      });
+
+      // Month keys sorted desc; within a month sort by day asc for calendar feel
+      monthKeys = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+      monthKeys.forEach(k => grouped[k].sort((a, b) => a.dateKey.localeCompare(b.dateKey)));
+
+      // 2) Get played gameIds for signed-in user (doc.id equals gameId used in links)
       await new Promise(resolve => {
         onAuthStateChanged(auth, async (user) => {
           playedIds = new Set();
           if (user) {
             try {
-              // Note: doc.id should equal gameId (dateKey)
-              const playsCol = collection(db, `userGames/${user.uid}/plays`);
-              const playsSnap = await getDocs(playsCol);
-              playsSnap.forEach(doc => playedIds.add(doc.id));
+              const playsSnap = await getDocs(collection(db, `userGames/${user.uid}/plays`));
+              playsSnap.forEach(p => playedIds.add(p.id));
             } catch (e) {
               console.warn("Kon nie gespeelde speletjies laai nie:", e);
             }
