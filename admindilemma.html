@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="af">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -26,12 +26,11 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
+    // --- Admin gating (unchanged) ---
     const ADMIN_UID = "jI7f0Wk4MqfPq7p69vjl8OlJUvS2";
     const ADMIN_EMAILS = new Set([
-      // Add whitelisted admin emails here if using email-based admin in rules
       // "you@yourdomain.com",
     ]);
-
     function isAdminClient(user) {
       if (!user) return false;
       return user.uid === ADMIN_UID || (user.email && ADMIN_EMAILS.has(user.email));
@@ -67,63 +66,105 @@
       }
     };
 
+    // --- Date helpers (SAST) ---
+    function toSASTDateKey(d = new Date()) {
+      const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Africa/Johannesburg',
+        year: 'numeric', month: '2-digit', day: '2-digit'
+      }).formatToParts(d);
+      const y = parts.find(p => p.type === 'year').value;
+      const m = parts.find(p => p.type === 'month').value;
+      const da = parts.find(p => p.type === 'day').value;
+      return `${y}-${m}-${da}`;
+    }
+
+    function todayKeySAST() {
+      return toSASTDateKey(new Date());
+    }
+
+    // --- Save Game (UPDATED to use dateKey as doc ID) ---
     window.saveGame = async () => {
-      const date = document.getElementById('date').value;
+      const dateInput = document.getElementById('date').value; // yyyy-mm-dd (no time)
       const word = document.getElementById('word').value.trim();
       const wordUpper = word.toUpperCase();
       const wordLower = word.toLowerCase();
       const clue = document.getElementById('clue').value.trim();
 
-      if (!date || !wordUpper || !clue) {
-        alert("Please complete all fields.");
+      if (!dateInput || !wordUpper || !clue) {
+        alert("Vul asseblief al die velde in.");
         return;
       }
 
-      // 1) Check duplicates in /words
+      // dateInput from <input type="date"> is already "YYYY-MM-DD".
+      // Treat it as a SAST calendar date:
+      const dateKey = dateInput;
+
+      // Optional: sanity check (prevent back-dating by mistake)
+      const todayKey = todayKeySAST();
+      if (dateKey < todayKey) {
+        const proceed = confirm(`Let wel: ${dateKey} is in die verlede. Gaan voort?`);
+        if (!proceed) return;
+      }
+
+      // 1) Check duplicates in /words (exact reuse prevention)
       try {
         const wordDocRef = doc(db, 'words', wordLower);
         const wordDoc = await getDoc(wordDocRef);
         if (wordDoc.exists()) {
-          alert("That target word has already been used. Choose another word.");
+          alert("Daardie teikenwoord is reeds gebruik. Kies asseblief 'n ander woord.");
           return;
         }
       } catch (e) {
         console.error("Duplicate check (words) failed:", e);
-        alert("Could not verify duplicates right now. Please try again.");
+        alert("Kon nie nou vir duplikate toets nie. Probeer weer.");
         return;
       }
 
-      // 2) Extra check in /games
+      // 2) Secondary duplicate check in /games by word (belt-and-braces)
       try {
         const dupQ = query(collection(db, 'games'), where('word', '==', wordUpper));
         const dupSnap = await getDocs(dupQ);
         if (!dupSnap.empty) {
-          alert("That target word has already been used. Choose another word.");
+          alert("Daardie teikenwoord is reeds gebruik. Kies asseblief 'n ander woord.");
           return;
         }
       } catch (e) {
         console.warn("Secondary duplicate query failed:", e);
       }
 
-      const gameId = `Game${date}`;
-
+      // 3) Prevent accidental overwrite if a game for this date already exists
       try {
-        await setDoc(doc(db, 'games', gameId), {
-          date,
+        const existing = await getDoc(doc(db, 'games', dateKey));
+        if (existing.exists()) {
+          alert(`Daar is reeds 'n spel vir ${dateKey}. Kies 'n ander datum of wysig die bestaande inskrywing.`);
+          return;
+        }
+      } catch (e) {
+        console.warn("Pre-existence check failed:", e);
+      }
+
+      // 4) Write new game with doc ID = dateKey
+      try {
+        await setDoc(doc(db, 'games', dateKey), {
+          dateKey,              // canonical SAST date key that UI pages will query
           word: wordUpper,
           clue,
           created: serverTimestamp()
         });
 
+        // Mark the word as used
         await setDoc(doc(db, 'words', wordLower), {
           word: wordLower,
+          usedBy: dateKey,
           created: serverTimestamp()
         });
 
-        alert(`Game '${gameId}' successfully saved.`);
+        alert(`Speletjie vir ${dateKey} gestoor.`);
+        // Optional: clear form
+        // document.getElementById('adminForm').reset();
       } catch (e) {
         console.error("Error writing document:", e);
-        alert(`Failed to save game. ${e?.message || ''}`);
+        alert(`Kon nie spel stoor nie. ${e?.message || ''}`);
       }
     };
 
@@ -174,8 +215,8 @@
   </div>
 
   <div id="adminForm" style="display: none;">
-    <label>Date (YYYY-MM-DD):<br><input type="date" id="date" required></label><br><br>
-    <label>Target Word:<br><input type="text" id="word" maxlength="14" placeholder="bv. DWAALSPOOR" required></label><br><br>
+    <label>Datum (YYYY-MM-DD):<br><input type="date" id="date" required></label><br><br>
+    <label>Teikenwoord:<br><input type="text" id="word" maxlength="14" placeholder="bv. DWAALSPOOR" required></label><br><br>
     <label>Leidraad:<br><textarea id="clue" rows="4" style="width: 100%;" placeholder="Tik leidraad hier..." required></textarea></label><br><br>
     <button onclick="saveGame()" style="padding: 10px 20px; font-weight: bold;">STUUR</button>
   </div>
