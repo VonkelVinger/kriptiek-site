@@ -244,9 +244,9 @@
         if (!dk) return;
 
         // Only include past games (strictly before today in SAST)
-        if (dk < todayKey) {
-          entries.push({ dateKey: dk, gameId: docSnap.id });
-        }
+        if (dk <= todayKey) {
+  entries.push({ dateKey: dk, gameId: docSnap.id });
+}
       });
 
       if (!entries.length) {
