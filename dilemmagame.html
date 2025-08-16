@@ -261,7 +261,7 @@ async function recordPlay(guessCount, didWin) {
   }
 }
 
-/* ---- Local result fallback (NEW) ---- */
+/* ---- Local result fallbacks (NEW) ---- */
 function readLocalResult() {
   const v = localStorage.getItem(`${doneKey}-result`);
   if (!v) return null;
@@ -271,6 +271,20 @@ function readLocalResult() {
   }
   if (v === 'loss') return { didWin: false, guesses: null };
   return null;
+}
+function deriveLocalSummaryFromProgress() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(progressKey) || '{}');
+    const rows = Array.isArray(saved.rows) ? saved.rows : [];
+    if (!rows.length) return null;
+    const winIndex = rows.findIndex(r =>
+      Array.isArray(r.states) && r.states.length &&
+      r.states.every(s => s === 'correct')
+    );
+    if (winIndex >= 0) return { didWin: true, guesses: winIndex + 1 };
+    if (rows.length >= gridRows) return { didWin: false, guesses: null };
+    return null;
+  } catch { return null; }
 }
 
 /* ---- Game data ---- */
@@ -553,7 +567,7 @@ async function gameCompleted(guessCount) {
   shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het DILEMMA in ${guessCount} ${woord} opgelos: ${gameUrl}`);
 
   saveLocalProgress(true);
-  localStorage.setItem(`${doneKey}-result`, `win:${guessCount}`); /* NEW */
+  localStorage.setItem(`${doneKey}-result`, `win:${guessCount}`); /* local marker */
   await recordPlay(guessCount, true);
   await submitScore(guessCount, true);
   await loadLeaderboard();
@@ -571,7 +585,7 @@ async function gameFailed() {
   shareBtn.onclick = () => navigator.clipboard.writeText(`Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${gameUrl}`);
 
   saveLocalProgress(true);
-  localStorage.setItem(`${doneKey}-result`, `loss`); /* NEW */
+  localStorage.setItem(`${doneKey}-result`, `loss`); /* local marker */
   await recordPlay(gridRows, false);
   await submitScore(gridRows, false);
   await loadLeaderboard();
@@ -636,8 +650,11 @@ onAuthStateChanged(auth, async (user) => {
   const lsDone = localStorage.getItem(doneKey) === "true";
   const fsDone = await serverLockExists();
   if (lsDone || fsDone) {
+    // Prefer server summary; then local marker; then derive from saved board
     let s = await getPlaySummary();
-    if (!s) s = readLocalResult(); /* NEW fallback */
+    if (!s) s = readLocalResult();
+    if (!s) s = deriveLocalSummaryFromProgress();
+
     if (s) {
       if (s.didWin) {
         const woord = s.guesses === 1 ? 'raaiskoot' : 'raaiskote';
