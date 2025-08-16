@@ -579,14 +579,16 @@ async function loadLeaderboard() {
 
     entries.sort((a, b) => (a.guesses - b.guesses) || (a.when - b.when));
     entries.forEach((e, idx) => {
-      const li = document.createElement("li");
-      if (idx === 0) li.className = "font-bold bg-green-100";
-      const woord = e.guesses === 1 ? 'raaiskoot' : 'raaiskote';
-      li.innerHTML =
-        `<strong>${e.name}</strong>: ${e.guesses} ${woord}` +
-        (Number.isFinite(e.sr) ? ` · ${e.sr}%-sukseskoers` : "");
-      leaderboardList.appendChild(li);
-    });
+  const li = document.createElement("li");
+  if (idx === 0) li.className = "font-bold bg-green-100";
+
+  const guessLabel = e.guesses === 1 ? 'raai' : 'raaie';
+  const rateText = Number.isFinite(e.sr) ? ` (${e.sr}%)` : '';
+
+  // Example: Admin (75%): 4 raaie
+  li.innerHTML = `<strong>${e.name}${rateText}</strong>: ${e.guesses} ${guessLabel}`;
+  leaderboardList.appendChild(li);
+});
   } catch (err) {
     console.error("Kon nie leierbord laai nie:", err);
     leaderboardList.innerHTML = `<li class="text-red-600">Kon nie leierbord laai nie.</li>`;
