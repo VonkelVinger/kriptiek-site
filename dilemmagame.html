@@ -261,7 +261,7 @@ async function recordPlay(guessCount, didWin) {
   }
 }
 
-/* ---- Local result fallbacks (NEW) ---- */
+/* ---- Local result fallbacks ---- */
 function readLocalResult() {
   const v = localStorage.getItem(`${doneKey}-result`);
   if (!v) return null;
@@ -517,6 +517,32 @@ async function submitScore(guessCount, didWin) {
   }
 }
 
+/* NEW: ensure/repair row if missing (runs on page load if game already completed) */
+async function ensureLeaderboardRow(summary) {
+  try {
+    if (!currentUid || !summary) return;
+    const rowRef = doc(db, "games", gameId, "leaderboard", currentUid);
+    const existing = await getDoc(rowRef);
+    if (existing.exists()) return; // nothing to do
+
+    const guessCount = summary.didWin
+      ? (Number(summary.guesses) || gridRows)
+      : gridRows;
+
+    await setDoc(rowRef, {
+      userName: displayName,
+      guesses: Math.trunc(Number(guessCount)),
+      date: serverTimestamp(),
+      createdAtMs: Date.now()
+    }, { merge: true });
+
+    // After repairing, refresh the UI
+    await loadLeaderboard();
+  } catch (e) {
+    console.warn("ensureLeaderboardRow failed:", e);
+  }
+}
+
 async function loadLeaderboard() {
   try {
     const snap = await getDocs(collection(db, "games", gameId, "leaderboard"));
@@ -567,7 +593,7 @@ async function gameCompleted(guessCount) {
   shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het DILEMMA in ${guessCount} ${woord} opgelos: ${gameUrl}`);
 
   saveLocalProgress(true);
-  localStorage.setItem(`${doneKey}-result`, `win:${guessCount}`); /* local marker */
+  localStorage.setItem(`${doneKey}-result`, `win:${guessCount}`);
   await recordPlay(guessCount, true);
   await submitScore(guessCount, true);
   await loadLeaderboard();
@@ -585,7 +611,7 @@ async function gameFailed() {
   shareBtn.onclick = () => navigator.clipboard.writeText(`Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${gameUrl}`);
 
   saveLocalProgress(true);
-  localStorage.setItem(`${doneKey}-result`, `loss`); /* local marker */
+  localStorage.setItem(`${doneKey}-result`, `loss`);
   await recordPlay(gridRows, false);
   await submitScore(gridRows, false);
   await loadLeaderboard();
@@ -622,9 +648,8 @@ function checkGuessWithFlip(guess) {
 /* ---- Auth gate + init ---- */
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    // Not signed in: prompt to sign in, but still show today's leaderboard (public read).
     renderAuthRequired();
-    await loadLeaderboard();
+    await loadLeaderboard(); // still show public board
     return;
   }
 
@@ -646,11 +671,10 @@ onAuthStateChanged(auth, async (user) => {
   createKeyboard();
   restoreLocalProgress();
 
-  // If previously completed, disable and show summary
+  // If previously completed, disable and show summary (and repair leaderboard if needed)
   const lsDone = localStorage.getItem(doneKey) === "true";
   const fsDone = await serverLockExists();
   if (lsDone || fsDone) {
-    // Prefer server summary; then local marker; then derive from saved board
     let s = await getPlaySummary();
     if (!s) s = readLocalResult();
     if (!s) s = deriveLocalSummaryFromProgress();
@@ -663,19 +687,14 @@ onAuthStateChanged(auth, async (user) => {
         statusLine.textContent = `Jy kon nie hierdie Dilemma oplos nie`;
       }
       statusLine.style.display = "block";
+
+      // NEW: ensure leaderboard row exists for this completed game
+      await ensureLeaderboardRow(s);
     } else {
       statusLine.textContent = `Hierdie Dilemma is reeds voltooi`;
       statusLine.style.display = "block";
     }
     disableGame();
-  } else {
-    const someWin = board.some(row => row.length && row.every(t => t.classList.contains("correct")));
-    const reachedMax = currentRow >= gridRows && !someWin;
-    if (someWin || reachedMax) {
-      statusLine.textContent = someWin ? `Jy het hierdie Dilemma opgelos` : `Jy kon nie hierdie Dilemma oplos nie`;
-      statusLine.style.display = "block";
-      disableGame();
-    }
   }
 
   await loadLeaderboard();
