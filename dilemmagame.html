@@ -137,13 +137,14 @@
     <button id="closeModalBtn" class="btn-close">SLUIT</button>
   </div>
 </div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
 import {
-  getFirestore, doc, getDoc, collection, setDoc, getDocs, serverTimestamp
+  getFirestore, doc, getDoc, collection, collectionGroup, setDoc, getDocs, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 import {
-  getAuth, onAuthStateChanged, signInAnonymously
+  getAuth, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -158,6 +159,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+
 // ---------- UI refs ----------
 const gameGrid = document.getElementById("game-grid");
 const keyboard = document.getElementById("keyboard");
@@ -178,17 +180,27 @@ let currentUid = null;
 let displayName = localStorage.getItem("userName") || "Speler";
 
 const params = new URLSearchParams(window.location.search);
-const gameId = params.get("gameId") || `Game${new Date().toISOString().split('T')[0]}`;
+
+// ZA-safe "today" for default
+function todayZA() {
+  const now = new Date();
+  const p = new Intl.DateTimeFormat('af-ZA', {
+    timeZone: 'Africa/Johannesburg',
+    year: 'numeric', month: '2-digit', day: '2-digit'
+  }).formatToParts(now).reduce((a, x) => (a[x.type] = x.value, a), {});
+  return `${p.year}-${p.month}-${p.day}`;
+}
+
+const gameId = params.get("gameId") || `Game${todayZA()}`;
 const doneKey = `dilemma-${gameId}-done`;
 const progressKey = `dilemma-${gameId}-progress`;
 const gameUrl = window.location.href;
 
+// Old/new ID mapper
 function altIdIfOldFormat(id) {
   const m = id.match(/^Game(\d{4}-\d{2}-\d{2})$/);
   return m ? m[1] : null; // returns "YYYY-MM-DD" if id starts with "Game"
 }
-
-
 
 playerNameEl.textContent = displayName;
 
@@ -498,11 +510,13 @@ async function submitScore(guessCount, didWin) {
   }
 }
 
+// Leaderboard with fallback to collectionGroup('plays')
 async function loadLeaderboard() {
   try {
+    // 1) Try the game's own leaderboard subcollection first
     const snap = await getDocs(collection(db, "games", gameId, "leaderboard"));
-    const entries = [];
-    const needSR = [];
+    let entries = [];
+    let needSR = [];
 
     snap.forEach(d => {
       const v = d.data() || {};
@@ -531,6 +545,41 @@ async function loadLeaderboard() {
       });
     }
 
+    // 2) If nothing there yet, FALL BACK: synthesize from all users' plays for this gameId
+    if (!entries.length) {
+      try {
+        const cg = await getDocs(collectionGroup(db, "plays"));
+        const fb = []; // fallback rows
+        cg.forEach(p => {
+          if (p.id !== gameId) return; // plays/{gameId} only
+          const v = p.data() || {};
+          const guesses = Math.trunc(Number(v.guesses));
+          if (!Number.isFinite(guesses) || guesses < 1 || guesses > gridRows) return;
+          const when = v.finishedAt?.seconds ? v.finishedAt.seconds * 1000 : 0;
+          // parent path: userGames/{uid}/plays/{gameId}
+          const uid = p.ref.parent.parent.id;
+          fb.push({ uid, guesses, when });
+        });
+
+        if (fb.length) {
+          // hydrate names + success rates
+          const docs = await Promise.all(fb.map(r => getDoc(doc(db, "users", r.uid))));
+          fb.forEach((r, i) => {
+            const u = docs[i].exists() ? (docs[i].data() || {}) : {};
+            r.name = (typeof u.userName === "string" && u.userName.trim()) ? u.userName.trim() : "Onbekend";
+            const gp = Number(u.gamesPlayed || 0);
+            const w  = Number(u.wins || 0);
+            r.sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
+          });
+          entries = fb;
+        }
+      } catch (e) {
+        // fallback failed — keep entries empty
+        console.warn("Fallback leaderboard from plays failed:", e);
+      }
+    }
+
+    // 3) Render
     leaderboardList.innerHTML = "";
     if (!entries.length) {
       leaderboardList.innerHTML =
@@ -539,7 +588,6 @@ async function loadLeaderboard() {
     }
 
     entries.sort((a, b) => (a.guesses - b.guesses) || (a.when - b.when));
-
     entries.forEach((e, idx) => {
       const li = document.createElement("li");
       if (idx === 0) li.className = "font-bold bg-green-100";
@@ -662,10 +710,19 @@ onAuthStateChanged(auth, async (user) => {
     const someWin = board.some(row => row.length && row.every(t => t.classList.contains("correct")));
     const reachedMax = currentRow >= gridRows && !someWin;
     if (someWin || reachedMax) {
-      // show local-only summary just in case
       statusLine.textContent = someWin
         ? `Jy het hierdie Dilemma opgelos`
         : `Jy kon nie hierdie Dilemma oplos nie`;
+      statusLine.style.display = "block";
+      disableGame();
+    }
+  }
+
+  // Extra fallback: old local key on this device (if earlier solved under old ID)
+  if (!lsDone && !fsDone) {
+    const alt = altIdIfOldFormat(gameId);
+    if (alt && localStorage.getItem(`dilemma-${alt}-done`) === 'true') {
+      statusLine.textContent = `Jy het hierdie Dilemma opgelos`;
       statusLine.style.display = "block";
       disableGame();
     }
