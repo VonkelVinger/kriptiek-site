@@ -4,15 +4,26 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin – Create DILEMMA Game</title>
+
+  <!-- Tailwind & Font -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Montserrat', sans-serif; }
+  </style>
+
+  <!-- Firebase -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import {
-      getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, serverTimestamp
+      getFirestore, doc, getDoc, setDoc, serverTimestamp,
+      collection, query, where, getDocs
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
     import {
-      getAuth, signInWithEmailAndPassword, onAuthStateChanged
+      getAuth, onAuthStateChanged, signOut
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
 
+    // ---- CONFIG ----
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
       authDomain: "kriptiek-c9ea2.firebaseapp.com",
@@ -23,202 +34,206 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const db  = getFirestore(app);
     const auth = getAuth(app);
 
-    // --- Admin gating (unchanged) ---
-    const ADMIN_UID = "jI7f0Wk4MqfPq7p69vjl8OlJUvS2";
-    const ADMIN_EMAILS = new Set([
-      // "you@yourdomain.com",
-    ]);
-    function isAdminClient(user) {
-      if (!user) return false;
-      return user.uid === ADMIN_UID || (user.email && ADMIN_EMAILS.has(user.email));
+    // ---- DOM ----
+    const statusEl     = document.getElementById('authStatus');
+    const logoutBtn    = document.getElementById('logoutBtn');
+    const dateInput    = document.getElementById('gameDate');
+    const wordInput    = document.getElementById('targetWord');
+    const clueInput    = document.getElementById('clue');
+    const saveBtn      = document.getElementById('saveBtn');
+    const checkBtn     = document.getElementById('checkBtn');
+    const resultEl     = document.getElementById('result');
+    const linkEl       = document.getElementById('gameLink');
+
+    // ---- Helpers ----
+    function todayZA() {
+      const now = new Date();
+      const p = new Intl.DateTimeFormat('af-ZA', {
+        timeZone: 'Africa/Johannesburg',
+        year: 'numeric', month: '2-digit', day: '2-digit'
+      }).formatToParts(now).reduce((a, x) => (a[x.type] = x.value, a), {});
+      return `${p.year}-${p.month}-${p.day}`; // YYYY-MM-DD
     }
 
-    const loginForm = document.getElementById('loginForm');
-    const adminForm = document.getElementById('adminForm');
-    const notAllowed = document.getElementById('notAllowed');
+    function clearResult() {
+      resultEl.textContent = '';
+      resultEl.className = '';
+      linkEl.textContent = '';
+      linkEl.removeAttribute('href');
+    }
 
-    onAuthStateChanged(auth, (user) => {
-      if (isAdminClient(user)) {
-        loginForm.style.display = "none";
-        adminForm.style.display = "block";
-        notAllowed.style.display = "none";
-      } else if (user) {
-        loginForm.style.display = "none";
-        adminForm.style.display = "none";
-        notAllowed.style.display = "block";
+    function showOk(msg, hrefId=null) {
+      resultEl.textContent = msg;
+      resultEl.className = 'mt-3 text-green-700 font-semibold';
+      if (hrefId) {
+        linkEl.textContent = 'Open spelblad';
+        linkEl.href = `/dilemmagame.html?gameId=${encodeURIComponent(hrefId)}`;
+      }
+    }
+
+    function showErr(msg) {
+      resultEl.textContent = msg;
+      resultEl.className = 'mt-3 text-red-600 font-semibold';
+    }
+
+    async function wordExists(wordUpper) {
+      // Option A: block reuse by checking games where 'word' equals this value
+      const q = query(collection(db, 'games'), where('word', '==', wordUpper));
+      const snap = await getDocs(q);
+      return !snap.empty;
+    }
+
+    async function saveGame() {
+      clearResult();
+
+      const dateStr = (dateInput.value || '').trim();
+      const wordRaw = (wordInput.value || '').trim();
+      const clueRaw = (clueInput.value || '').trim();
+
+      if (!dateStr) { showErr('Kies ’n datum (YYYY-MM-DD).'); return; }
+      if (!wordRaw) { showErr('Voer die teikenwoord in.'); return; }
+      if (!clueRaw) { showErr('Voer die leidraad in.'); return; }
+
+      const wordUpper = wordRaw.toUpperCase();
+      if (!/^[A-ZÁÉÍÓÚÄËÏÖÜÂÊÎÔÛŸ\-]+$/.test(wordUpper)) {
+        // Allow basic accented letters & hyphen; adjust as needed for Afrikaans.
+        showErr('Die woord moet uit letters bestaan (A–Z, met basiese aksente) en/of ’n koppelteken.');
+        return;
+      }
+
+      // Duplicate doc ID guard across BOTH formats
+      const idPreferred = `Game${dateStr}`;
+      const idAlt       = dateStr;
+
+      const [a, b, reuse] = await Promise.all([
+        getDoc(doc(db, 'games', idPreferred)),
+        getDoc(doc(db, 'games', idAlt)),
+        wordExists(wordUpper)
+      ]);
+
+      if (a.exists() || b.exists()) {
+        const existing = a.exists() ? idPreferred : idAlt;
+        showErr(`’n Speletjie vir ${dateStr} bestaan reeds as “${existing}”.`);
+        return;
+      }
+      if (reuse) {
+        showErr(`Die woord “${wordUpper}” is reeds gebruik. Kies ’n ander teikenwoord.`);
+        return;
+      }
+
+      // Payload (write both 'clue' en 'leidraad' vir terugwaartse kompatibiliteit)
+      const payload = {
+        date: dateStr,
+        word: wordUpper,
+        clue: clueRaw,
+        leidraad: clueRaw,
+        status: 'published',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        createdBy: auth.currentUser?.uid || null
+      };
+
+      try {
+        await setDoc(doc(db, 'games', idPreferred), payload, { merge: true });
+        showOk(`Gestoor as ${idPreferred}.`, idPreferred);
+      } catch (e) {
+        console.error(e);
+        showErr(`Kon nie stoor nie: ${e?.message || e}`);
+      }
+    }
+
+    async function checkWordReuseOnly() {
+      clearResult();
+      const w = (wordInput.value || '').trim().toUpperCase();
+      if (!w) { showErr('Geen woord ingevul nie.'); return; }
+      try {
+        const used = await wordExists(w);
+        if (used) showErr(`Die woord “${w}” is reeds gebruik.`);
+        else showOk(`“${w}” is nog nie gebruik nie.`);
+      } catch (e) {
+        console.error(e);
+        showErr('Kon nie die woordkontrole uitvoer nie.');
+      }
+    }
+
+    // ---- Auth state (UI only; rules still enforce admin) ----
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const token = await user.getIdTokenResult().catch(()=>null);
+        const isAdminClaim = !!token?.claims?.admin;
+        statusEl.innerHTML = `Aangemeld as <strong>${user.email || user.uid}</strong>${isAdminClaim ? ' (admin)' : ''}.`;
+        logoutBtn.classList.remove('hidden');
       } else {
-        loginForm.style.display = "block";
-        adminForm.style.display = "none";
-        notAllowed.style.display = "none";
+        statusEl.innerHTML = `Nie aangemeld nie. <a href="/login.html" class="underline text-blue-700">Meld aan</a> as admin.`;
+        logoutBtn.classList.add('hidden');
       }
     });
 
-    window.login = async () => {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-      } catch (error) {
-        alert("Aanmelding het misluk: " + error.message);
-      }
-    };
+    logoutBtn.addEventListener('click', () => signOut(auth));
 
-    // --- Date helpers (SAST) ---
-    function toSASTDateKey(d = new Date()) {
-      const parts = new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'Africa/Johannesburg',
-        year: 'numeric', month: '2-digit', day: '2-digit'
-      }).formatToParts(d);
-      const y = parts.find(p => p.type === 'year').value;
-      const m = parts.find(p => p.type === 'month').value;
-      const da = parts.find(p => p.type === 'day').value;
-      return `${y}-${m}-${da}`;
-    }
-
-    function todayKeySAST() {
-      return toSASTDateKey(new Date());
-    }
-
-    // --- Save Game (UPDATED to use dateKey as doc ID) ---
-    window.saveGame = async () => {
-      const dateInput = document.getElementById('date').value; // yyyy-mm-dd (no time)
-      const word = document.getElementById('word').value.trim();
-      const wordUpper = word.toUpperCase();
-      const wordLower = word.toLowerCase();
-      const clue = document.getElementById('clue').value.trim();
-
-      if (!dateInput || !wordUpper || !clue) {
-        alert("Vul asseblief al die velde in.");
-        return;
-      }
-
-      // dateInput from <input type="date"> is already "YYYY-MM-DD".
-      // Treat it as a SAST calendar date:
-      const dateKey = dateInput;
-
-      // Optional: sanity check (prevent back-dating by mistake)
-      const todayKey = todayKeySAST();
-      if (dateKey < todayKey) {
-        const proceed = confirm(`Let wel: ${dateKey} is in die verlede. Gaan voort?`);
-        if (!proceed) return;
-      }
-
-      // 1) Check duplicates in /words (exact reuse prevention)
-      try {
-        const wordDocRef = doc(db, 'words', wordLower);
-        const wordDoc = await getDoc(wordDocRef);
-        if (wordDoc.exists()) {
-          alert("Daardie teikenwoord is reeds gebruik. Kies asseblief 'n ander woord.");
-          return;
-        }
-      } catch (e) {
-        console.error("Duplicate check (words) failed:", e);
-        alert("Kon nie nou vir duplikate toets nie. Probeer weer.");
-        return;
-      }
-
-      // 2) Secondary duplicate check in /games by word (belt-and-braces)
-      try {
-        const dupQ = query(collection(db, 'games'), where('word', '==', wordUpper));
-        const dupSnap = await getDocs(dupQ);
-        if (!dupSnap.empty) {
-          alert("Daardie teikenwoord is reeds gebruik. Kies asseblief 'n ander woord.");
-          return;
-        }
-      } catch (e) {
-        console.warn("Secondary duplicate query failed:", e);
-      }
-
-      // 3) Prevent accidental overwrite if a game for this date already exists
-      try {
-        const existing = await getDoc(doc(db, 'games', dateKey));
-        if (existing.exists()) {
-          alert(`Daar is reeds 'n spel vir ${dateKey}. Kies 'n ander datum of wysig die bestaande inskrywing.`);
-          return;
-        }
-      } catch (e) {
-        console.warn("Pre-existence check failed:", e);
-      }
-
-      // 4) Write new game with doc ID = dateKey
-      try {
-        await setDoc(doc(db, 'games', dateKey), {
-          dateKey,              // canonical SAST date key that UI pages will query
-          word: wordUpper,
-          clue,
-          created: serverTimestamp()
-        });
-
-        // Mark the word as used
-        await setDoc(doc(db, 'words', wordLower), {
-          word: wordLower,
-          usedBy: dateKey,
-          created: serverTimestamp()
-        });
-
-        alert(`Speletjie vir ${dateKey} gestoor.`);
-        // Optional: clear form
-        // document.getElementById('adminForm').reset();
-      } catch (e) {
-        console.error("Error writing document:", e);
-        alert(`Kon nie spel stoor nie. ${e?.message || ''}`);
-      }
-    };
-
-    // ---------- Auto-fill the clue field ----------
-    const TEMPLATE_PREFIX = "VANDAG SE MISLEIDRAAD: ";
-
-    function updateClueTemplate(force = false) {
-      const wordEl = document.getElementById('word');
-      const clueEl = document.getElementById('clue');
-      if (!wordEl || !clueEl) return;
-
-      const userIsEditing = clueEl.dataset.autofilled === "false";
-      if (userIsEditing && !force) return;
-
-      const len = (wordEl.value || "").trim().toUpperCase().length;
-      const x = len > 0 ? len : "x";
-      if (force || !clueEl.value.trim() || clueEl.dataset.autofilled === "true") {
-        clueEl.value = `${TEMPLATE_PREFIX}XXXX (${x} letters).`;
-        clueEl.dataset.autofilled = "true";
-      }
-    }
-
-    function initClueAutofill() {
-      const wordEl = document.getElementById('word');
-      const clueEl = document.getElementById('clue');
-      if (!wordEl || !clueEl) return;
-
-      clueEl.addEventListener("input", () => { clueEl.dataset.autofilled = "false"; });
-      wordEl.addEventListener("input", () => updateClueTemplate());
-      if (!clueEl.value.trim()) updateClueTemplate(true);
-    }
-
-    document.addEventListener("DOMContentLoaded", initClueAutofill);
+    // ---- Init form defaults ----
+    document.addEventListener('DOMContentLoaded', () => {
+      dateInput.value = todayZA();
+      wordInput.addEventListener('input', () => { wordInput.value = wordInput.value.toUpperCase(); });
+      saveBtn.addEventListener('click', saveGame);
+      checkBtn.addEventListener('click', checkWordReuseOnly);
+    });
   </script>
 </head>
-<body style="font-family: sans-serif; max-width: 600px; margin: 40px auto;">
-  <h1>🔐 Admin: Skep Nuwe DILEMMA</h1>
+<body class="bg-gray-100 min-h-screen">
+  <header class="bg-white shadow p-4">
+    <h1 class="text-2xl font-bold text-center">Admin · Create DILEMMA Game</h1>
+  </header>
 
-  <div id="loginForm" style="display: none;">
-    <p>Meld aan om voort te gaan:</p>
-    <input id="email" type="email" placeholder="E-pos" /><br><br>
-    <input id="password" type="password" placeholder="Wagwoord" /><br><br>
-    <button onclick="login()">Meld aan</button>
-  </div>
+  <main class="max-w-2xl mx-auto p-4">
+    <div class="bg-white rounded shadow p-4">
+      <div id="authStatus" class="text-sm text-gray-600 mb-3">Kontroleer aanmelding…</div>
+      <button id="logoutBtn" class="hidden text-xs px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 mb-4">Meld af</button>
 
-  <div id="notAllowed" style="display: none; color: red;">
-    <p>🚫 Jy is aangemeld, maar het nie toegang nie.</p>
-  </div>
+      <div class="grid grid-cols-1 gap-4">
+        <label class="block">
+          <span class="font-semibold">Datum (YYYY-MM-DD)</span>
+          <input id="gameDate" type="date" class="mt-1 w-full border rounded px-3 py-2" />
+        </label>
 
-  <div id="adminForm" style="display: none;">
-    <label>Datum (YYYY-MM-DD):<br><input type="date" id="date" required></label><br><br>
-    <label>Teikenwoord:<br><input type="text" id="word" maxlength="14" placeholder="bv. DWAALSPOOR" required></label><br><br>
-    <label>Leidraad:<br><textarea id="clue" rows="4" style="width: 100%;" placeholder="Tik leidraad hier..." required></textarea></label><br><br>
-    <button onclick="saveGame()" style="padding: 10px 20px; font-weight: bold;">STUUR</button>
-  </div>
+        <label class="block">
+          <span class="font-semibold">Teikenwoord</span>
+          <input id="targetWord" type="text" class="mt-1 w-full border rounded px-3 py-2 uppercase" placeholder="bv. WATER" />
+          <p class="text-xs text-gray-500 mt-1">Word outomaties in hoofletters gestoor.</p>
+        </label>
+
+        <label class="block">
+          <span class="font-semibold">Leidraad</span>
+          <textarea id="clue" rows="3" class="mt-1 w-full border rounded px-3 py-2" placeholder="Skryf hier die leidraad…"></textarea>
+        </label>
+
+        <div class="flex gap-3">
+          <button id="saveBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+            Stoor spel
+          </button>
+          <button id="checkBtn" class="bg-gray-200 text-gray-900 px-4 py-2 rounded hover:bg-gray-300 transition">
+            Toets of woord reeds gebruik is
+          </button>
+        </div>
+
+        <p id="result" class="mt-3"></p>
+        <a id="gameLink" class="underline text-blue-700 font-semibold" target="_blank" rel="noopener"></a>
+
+        <hr class="my-4">
+        <p class="text-xs text-gray-500">
+          Nota: Die dokument-ID word altyd as <code>GameYYYY-MM-DD</code> gestoor, en ’n
+          <code>date</code>-veld (YYYY-MM-DD, Africa/Johannesburg) word bygevoeg. Die stooraksie stop as:
+          ’n dokument vir die datum reeds bestaan (in enige formaat), of as die teikenwoord reeds gebruik is.
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
+    &copy; 2025 Kriptiek. Alle regte voorbehou.
+  </footer>
 </body>
 </html>
