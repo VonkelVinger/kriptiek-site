@@ -183,6 +183,13 @@ const doneKey = `dilemma-${gameId}-done`;
 const progressKey = `dilemma-${gameId}-progress`;
 const gameUrl = window.location.href;
 
+function altIdIfOldFormat(id) {
+  const m = id.match(/^Game(\d{4}-\d{2}-\d{2})$/);
+  return m ? m[1] : null; // returns "YYYY-MM-DD" if id starts with "Game"
+}
+
+
+
 playerNameEl.textContent = displayName;
 
 // ---------- Helpers ----------
@@ -194,22 +201,36 @@ function disableGame() {
 async function serverLockExists() {
   if (!currentUid) return false;
   try {
+    // Check new format first: plays/<GameYYYY-MM-DD>
     const p = await getDoc(doc(db, "userGames", currentUid, "plays", gameId));
-    return p.exists();
-  } catch {
-    return false;
-  }
+    if (p.exists()) return true;
+
+    // Fallback to old format: plays/<YYYY-MM-DD>
+    const alt = altIdIfOldFormat(gameId);
+    if (alt) {
+      const p2 = await getDoc(doc(db, "userGames", currentUid, "plays", alt));
+      if (p2.exists()) return true;
+    }
+  } catch {}
+  return false;
 }
 
-// NEW: tiny helper to read prior play summary
 async function getPlaySummary() {
   if (!currentUid) return null;
   try {
-    const snap = await getDoc(doc(db, "userGames", currentUid, "plays", gameId));
+    // Try new format first
+    let snap = await getDoc(doc(db, "userGames", currentUid, "plays", gameId));
+    if (!snap.exists()) {
+      // Fallback to old format
+      const alt = altIdIfOldFormat(gameId);
+      if (alt) snap = await getDoc(doc(db, "userGames", currentUid, "plays", alt));
+    }
     if (!snap.exists()) return null;
     const d = snap.data() || {};
     return { didWin: d.result === "win", guesses: Number(d.guesses) || null };
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 async function recordPlay(guessCount, didWin) {
