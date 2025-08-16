@@ -68,10 +68,9 @@
   <div id="game-grid" class="mb-6"></div>
   <div id="keyboard" class="mb-2"></div>
 
-  <!-- NEW: status line (success/fail summary) -->
+  <!-- Status line -->
   <p id="statusLine" class="text-center font-bold text-[#1e3a8a] mb-4" style="display:none;"></p>
 
-  <!-- GESELS SAAM button lives here -->
   <div class="mb-6 flex justify-center">
     <a href="/forum.html" id="chatButton"
        class="inline-block bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-4 py-2 rounded">
@@ -99,13 +98,10 @@
     <ul class="list-disc pl-6 text-gray-700 space-y-1">
       <li><strong>Een poging per raaisel:</strong> Sodra jy klaar gespeel het (wen of verloor), word daardie raaisel vir jou gesluit.</li>
       <li><strong>Ouer raaisels is oop:</strong> Jy kan enige vroeëre Dilemma steeds aanpak as jy dit nog nie gedoen het nie.</li>
-      <li><strong>Alles tel vir jou statistiek:</strong> Elke voltooide raaisel word ingereken by jou <strong>sukseskoers</strong> (% opgelos), dit wil sê al die Dilemmas wat jy kon oplos as 'n persentasie van die totale aantal wat jy al gespeel het.</li>
-      <li><strong>Wenlopie:</strong> Dit is jou lopie van suksesvolle opeenvolgende Dilemmas gespeel, in enige volgorde waarin jy kies om hulle te speel (dus nie noodwendig chronologies nie).</li>
-      <li><strong>Leierbord:</strong> Omdat jy elke raaisel <em>net een keer</em> mag speel, kan jou naam nie meer as een keer op daardie dag se leierbord verskyn nie.</li>
+      <li><strong>Alles tel vir jou statistiek:</strong> Elke voltooide raaisel word ingereken by jou <strong>sukseskoers</strong>.</li>
+      <li><strong>Wenlopie:</strong> Jou suksesvolle opeenvolgende Dilemmas (enige volgorde).</li>
+      <li><strong>Leierbord:</strong> Jou naam verskyn net een keer per dag.</li>
     </ul>
-    <p class="text-sm text-gray-500 mt-2">
-      Let wel: Jou vordering is aan hierdie blaaier en toestel gekoppel, maar sal ook beskikbaar wees as jy elders met dieselfde besonderhede aanmeld.
-    </p>
   </div>
 
   <!-- LEADERBOARD -->
@@ -143,7 +139,9 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebas
 import {
   getFirestore, doc, getDoc, collection, collectionGroup, setDoc, getDocs, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+import {
+  getAuth, onAuthStateChanged, signInAnonymously   // <-- 1) bring back anon sign-in
+} from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -254,7 +252,6 @@ async function recordPlay(guessCount, didWin) {
   }
 }
 
-// Backfill your own leaderboard row if missing
 async function ensureLeaderboardRowOnLoad() {
   if (!currentUid) return;
   try {
@@ -272,7 +269,7 @@ async function ensureLeaderboardRowOnLoad() {
     const play = playSnap.data() || {};
     const guesses = Math.trunc(Number(play.guesses)) || gridRows;
 
-    // Name & success rate (best effort)
+    // Name & success rate
     let name = displayName;
     let successRate = null;
     try {
@@ -487,7 +484,7 @@ async function submitScore(guessCount, didWin) {
 
   let successRate = null;
 
-  // Try to update /users stats (but do NOT block leaderboard on failure)
+  // Try to update /users stats (non-fatal)
   try {
     const uref = doc(db, "users", currentUid);
     const before = await getDoc(uref);
@@ -553,10 +550,9 @@ async function submitScore(guessCount, didWin) {
   }
 }
 
-// Leaderboard (primary: subcollection; fallback: collectionGroup('plays') if allowed)
+// Leaderboard (primary then fallback)
 async function loadLeaderboard() {
   try {
-    // 1) Try the game's own leaderboard subcollection first
     const snap = await getDocs(collection(db, "games", gameId, "leaderboard"));
     let entries = [];
     let needSR = [];
@@ -588,7 +584,6 @@ async function loadLeaderboard() {
       });
     }
 
-    // 2) If nothing there yet, FALL BACK from plays (if rules allow)
     if (!entries.length) {
       try {
         const cg = await getDocs(collectionGroup(db, "plays"));
@@ -618,7 +613,6 @@ async function loadLeaderboard() {
       }
     }
 
-    // 3) Render
     leaderboardList.innerHTML = "";
     if (!entries.length) {
       leaderboardList.innerHTML =
@@ -709,20 +703,33 @@ function checkGuessWithFlip(guess) {
   }, gridCols * 350 + 20);
 }
 
-// ---------- Init sequence ----------
+/* ---------- 2) AUTH GATE -----------
+   If the page has no signed-in user, sign in anonymously.
+   (Enable Anonymous in Firebase Console → Auth → Sign-in method.)
+*/
 onAuthStateChanged(auth, async (user) => {
-  currentUid = user?.uid || null;
-
-  if (currentUid) {
+  if (!user) {
     try {
-      const uDoc = await getDoc(doc(db, "users", currentUid));
-      const nm = uDoc.exists() ? uDoc.data()?.userName : null;
-      if (typeof nm === "string" && nm.trim()) {
-        displayName = nm.trim();
-        localStorage.setItem("userName", displayName);
-      }
-    } catch {}
+      await signInAnonymously(auth);
+      return; // onAuthStateChanged will fire again with a user
+    } catch (e) {
+      console.error("Anonymous sign-in failed:", e);
+      document.getElementById("clue").textContent =
+        "Jy moet eers aanmeld om te speel. Probeer weer of gaan na Aanmelding.";
+      return;
+    }
   }
+
+  currentUid = user.uid;
+  try {
+    const uDoc = await getDoc(doc(db, "users", currentUid));
+    const nm = uDoc.exists() ? uDoc.data()?.userName : null;
+    if (typeof nm === "string" && nm.trim()) {
+      displayName = nm.trim();
+      localStorage.setItem("userName", displayName);
+    }
+  } catch {}
+
   playerNameEl.textContent = displayName;
 
   await loadGameData();
