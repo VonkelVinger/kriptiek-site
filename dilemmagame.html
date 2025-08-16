@@ -140,9 +140,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebas
 import {
   getFirestore, doc, getDoc, collection, setDoc, getDocs, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
-import {
-  getAuth, onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
 /* ---- Firebase config ---- */
 const firebaseConfig = {
@@ -459,7 +457,6 @@ function restoreLocalProgress() {
 async function submitScore(guessCount, didWin) {
   if (!currentUid) return;
 
-  // Try to refresh display name from users doc (optional)
   try {
     const uDoc = await getDoc(doc(db, "users", currentUid));
     if (uDoc.exists() && typeof uDoc.data().userName === "string") {
@@ -471,7 +468,6 @@ async function submitScore(guessCount, didWin) {
     console.warn("Could not read users doc:", e);
   }
 
-  // Optionally update aggregate stats (non-fatal)
   let successRate = null;
   try {
     const uref = doc(db, "users", currentUid);
@@ -505,7 +501,6 @@ async function submitScore(guessCount, didWin) {
     console.warn("User stats update failed (non-fatal):", e);
   }
 
-  // Always write/merge leaderboard row (publicly readable)
   try {
     await setDoc(
       doc(db, "games", gameId, "leaderboard", currentUid),
@@ -517,13 +512,13 @@ async function submitScore(guessCount, didWin) {
   }
 }
 
-/* NEW: ensure/repair row if missing (runs on page load if game already completed) */
+/* ensure/repair row if missing (runs on page load if game already completed) */
 async function ensureLeaderboardRow(summary) {
   try {
     if (!currentUid || !summary) return;
     const rowRef = doc(db, "games", gameId, "leaderboard", currentUid);
     const existing = await getDoc(rowRef);
-    if (existing.exists()) return; // nothing to do
+    if (existing.exists()) return;
 
     const guessCount = summary.didWin
       ? (Number(summary.guesses) || gridRows)
@@ -536,7 +531,6 @@ async function ensureLeaderboardRow(summary) {
       createdAtMs: Date.now()
     }, { merge: true });
 
-    // After repairing, refresh the UI
     await loadLeaderboard();
   } catch (e) {
     console.warn("ensureLeaderboardRow failed:", e);
@@ -547,6 +541,7 @@ async function loadLeaderboard() {
   try {
     const snap = await getDocs(collection(db, "games", gameId, "leaderboard"));
     const entries = [];
+    const needSR = [];
 
     snap.forEach(d => {
       const v = d.data() || {};
@@ -555,10 +550,26 @@ async function loadLeaderboard() {
 
       const name = (typeof v.userName === "string" && v.userName.trim()) ? v.userName.trim() : "Onbekend";
       const ts = v.date?.seconds ? v.date.seconds * 1000 : (typeof v.createdAtMs === "number" ? v.createdAtMs : 0);
-      const sr = Number.isFinite(Number(v.successRate)) ? Math.trunc(Number(v.successRate)) : null;
+      const srVal = Number.isFinite(Number(v.successRate)) ? Math.trunc(Number(v.successRate)) : null;
 
-      entries.push({ name, guesses: guessesNum, when: ts, sr });
+      const entry = { uid: d.id, name, guesses: guessesNum, when: ts, sr: srVal };
+      entries.push(entry);
+      if (srVal == null) needSR.push(d.id);
     });
+
+    // Fallback: fetch success rate from users/{uid} for rows that don't have it
+    if (needSR.length) {
+      const userDocs = await Promise.all(needSR.map(uid => getDoc(doc(db, "users", uid))));
+      userDocs.forEach((uDoc, i) => {
+        if (!uDoc.exists()) return;
+        const u = uDoc.data() || {};
+        const gp = Number(u.gamesPlayed || 0);
+        const w  = Number(u.wins || 0);
+        const sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
+        const ent = entries.find(e => e.uid === needSR[i]);
+        if (ent) ent.sr = sr;
+      });
+    }
 
     leaderboardList.innerHTML = "";
     if (!entries.length) {
@@ -571,7 +582,9 @@ async function loadLeaderboard() {
       const li = document.createElement("li");
       if (idx === 0) li.className = "font-bold bg-green-100";
       const woord = e.guesses === 1 ? 'raaiskoot' : 'raaiskote';
-      li.innerHTML = `<strong>${e.name}</strong>: ${e.guesses} ${woord}` + (Number.isFinite(e.sr) ? ` · ${e.sr}%-sukseskoers` : "");
+      li.innerHTML =
+        `<strong>${e.name}</strong>: ${e.guesses} ${woord}` +
+        (Number.isFinite(e.sr) ? ` · ${e.sr}%-sukseskoers` : "");
       leaderboardList.appendChild(li);
     });
   } catch (err) {
@@ -688,7 +701,6 @@ onAuthStateChanged(auth, async (user) => {
       }
       statusLine.style.display = "block";
 
-      // NEW: ensure leaderboard row exists for this completed game
       await ensureLeaderboardRow(s);
     } else {
       statusLine.textContent = `Hierdie Dilemma is reeds voltooi`;
