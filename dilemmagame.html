@@ -108,7 +108,7 @@
     </p>
   </div>
 
-  <!-- LEADERBOARD (button removed here) -->
+  <!-- LEADERBOARD -->
   <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
     <div class="flex items-center justify-between mb-2">
       <h2 class="text-xl font-bold">Vandag se bestes:</h2>
@@ -143,9 +143,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebas
 import {
   getFirestore, doc, getDoc, collection, collectionGroup, setDoc, getDocs, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
-import {
-  getAuth, onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -181,7 +179,7 @@ let displayName = localStorage.getItem("userName") || "Speler";
 
 const params = new URLSearchParams(window.location.search);
 
-// ZA-safe "today" for default
+// ZA-safe default
 function todayZA() {
   const now = new Date();
   const p = new Intl.DateTimeFormat('af-ZA', {
@@ -199,7 +197,7 @@ const gameUrl = window.location.href;
 // Old/new ID mapper
 function altIdIfOldFormat(id) {
   const m = id.match(/^Game(\d{4}-\d{2}-\d{2})$/);
-  return m ? m[1] : null; // returns "YYYY-MM-DD" if id starts with "Game"
+  return m ? m[1] : null;
 }
 
 playerNameEl.textContent = displayName;
@@ -213,11 +211,8 @@ function disableGame() {
 async function serverLockExists() {
   if (!currentUid) return false;
   try {
-    // Check new format first: plays/<GameYYYY-MM-DD>
     const p = await getDoc(doc(db, "userGames", currentUid, "plays", gameId));
     if (p.exists()) return true;
-
-    // Fallback to old format: plays/<YYYY-MM-DD>
     const alt = altIdIfOldFormat(gameId);
     if (alt) {
       const p2 = await getDoc(doc(db, "userGames", currentUid, "plays", alt));
@@ -230,19 +225,15 @@ async function serverLockExists() {
 async function getPlaySummary() {
   if (!currentUid) return null;
   try {
-    // Try new format first
     let snap = await getDoc(doc(db, "userGames", currentUid, "plays", gameId));
     if (!snap.exists()) {
-      // Fallback to old format
       const alt = altIdIfOldFormat(gameId);
       if (alt) snap = await getDoc(doc(db, "userGames", currentUid, "plays", alt));
     }
     if (!snap.exists()) return null;
     const d = snap.data() || {};
     return { didWin: d.result === "win", guesses: Number(d.guesses) || null };
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 async function recordPlay(guessCount, didWin) {
@@ -263,6 +254,50 @@ async function recordPlay(guessCount, didWin) {
   }
 }
 
+// Backfill your own leaderboard row if missing
+async function ensureLeaderboardRowOnLoad() {
+  if (!currentUid) return;
+  try {
+    const lbRef = doc(db, "games", gameId, "leaderboard", currentUid);
+    const lbSnap = await getDoc(lbRef);
+    if (lbSnap.exists()) return;
+
+    let playSnap = await getDoc(doc(db, "userGames", currentUid, "plays", gameId));
+    if (!playSnap.exists()) {
+      const alt = altIdIfOldFormat(gameId);
+      if (alt) playSnap = await getDoc(doc(db, "userGames", currentUid, "plays", alt));
+    }
+    if (!playSnap.exists()) return;
+
+    const play = playSnap.data() || {};
+    const guesses = Math.trunc(Number(play.guesses)) || gridRows;
+
+    // Name & success rate (best effort)
+    let name = displayName;
+    let successRate = null;
+    try {
+      const uDoc = await getDoc(doc(db, "users", currentUid));
+      if (uDoc.exists()) {
+        const u = uDoc.data() || {};
+        if (typeof u.userName === "string" && u.userName.trim()) name = u.userName.trim();
+        const gp = Number(u.gamesPlayed || 0), w = Number(u.wins || 0);
+        successRate = gp > 0 ? Math.round((w / gp) * 100) : 0;
+      }
+    } catch {}
+
+    await setDoc(lbRef, {
+      userName: name,
+      guesses,
+      successRate,
+      date: serverTimestamp(),
+      createdAtMs: Date.now()
+    }, { merge: true });
+  } catch (e) {
+    console.warn("ensureLeaderboardRowOnLoad:", e);
+  }
+}
+
+// ---------- Load game data ----------
 async function loadGameData() {
   const gameRef = doc(db, "games", gameId);
   const snap = await getDoc(gameRef);
@@ -438,20 +473,22 @@ async function submitScore(guessCount, didWin) {
     return;
   }
 
+  // Resolve display name from /users if possible
   try {
-    // Prefer Firestore-stored name if available
-    try {
-      const uDoc = await getDoc(doc(db, "users", currentUid));
-      if (uDoc.exists() && typeof uDoc.data().userName === "string") {
-        displayName = uDoc.data().userName || displayName;
-        playerNameEl.textContent = displayName;
-        localStorage.setItem("userName", displayName);
-      }
-    } catch (e) {
-      console.warn("Could not read users doc:", e);
+    const uDoc = await getDoc(doc(db, "users", currentUid));
+    if (uDoc.exists() && typeof uDoc.data().userName === "string") {
+      displayName = uDoc.data().userName || displayName;
+      playerNameEl.textContent = displayName;
+      localStorage.setItem("userName", displayName);
     }
+  } catch (e) {
+    console.warn("Could not read users doc:", e);
+  }
 
-    // Update aggregated stats (users/{uid})
+  let successRate = null;
+
+  // Try to update /users stats (but do NOT block leaderboard on failure)
+  try {
     const uref = doc(db, "users", currentUid);
     const before = await getDoc(uref);
 
@@ -489,28 +526,34 @@ async function submitScore(guessCount, didWin) {
     }
     await setDoc(uref, payload, { merge: true });
 
-    // Compute success rate and write leaderboard doc
     const after = await getDoc(uref);
     const nd = after.data() || {};
     const games = Number(nd.gamesPlayed || 0);
     const wins  = Number(nd.wins || 0);
-    const successRate = games > 0 ? Math.round((wins / games) * 100) : 0;
-
-    const lbDocRef = doc(db, "games", gameId, "leaderboard", currentUid);
-    const toWrite = {
-      userName: displayName,
-      guesses: Math.trunc(Number(guessCount)),
-      successRate: Math.max(0, Math.min(100, Math.trunc(successRate))),
-      date: serverTimestamp(),
-      createdAtMs: Date.now()
-    };
-    await setDoc(lbDocRef, toWrite, { merge: true });
+    successRate = games > 0 ? Math.round((wins / games) * 100) : 0;
   } catch (e) {
-    console.error("Kon nie telling stoor nie:", e);
+    console.warn("User stats update failed (non-fatal):", e);
+  }
+
+  // ALWAYS write/merge the leaderboard row
+  try {
+    await setDoc(
+      doc(db, "games", gameId, "leaderboard", currentUid),
+      {
+        userName: displayName,
+        guesses: Math.trunc(Number(guessCount)),
+        successRate: (successRate === null ? undefined : successRate),
+        date: serverTimestamp(),
+        createdAtMs: Date.now()
+      },
+      { merge: true }
+    );
+  } catch (e) {
+    console.error("Kon nie leierbord-ry stoor nie:", e);
   }
 }
 
-// Leaderboard with fallback to collectionGroup('plays')
+// Leaderboard (primary: subcollection; fallback: collectionGroup('plays') if allowed)
 async function loadLeaderboard() {
   try {
     // 1) Try the game's own leaderboard subcollection first
@@ -545,36 +588,32 @@ async function loadLeaderboard() {
       });
     }
 
-    // 2) If nothing there yet, FALL BACK: synthesize from all users' plays for this gameId
+    // 2) If nothing there yet, FALL BACK from plays (if rules allow)
     if (!entries.length) {
       try {
         const cg = await getDocs(collectionGroup(db, "plays"));
-        const fb = []; // fallback rows
+        const fb = [];
         cg.forEach(p => {
-          if (p.id !== gameId) return; // plays/{gameId} only
+          if (p.id !== gameId) return;
           const v = p.data() || {};
           const guesses = Math.trunc(Number(v.guesses));
           if (!Number.isFinite(guesses) || guesses < 1 || guesses > gridRows) return;
           const when = v.finishedAt?.seconds ? v.finishedAt.seconds * 1000 : 0;
-          // parent path: userGames/{uid}/plays/{gameId}
           const uid = p.ref.parent.parent.id;
           fb.push({ uid, guesses, when });
         });
 
         if (fb.length) {
-          // hydrate names + success rates
           const docs = await Promise.all(fb.map(r => getDoc(doc(db, "users", r.uid))));
           fb.forEach((r, i) => {
             const u = docs[i].exists() ? (docs[i].data() || {}) : {};
             r.name = (typeof u.userName === "string" && u.userName.trim()) ? u.userName.trim() : "Onbekend";
-            const gp = Number(u.gamesPlayed || 0);
-            const w  = Number(u.wins || 0);
+            const gp = Number(u.gamesPlayed || 0), w = Number(u.wins || 0);
             r.sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
           });
           entries = fb;
         }
       } catch (e) {
-        // fallback failed — keep entries empty
         console.warn("Fallback leaderboard from plays failed:", e);
       }
     }
@@ -608,19 +647,17 @@ async function gameCompleted(guessCount) {
   gameOver = true;
   const woord = guessCount === 1 ? 'raaiskoot' : 'raaiskote';
 
-  // 1) Show status line under keyboard
   statusLine.textContent = `Jy het hierdie Dilemma in ${guessCount} ${woord} opgelos`;
   statusLine.style.display = "block";
 
-  // 2) Show modal as before
   resultMsg.textContent = `Veels geluk, ${displayName}, jy het die woord in ${guessCount} ${woord} gekry!`;
   modal.style.display = "flex";
-  shareBtn.onclick = () =>
-    navigator.clipboard.writeText(`Ek het DILEMMA in ${guessCount} ${woord} opgelos: ${gameUrl}`);
+  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het DILEMMA in ${guessCount} ${woord} opgelos: ${gameUrl}`);
 
   saveLocalProgress(true);
   await recordPlay(guessCount, true);
   await submitScore(guessCount, true);
+  await ensureLeaderboardRowOnLoad();
   await loadLeaderboard();
   document.querySelectorAll(".key").forEach(k => k.disabled = true);
 }
@@ -628,11 +665,9 @@ async function gameCompleted(guessCount) {
 async function gameFailed() {
   gameOver = true;
 
-  // 1) Status line
   statusLine.textContent = `Jy kon nie hierdie Dilemma oplos nie`;
   statusLine.style.display = "block";
 
-  // 2) Modal
   resultMsg.textContent = `Jammer, ${displayName}! Vandag se oplossing is ${targetWord}.`;
   modal.style.display = "flex";
   shareBtn.onclick = () =>
@@ -641,6 +676,7 @@ async function gameFailed() {
   saveLocalProgress(true);
   await recordPlay(gridRows, false);
   await submitScore(gridRows, false);
+  await ensureLeaderboardRowOnLoad();
   await loadLeaderboard();
   document.querySelectorAll(".key").forEach(k => k.disabled = true);
 }
@@ -694,7 +730,7 @@ onAuthStateChanged(auth, async (user) => {
   createKeyboard();
   restoreLocalProgress();
 
-  // If previously completed, disable and show summary (but keep new button)
+  // If previously completed, disable and show summary
   const lsDone = localStorage.getItem(doneKey) === "true";
   const fsDone = await serverLockExists();
   if (lsDone || fsDone) {
@@ -718,7 +754,7 @@ onAuthStateChanged(auth, async (user) => {
     }
   }
 
-  // Extra fallback: old local key on this device (if earlier solved under old ID)
+  // Extra fallback: old local key on this device
   if (!lsDone && !fsDone) {
     const alt = altIdIfOldFormat(gameId);
     if (alt && localStorage.getItem(`dilemma-${alt}-done`) === 'true') {
@@ -728,6 +764,7 @@ onAuthStateChanged(auth, async (user) => {
     }
   }
 
+  await ensureLeaderboardRowOnLoad();
   await loadLeaderboard();
 });
 </script>
