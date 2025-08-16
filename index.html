@@ -199,6 +199,7 @@
     </div>
   </div>
 
+  <!-- Keep this non-module script so cookie functions remain global -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const backgroundCrossword = document.getElementById('backgroundCrossword');
@@ -224,7 +225,7 @@
       generateBackgroundGrid();
       window.addEventListener('resize', generateBackgroundGrid);
 
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split('T')[0]; // kept, but not used for linking
       const isRegistered = localStorage.getItem('userRegistered') === 'true';
       const main = document.querySelector('main');
       const buttonContainer = document.querySelector('.flex.flex-wrap.justify-center.gap-4.mb-8');
@@ -256,7 +257,8 @@
         dilemmaButtons.appendChild(buttonGroup);
       } else {
         const playBtn = document.createElement('a');
-        playBtn.href = `/dilemmagame.html?gameId=Game${today}`;
+        playBtn.id = "today-link";                     // <-- added ID for module script
+        playBtn.href = "#";                            // <-- no guess-link; will be set after Firestore lookup
         playBtn.textContent = "Speel VANDAG SE DILEMMA";
         playBtn.className = "bg-blue-600 text-white px-4 py-2 rounded transition transform hover:scale-105 duration-300";
 
@@ -296,9 +298,70 @@
       document.getElementById('cookie-banner').style.display = 'none';
     }
   </script>
+
+  <!-- New module: ZA-safe "today" resolver that updates the play button -->
+  <script type="module">
+    import {
+      getFirestore, collection, query, where, limit, getDocs, doc, getDoc
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+    const db = getFirestore();
+
+    // YYYY-MM-DD in Africa/Johannesburg
+    function todayZA() {
+      const now = new Date();
+      const p = new Intl.DateTimeFormat('af-ZA', {
+        timeZone: 'Africa/Johannesburg',
+        year: 'numeric', month: '2-digit', day: '2-digit'
+      }).formatToParts(now).reduce((a, x) => (a[x.type] = x.value, a), {});
+      return `${p.year}-${p.month}-${p.day}`;
+    }
+
+    async function resolveTodayGameId() {
+      const d = todayZA();
+
+      // 1) Preferred: a 'date' field on /games docs
+      try {
+        const q = query(collection(db, 'games'), where('date', '==', d), limit(1));
+        const snap = await getDocs(q);
+        if (!snap.empty) return snap.docs[0].id;
+      } catch (_) {}
+
+      // 2) Fallback: doc id "GameYYYY-MM-DD"
+      try {
+        const ref1 = doc(db, 'games', `Game${d}`);
+        const got1 = await getDoc(ref1);
+        if (got1.exists()) return got1.id;
+      } catch (_) {}
+
+      // 3) Fallback: doc id "YYYY-MM-DD"
+      try {
+        const ref2 = doc(db, 'games', d);
+        const got2 = await getDoc(ref2);
+        if (got2.exists()) return got2.id;
+      } catch (_) {}
+
+      return null;
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const playBtn = document.getElementById('today-link');
+      if (!playBtn) return;
+
+      try {
+        const gameId = await resolveTodayGameId();
+        if (gameId) {
+          playBtn.href = `/dilemmagame.html?gameId=${encodeURIComponent(gameId)}`;
+        } else {
+          // Only show this if there's truly no doc to link to
+          playBtn.removeAttribute('href');
+          playBtn.textContent = 'Geen leidraad beskikbaar nie';
+          playBtn.classList.add('bg-gray-400', 'cursor-not-allowed', 'pointer-events-none');
+        }
+      } catch (_) {
+        // On any unexpected error, leave the button as-is
+      }
+    });
+  </script>
 </body>
 </html>
-
-
-
-
