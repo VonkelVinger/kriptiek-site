@@ -516,6 +516,7 @@ async function submitScore(guessCount, didWin) {
 async function ensureLeaderboardRow(summary) {
   try {
     if (!currentUid || !summary) return;
+
     const rowRef = doc(db, "games", gameId, "leaderboard", currentUid);
     const existing = await getDoc(rowRef);
     if (existing.exists()) return;
@@ -524,19 +525,34 @@ async function ensureLeaderboardRow(summary) {
       ? (Number(summary.guesses) || gridRows)
       : gridRows;
 
-    await setDoc(rowRef, {
+    // Compute your own successRate (allowed by rules)
+    let sr = null;
+    try {
+      const uSnap = await getDoc(doc(db, "users", currentUid));
+      if (uSnap.exists()) {
+        const u = uSnap.data() || {};
+        const gp = Number(u.gamesPlayed || 0);
+        const w  = Number(u.wins || 0);
+        sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
+      }
+    } catch (_) {
+      // ignore, we'll just omit successRate if we can't read it
+    }
+
+    const payload = {
       userName: displayName,
       guesses: Math.trunc(Number(guessCount)),
       date: serverTimestamp(),
-      createdAtMs: Date.now()
-    }, { merge: true });
+      createdAtMs: Date.now(),
+      ...(sr == null ? {} : { successRate: sr })
+    };
 
+    await setDoc(rowRef, payload, { merge: true });
     await loadLeaderboard();
   } catch (e) {
     console.warn("ensureLeaderboardRow failed:", e);
   }
 }
-
 async function loadLeaderboard() {
   try {
     const snap = await getDocs(collection(db, "games", gameId, "leaderboard"));
@@ -557,19 +573,25 @@ async function loadLeaderboard() {
       if (srVal == null) needSR.push(d.id);
     });
 
-    // Fallback: fetch success rate from users/{uid} for rows that don't have it
-    if (needSR.length) {
-      const userDocs = await Promise.all(needSR.map(uid => getDoc(doc(db, "users", uid))));
-      userDocs.forEach((uDoc, i) => {
-        if (!uDoc.exists()) return;
-        const u = uDoc.data() || {};
-        const gp = Number(u.gamesPlayed || 0);
-        const w  = Number(u.wins || 0);
-        const sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
-        const ent = entries.find(e => e.uid === needSR[i]);
-        if (ent) ent.sr = sr;
-      });
-    }
+   // Fallback: compute % for rows missing it — ignore permission errors
+if (needSR.length) {
+  try {
+    const results = await Promise.allSettled(
+      needSR.map(uid => getDoc(doc(db, "users", uid)))
+    );
+    results.forEach((res, i) => {
+      if (res.status !== "fulfilled") return; // skip blocked/failed reads
+      const snap = res.value;
+      if (!snap.exists()) return;
+      const u = snap.data() || {};
+      const gp = Number(u.gamesPlayed || 0);
+      const w  = Number(u.wins || 0);
+      const sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
+      const ent = entries.find(e => e.uid === needSR[i]);
+      if (ent) ent.sr = sr;
+    });
+  } catch {}
+}
 
     leaderboardList.innerHTML = "";
     if (!entries.length) {
