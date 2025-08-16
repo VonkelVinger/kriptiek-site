@@ -158,8 +158,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
-signInAnonymously(auth).catch(() => {});
-
 // ---------- UI refs ----------
 const gameGrid = document.getElementById("game-grid");
 const keyboard = document.getElementById("keyboard");
