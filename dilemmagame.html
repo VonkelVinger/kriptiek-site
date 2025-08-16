@@ -68,10 +68,10 @@
   <div id="game-grid" class="mb-6"></div>
   <div id="keyboard" class="mb-2"></div>
 
-  <!-- NEW: status line (success/fail summary) -->
+  <!-- Success/Fail status line -->
   <p id="statusLine" class="text-center font-bold text-[#1e3a8a] mb-4" style="display:none;"></p>
 
-  <!-- GESELS SAAM button lives here -->
+  <!-- GESELS SAAM -->
   <div class="mb-6 flex justify-center">
     <a href="/forum.html" id="chatButton"
        class="inline-block bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-4 py-2 rounded">
@@ -79,7 +79,7 @@
     </a>
   </div>
 
-  <!-- HOE OM TE SPEEL -->
+  <!-- HOW TO PLAY -->
   <div class="mt-2 bg-white rounded shadow p-4">
     <h2 class="text-xl font-bold mb-2">HOE OM DILEMMA TE SPEEL</h2>
     <p class="text-gray-700 leading-relaxed mb-2">
@@ -97,15 +97,12 @@
     </p>
     <h3 class="text-lg font-bold mt-4">JOU STATISTIEK</h3>
     <ul class="list-disc pl-6 text-gray-700 space-y-1">
-      <li><strong>Een poging per raaisel:</strong> Sodra jy klaar gespeel het (wen of verloor), word daardie raaisel vir jou gesluit.</li>
-      <li><strong>Ouer raaisels is oop:</strong> Jy kan enige vroeëre Dilemma steeds aanpak as jy dit nog nie gedoen het nie.</li>
-      <li><strong>Alles tel vir jou statistiek:</strong> Elke voltooide raaisel word ingereken by jou <strong>sukseskoers</strong> (% opgelos), dit wil sê al die Dilemmas wat jy kon oplos as 'n persentasie van die totale aantal wat jy al gespeel het.</li>
-      <li><strong>Wenlopie:</strong> Dit is jou lopie van suksesvolle opeenvolgende Dilemmas gespeel, in enige volgorde waarin jy kies om hulle te speel (dus nie noodwendig chronologies nie).</li>
-      <li><strong>Leierbord:</strong> Omdat jy elke raaisel <em>net een keer</em> mag speel, kan jou naam nie meer as een keer op daardie dag se leierbord verskyn nie.</li>
+      <li><strong>Een poging per raaisel:</strong> Wanneer jy klaar gespeel het (wen of verloor), word daardie raaisel vir jou gesluit.</li>
+      <li><strong>Ouer raaisels is oop:</strong> Jy kan enige vroeëre Dilemma nog aanpak as jy dit nog nie gedoen het nie.</li>
+      <li><strong>Alles tel:</strong> Elke voltooide raaisel tel vir jou <strong>sukseskoers</strong>.</li>
+      <li><strong>Wenlopie:</strong> Suksesvolle opeenvolgende Dilemmas (in enige volgorde).</li>
+      <li><strong>Leierbord:</strong> Jou naam verskyn net een keer per dag.</li>
     </ul>
-    <p class="text-sm text-gray-500 mt-2">
-      Let wel: Jou vordering is aan hierdie blaaier en toestel gekoppel, maar sal ook beskikbaar wees as jy elders met dieselfde besonderhede aanmeld.
-    </p>
   </div>
 
   <!-- LEADERBOARD -->
@@ -141,10 +138,13 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
 import {
-  getFirestore, doc, getDoc, collection, collectionGroup, setDoc, getDocs, serverTimestamp
+  getFirestore, doc, getDoc, collection, setDoc, getDocs, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+import {
+  getAuth, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
+/* ---- Firebase config ---- */
 const firebaseConfig = {
   apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
   authDomain: "kriptiek-c9ea2.firebaseapp.com",
@@ -155,10 +155,10 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const db  = getFirestore(app);
 const auth = getAuth(app);
 
-// ---------- UI refs ----------
+/* ---- UI refs ---- */
 const gameGrid = document.getElementById("game-grid");
 const keyboard = document.getElementById("keyboard");
 const modal = document.getElementById("resultModal");
@@ -169,7 +169,7 @@ const leaderboardList = document.getElementById("leaderboardList");
 const playerNameEl = document.getElementById("playerName");
 const statusLine = document.getElementById("statusLine");
 
-// ---------- State ----------
+/* ---- State ---- */
 let gridRows = 6, gridCols = 5;
 let currentRow = 0, currentCol = 0;
 let board = [], targetWord = "", gameOver = false;
@@ -178,31 +178,38 @@ let currentUid = null;
 let displayName = localStorage.getItem("userName") || "Speler";
 
 const params = new URLSearchParams(window.location.search);
-
-// ZA-safe default
 function todayZA() {
   const now = new Date();
-  const p = new Intl.DateTimeFormat('af-ZA', {
+  const parts = new Intl.DateTimeFormat('af-ZA', {
     timeZone: 'Africa/Johannesburg',
     year: 'numeric', month: '2-digit', day: '2-digit'
   }).formatToParts(now).reduce((a, x) => (a[x.type] = x.value, a), {});
-  return `${p.year}-${p.month}-${p.day}`;
+  return `${parts.year}-${parts.month}-${parts.day}`;
 }
-
 const gameId = params.get("gameId") || `Game${todayZA()}`;
 const doneKey = `dilemma-${gameId}-done`;
 const progressKey = `dilemma-${gameId}-progress`;
 const gameUrl = window.location.href;
 
-// Old/new ID mapper
 function altIdIfOldFormat(id) {
   const m = id.match(/^Game(\d{4}-\d{2}-\d{2})$/);
-  return m ? m[1] : null;
+  return m ? m[1] : null; // legacy read support only
 }
 
 playerNameEl.textContent = displayName;
 
-// ---------- Helpers ----------
+/* ---- If not signed in, render prompt (leaderboard remains visible) ---- */
+function renderAuthRequired() {
+  const clue = document.getElementById("clue");
+  clue.textContent = "Jy moet aangemeld wees om te speel.";
+  keyboard.innerHTML = `
+    <div class="text-center mt-2">
+      <a href="/login.html" class="underline font-bold text-[#1e3a8a] mr-4">Meld aan</a>
+      <a href="/register.html" class="underline">Registreer</a>
+    </div>`;
+}
+
+/* ---- Helpers ---- */
 function disableGame() {
   gameOver = true;
   document.querySelectorAll(".key").forEach(key => key.disabled = true);
@@ -254,50 +261,7 @@ async function recordPlay(guessCount, didWin) {
   }
 }
 
-// Backfill your own leaderboard row if missing
-async function ensureLeaderboardRowOnLoad() {
-  if (!currentUid) return;
-  try {
-    const lbRef = doc(db, "games", gameId, "leaderboard", currentUid);
-    const lbSnap = await getDoc(lbRef);
-    if (lbSnap.exists()) return;
-
-    let playSnap = await getDoc(doc(db, "userGames", currentUid, "plays", gameId));
-    if (!playSnap.exists()) {
-      const alt = altIdIfOldFormat(gameId);
-      if (alt) playSnap = await getDoc(doc(db, "userGames", currentUid, "plays", alt));
-    }
-    if (!playSnap.exists()) return;
-
-    const play = playSnap.data() || {};
-    const guesses = Math.trunc(Number(play.guesses)) || gridRows;
-
-    // Name & success rate (best effort)
-    let name = displayName;
-    let successRate = null;
-    try {
-      const uDoc = await getDoc(doc(db, "users", currentUid));
-      if (uDoc.exists()) {
-        const u = uDoc.data() || {};
-        if (typeof u.userName === "string" && u.userName.trim()) name = u.userName.trim();
-        const gp = Number(u.gamesPlayed || 0), w = Number(u.wins || 0);
-        successRate = gp > 0 ? Math.round((w / gp) * 100) : 0;
-      }
-    } catch {}
-
-    await setDoc(lbRef, {
-      userName: name,
-      guesses,
-      successRate,
-      date: serverTimestamp(),
-      createdAtMs: Date.now()
-    }, { merge: true });
-  } catch (e) {
-    console.warn("ensureLeaderboardRowOnLoad:", e);
-  }
-}
-
-// ---------- Load game data ----------
+/* ---- Game data ---- */
 async function loadGameData() {
   const gameRef = doc(db, "games", gameId);
   const snap = await getDoc(gameRef);
@@ -372,6 +336,7 @@ function updateKeyboard(letter, state) {
   }
 }
 
+/* ---- Input handling ---- */
 function handleKey(letter) {
   if (gameOver) return;
   if (currentCol < gridCols && currentRow < gridRows) {
@@ -379,13 +344,11 @@ function handleKey(letter) {
     currentCol++;
   }
 }
-
 function handleBackspace() {
   if (gameOver || currentCol === 0) return;
   currentCol--;
   board[currentRow][currentCol].textContent = "";
 }
-
 function handleEnter() {
   if (gameOver) return;
   if (currentCol < gridCols) return alert("Vul al die letters in!");
@@ -425,7 +388,7 @@ function applyStatesWithFlip(rowIndex, guess, states) {
   });
 }
 
-// ---- Save/restore progress ----
+/* ---- Save/restore progress ---- */
 function saveLocalProgress(done=false) {
   const rows = [];
   for (let r = 0; r < gridRows; r++) {
@@ -466,14 +429,11 @@ function restoreLocalProgress() {
   } catch {}
 }
 
-// ---------- Leaderboard ----------
+/* ---- Leaderboard ---- */
 async function submitScore(guessCount, didWin) {
-  if (!currentUid) {
-    console.warn("No auth; skipping leaderboard write.");
-    return;
-  }
+  if (!currentUid) return;
 
-  // Resolve display name from /users if possible
+  // Try to refresh display name from users doc (optional)
   try {
     const uDoc = await getDoc(doc(db, "users", currentUid));
     if (uDoc.exists() && typeof uDoc.data().userName === "string") {
@@ -485,9 +445,8 @@ async function submitScore(guessCount, didWin) {
     console.warn("Could not read users doc:", e);
   }
 
+  // Optionally update aggregate stats (non-fatal)
   let successRate = null;
-
-  // Try to update /users stats (but do NOT block leaderboard on failure)
   try {
     const uref = doc(db, "users", currentUid);
     const before = await getDoc(uref);
@@ -500,28 +459,13 @@ async function submitScore(guessCount, didWin) {
       const newStreak = didWin ? (u.streak || 0) + 1 : 0;
       const newBest   = Math.max(u.bestStreak || 0, newStreak);
       const dist = { "1":0,"2":0,"3":0,"4":0,"5":0,"6":0, ...(u.guessDist || {}) };
-      if (didWin && guessCount >= 1 && guessCount <= 6) {
-        dist[String(guessCount)] = (dist[String(guessCount)] || 0) + 1;
-      }
-      payload = {
-        userName: displayName,
-        gamesPlayed: newGames,
-        wins: newWins,
-        streak: newStreak,
-        bestStreak: newBest,
-        guessDist: dist,
-        updatedAt: serverTimestamp()
-      };
+      if (didWin && guessCount >= 1 && guessCount <= 6) dist[String(guessCount)] = (dist[String(guessCount)] || 0) + 1;
+      payload = { userName: displayName, gamesPlayed: newGames, wins: newWins, streak: newStreak, bestStreak: newBest, guessDist: dist, updatedAt: serverTimestamp() };
     } else {
       payload = {
-        userName: displayName,
-        gamesPlayed: 1,
-        wins: didWin ? 1 : 0,
-        streak: didWin ? 1 : 0,
-        bestStreak: didWin ? 1 : 0,
+        userName: displayName, gamesPlayed: 1, wins: didWin ? 1 : 0, streak: didWin ? 1 : 0, bestStreak: didWin ? 1 : 0,
         guessDist: { "1":0,"2":0,"3":0,"4":0,"5":0,"6":0, ...(didWin && guessCount>=1 && guessCount<=6 ? { [String(guessCount)]: 1 } : {}) },
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        createdAt: serverTimestamp(), updatedAt: serverTimestamp()
       };
     }
     await setDoc(uref, payload, { merge: true });
@@ -535,17 +479,11 @@ async function submitScore(guessCount, didWin) {
     console.warn("User stats update failed (non-fatal):", e);
   }
 
-  // ALWAYS write/merge the leaderboard row
+  // Always write/merge leaderboard row (publicly readable)
   try {
     await setDoc(
       doc(db, "games", gameId, "leaderboard", currentUid),
-      {
-        userName: displayName,
-        guesses: Math.trunc(Number(guessCount)),
-        successRate: (successRate === null ? undefined : successRate),
-        date: serverTimestamp(),
-        createdAtMs: Date.now()
-      },
+      { userName: displayName, guesses: Math.trunc(Number(guessCount)), successRate: (successRate == null ? undefined : successRate), date: serverTimestamp(), createdAtMs: Date.now() },
       { merge: true }
     );
   } catch (e) {
@@ -553,13 +491,10 @@ async function submitScore(guessCount, didWin) {
   }
 }
 
-// Leaderboard (primary: subcollection; fallback: collectionGroup('plays') if allowed)
 async function loadLeaderboard() {
   try {
-    // 1) Try the game's own leaderboard subcollection first
     const snap = await getDocs(collection(db, "games", gameId, "leaderboard"));
-    let entries = [];
-    let needSR = [];
+    const entries = [];
 
     snap.forEach(d => {
       const v = d.data() || {};
@@ -567,62 +502,15 @@ async function loadLeaderboard() {
       if (!Number.isFinite(guessesNum) || guessesNum < 1 || guessesNum > gridRows) return;
 
       const name = (typeof v.userName === "string" && v.userName.trim()) ? v.userName.trim() : "Onbekend";
-      const ts = v.date?.seconds ? v.date.seconds * 1000 :
-                 (typeof v.createdAtMs === "number" ? v.createdAtMs : 0);
+      const ts = v.date?.seconds ? v.date.seconds * 1000 : (typeof v.createdAtMs === "number" ? v.createdAtMs : 0);
       const sr = Number.isFinite(Number(v.successRate)) ? Math.trunc(Number(v.successRate)) : null;
 
-      entries.push({ uid: d.id, name, guesses: guessesNum, when: ts, sr });
-      if (sr == null) needSR.push(d.id);
+      entries.push({ name, guesses: guessesNum, when: ts, sr });
     });
 
-    if (needSR.length) {
-      const userDocs = await Promise.all(needSR.map(uid => getDoc(doc(db, "users", uid))));
-      userDocs.forEach((uDoc, i) => {
-        if (!uDoc.exists()) return;
-        const u = uDoc.data() || {};
-        const gp = Number(u.gamesPlayed || 0);
-        const w  = Number(u.wins || 0);
-        const sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
-        const ent = entries.find(e => e.uid === needSR[i]);
-        if (ent && ent.sr == null) ent.sr = sr;
-      });
-    }
-
-    // 2) If nothing there yet, FALL BACK from plays (if rules allow)
-    if (!entries.length) {
-      try {
-        const cg = await getDocs(collectionGroup(db, "plays"));
-        const fb = [];
-        cg.forEach(p => {
-          if (p.id !== gameId) return;
-          const v = p.data() || {};
-          const guesses = Math.trunc(Number(v.guesses));
-          if (!Number.isFinite(guesses) || guesses < 1 || guesses > gridRows) return;
-          const when = v.finishedAt?.seconds ? v.finishedAt.seconds * 1000 : 0;
-          const uid = p.ref.parent.parent.id;
-          fb.push({ uid, guesses, when });
-        });
-
-        if (fb.length) {
-          const docs = await Promise.all(fb.map(r => getDoc(doc(db, "users", r.uid))));
-          fb.forEach((r, i) => {
-            const u = docs[i].exists() ? (docs[i].data() || {}) : {};
-            r.name = (typeof u.userName === "string" && u.userName.trim()) ? u.userName.trim() : "Onbekend";
-            const gp = Number(u.gamesPlayed || 0), w = Number(u.wins || 0);
-            r.sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
-          });
-          entries = fb;
-        }
-      } catch (e) {
-        console.warn("Fallback leaderboard from plays failed:", e);
-      }
-    }
-
-    // 3) Render
     leaderboardList.innerHTML = "";
     if (!entries.length) {
-      leaderboardList.innerHTML =
-        `<li class="bg-green-100 font-medium px-2 py-1 rounded">Jy kan eerste op die leierbord wees!</li>`;
+      leaderboardList.innerHTML = `<li class="bg-green-100 font-medium px-2 py-1 rounded">Jy kan eerste op die leierbord wees!</li>`;
       return;
     }
 
@@ -631,9 +519,7 @@ async function loadLeaderboard() {
       const li = document.createElement("li");
       if (idx === 0) li.className = "font-bold bg-green-100";
       const woord = e.guesses === 1 ? 'raaiskoot' : 'raaiskote';
-      li.innerHTML =
-        `<strong>${e.name}</strong>: ${e.guesses} ${woord}` +
-        (Number.isFinite(e.sr) ? ` · ${e.sr}%-sukseskoers` : "");
+      li.innerHTML = `<strong>${e.name}</strong>: ${e.guesses} ${woord}` + (Number.isFinite(e.sr) ? ` · ${e.sr}%-sukseskoers` : "");
       leaderboardList.appendChild(li);
     });
   } catch (err) {
@@ -642,7 +528,7 @@ async function loadLeaderboard() {
   }
 }
 
-// ---------- Game end flows ----------
+/* ---- Game end flows ---- */
 async function gameCompleted(guessCount) {
   gameOver = true;
   const woord = guessCount === 1 ? 'raaiskoot' : 'raaiskote';
@@ -657,7 +543,6 @@ async function gameCompleted(guessCount) {
   saveLocalProgress(true);
   await recordPlay(guessCount, true);
   await submitScore(guessCount, true);
-  await ensureLeaderboardRowOnLoad();
   await loadLeaderboard();
   document.querySelectorAll(".key").forEach(k => k.disabled = true);
 }
@@ -670,19 +555,16 @@ async function gameFailed() {
 
   resultMsg.textContent = `Jammer, ${displayName}! Vandag se oplossing is ${targetWord}.`;
   modal.style.display = "flex";
-  shareBtn.onclick = () =>
-    navigator.clipboard.writeText(`Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${gameUrl}`);
+  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${gameUrl}`);
 
   saveLocalProgress(true);
   await recordPlay(gridRows, false);
   await submitScore(gridRows, false);
-  await ensureLeaderboardRowOnLoad();
   await loadLeaderboard();
   document.querySelectorAll(".key").forEach(k => k.disabled = true);
 }
 
 closeBtn.onclick = () => { modal.style.display = "none"; };
-
 document.addEventListener("keydown", e => {
   if (e.key === "Enter") handleEnter();
   else if (e.key === "Backspace") handleBackspace();
@@ -709,20 +591,26 @@ function checkGuessWithFlip(guess) {
   }, gridCols * 350 + 20);
 }
 
-// ---------- Init sequence ----------
+/* ---- Auth gate + init ---- */
 onAuthStateChanged(auth, async (user) => {
-  currentUid = user?.uid || null;
-
-  if (currentUid) {
-    try {
-      const uDoc = await getDoc(doc(db, "users", currentUid));
-      const nm = uDoc.exists() ? uDoc.data()?.userName : null;
-      if (typeof nm === "string" && nm.trim()) {
-        displayName = nm.trim();
-        localStorage.setItem("userName", displayName);
-      }
-    } catch {}
+  if (!user) {
+    // Not signed in: prompt to sign in, but still show today's leaderboard (public read).
+    renderAuthRequired();
+    await loadLeaderboard();
+    return;
   }
+
+  currentUid = user.uid;
+
+  // Load display name if stored
+  try {
+    const uDoc = await getDoc(doc(db, "users", currentUid));
+    const nm = uDoc.exists() ? uDoc.data()?.userName : null;
+    if (typeof nm === "string" && nm.trim()) {
+      displayName = nm.trim();
+      localStorage.setItem("userName", displayName);
+    }
+  } catch {}
   playerNameEl.textContent = displayName;
 
   await loadGameData();
@@ -746,25 +634,12 @@ onAuthStateChanged(auth, async (user) => {
     const someWin = board.some(row => row.length && row.every(t => t.classList.contains("correct")));
     const reachedMax = currentRow >= gridRows && !someWin;
     if (someWin || reachedMax) {
-      statusLine.textContent = someWin
-        ? `Jy het hierdie Dilemma opgelos`
-        : `Jy kon nie hierdie Dilemma oplos nie`;
+      statusLine.textContent = someWin ? `Jy het hierdie Dilemma opgelos` : `Jy kon nie hierdie Dilemma oplos nie`;
       statusLine.style.display = "block";
       disableGame();
     }
   }
 
-  // Extra fallback: old local key on this device
-  if (!lsDone && !fsDone) {
-    const alt = altIdIfOldFormat(gameId);
-    if (alt && localStorage.getItem(`dilemma-${alt}-done`) === 'true') {
-      statusLine.textContent = `Jy het hierdie Dilemma opgelos`;
-      statusLine.style.display = "block";
-      disableGame();
-    }
-  }
-
-  await ensureLeaderboardRowOnLoad();
   await loadLeaderboard();
 });
 </script>
