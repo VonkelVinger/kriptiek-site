@@ -261,6 +261,18 @@ async function recordPlay(guessCount, didWin) {
   }
 }
 
+/* ---- Local result fallback (NEW) ---- */
+function readLocalResult() {
+  const v = localStorage.getItem(`${doneKey}-result`);
+  if (!v) return null;
+  if (v.startsWith('win:')) {
+    const n = Number(v.split(':')[1]);
+    return { didWin: true, guesses: Number.isFinite(n) ? n : null };
+  }
+  if (v === 'loss') return { didWin: false, guesses: null };
+  return null;
+}
+
 /* ---- Game data ---- */
 async function loadGameData() {
   const gameRef = doc(db, "games", gameId);
@@ -541,6 +553,7 @@ async function gameCompleted(guessCount) {
   shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het DILEMMA in ${guessCount} ${woord} opgelos: ${gameUrl}`);
 
   saveLocalProgress(true);
+  localStorage.setItem(`${doneKey}-result`, `win:${guessCount}`); /* NEW */
   await recordPlay(guessCount, true);
   await submitScore(guessCount, true);
   await loadLeaderboard();
@@ -558,6 +571,7 @@ async function gameFailed() {
   shareBtn.onclick = () => navigator.clipboard.writeText(`Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${gameUrl}`);
 
   saveLocalProgress(true);
+  localStorage.setItem(`${doneKey}-result`, `loss`); /* NEW */
   await recordPlay(gridRows, false);
   await submitScore(gridRows, false);
   await loadLeaderboard();
@@ -622,11 +636,18 @@ onAuthStateChanged(auth, async (user) => {
   const lsDone = localStorage.getItem(doneKey) === "true";
   const fsDone = await serverLockExists();
   if (lsDone || fsDone) {
-    const s = await getPlaySummary();
+    let s = await getPlaySummary();
+    if (!s) s = readLocalResult(); /* NEW fallback */
     if (s) {
-      statusLine.textContent = s.didWin
-        ? `Jy het hierdie Dilemma in ${s.guesses} ${s.guesses === 1 ? 'raaiskoot' : 'raaiskote'} opgelos`
-        : `Jy kon nie hierdie Dilemma oplos nie`;
+      if (s.didWin) {
+        const woord = s.guesses === 1 ? 'raaiskoot' : 'raaiskote';
+        statusLine.textContent = `Jy het hierdie Dilemma in ${s.guesses ?? ''} ${s.guesses ? woord : ''} opgelos`.trim();
+      } else {
+        statusLine.textContent = `Jy kon nie hierdie Dilemma oplos nie`;
+      }
+      statusLine.style.display = "block";
+    } else {
+      statusLine.textContent = `Hierdie Dilemma is reeds voltooi`;
       statusLine.style.display = "block";
     }
     disableGame();
