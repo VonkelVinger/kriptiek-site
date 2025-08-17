@@ -30,7 +30,7 @@
 
 <body class="min-h-screen flex flex-col bg-gray-50 bg-letters">
 
-  <!-- Header (matches index.html style) -->
+  <!-- Header -->
   <header class="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-gray-100">
     <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
       <a href="/index.html" class="flex items-center space-x-3 group">
@@ -46,7 +46,7 @@
         <a href="/dilemmagame.html" class="text-gray-700 hover:text-[color:var(--brand)]">DILEMMA</a>
         <a href="/dilemma-argief.html" class="text-gray-700 hover:text-[color:var(--brand)]">Argief</a>
         <a href="/forum.html" class="text-gray-700 hover:text-[color:var(--brand)]">Gesels saam</a>
-        <a id="nav-register" href="/register.html" class="text-gray-700 hover:text-[color:var(--brand)]">Registreer</a>
+        <a id="nav-register" href="/register.html?new=1" class="text-gray-700 hover:text-[color:var(--brand)]">Registreer</a>
         <a id="nav-login" href="/login.html" class="text-gray-700 hover:text-[color:var(--brand)]">Meld aan</a>
         <button id="nav-logout" class="hidden text-gray-700 hover:text-red-700">Meld af</button>
       </nav>
@@ -137,7 +137,14 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // UI helpers
+    // "force new" mode
+    const forceNew = new URL(location.href).searchParams.get("new") === "1";
+    if (forceNew) {
+      try { await signOut(auth); } catch {}
+      try { localStorage.clear(); sessionStorage.clear(); } catch {}
+      await new Promise(r => setTimeout(r, 150));
+    }
+
     const el = (id) => document.getElementById(id);
     const showAlert = (msg, kind = "error") => {
       const box = el("alertBox");
@@ -147,10 +154,9 @@
         (kind === "ok" ? "border-green-300 bg-green-50 text-green-800" : "border-red-300 bg-red-50 text-red-800");
     };
 
-    // Durable sessions
     try { await setPersistence(auth, browserLocalPersistence); } catch {}
 
-    // Header auth toggles
+    // Header toggle only (no auto-redirect)
     const updateHeader = (user) => {
       const reg = document.getElementById("nav-register");
       const log = document.getElementById("nav-login");
@@ -158,12 +164,7 @@
       if (user) { reg?.classList.add("hidden"); log?.classList.add("hidden"); out?.classList.remove("hidden"); }
       else { reg?.classList.remove("hidden"); log?.classList.remove("hidden"); out?.classList.add("hidden"); }
     };
-
-    onAuthStateChanged(auth, (user) => {
-      updateHeader(user);
-      // If already signed in, send them home (no need to register)
-      if (user) { window.location.replace("/index.html"); }
-    });
+    onAuthStateChanged(auth, updateHeader);
 
     // Register flow
     el("registerForm").addEventListener("submit", async (e) => {
@@ -178,14 +179,11 @@
       if (userName.length < 2) { showAlert("Jou naam moet minstens 2 karakters wees."); el("registerBtn").disabled = false; return; }
 
       try {
-        // Create + signed-in automatically
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         const user = cred.user;
 
-        // Set displayName (best-effort)
         try { await updateProfile(user, { displayName: userName }); } catch {}
 
-        // Canonical user profile (private)
         await setDoc(doc(db, "users", user.uid), {
           userName,
           email,
@@ -199,12 +197,10 @@
           updatedAt: serverTimestamp()
         }, { merge: true });
 
-        // Optional audit trail
         await setDoc(doc(db, "registrations", user.uid), {
           userName, email, userId: user.uid, timestamp: serverTimestamp()
         }, { merge: true });
 
-        // Cache for gameplay
         localStorage.setItem("userName", userName);
         localStorage.setItem("userId", user.uid);
         localStorage.setItem("userEmail", email);
@@ -220,8 +216,11 @@
     });
 
     // Header "Meld af"
-    document.getElementById("nav-logout")?.addEventListener("click", async () => {
-      try { await signOut(auth); localStorage.clear(); window.location.href = "/index.html"; } catch {}
+    el("nav-logout")?.addEventListener("click", async () => {
+      try { await signOut(auth); } finally {
+        localStorage.clear(); sessionStorage.clear();
+        setTimeout(() => { window.location.href = "/index.html"; }, 120);
+      }
     });
 
     // Footer year
