@@ -35,6 +35,8 @@
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
+
+  <!-- Header -->
   <header class="bg-white shadow p-4">
     <div class="logo-container">
       <div id="backgroundCrossword" class="background-crossword"></div>
@@ -51,38 +53,40 @@
     </div>
   </header>
 
+  <!-- Main -->
   <main class="flex-grow flex items-center justify-center p-4">
     <div class="bg-white shadow-lg rounded-xl p-6 w-full max-w-md">
-      <h2 class="text-xl font-bold text-center mb-6 text-[#1e3a8a]">Meld aan</h2>
+      <h2 class="text-xl font-bold text-center mb-2 text-[#1e3a8a]">Meld aan</h2>
+      <p class="text-center text-gray-600 mb-6">Meld aan om te speel en jou vordering te stoor.</p>
+
+      <div id="alertBox" class="hidden mb-4 rounded-lg border px-3 py-2 text-sm"></div>
 
       <form id="loginForm" class="space-y-6">
         <label class="block text-left">
-          <span class="text-gray-700 font-semibold">Naam (kan 'n skuilnaam wees)</span>
-          <input type="text" id="nameInput" name="nameInput" minlength="2" maxlength="40" required
-                 class="mt-1 block w-full border border-gray-300 rounded p-2" />
-        </label>
-        <label class="block text-left">
           <span class="text-gray-700 font-semibold">E-posadres</span>
-          <input type="email" name="email" required class="mt-1 block w-full border border-gray-300 rounded p-2" />
+          <input type="email" id="email" required class="mt-1 block w-full border border-gray-300 rounded p-2" />
         </label>
         <label class="block text-left">
           <span class="text-gray-700 font-semibold">Wagwoord</span>
-          <input type="password" name="password" required class="mt-1 block w-full border border-gray-300 rounded p-2" />
+          <input type="password" id="password" required class="mt-1 block w-full border border-gray-300 rounded p-2" />
         </label>
-        <button type="submit" class="w-full bg-gray-800 hover:bg-gray-900 text-white py-2 px-4 rounded transition">STUUR</button>
+        <button type="submit" id="loginBtn" class="w-full bg-gray-800 hover:bg-gray-900 text-white py-2 px-4 rounded transition disabled:opacity-60 disabled:cursor-not-allowed">
+          MELD AAN
+        </button>
       </form>
 
-      <p class="mt-3 text-sm text-blue-600 hover:underline cursor-pointer text-center" onclick="showReset()">Wagwoord vergeet?</p>
+      <p class="mt-3 text-sm text-blue-600 hover:underline cursor-pointer text-center" id="showReset">Wagwoord vergeet?</p>
       <div id="resetSection" class="hidden mt-4 space-y-2">
         <input id="resetEmail" type="email" placeholder="Voer jou e-posadres in" class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <button onclick="sendReset()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition w-full">Stuur wagwoordherstel</button>
+        <button id="sendReset" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition w-full">Stuur wagwoordherstel</button>
         <p id="resetMessage" class="text-sm text-center"></p>
       </div>
     </div>
   </main>
 
+  <!-- Footer -->
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
-    &copy; 2025 Kriptiek. Alle regte voorbehou. |
+    &copy; <span id="year"></span> Kriptiek. Alle regte voorbehou. |
     <a href="/index.html" class="underline">Tuis</a> |
     <a href="/forum.html" class="underline">Gesels saam</a> |
     <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
@@ -92,10 +96,24 @@
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
 
+  <!-- Auth + Firestore -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      onAuthStateChanged,
+      setPersistence,
+      browserLocalPersistence,
+      sendPasswordResetEmail
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -110,100 +128,134 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Prefill name from localStorage if present
-    document.addEventListener('DOMContentLoaded', () => {
-      const nameInput = document.getElementById('nameInput');
-      const cached = (localStorage.getItem('userName') || "").trim();
-      if (cached) nameInput.value = cached;
+    const el = (id) => document.getElementById(id);
+    const showAlert = (msg, kind = "error") => {
+      const box = el("alertBox");
+      box.classList.remove("hidden");
+      box.textContent = msg;
+      box.className = "mb-4 rounded-lg border px-3 py-2 text-sm " +
+        (kind === "ok" ? "border-green-300 bg-green-50 text-green-800" : "border-red-300 bg-red-50 text-red-800");
+    };
 
-      const form = document.getElementById('loginForm');
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const nameEntered = nameInput.value.trim();
-        const email = form.email.value.trim();
-        const password = form.password.value;
+    // Durable sessions
+    try { await setPersistence(auth, browserLocalPersistence); } catch (e) {/* ignore */}
 
-        if (nameEntered.length < 2) { alert("Jou naam moet minstens 2 karakters wees."); return; }
-        if (!email || !password) { alert("Vul alle velde asseblief in."); return; }
+    // Already signed in? Bounce to home.
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Populate cache from existing profile before redirect
+        (async () => {
+          const uid = user.uid;
+          let userName = user.displayName || "";
+          let userEmail = user.email || "";
 
-        try {
-          const userCredential = await signInWithEmailAndPassword(auth, email, password);
-          const user = userCredential.user;
-
-          // Cache basics
-          localStorage.setItem('userId', user.uid);
-          localStorage.setItem('userEmail', user.email || email);
-
-          // Read/verify name in registrations/{uid}
-          const regRef = doc(db, "registrations", user.uid);
-          const regSnap = await getDoc(regRef);
-          let finalName = nameEntered;
-
-          const norm = s => (s || "").trim().toLowerCase();
-          if (regSnap.exists()) {
-            const stored = (regSnap.data().userName || "").trim();
-            if (stored) {
-              if (norm(stored) !== norm(nameEntered)) {
-                const ok = confirm(`Die naam op rekord is “${stored}”. Wil jy dit verander na “${nameEntered}”?`);
-                if (ok) {
-                  await setDoc(regRef, { userName: nameEntered, email: user.email || email, userId: user.uid }, { merge: true });
-                  finalName = nameEntered;
-                } else {
-                  finalName = stored;
-                }
-              } else {
-                finalName = stored; // identical
-              }
-            } else {
-              await setDoc(regRef, { userName: nameEntered, email: user.email || email, userId: user.uid }, { merge: true });
-              finalName = nameEntered;
+          // Prefer users/{uid}
+          const userRef = doc(db, "users", uid);
+          const userSnap = await getDoc(userRef);
+          if (userSnap.exists()) {
+            userName = userSnap.data()?.userName || userName;
+            userEmail = userSnap.data()?.email || userEmail;
+          } else {
+            // Fallback to registrations/{uid}
+            const regRef = doc(db, "registrations", uid);
+            const regSnap = await getDoc(regRef);
+            if (regSnap.exists()) {
+              userName = regSnap.data()?.userName || userName;
+              userEmail = regSnap.data()?.email || userEmail;
             }
-          } else {
-            await setDoc(regRef, { userName: nameEntered, email: user.email || email, userId: user.uid, timestamp: serverTimestamp() });
-            finalName = nameEntered;
           }
 
-          // Persist standardized key for gameplay
-          localStorage.setItem('userName', finalName);
+          if (userName) localStorage.setItem("userName", userName);
+          localStorage.setItem("userId", uid);
+          if (userEmail) localStorage.setItem("userEmail", userEmail);
 
-          // Ensure users/{uid} exists (games use this for streaks etc.)
-          await setDoc(
-            doc(db, "users", user.uid),
-            { userName: finalName, email: user.email || email, lastLogin: serverTimestamp() },
-            { merge: true }
-          );
-
-          alert("Welkom terug by Kriptiek!");
-          const redirectUrl = localStorage.getItem('redirectAfterLogin');
-          if (redirectUrl) {
-            localStorage.removeItem('redirectAfterLogin');
-            window.location.href = redirectUrl;
-          } else {
-            window.location.href = '/index.html';
-          }
-        } catch (error) {
-          console.error("Fout tydens aanmelding:", error.message);
-          alert("Kon nie aanmeld nie: " + error.message);
-        }
-      });
+          window.location.replace("/index.html");
+        })();
+      }
     });
 
-    // Reset helpers
-    window.showReset = () => { document.getElementById('resetSection').classList.remove('hidden'); };
-    window.sendReset = () => {
-      const email = document.getElementById('resetEmail').value.trim();
-      const message = document.getElementById('resetMessage');
-      if (!email) {
-        message.textContent = "Voer asseblief jou e-posadres in.";
-        message.className = "text-red-600 text-sm text-center";
-        return;
+    // Login flow
+    el("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      el("alertBox").classList.add("hidden");
+      el("loginBtn").disabled = true;
+
+      const email = el("email").value.trim();
+      const password = el("password").value;
+
+      try {
+        const { user } = await signInWithEmailAndPassword(auth, email, password);
+
+        // Fetch profile -> cache -> merge lastLogin
+        const uid = user.uid;
+        let userName = user.displayName || "";
+        let userEmail = user.email || email;
+
+        const userRef = doc(db, "users", uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          userName = userSnap.data()?.userName || userName;
+          userEmail = userSnap.data()?.email || userEmail;
+        } else {
+          // fallback to registrations
+          const regRef = doc(db, "registrations", uid);
+          const regSnap = await getDoc(regRef);
+          if (regSnap.exists()) {
+            userName = regSnap.data()?.userName || userName;
+            userEmail = regSnap.data()?.email || userEmail;
+          }
+        }
+
+        if (userName) localStorage.setItem("userName", userName);
+        localStorage.setItem("userId", uid);
+        localStorage.setItem("userEmail", userEmail || "");
+
+        // Update users/{uid} with lastLogin (non-blocking)
+        try {
+          await setDoc(userRef, { userName: userName || null, email: userEmail || null, lastLogin: serverTimestamp() }, { merge: true });
+        } catch (e) { console.warn("users doc update skipped", e); }
+
+        const redirectUrl = localStorage.getItem("redirectAfterLogin");
+        if (redirectUrl) {
+          localStorage.removeItem("redirectAfterLogin");
+          window.location.href = redirectUrl;
+        } else {
+          window.location.href = "/index.html";
+        }
+      } catch (err) {
+        console.error(err);
+        let msg = "Kon nie aanmeld nie. Kontroleer jou besonderhede.";
+        const code = err?.code || "";
+        if (code.includes("invalid-credential") || code.includes("wrong-password")) msg = "Verkeerde e-pos of wagwoord.";
+        else if (code.includes("user-not-found")) msg = "Geen gebruiker met dié e-pos is gevind nie.";
+        else if (code.includes("too-many-requests")) msg = "Te veel pogings. Probeer weer later.";
+        showAlert(msg, "error");
+      } finally {
+        el("loginBtn").disabled = false;
       }
-      sendPasswordResetEmail(auth, email)
-        .then(() => { message.textContent = "Kyk in jou e-pos vir die herstel-skakel."; message.className = "text-green-600 text-sm text-center"; })
-        .catch(error => { message.textContent = "Fout: " + error.message; message.className = "text-red-600 text-sm text-center"; });
-    };
+    });
+
+    // Reset UI
+    el("showReset").addEventListener("click", () => el("resetSection").classList.remove("hidden"));
+    el("sendReset").addEventListener("click", async () => {
+      const email = el("resetEmail").value.trim();
+      const message = el("resetMessage");
+      if (!email) { message.textContent = "Voer asseblief jou e-posadres in."; message.className = "text-red-600 text-sm text-center"; return; }
+      try {
+        await sendPasswordResetEmail(auth, email);
+        message.textContent = "Kyk in jou e-pos vir die herstel-skakel.";
+        message.className = "text-green-600 text-sm text-center";
+      } catch (error) {
+        message.textContent = "Fout: " + (error?.message || error);
+        message.className = "text-red-600 text-sm text-center";
+      }
+    });
+
+    // Footer year
+    document.getElementById("year").textContent = new Date().getFullYear();
   </script>
 
+  <!-- Background letters -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const backgroundCrossword = document.getElementById('backgroundCrossword');
@@ -211,9 +263,9 @@
       function getRandomLetter() { return letters[Math.floor(Math.random() * letters.length)]; }
       function generateBackgroundGrid() {
         backgroundCrossword.innerHTML = '';
-        const numRows = Math.ceil(backgroundCrossword.offsetHeight / 30);
-        const numCols = Math.ceil(backgroundCrossword.offsetWidth / 30);
-        const totalCells = (numRows * numCols) || 300;
+        const numRows = Math.ceil(backgroundCrossword.offsetHeight / 30) || 10;
+        const numCols = Math.ceil(backgroundCrossword.offsetWidth / 30) || 30;
+        const totalCells = numRows * numCols;
         for (let i = 0; i < totalCells; i++) {
           const bgLetterBox = document.createElement('div');
           bgLetterBox.classList.add('bg-letter-box');
@@ -223,12 +275,7 @@
       }
       generateBackgroundGrid();
       window.addEventListener('resize', generateBackgroundGrid);
-
-      const cookieConsent = localStorage.getItem('cookieConsent');
-      if (!cookieConsent) { document.getElementById('cookie-banner')?.classList.remove('hidden'); }
     });
-    function acceptCookies() { localStorage.setItem('cookieConsent', 'accepted'); document.getElementById('cookie-banner').style.display = 'none'; }
-    function declineCookies() { localStorage.setItem('cookieConsent', 'declined'); document.getElementById('cookie-banner').style.display = 'none'; }
   </script>
 </body>
 </html>
