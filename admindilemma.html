@@ -10,9 +10,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
   <style>
     body { font-family: 'Montserrat', sans-serif; }
+    .disabled * { opacity:.6; pointer-events:none; user-select:none; }
+    code { background:#f3f4f6; padding:.1rem .3rem; border-radius:.25rem; }
   </style>
 
-  <!-- Firebase -->
+  <!-- Firebase Admin Page -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import {
@@ -32,29 +34,30 @@
       messagingSenderId: "620450620939",
       appId: "1:620450620939:web:e93a18ac23b53b33db890e"
     };
+    const ADMIN_UID = "jI7f0Wk4MqfPq7p69vjl8OlJUvS2";
 
     const app = initializeApp(firebaseConfig);
     const db  = getFirestore(app);
     const auth = getAuth(app);
 
     // ---- DOM ----
-    const statusEl     = document.getElementById('authStatus');
-    const logoutBtn    = document.getElementById('logoutBtn');
-    const dateInput    = document.getElementById('gameDate');
-    const wordInput    = document.getElementById('targetWord');
-    const clueInput    = document.getElementById('clue');
-    const saveBtn      = document.getElementById('saveBtn');
-    const checkBtn     = document.getElementById('checkBtn');
-    const resultEl     = document.getElementById('result');
-    const linkEl       = document.getElementById('gameLink');
+    const statusEl  = document.getElementById('authStatus');
+    const panelEl   = document.getElementById('panel');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const dateInput = document.getElementById('gameDate');
+    const wordInput = document.getElementById('targetWord');
+    const clueInput = document.getElementById('clue');
+    const saveBtn   = document.getElementById('saveBtn');
+    const checkBtn  = document.getElementById('checkBtn');
+    const resultEl  = document.getElementById('result');
+    const linkEl    = document.getElementById('gameLink');
 
     // ---- Helpers ----
-    function todayZA() {
-      const now = new Date();
+    function todayZAISO() {
       const p = new Intl.DateTimeFormat('af-ZA', {
         timeZone: 'Africa/Johannesburg',
         year: 'numeric', month: '2-digit', day: '2-digit'
-      }).formatToParts(now).reduce((a, x) => (a[x.type] = x.value, a), {});
+      }).formatToParts(new Date()).reduce((a, x) => (a[x.type] = x.value, a), {});
       return `${p.year}-${p.month}-${p.day}`; // YYYY-MM-DD
     }
 
@@ -79,13 +82,18 @@
       resultEl.className = 'mt-3 text-red-600 font-semibold';
     }
 
-    async function wordExists(wordUpper) {
-      // Option A: block reuse by checking games where 'word' equals this value
+    function validWordUpper(s) {
+      // Allow A–Z plus common Afrikaans diacritics and hyphen
+      return /^[A-ZÁÉÍÓÚÄËÏÖÜÂÊÎÔÛŸ\-]+$/.test(s);
+    }
+
+    async function wordUsedAlready(wordUpper) {
       const q = query(collection(db, 'games'), where('word', '==', wordUpper));
       const snap = await getDocs(q);
       return !snap.empty;
     }
 
+    // ---- Core Save ----
     async function saveGame() {
       clearResult();
 
@@ -93,47 +101,42 @@
       const wordRaw = (wordInput.value || '').trim();
       const clueRaw = (clueInput.value || '').trim();
 
-      if (!dateStr) { showErr('Kies ’n datum (YYYY-MM-DD).'); return; }
-      if (!wordRaw) { showErr('Voer die teikenwoord in.'); return; }
-      if (!clueRaw) { showErr('Voer die leidraad in.'); return; }
+      if (!dateStr) return showErr('Kies ’n datum (YYYY-MM-DD).');
+      if (!wordRaw) return showErr('Voer die teikenwoord in.');
+      if (!clueRaw) return showErr('Voer die leidraad in.');
 
       const wordUpper = wordRaw.toUpperCase();
-      if (!/^[A-ZÁÉÍÓÚÄËÏÖÜÂÊÎÔÛŸ\-]+$/.test(wordUpper)) {
-        // Allow basic accented letters & hyphen; adjust as needed for Afrikaans.
-        showErr('Die woord moet uit letters bestaan (A–Z, met basiese aksente) en/of ’n koppelteken.');
-        return;
+      if (!validWordUpper(wordUpper)) {
+        return showErr('Die woord moet uit letters bestaan (A–Z, basiese aksente) en/of ’n koppelteken.');
       }
 
-      // Duplicate doc ID guard across BOTH formats
+      // Enforce ID = GameYYYY-MM-DD; also guard against old-format dupes
       const idPreferred = `Game${dateStr}`;
       const idAlt       = dateStr;
 
-      const [a, b, reuse] = await Promise.all([
+      const [existsNew, existsOld, reused] = await Promise.all([
         getDoc(doc(db, 'games', idPreferred)),
         getDoc(doc(db, 'games', idAlt)),
-        wordExists(wordUpper)
+        wordUsedAlready(wordUpper)
       ]);
 
-      if (a.exists() || b.exists()) {
-        const existing = a.exists() ? idPreferred : idAlt;
-        showErr(`’n Speletjie vir ${dateStr} bestaan reeds as “${existing}”.`);
-        return;
+      if (existsNew.exists() || existsOld.exists()) {
+        const which = existsNew.exists() ? idPreferred : idAlt;
+        return showErr(`’n Speletjie vir ${dateStr} bestaan reeds as “${which}”.`);
       }
-      if (reuse) {
-        showErr(`Die woord “${wordUpper}” is reeds gebruik. Kies ’n ander teikenwoord.`);
-        return;
+      if (reused) {
+        return showErr(`Die woord “${wordUpper}” is reeds gebruik. Kies ’n ander teikenwoord.`);
       }
 
-      // Payload (write both 'clue' en 'leidraad' vir terugwaartse kompatibiliteit)
+      // Required fields + optional back-compat "leidraad"
       const payload = {
-        date: dateStr,
-        word: wordUpper,
         clue: clueRaw,
-        leidraad: clueRaw,
+        leidraad: clueRaw,                      // (optional) back-compat mirror
+        word: wordUpper,                        // UPPERCASE
         status: 'published',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        createdBy: auth.currentUser?.uid || null
+        createdBy: ADMIN_UID                    // fixed admin UID per spec
       };
 
       try {
@@ -145,30 +148,44 @@
       }
     }
 
-    async function checkWordReuseOnly() {
+    async function checkWord() {
       clearResult();
       const w = (wordInput.value || '').trim().toUpperCase();
-      if (!w) { showErr('Geen woord ingevul nie.'); return; }
+      if (!w) return showErr('Geen woord ingevul nie.');
+      if (!validWordUpper(w)) return showErr('Ongeldige karakters in die woord.');
       try {
-        const used = await wordExists(w);
-        if (used) showErr(`Die woord “${w}” is reeds gebruik.`);
-        else showOk(`“${w}” is nog nie gebruik nie.`);
+        const used = await wordUsedAlready(w);
+        used ? showErr(`Die woord “${w}” is reeds gebruik.`)
+             : showOk(`“${w}” is nog nie gebruik nie.`);
       } catch (e) {
         console.error(e);
         showErr('Kon nie die woordkontrole uitvoer nie.');
       }
     }
 
-    // ---- Auth state (UI only; rules still enforce admin) ----
+    function setAdminUIEnabled(enabled) {
+      if (enabled) {
+        panelEl.classList.remove('disabled');
+      } else {
+        panelEl.classList.add('disabled');
+      }
+    }
+
+    // ---- Auth + Admin Gate (UI only; rules still enforce server-side) ----
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const token = await user.getIdTokenResult().catch(()=>null);
-        const isAdminClaim = !!token?.claims?.admin;
-        statusEl.innerHTML = `Aangemeld as <strong>${user.email || user.uid}</strong>${isAdminClaim ? ' (admin)' : ''}.`;
+        let isAdminUI = false;
+        try {
+          const token = await user.getIdTokenResult();
+          isAdminUI = token?.claims?.admin === true || user.uid === ADMIN_UID;
+        } catch {}
+        statusEl.innerHTML = `Aangemeld as <strong>${user.email || user.uid}</strong>${isAdminUI ? ' (admin)' : ''}.`;
         logoutBtn.classList.remove('hidden');
+        setAdminUIEnabled(isAdminUI);
       } else {
         statusEl.innerHTML = `Nie aangemeld nie. <a href="/login.html" class="underline text-blue-700">Meld aan</a> as admin.`;
         logoutBtn.classList.add('hidden');
+        setAdminUIEnabled(false);
       }
     });
 
@@ -176,10 +193,10 @@
 
     // ---- Init form defaults ----
     document.addEventListener('DOMContentLoaded', () => {
-      dateInput.value = todayZA();
+      dateInput.value = todayZAISO();
       wordInput.addEventListener('input', () => { wordInput.value = wordInput.value.toUpperCase(); });
       saveBtn.addEventListener('click', saveGame);
-      checkBtn.addEventListener('click', checkWordReuseOnly);
+      checkBtn.addEventListener('click', checkWord);
     });
   </script>
 </head>
@@ -189,7 +206,7 @@
   </header>
 
   <main class="max-w-2xl mx-auto p-4">
-    <div class="bg-white rounded shadow p-4">
+    <div id="panel" class="bg-white rounded shadow p-4">
       <div id="authStatus" class="text-sm text-gray-600 mb-3">Kontroleer aanmelding…</div>
       <button id="logoutBtn" class="hidden text-xs px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 mb-4">Meld af</button>
 
@@ -223,11 +240,20 @@
         <a id="gameLink" class="underline text-blue-700 font-semibold" target="_blank" rel="noopener"></a>
 
         <hr class="my-4">
-        <p class="text-xs text-gray-500">
-          Nota: Die dokument-ID word altyd as <code>GameYYYY-MM-DD</code> gestoor, en ’n
-          <code>date</code>-veld (YYYY-MM-DD, Africa/Johannesburg) word bygevoeg. Die stooraksie stop as:
-          ’n dokument vir die datum reeds bestaan (in enige formaat), of as die teikenwoord reeds gebruik is.
-        </p>
+        <div class="text-xs text-gray-500 space-y-2">
+          <p>
+            Dokument-ID: <code>GameYYYY-MM-DD</code> (bv. <code>Game2025-08-17</code>).
+          </p>
+          <p>
+            Velde wat geskryf word: <code>clue</code>, <code>leidraad</code> (opsioneel vir terugwaartse
+            kompatibiliteit), <code>word</code> (UPPERCASE), <code>status:"published"</code>,
+            <code>createdAt</code>, <code>updatedAt</code>, <code>createdBy:"jI7f0Wk4MqfPq7p69vjl8OlJUvS2"</code>.
+          </p>
+          <p>
+            Geen <code>leaderboard</code>-subversamelings word vooraf geskep nie — die spelblad
+            skep inskrywings outomaties wanneer spelers klaar speel.
+          </p>
+        </div>
       </div>
     </div>
   </main>
