@@ -39,7 +39,7 @@
 </head>
 
 <body class="bg-gray-100 min-h-screen flex flex-col">
-  <!-- Header (same structure as index.html) -->
+  <!-- Header (same as index.html) -->
   <header class="bg-white shadow p-4">
     <div class="logo-container">
       <div id="backgroundCrossword" class="background-crossword"></div>
@@ -61,27 +61,27 @@
       <h2 class="text-2xl font-bold text-center mb-2 text-[#1e3a8a]">Meld aan</h2>
       <p class="text-center text-gray-600 mb-6">Meld aan om te speel en jou vordering te bewaar.</p>
 
+      <!-- Notice / errors -->
       <div id="alertBox" class="hidden mb-4 rounded-lg border px-3 py-2 text-sm"></div>
 
       <form id="loginForm" class="space-y-4">
         <label class="block">
           <span class="text-gray-700 font-semibold">Naam (kan ’n skuilnaam wees)</span>
-          <input id="nameInput" type="text" minlength="2" maxlength="40"
-                 class="mt-1 block w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]"
-                 placeholder="Opsioneel – vir vertoonnaam"/>
+          <input id="nameInput" type="text" minlength="2" maxlength="40" placeholder="Opsioneel – vir vertoonnaam"
+                 class="mt-1 block w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]" />
         </label>
 
         <label class="block">
           <span class="text-gray-700 font-semibold">E-posadres</span>
           <input id="email" type="email" required
-                 class="mt-1 block w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]"/>
+                 class="mt-1 block w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]" />
         </label>
 
         <label class="block">
           <span class="text-gray-700 font-semibold">Wagwoord</span>
           <div class="mt-1 relative">
             <input id="password" type="password" required
-                   class="block w-full border border-gray-300 rounded p-2 pr-12 focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]"/>
+                   class="block w-full border border-gray-300 rounded p-2 pr-12 focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]" />
             <button type="button" id="togglePw"
                     class="absolute inset-y-0 right-2 my-auto px-2 text-gray-500 hover:text-gray-800 text-sm">Wys</button>
           </div>
@@ -94,14 +94,19 @@
 
         <div class="flex items-center justify-between text-sm">
           <button type="button" id="forgotBtn" class="text-[#1e3a8a] hover:underline">Wagwoord vergeet?</button>
-          <a href="/register.html?new=1" class="text-gray-700 hover:text-[#1e3a8a]">Geen rekening? <span class="underline">Registreer</span></a>
+          <a href="/register.html?new=1" class="text-gray-700 hover:text-[#1e3a8a]">
+            Geen rekening? <span class="underline">Registreer</span>
+          </a>
         </div>
       </form>
 
+      <!-- Reset UI -->
       <div id="resetSection" class="hidden mt-4 space-y-2">
         <input id="resetEmail" type="email" placeholder="Voer jou e-posadres in"
                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <button id="sendReset" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition w-full">Stuur wagwoordherstel</button>
+        <button id="sendReset" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition w-full">
+          Stuur wagwoordherstel
+        </button>
         <p id="resetMessage" class="text-sm text-center"></p>
       </div>
     </div>
@@ -119,7 +124,7 @@
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
 
-  <!-- Cookie banner (same helper functions as index.html) -->
+  <!-- Cookie banner (same helpers as index.html) -->
   <div id="cookie-banner" class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-300 shadow-md p-4 text-sm text-gray-800 text-center z-50 hidden">
     <p class="mb-2">
       Ons gebruik koekies om jou ervaring te verbeter en die webwerf beter te laat werk.
@@ -131,7 +136,7 @@
     </div>
   </div>
 
-  <!-- Non-module: background + cookie helpers copied from index.html -->
+  <!-- Non-module: background + cookie helpers -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const backgroundCrossword = document.getElementById('backgroundCrossword');
@@ -152,10 +157,11 @@
       generateBackgroundGrid();
       window.addEventListener('resize', generateBackgroundGrid);
 
+      // Cookie banner
       const cookieConsent = localStorage.getItem('cookieConsent');
       if (!cookieConsent) { document.getElementById('cookie-banner').classList.remove('hidden'); }
 
-      // Prefill Naam from cache if available
+      // Prefill Naam if previously cached
       const cached = (localStorage.getItem('userName') || "").trim();
       if (cached) { const n = document.getElementById('nameInput'); if (n) n.value = cached; }
     });
@@ -163,7 +169,7 @@
     function declineCookies() { localStorage.setItem('cookieConsent', 'declined'); document.getElementById('cookie-banner').style.display = 'none'; }
   </script>
 
-  <!-- Firebase + Login logic -->
+  <!-- Firebase + login logic -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import {
@@ -197,6 +203,14 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    // Global logout helper (same behavior as index.html)
+    window.kriptiekLogout = async function () {
+      try { await signOut(auth); } finally {
+        try { localStorage.clear(); sessionStorage.clear(); } catch {}
+        setTimeout(() => { window.location.href = "/index.html"; }, 120);
+      }
+    };
+
     // Force clean slate for testing: /login.html?new=1
     const forceNew = new URL(location.href).searchParams.get("new") === "1";
     if (forceNew) {
@@ -212,23 +226,41 @@
     const showAlert = (msg, kind = "error") => {
       const box = el("alertBox");
       box.classList.remove("hidden");
-      box.textContent = msg;
+      box.innerHTML = msg;
       box.className = "mb-4 rounded-lg border px-3 py-2 text-sm " +
-        (kind === "ok" ? "border-green-300 bg-green-50 text-green-800" : "border-red-300 bg-red-50 text-red-800");
+        (kind === "ok" ? "border-green-300 bg-green-50 text-green-800" : "border-blue-300 bg-blue-50 text-blue-800");
     };
 
-    // Redirect away if already signed in (except in forceNew mode)
-    onAuthStateChanged(auth, async (user) => {
-      if (user && !forceNew) {
-        // Cache minimally then go home
-        localStorage.setItem("userRegistered", "true");
-        localStorage.setItem("userId", user.uid);
-        localStorage.setItem("userEmail", user.email || "");
-        window.location.replace("/index.html");
-      }
+    // If already signed in (and not in clean-slate mode), show a switch-account notice instead of redirecting
+    onAuthStateChanged(auth, (user) => {
+      if (!user || forceNew) return;
+
+      const who = user.displayName || user.email || user.uid;
+      showAlert(`Reeds aangemeld as <strong>${who}</strong>. `, "info");
+
+      // Add actions
+      const box = el("alertBox");
+      const switchBtn = document.createElement("button");
+      switchBtn.className = "underline ml-1";
+      switchBtn.textContent = "Gebruik ’n ander rekening";
+      switchBtn.onclick = async () => {
+        try { await signOut(auth); } finally {
+          try { localStorage.clear(); sessionStorage.clear(); } catch {}
+          const u = new URL(location.href); u.searchParams.set("new","1"); window.location.href = u.toString();
+        }
+      };
+      const homeBtn = document.createElement("a");
+      homeBtn.href = "/index.html";
+      homeBtn.className = "underline ml-3";
+      homeBtn.textContent = "Gaan na Tuis";
+      box.appendChild(switchBtn);
+      box.appendChild(homeBtn);
+
+      // Optionally disable the form while signed in
+      el("loginForm").classList.add("opacity-60","pointer-events-none");
     });
 
-    // Toggle password visibility
+    // UI handlers
     el("togglePw").addEventListener("click", () => {
       const pw = el("password");
       const isPw = pw.type === "password";
@@ -237,7 +269,6 @@
       pw.focus();
     });
 
-    // Forgot password UI
     el("forgotBtn").addEventListener("click", () => el("resetSection").classList.remove("hidden"));
     el("sendReset").addEventListener("click", async () => {
       const email = el("resetEmail").value.trim();
@@ -247,14 +278,18 @@
       catch (e) { msg.textContent = "Fout: " + (e?.message || e); msg.className = "text-red-600 text-sm text-center"; }
     });
 
-    // Login flow (with Naam reconciliation)
+    // Login flow (with optional Naam reconciliation)
     el("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       el("alertBox").classList.add("hidden");
       el("loginBtn").disabled = true;
 
       const nameEntered = (el("nameInput").value || "").trim();
-      if (nameEntered && nameEntered.length < 2) { showAlert("Jou naam moet minstens 2 karakters wees."); el("loginBtn").disabled = false; return; }
+      if (nameEntered && nameEntered.length < 2) {
+        showAlert("Jou naam moet minstens 2 karakters wees.", "ok");
+        el("loginBtn").disabled = false;
+        return;
+      }
 
       const email = el("email").value.trim();
       const password = el("password").value;
@@ -263,7 +298,7 @@
         const { user } = await signInWithEmailAndPassword(auth, email, password);
         const uid = user.uid;
 
-        // Prefer users/{uid}
+        // Get canonical profile (prefer users/{uid}, fallback to registrations/{uid})
         let userName = user.displayName || "";
         let userEmail = user.email || email;
 
@@ -273,7 +308,6 @@
           userName = userSnap.data()?.userName || userName;
           userEmail = userSnap.data()?.email || userEmail;
         } else {
-          // Fallback: registrations/{uid}
           const regRef = doc(db, "registrations", uid);
           const regSnap = await getDoc(regRef);
           if (regSnap.exists()) {
@@ -282,17 +316,14 @@
           }
         }
 
-        // If user typed a name, prefer it and update profile/docs
+        // If user typed a name and it's different, update displayName + docs (registrations write is non-fatal)
         const normalize = s => (s || "").trim().toLowerCase();
         let finalName = userName;
         if (nameEntered && normalize(nameEntered) !== normalize(userName)) {
           finalName = nameEntered;
           try { await updateProfile(user, { displayName: finalName }); } catch {}
           try { await setDoc(userRef, { userName: finalName }, { merge: true }); } catch {}
-          try { await setDoc(doc(db, "registrations", uid), { userName: finalName, email: userEmail || email, userId: uid }, { merge: true }); } catch (e) {
-            // non-fatal if rules block registrations
-            console.warn("registrations write skipped:", e?.message || e);
-          }
+          try { await setDoc(doc(db, "registrations", uid), { userName: finalName, email: userEmail || email, userId: uid }, { merge: true }); } catch {}
         }
 
         // Cache for gameplay
@@ -301,7 +332,7 @@
         localStorage.setItem("userId", uid);
         localStorage.setItem("userEmail", userEmail || email || "");
 
-        // Non-blocking: touch lastLogin
+        // Touch lastLogin (non-blocking)
         try { await setDoc(userRef, { email: userEmail || email || null, lastLogin: serverTimestamp(), userName: finalName || userName || null }, { merge: true }); } catch {}
 
         const redirectUrl = localStorage.getItem("redirectAfterLogin");
@@ -314,19 +345,15 @@
         if (code.includes("invalid-credential") || code.includes("wrong-password")) msg = "Verkeerde e-pos of wagwoord.";
         else if (code.includes("user-not-found")) msg = "Geen gebruiker met dié e-pos is gevind nie.";
         else if (code.includes("too-many-requests")) msg = "Te veel pogings. Probeer weer later.";
-        showAlert(msg, "error");
+        // Red error styling:
+        const box = el("alertBox");
+        box.className = "mb-4 rounded-lg border px-3 py-2 text-sm border-red-300 bg-red-50 text-red-800";
+        box.textContent = msg;
+        box.classList.remove("hidden");
       } finally {
         el("loginBtn").disabled = false;
       }
     });
-
-    // Robust “sign out then go home” helper (if you add a logout button later)
-    // document.getElementById("nav-logout")?.addEventListener("click", async () => {
-    //   try { await signOut(auth); } finally { localStorage.clear(); sessionStorage.clear(); setTimeout(() => { window.location.href = "/index.html"; }, 120); }
-    // });
-
-    // Footer year (optional)
-    // document.getElementById("year").textContent = new Date().getFullYear();
   </script>
 </body>
 </html>
