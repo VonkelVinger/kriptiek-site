@@ -5,16 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin – Create DILEMMA Game</title>
 
-  <!-- Tailwind & Font -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
   <style>
     body { font-family: 'Montserrat', sans-serif; }
-    .disabled * { opacity:.6; pointer-events:none; user-select:none; }
+    /* Dim + block the panel when not admin */
+    #panel.disabled { opacity:.6; pointer-events:none; user-select:none; }
     code { background:#f3f4f6; padding:.1rem .3rem; border-radius:.25rem; }
   </style>
 
-  <!-- Firebase Admin Page -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import {
@@ -34,169 +33,182 @@
       messagingSenderId: "620450620939",
       appId: "1:620450620939:web:e93a18ac23b53b33db890e"
     };
+    // Optional: hard-code your own UID as a second admin signal
     const ADMIN_UID = "jI7f0Wk4MqfPq7p69vjl8OlJUvS2";
 
-    const app = initializeApp(firebaseConfig);
-    const db  = getFirestore(app);
+    const app  = initializeApp(firebaseConfig);
+    const db   = getFirestore(app);
     const auth = getAuth(app);
 
-    // ---- DOM ----
-    const statusEl  = document.getElementById('authStatus');
-    const panelEl   = document.getElementById('panel');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const dateInput = document.getElementById('gameDate');
-    const wordInput = document.getElementById('targetWord');
-    const clueInput = document.getElementById('clue');
-    const saveBtn   = document.getElementById('saveBtn');
-    const checkBtn  = document.getElementById('checkBtn');
-    const resultEl  = document.getElementById('result');
-    const linkEl    = document.getElementById('gameLink');
+    // Robust logout (same behavior as index/login)
+    async function kriptiekLogout() {
+      try { await signOut(auth); } finally {
+        try { localStorage.clear(); sessionStorage.clear(); } catch {}
+        setTimeout(() => { window.location.href = "/index.html"; }, 120);
+      }
+    }
 
-    // ---- Helpers ----
-    function todayZAISO() {
+    // Helpers (pure functions)
+    const todayZAISO = () => {
       const p = new Intl.DateTimeFormat('af-ZA', {
         timeZone: 'Africa/Johannesburg',
         year: 'numeric', month: '2-digit', day: '2-digit'
       }).formatToParts(new Date()).reduce((a, x) => (a[x.type] = x.value, a), {});
       return `${p.year}-${p.month}-${p.day}`; // YYYY-MM-DD
-    }
-
-    function clearResult() {
-      resultEl.textContent = '';
-      resultEl.className = '';
-      linkEl.textContent = '';
-      linkEl.removeAttribute('href');
-    }
-
-    function showOk(msg, hrefId=null) {
-      resultEl.textContent = msg;
-      resultEl.className = 'mt-3 text-green-700 font-semibold';
-      if (hrefId) {
-        linkEl.textContent = 'Open spelblad';
-        linkEl.href = `/dilemmagame.html?gameId=${encodeURIComponent(hrefId)}`;
-      }
-    }
-
-    function showErr(msg) {
-      resultEl.textContent = msg;
-      resultEl.className = 'mt-3 text-red-600 font-semibold';
-    }
-
-    function validWordUpper(s) {
-      // Allow A–Z plus common Afrikaans diacritics and hyphen
-      return /^[A-ZÁÉÍÓÚÄËÏÖÜÂÊÎÔÛŸ\-]+$/.test(s);
-    }
+    };
+    const validWordUpper = s => /^[A-ZÁÉÍÓÚÄËÏÖÜÂÊÎÔÛŸ\-]+$/.test(s);
 
     async function wordUsedAlready(wordUpper) {
-      const q = query(collection(db, 'games'), where('word', '==', wordUpper));
-      const snap = await getDocs(q);
+      const qy = query(collection(db, 'games'), where('word', '==', wordUpper));
+      const snap = await getDocs(qy);
       return !snap.empty;
     }
 
-    // ---- Core Save ----
-    async function saveGame() {
-      clearResult();
+    // Admin check: refresh token -> claim -> admins/{uid} fallback
+    async function isAdmin(user) {
+      try {
+        const tok = await user.getIdTokenResult(true);       // refresh claims
+        if (tok?.claims?.admin === true) return true;
+      } catch {}
+      if (user.uid === ADMIN_UID) return true;               // optional shortcut
+      try {
+        const snap = await getDoc(doc(db, "admins", user.uid));
+        return snap.exists();
+      } catch { return false; }
+    }
 
-      const dateStr = (dateInput.value || '').trim();
-      const wordRaw = (wordInput.value || '').trim();
-      const clueRaw = (clueInput.value || '').trim();
+    document.addEventListener('DOMContentLoaded', () => {
+      // ---- Grab DOM (now they exist) ----
+      const statusEl  = document.getElementById('authStatus');
+      const panelEl   = document.getElementById('panel');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const dateInput = document.getElementById('gameDate');
+      const wordInput = document.getElementById('targetWord');
+      const clueInput = document.getElementById('clue');
+      const saveBtn   = document.getElementById('saveBtn');
+      const checkBtn  = document.getElementById('checkBtn');
+      const resultEl  = document.getElementById('result');
+      const linkEl    = document.getElementById('gameLink');
 
-      if (!dateStr) return showErr('Kies ’n datum (YYYY-MM-DD).');
-      if (!wordRaw) return showErr('Voer die teikenwoord in.');
-      if (!clueRaw) return showErr('Voer die leidraad in.');
-
-      const wordUpper = wordRaw.toUpperCase();
-      if (!validWordUpper(wordUpper)) {
-        return showErr('Die woord moet uit letters bestaan (A–Z, basiese aksente) en/of ’n koppelteken.');
-      }
-
-      // Enforce ID = GameYYYY-MM-DD; also guard against old-format dupes
-      const idPreferred = `Game${dateStr}`;
-      const idAlt       = dateStr;
-
-      const [existsNew, existsOld, reused] = await Promise.all([
-        getDoc(doc(db, 'games', idPreferred)),
-        getDoc(doc(db, 'games', idAlt)),
-        wordUsedAlready(wordUpper)
-      ]);
-
-      if (existsNew.exists() || existsOld.exists()) {
-        const which = existsNew.exists() ? idPreferred : idAlt;
-        return showErr(`’n Speletjie vir ${dateStr} bestaan reeds as “${which}”.`);
-      }
-      if (reused) {
-        return showErr(`Die woord “${wordUpper}” is reeds gebruik. Kies ’n ander teikenwoord.`);
-      }
-
-      // Required fields + optional back-compat "leidraad"
-      const payload = {
-        clue: clueRaw,
-        leidraad: clueRaw,                      // (optional) back-compat mirror
-        word: wordUpper,                        // UPPERCASE
-        status: 'published',
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        createdBy: ADMIN_UID                    // fixed admin UID per spec
+      const clearResult = () => {
+        resultEl.textContent = '';
+        resultEl.className = '';
+        linkEl.textContent = '';
+        linkEl.removeAttribute('href');
+      };
+      const showOk = (msg, hrefId=null) => {
+        resultEl.textContent = msg;
+        resultEl.className = 'mt-3 text-green-700 font-semibold';
+        if (hrefId) {
+          linkEl.textContent = 'Open spelblad';
+          linkEl.href = `/dilemmagame.html?gameId=${encodeURIComponent(hrefId)}`;
+        }
+      };
+      const showErr = (msg) => {
+        resultEl.textContent = msg;
+        resultEl.className = 'mt-3 text-red-600 font-semibold';
       };
 
-      try {
-        await setDoc(doc(db, 'games', idPreferred), payload, { merge: true });
-        showOk(`Gestoor as ${idPreferred}.`, idPreferred);
-      } catch (e) {
-        console.error(e);
-        showErr(`Kon nie stoor nie: ${e?.message || e}`);
+      function setPanelEnabled(enabled) {
+        panelEl.classList.toggle('disabled', !enabled);
       }
-    }
 
-    async function checkWord() {
-      clearResult();
-      const w = (wordInput.value || '').trim().toUpperCase();
-      if (!w) return showErr('Geen woord ingevul nie.');
-      if (!validWordUpper(w)) return showErr('Ongeldige karakters in die woord.');
-      try {
-        const used = await wordUsedAlready(w);
-        used ? showErr(`Die woord “${w}” is reeds gebruik.`)
-             : showOk(`“${w}” is nog nie gebruik nie.`);
-      } catch (e) {
-        console.error(e);
-        showErr('Kon nie die woordkontrole uitvoer nie.');
-      }
-    }
+      async function saveGame() {
+        clearResult();
 
-    function setAdminUIEnabled(enabled) {
-      if (enabled) {
-        panelEl.classList.remove('disabled');
-      } else {
-        panelEl.classList.add('disabled');
-      }
-    }
+        const dateStr = (dateInput.value || '').trim();
+        const wordRaw = (wordInput.value || '').trim();
+        const clueRaw = (clueInput.value || '').trim();
 
-    // ---- Auth + Admin Gate (UI only; rules still enforce server-side) ----
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        let isAdminUI = false;
+        if (!dateStr) return showErr('Kies ’n datum (YYYY-MM-DD).');
+        if (!wordRaw) return showErr('Voer die teikenwoord in.');
+        if (!clueRaw) return showErr('Voer die leidraad in.');
+
+        const wordUpper = wordRaw.toUpperCase();
+        if (!validWordUpper(wordUpper)) {
+          return showErr('Die woord moet uit letters bestaan (A–Z, basiese aksente) en/of ’n koppelteken.');
+        }
+
+        // IDs
+        const idPreferred = `Game${dateStr}`;
+        const idAlt = dateStr;
+
+        const [existsNew, existsOld, reused] = await Promise.all([
+          getDoc(doc(db, 'games', idPreferred)),
+          getDoc(doc(db, 'games', idAlt)),
+          wordUsedAlready(wordUpper)
+        ]);
+
+        if (existsNew.exists() || existsOld.exists()) {
+          const which = existsNew.exists() ? idPreferred : idAlt;
+          return showErr(`’n Speletjie vir ${dateStr} bestaan reeds as “${which}”.`);
+        }
+        if (reused) {
+          return showErr(`Die woord “${wordUpper}” is reeds gebruik. Kies ’n ander teikenwoord.`);
+        }
+
+        const payload = {
+          clue: clueRaw,
+          leidraad: clueRaw,          // back-compat
+          word: wordUpper,            // UPPERCASE
+          status: 'published',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          createdBy: ADMIN_UID
+        };
+
         try {
-          const token = await user.getIdTokenResult();
-          isAdminUI = token?.claims?.admin === true || user.uid === ADMIN_UID;
-        } catch {}
-        statusEl.innerHTML = `Aangemeld as <strong>${user.email || user.uid}</strong>${isAdminUI ? ' (admin)' : ''}.`;
-        logoutBtn.classList.remove('hidden');
-        setAdminUIEnabled(isAdminUI);
-      } else {
-        statusEl.innerHTML = `Nie aangemeld nie. <a href="/login.html" class="underline text-blue-700">Meld aan</a> as admin.`;
-        logoutBtn.classList.add('hidden');
-        setAdminUIEnabled(false);
+          await setDoc(doc(db, 'games', idPreferred), payload, { merge: true });
+          showOk(`Gestoor as ${idPreferred}.`, idPreferred);
+        } catch (e) {
+          console.error(e);
+          showErr(`Kon nie stoor nie: ${e?.message || e}`);
+        }
       }
-    });
 
-    logoutBtn.addEventListener('click', () => signOut(auth));
+      async function checkWord() {
+        clearResult();
+        const w = (wordInput.value || '').trim().toUpperCase();
+        if (!w) return showErr('Geen woord ingevul nie.');
+        if (!validWordUpper(w)) return showErr('Ongeldige karakters in die woord.');
+        try {
+          const used = await wordUsedAlready(w);
+          used ? showErr(`Die woord “${w}” is reeds gebruik.`)
+               : showOk(`“${w}” is nog nie gebruik nie.`);
+        } catch (e) {
+          console.error(e);
+          showErr('Kon nie die woordkontrole uitvoer nie.');
+        }
+      }
 
-    // ---- Init form defaults ----
-    document.addEventListener('DOMContentLoaded', () => {
+      // Init form defaults + handlers
       dateInput.value = todayZAISO();
       wordInput.addEventListener('input', () => { wordInput.value = wordInput.value.toUpperCase(); });
       saveBtn.addEventListener('click', saveGame);
       checkBtn.addEventListener('click', checkWord);
+      logoutBtn.addEventListener('click', kriptiekLogout);
+
+      // Auth + admin gate
+      setPanelEnabled(false);                        // start locked
+      statusEl.textContent = "Kontroleer aanmelding…";
+
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          statusEl.innerHTML = `Nie aangemeld nie. <a href="/login.html?new=1" class="underline text-blue-700">Meld aan</a> as admin.`;
+          setPanelEnabled(false);
+          return;
+        }
+
+        const ok = await isAdmin(user);
+        if (ok) {
+          statusEl.innerHTML = `Aangemeld as <strong>${user.email || user.uid}</strong> (admin).`;
+          setPanelEnabled(true);                    // ✅ enable form
+          logoutBtn.classList.remove('hidden');
+        } else {
+          alert("Net administrateurs kan 'n nuwe DILEMMA skep.");
+          window.location.replace("/index.html");
+        }
+      });
     });
   </script>
 </head>
@@ -206,7 +218,7 @@
   </header>
 
   <main class="max-w-2xl mx-auto p-4">
-    <div id="panel" class="bg-white rounded shadow p-4">
+    <div id="panel" class="bg-white rounded shadow p-4 disabled">
       <div id="authStatus" class="text-sm text-gray-600 mb-3">Kontroleer aanmelding…</div>
       <button id="logoutBtn" class="hidden text-xs px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 mb-4">Meld af</button>
 
@@ -228,12 +240,8 @@
         </label>
 
         <div class="flex gap-3">
-          <button id="saveBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
-            Stoor spel
-          </button>
-          <button id="checkBtn" class="bg-gray-200 text-gray-900 px-4 py-2 rounded hover:bg-gray-300 transition">
-            Toets of woord reeds gebruik is
-          </button>
+          <button id="saveBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Stoor spel</button>
+          <button id="checkBtn" class="bg-gray-200 text-gray-900 px-4 py-2 rounded hover:bg-gray-300 transition">Toets of woord reeds gebruik is</button>
         </div>
 
         <p id="result" class="mt-3"></p>
@@ -241,18 +249,8 @@
 
         <hr class="my-4">
         <div class="text-xs text-gray-500 space-y-2">
-          <p>
-            Dokument-ID: <code>GameYYYY-MM-DD</code> (bv. <code>Game2025-08-17</code>).
-          </p>
-          <p>
-            Velde wat geskryf word: <code>clue</code>, <code>leidraad</code> (opsioneel vir terugwaartse
-            kompatibiliteit), <code>word</code> (UPPERCASE), <code>status:"published"</code>,
-            <code>createdAt</code>, <code>updatedAt</code>, <code>createdBy:"jI7f0Wk4MqfPq7p69vjl8OlJUvS2"</code>.
-          </p>
-          <p>
-            Geen <code>leaderboard</code>-subversamelings word vooraf geskep nie — die spelblad
-            skep inskrywings outomaties wanneer spelers klaar speel.
-          </p>
+          <p>Dokument-ID: <code>GameYYYY-MM-DD</code> (bv. <code>Game2025-08-17</code>).</p>
+          <p>Velde: <code>clue</code>, <code>leidraad</code>, <code>word</code>, <code>status:"published"</code>, <code>createdAt</code>, <code>updatedAt</code>, <code>createdBy</code>.</p>
         </div>
       </div>
     </div>
