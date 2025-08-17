@@ -40,7 +40,13 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-
+// after: const auth = getAuth(app);
+window.kriptiekLogout = async function () {
+  try { await signOut(auth); } finally {
+    try { localStorage.clear(); sessionStorage.clear(); } catch {}
+    setTimeout(() => { window.location.href = "/index.html"; }, 120);
+  }
+};
     document.addEventListener('DOMContentLoaded', () => {
       const userIsLocal = localStorage.getItem('userRegistered') === 'true';
 
@@ -277,6 +283,7 @@
         logoutBtn.textContent = "MELD AF";
         logoutBtn.className = "mt-4 no-underline text-sm text-gray-500 hover:text-black";
         logoutBtn.onclick = () => {
+logoutBtn.onclick = window.kriptiekLogout;   // instead of just clearing localStorage
           localStorage.clear();
           location.reload();
         };
@@ -365,3 +372,4 @@
   </script>
 </body>
 </html>
+
