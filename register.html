@@ -2,38 +2,126 @@
 <html lang="af">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>REGISTREER – Kriptiek</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Meld aan – Kriptiek</title>
+
+  <!-- Tailwind & Font -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
-  <style> body { font-family: 'Montserrat', sans-serif; } </style>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root { --brand:#1e3a8a; }
+    body { font-family: 'Montserrat', sans-serif; }
+    /* Animated crossword logo (keeps to your brand vibe) */
+    .logo-grid { display:grid; grid-template-columns: repeat(9, 1fr); gap:4px; }
+    .logo-cell {
+      width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+      background:#0b2459;color:#dbeafe;border-radius:6px;font-weight:700;
+      transform: rotateX(0deg); transition: transform .6s;
+    }
+    .logo-cell.flip { transform: rotateX(180deg); }
+    /* Soft background letter grid */
+    .bg-letters::before{
+      content:"";position:fixed;inset:0;pointer-events:none;opacity:.05;background:
+      radial-gradient(circle at 20% 30%, #1e3a8a 0 1px, transparent 2px) 0 0/40px 40px,
+      radial-gradient(circle at 80% 70%, #1e3a8a 0 1px, transparent 2px) 20px 20px/40px 40px;
+      z-index:0;
+    }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
-  <div class="bg-white shadow-lg rounded-xl p-6 w-full max-w-md">
-    <h2 class="text-xl font-bold text-center mb-6 text-[#1e3a8a]">Registreer</h2>
 
-    <form id="registerForm" class="space-y-4">
-      <label class="block">
-        <span class="text-gray-700 font-semibold">Naam (kan 'n skuilnaam wees)</span>
-        <input type="text" id="userName" required maxlength="40"
-               class="mt-1 block w-full border border-gray-300 rounded p-2" />
-      </label>
-      <label class="block">
-        <span class="text-gray-700 font-semibold">E-posadres</span>
-        <input type="email" id="email" required class="mt-1 block w-full border border-gray-300 rounded p-2" />
-      </label>
-      <label class="block">
-        <span class="text-gray-700 font-semibold">Wagwoord</span>
-        <input type="password" id="password" required class="mt-1 block w-full border border-gray-300 rounded p-2" />
-      </label>
-      <button type="submit" class="w-full bg-gray-800 hover:bg-gray-900 text-white py-2 px-4 rounded transition">REGISTREER</button>
-    </form>
-  </div>
+<body class="min-h-screen flex flex-col bg-gray-50 bg-letters">
 
+  <!-- Header -->
+  <header class="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-gray-100">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="/index.html" class="flex items-center space-x-3 group">
+        <div class="logo-grid">
+          <!-- K R I P T I E K -->
+          <div class="logo-cell">K</div><div class="logo-cell">R</div><div class="logo-cell">I</div>
+          <div class="logo-cell">P</div><div class="logo-cell">T</div><div class="logo-cell">I</div>
+          <div class="logo-cell">E</div><div class="logo-cell">K</div><div class="logo-cell flip">•</div>
+        </div>
+        <span class="text-xl font-extrabold tracking-wide text-[color:var(--brand)]">KRIPTIEK</span>
+      </a>
+      <nav class="hidden sm:flex items-center gap-4 text-sm">
+        <a href="/index.html" class="text-gray-700 hover:text-[color:var(--brand)]">Tuis</a>
+        <a href="/dilemmagame.html" class="text-gray-700 hover:text-[color:var(--brand)]">DILEMMA</a>
+        <a href="/dilemma-argief.html" class="text-gray-700 hover:text-[color:var(--brand)]">Argief</a>
+        <a href="/forum.html" class="text-gray-700 hover:text-[color:var(--brand)]">Gesels saam</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="flex-1">
+    <div class="max-w-md mx-auto px-4 py-10 relative z-10">
+      <div class="bg-white shadow-xl rounded-2xl p-6 border border-gray-100">
+        <h1 class="text-2xl font-bold text-center text-[color:var(--brand)] mb-2">Meld aan</h1>
+        <p class="text-center text-gray-600 mb-6">Meld aan om te speel en jou vordering te stoor.</p>
+
+        <!-- Alerts -->
+        <div id="alertBox" class="hidden mb-4 rounded-lg border px-3 py-2 text-sm"></div>
+
+        <form id="loginForm" class="space-y-4">
+          <label class="block">
+            <span class="text-gray-700 font-semibold">E-posadres</span>
+            <input id="email" type="email" required
+                   class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-[color:var(--brand)]"/>
+          </label>
+
+          <label class="block">
+            <span class="text-gray-700 font-semibold">Wagwoord</span>
+            <div class="mt-1 relative">
+              <input id="password" type="password" required
+                     class="block w-full border border-gray-300 rounded-lg p-2.5 pr-12 focus:outline-none focus:ring-2 focus:ring-[color:var(--brand)]"/>
+              <button type="button" id="togglePw"
+                      class="absolute inset-y-0 right-2 my-auto px-2 text-gray-500 hover:text-gray-800 text-sm">
+                Wys
+              </button>
+            </div>
+          </label>
+
+          <button id="loginBtn" type="submit"
+                  class="w-full bg-gray-900 hover:bg-black text-white py-2.5 rounded-lg transition disabled:opacity-60 disabled:cursor-not-allowed">
+            MELD AAN
+          </button>
+
+          <div class="flex items-center justify-between text-sm">
+            <button type="button" id="forgotBtn" class="text-[color:var(--brand)] hover:underline">
+              Wagwoord vergeet?
+            </button>
+            <a href="/register.html" class="text-gray-700 hover:text-[color:var(--brand)]">
+              Geen rekening? <span class="underline">Registreer</span>
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-auto bg-white border-t border-gray-100">
+    <div class="max-w-5xl mx-auto px-4 py-6 text-sm text-gray-600 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p>&copy; <span id="year"></span> Kriptiek. Alle regte voorbehou.</p>
+      <div class="flex items-center gap-4">
+        <a href="/index.html#speletjies" class="hover:text-[color:var(--brand)]">Speletjies</a>
+        <a href="/privacy.html" class="hover:text-[color:var(--brand)]">Privaatheid</a>
+        <a href="/terms.html" class="hover:text-[color:var(--brand)]">Bepalings</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Firebase + Auth Logic -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      onAuthStateChanged,
+      setPersistence,
+      browserLocalPersistence,
+      sendPasswordResetEmail
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -46,46 +134,106 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getFirestore(app);
 
-    const form = document.getElementById('registerForm');
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const userName = document.getElementById('userName').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
+    // Keep sessions persistent (matches your site-wide expectation)
+    try { await setPersistence(auth, browserLocalPersistence); } catch (e) { /* ignore */ }
 
-      // ✅ Simple name rule
-      if (userName.length < 2) { alert("Jou naam moet minstens 2 karakters wees."); return; }
-      if (!email || !password) { alert("Vul asseblief al die velde in."); return; }
-
-      try {
-        const cred = await createUserWithEmailAndPassword(auth, email, password);
-        const user = cred.user;
-
-        try {
-          // Keep existing collection + fields
-          await setDoc(doc(db, "registrations", user.uid), {
-            userName, email, userId: user.uid, timestamp: serverTimestamp()
-          });
-
-          // Cache for gameplay
-          localStorage.setItem("userName", userName);
-          localStorage.setItem("userId", user.uid);
-          localStorage.setItem("userEmail", email);
-
-          alert("Welkom by Kriptiek!");
-          window.location.href = "/index.html";
-        } catch (firestoreError) {
-          console.error("Firestore write failed:", firestoreError);
-          await user.delete(); // Roll back the user creation
-          alert("Registrasie het misluk: " + firestoreError.message);
-        }
-      } catch (authError) {
-        console.error("Auth error:", authError);
-        alert("Kon nie registreer nie: " + authError.message);
+    // Redirect away if already signed in
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Cache minimal identity for pages that use localStorage
+        if (user.displayName) localStorage.setItem("userName", user.displayName);
+        localStorage.setItem("userId", user.uid);
+        localStorage.setItem("userEmail", user.email || "");
+        window.location.replace("/index.html");
       }
     });
+
+    // UI helpers
+    const el = (id) => document.getElementById(id);
+    const showAlert = (msg, kind = "error") => {
+      const box = el("alertBox");
+      box.classList.remove("hidden");
+      box.textContent = msg;
+      box.className = "mb-4 rounded-lg border px-3 py-2 text-sm " +
+        (kind === "ok"
+          ? "border-green-300 bg-green-50 text-green-800"
+          : "border-red-300 bg-red-50 text-red-800");
+    };
+
+    // Toggle password visibility
+    el("togglePw").addEventListener("click", () => {
+      const pw = el("password");
+      const isPw = pw.type === "password";
+      pw.type = isPw ? "text" : "password";
+      el("togglePw").textContent = isPw ? "Verberg" : "Wys";
+      pw.focus();
+    });
+
+    // Login
+    el("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      el("alertBox").classList.add("hidden");
+      const btn = el("loginBtn");
+      btn.disabled = true;
+
+      const email = el("email").value.trim();
+      const password = el("password").value;
+
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        const user = cred.user;
+
+        // Cache for gameplay consistency
+        if (user.displayName) localStorage.setItem("userName", user.displayName);
+        localStorage.setItem("userId", user.uid);
+        localStorage.setItem("userEmail", user.email || "");
+
+        window.location.replace("/index.html");
+      } catch (err) {
+        // Friendly Afrikaans errors
+        let msg = "Kon nie aanmeld nie. Kontroleer jou besonderhede.";
+        const code = err?.code || "";
+        if (code.includes("invalid-credential") || code.includes("wrong-password")) {
+          msg = "Verkeerde e-pos of wagwoord.";
+        } else if (code.includes("user-not-found")) {
+          msg = "Geen gebruiker met dié e-pos is gevind nie.";
+        } else if (code.includes("too-many-requests")) {
+          msg = "Te veel pogings. Probeer weer later.";
+        }
+        showAlert(msg, "error");
+        console.error(err);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    // Forgot password
+    el("forgotBtn").addEventListener("click", async () => {
+      const email = el("email").value.trim();
+      if (!email) { showAlert("Tik eers jou e-pos in om 'n herstel-skakel te ontvang."); return; }
+      try {
+        await sendPasswordResetEmail(auth, email);
+        showAlert("Herstel-skakel is gestuur. Gaan jou e-pos na.", "ok");
+      } catch (err) {
+        let msg = "Kon nie herstel-skakel stuur nie.";
+        if ((err?.code || "").includes("user-not-found")) {
+          msg = "Geen gebruiker met dié e-pos is gevind nie.";
+        }
+        showAlert(msg);
+        console.error(err);
+      }
+    });
+
+    // Footer year
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Simple logo animation
+    setInterval(() => {
+      document.querySelectorAll(".logo-cell").forEach((c, i) => {
+        setTimeout(() => c.classList.toggle("flip"), i * 30);
+      });
+    }, 4000);
   </script>
 </body>
 </html>
