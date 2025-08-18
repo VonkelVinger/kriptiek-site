@@ -71,15 +71,15 @@
   <!-- Success/Fail status line -->
   <p id="statusLine" class="text-center font-bold text-[#1e3a8a] mb-4" style="display:none;"></p>
 
-  <!-- ACTION ROW: DEEL (left, hidden until finished) + GESELS SAAM (right) -->
-  <div class="mb-6 flex items-center justify-between">
+  <!-- ACTION ROW: centered; compact spacing -->
+  <div class="mb-6 flex items-center justify-center gap-4 sm:gap-6">
     <button id="persistentShareBtn"
             class="hidden bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-4 py-2 rounded">
       DEEL
     </button>
 
     <a href="/forum.html" id="chatButton"
-       class="ml-4 inline-block bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-4 py-2 rounded">
+       class="inline-block bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-4 py-2 rounded">
       GESELS SAAM
     </a>
   </div>
@@ -630,6 +630,16 @@ function shareTextFromSummary(summary) {
   }
   return `Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${gameUrl}`;
 }
+
+function openWhatsApp(text) {
+  const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+  const win = window.open(url, '_blank', 'noopener,noreferrer');
+  if (!win) {
+    // Popup blocked – copy as last resort
+    navigator.clipboard?.writeText(text).then(() => alert("Skakel gekopieer!"));
+  }
+}
+
 function bindShareButton(btn, summary) {
   const text = shareTextFromSummary(summary);
   btn.onclick = async () => {
@@ -637,12 +647,15 @@ function bindShareButton(btn, summary) {
       if (navigator.share) {
         await navigator.share({ text });
       } else {
-        await navigator.clipboard.writeText(text);
-        alert("Skakel gekopieer!");
+        openWhatsApp(text);
       }
-    } catch(_){ /* user cancelled or unsupported */ }
+    } catch {
+      // If user cancels or share fails, still offer WhatsApp/clipboard
+      openWhatsApp(text);
+    }
   };
 }
+
 function showPersistentShare(summary) {
   if (!summary) return;
   persistentShareBtn.classList.remove("hidden");
@@ -758,7 +771,7 @@ onAuthStateChanged(auth, async (user) => {
         statusLine.textContent = `Jy kon nie hierdie Dilemma oplos nie`;
       }
       statusLine.style.display = "block";
-      showPersistentShare(s);   // <-- make DEEL visible with correct text
+      showPersistentShare(s);   // persistent DEEL visible with correct text
       await ensureLeaderboardRow(s);
     } else {
       statusLine.textContent = `Hierdie Dilemma is reeds voltooi`;
