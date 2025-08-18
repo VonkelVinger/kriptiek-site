@@ -44,12 +44,17 @@
     .key.bg-green-600{ background:#16a34a!important; }
     .key.bg-red-600{ background:#1e3a8a!important; }
 
-    /* Result modal */
+    /* Modal */
     #resultModal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); align-items:center; justify-content:center; z-index:1000; }
     #resultModal .modal-content{ background:#fff; padding:1.5rem; border-radius:8px; text-align:center; max-width:300px; width:100%; }
     #resultModal button{ margin:5px; padding:8px 16px; border-radius:4px; font-weight:700; }
     .btn-share{ background:#1e3a8a; color:#fff; }
     .btn-close{ background:#6b7280; color:#fff; }
+
+    /* Share menu */
+    .share-menu{ position:fixed; z-index:1100; background:#fff; border:1px solid #e5e7eb; box-shadow:0 6px 24px rgba(0,0,0,.12); border-radius:.5rem; padding:.5rem; width:240px; }
+    .share-menu button{ width:100%; text-align:left; padding:.5rem .75rem; border-radius:.375rem; font-weight:600; }
+    .share-menu button:hover{ background:#f3f4f6; }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -68,16 +73,15 @@
   <div id="game-grid" class="mb-6"></div>
   <div id="keyboard" class="mb-2"></div>
 
-  <!-- Success/Fail status line -->
+  <!-- Status -->
   <p id="statusLine" class="text-center font-bold text-[#1e3a8a] mb-4" style="display:none;"></p>
 
-  <!-- ACTION ROW: centered; compact spacing -->
-  <div class="mb-6 flex items-center justify-center gap-4 sm:gap-6">
+  <!-- ACTION ROW (centered, compact) -->
+  <div class="mb-6 flex items-center justify-center gap-3 sm:gap-4">
     <button id="persistentShareBtn"
             class="hidden bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-4 py-2 rounded">
       DEEL
     </button>
-
     <a href="/forum.html" id="chatButton"
        class="inline-block bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-4 py-2 rounded">
       GESELS SAAM
@@ -140,11 +144,19 @@
   </div>
 </div>
 
+<!-- Floating Share Menu (created once, reused for both buttons) -->
+<div id="shareMenu" class="share-menu hidden">
+  <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
+  <div class="space-y-1">
+    <button id="smWhatsApp">📲 WhatsApp</button>
+    <button id="smCopy">📋 Kopieer skakel</button>
+    <button id="smSystem">🖥️ Stelsel‑deel</button>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-import {
-  getFirestore, doc, getDoc, collection, setDoc, getDocs, serverTimestamp
-} from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, collection, setDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
 /* ---- Firebase config ---- */
@@ -172,6 +184,10 @@ const leaderboardList = document.getElementById("leaderboardList");
 const playerNameEl = document.getElementById("playerName");
 const statusLine = document.getElementById("statusLine");
 const persistentShareBtn = document.getElementById("persistentShareBtn");
+const shareMenu = document.getElementById("shareMenu");
+const smWhatsApp = document.getElementById("smWhatsApp");
+const smCopy = document.getElementById("smCopy");
+const smSystem = document.getElementById("smSystem");
 
 /* ---- State ---- */
 let gridRows = 6, gridCols = 5;
@@ -202,7 +218,7 @@ function altIdIfOldFormat(id) {
 
 playerNameEl.textContent = displayName;
 
-/* ---- If not signed in, render prompt (leaderboard remains visible) ---- */
+/* ---- If not signed in ---- */
 function renderAuthRequired() {
   const clue = document.getElementById("clue");
   clue.textContent = "Jy moet aangemeld wees om te speel.";
@@ -214,10 +230,7 @@ function renderAuthRequired() {
 }
 
 /* ---- Helpers ---- */
-function disableGame() {
-  gameOver = true;
-  document.querySelectorAll(".key").forEach(key => key.disabled = true);
-}
+function disableGame(){ gameOver = true; document.querySelectorAll(".key").forEach(k => k.disabled = true); }
 
 async function serverLockExists() {
   if (!currentUid) return false;
@@ -250,19 +263,11 @@ async function getPlaySummary() {
 async function recordPlay(guessCount, didWin) {
   if (!currentUid) return;
   try {
-    await setDoc(
-      doc(db, "userGames", currentUid, "plays", gameId),
-      {
-        finished: true,
-        result: didWin ? "win" : "loss",
-        guesses: Math.trunc(Number(guessCount)),
-        finishedAt: serverTimestamp(),
-      },
-      { merge: true }
-    );
-  } catch (e) {
-    console.warn("Could not store play-lock:", e);
-  }
+    await setDoc(doc(db, "userGames", currentUid, "plays", gameId), {
+      finished: true, result: didWin ? "win" : "loss",
+      guesses: Math.trunc(Number(guessCount)), finishedAt: serverTimestamp(),
+    }, { merge: true });
+  } catch (e) { console.warn("Could not store play-lock:", e); }
 }
 
 /* ---- Local result fallbacks ---- */
@@ -282,8 +287,7 @@ function deriveLocalSummaryFromProgress() {
     const rows = Array.isArray(saved.rows) ? saved.rows : [];
     if (!rows.length) return null;
     const winIndex = rows.findIndex(r =>
-      Array.isArray(r.states) && r.states.length &&
-      r.states.every(s => s === 'correct')
+      Array.isArray(r.states) && r.states.length && r.states.every(s => s === 'correct')
     );
     if (winIndex >= 0) return { didWin: true, guesses: winIndex + 1 };
     if (rows.length >= gridRows) return { didWin: false, guesses: null };
@@ -366,7 +370,7 @@ function updateKeyboard(letter, state) {
   }
 }
 
-/* ---- Input handling ---- */
+/* ---- Input ---- */
 function handleKey(letter) {
   if (gameOver) return;
   if (currentCol < gridCols && currentRow < gridRows) {
@@ -418,7 +422,7 @@ function applyStatesWithFlip(rowIndex, guess, states) {
   });
 }
 
-/* ---- Save/restore progress ---- */
+/* ---- Save/restore ---- */
 function saveLocalProgress(done=false) {
   const rows = [];
   for (let r = 0; r < gridRows; r++) {
@@ -428,11 +432,8 @@ function saveLocalProgress(done=false) {
       t.classList.contains("correct") ? "correct" :
       t.classList.contains("present") ? "present" : "absent"
     );
-    if (states.every(s=>["correct","present","absent"].includes(s))) {
-      rows.push({ guess, states });
-    } else {
-      break;
-    }
+    if (states.every(s=>["correct","present","absent"].includes(s))) rows.push({ guess, states });
+    else break;
   }
   localStorage.setItem(progressKey, JSON.stringify({ rows }));
   if (done) localStorage.setItem(doneKey, "true");
@@ -470,9 +471,7 @@ async function submitScore(guessCount, didWin) {
       playerNameEl.textContent = displayName;
       localStorage.setItem("userName", displayName);
     }
-  } catch (e) {
-    console.warn("Could not read users doc:", e);
-  }
+  } catch (e) { console.warn("Could not read users doc:", e); }
 
   let successRate = null;
   try {
@@ -503,35 +502,27 @@ async function submitScore(guessCount, didWin) {
     const games = Number(nd.gamesPlayed || 0);
     const wins  = Number(nd.wins || 0);
     successRate = games > 0 ? Math.round((wins / games) * 100) : 0;
-  } catch (e) {
-    console.warn("User stats update failed (non-fatal):", e);
-  }
+  } catch (e) { console.warn("User stats update failed (non-fatal):", e); }
 
-  try {
-    await setDoc(
-      doc(db, "games", gameId, "leaderboard", currentUid),
-      { userName: displayName, guesses: Math.trunc(Number(guessCount)), successRate: (successRate == null ? undefined : successRate), date: serverTimestamp(), createdAtMs: Date.now() },
-      { merge: true }
-    );
-  } catch (e) {
-    console.error("Kon nie leierbord-ry stoor nie:", e);
-  }
+    try {
+      await setDoc(
+        doc(db, "games", gameId, "leaderboard", currentUid),
+        { userName: displayName, guesses: Math.trunc(Number(guessCount)), successRate: (successRate == null ? undefined : successRate), date: serverTimestamp(), createdAtMs: Date.now() },
+        { merge: true }
+      );
+    } catch (e) { console.error("Kon nie leierbord-ry stoor nie:", e); }
 }
 
-/* ensure/repair row if missing (runs on page load if game already completed) */
+/* ensure/repair row on load if game already completed */
 async function ensureLeaderboardRow(summary) {
   try {
     if (!currentUid || !summary) return;
-
     const rowRef = doc(db, "games", gameId, "leaderboard", currentUid);
     const existing = await getDoc(rowRef);
     if (existing.exists()) return;
 
-    const guessCount = summary.didWin
-      ? (Number(summary.guesses) || gridRows)
-      : gridRows;
+    const guessCount = summary.didWin ? (Number(summary.guesses) || gridRows) : gridRows;
 
-    // Compute your own successRate (allowed by rules)
     let sr = null;
     try {
       const uSnap = await getDoc(doc(db, "users", currentUid));
@@ -541,9 +532,7 @@ async function ensureLeaderboardRow(summary) {
         const w  = Number(u.wins || 0);
         sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
       }
-    } catch (_) {
-      // ignore, we'll just omit successRate if we can't read it
-    }
+    } catch {}
 
     const payload = {
       userName: displayName,
@@ -555,9 +544,7 @@ async function ensureLeaderboardRow(summary) {
 
     await setDoc(rowRef, payload, { merge: true });
     await loadLeaderboard();
-  } catch (e) {
-    console.warn("ensureLeaderboardRow failed:", e);
-  }
+  } catch (e) { console.warn("ensureLeaderboardRow failed:", e); }
 }
 async function loadLeaderboard() {
   try {
@@ -581,11 +568,9 @@ async function loadLeaderboard() {
 
     if (needSR.length) {
       try {
-        const results = await Promise.allSettled(
-          needSR.map(uid => getDoc(doc(db, "users", uid)))
-        );
+        const results = await Promise.allSettled(needSR.map(uid => getDoc(doc(db, "users", uid))));
         results.forEach((res, i) => {
-          if (res.status !== "fulfilled") return; // skip blocked/failed reads
+          if (res.status !== "fulfilled") return;
           const snap = res.value;
           if (!snap.exists()) return;
           const u = snap.data() || {};
@@ -608,10 +593,8 @@ async function loadLeaderboard() {
     entries.forEach((e, idx) => {
       const li = document.createElement("li");
       if (idx === 0) li.className = "font-bold bg-green-100";
-
       const guessLabel = e.guesses === 1 ? 'raai' : 'raaie';
       const rateText = Number.isFinite(e.sr) ? ` (${e.sr}%)` : '';
-
       li.innerHTML = `<strong>${e.name}${rateText}</strong>: ${e.guesses} ${guessLabel}`;
       leaderboardList.appendChild(li);
     });
@@ -621,7 +604,8 @@ async function loadLeaderboard() {
   }
 }
 
-/* ---- Share helpers (modal + persistent) ---- */
+/* ---- Share helpers (menu) ---- */
+let currentShareText = "";
 function shareTextFromSummary(summary) {
   if (!summary) return `Probeer vandag se DILEMMA by ${gameUrl}`;
   if (summary.didWin) {
@@ -631,30 +615,61 @@ function shareTextFromSummary(summary) {
   return `Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${gameUrl}`;
 }
 
+function positionMenu(anchorEl) {
+  const r = anchorEl.getBoundingClientRect();
+  const top = r.bottom + window.scrollY + 8;
+  const left = Math.min(window.scrollX + r.left, window.scrollX + window.innerWidth - 260);
+  shareMenu.style.top = `${top}px`;
+  shareMenu.style.left = `${left}px`;
+}
+
+function toggleShareMenu(show, anchorEl) {
+  if (show && anchorEl) {
+    positionMenu(anchorEl);
+    shareMenu.classList.remove("hidden");
+  } else {
+    shareMenu.classList.add("hidden");
+  }
+}
+
 function openWhatsApp(text) {
   const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-  const win = window.open(url, '_blank', 'noopener,noreferrer');
-  if (!win) {
-    // Popup blocked – copy as last resort
-    navigator.clipboard?.writeText(text).then(() => alert("Skakel gekopieer!"));
+  const w = window.open(url, '_blank', 'noopener,noreferrer');
+  if (!w && navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => alert("Skakel gekopieer!"));
   }
 }
 
 function bindShareButton(btn, summary) {
   const text = shareTextFromSummary(summary);
-  btn.onclick = async () => {
-    try {
-      if (navigator.share) {
-        await navigator.share({ text });
-      } else {
-        openWhatsApp(text);
-      }
-    } catch {
-      // If user cancels or share fails, still offer WhatsApp/clipboard
-      openWhatsApp(text);
-    }
+  btn.onclick = () => {
+    currentShareText = text;
+    toggleShareMenu(true, btn);
   };
 }
+
+smWhatsApp.onclick = () => { openWhatsApp(currentShareText); toggleShareMenu(false); };
+smCopy.onclick = async () => {
+  try { await navigator.clipboard.writeText(currentShareText); alert("Skakel gekopieer!"); }
+  catch(_) {}
+  toggleShareMenu(false);
+};
+smSystem.onclick = async () => {
+  try {
+    if (navigator.share) await navigator.share({ text: currentShareText });
+    else openWhatsApp(currentShareText);
+  } catch { /* user cancelled */ }
+  toggleShareMenu(false);
+};
+document.addEventListener("click", (e) => {
+  if (!shareMenu.classList.contains("hidden") &&
+      !shareMenu.contains(e.target) &&
+      !e.target.closest("#modalShareBtn") &&
+      !e.target.closest("#persistentShareBtn")) {
+    toggleShareMenu(false);
+  }
+});
+window.addEventListener("resize", () => toggleShareMenu(false));
 
 function showPersistentShare(summary) {
   if (!summary) return;
@@ -755,7 +770,7 @@ onAuthStateChanged(auth, async (user) => {
   createKeyboard();
   restoreLocalProgress();
 
-  // If previously completed, disable and show summary (and repair leaderboard if needed)
+  // Already finished?
   const lsDone = localStorage.getItem(doneKey) === "true";
   const fsDone = await serverLockExists();
   if (lsDone || fsDone) {
@@ -771,7 +786,7 @@ onAuthStateChanged(auth, async (user) => {
         statusLine.textContent = `Jy kon nie hierdie Dilemma oplos nie`;
       }
       statusLine.style.display = "block";
-      showPersistentShare(s);   // persistent DEEL visible with correct text
+      showPersistentShare(s);
       await ensureLeaderboardRow(s);
     } else {
       statusLine.textContent = `Hierdie Dilemma is reeds voltooi`;
