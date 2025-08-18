@@ -4,13 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DILEMMA Argief – Kriptiek</title>
-  <!-- Favicon and App Icons -->
-  <link rel="icon" href="/assets/favicon.ico" type="image/x-icon" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
-  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  <link rel="manifest" href="/assets/site.webmanifest">
 
+  <!-- Favicon and App Icons -->
+  <link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=3">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png?v=3">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=3">
+  <link rel="manifest" href="/assets/site.webmanifest?v=3">
+
+  <!-- Styles -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
   <style>
@@ -42,21 +44,55 @@
       display: inline-block;
       box-sizing: border-box;
     }
-    /* "Today" marker: subtle white dot in the top-right corner */
-    .today-indicator {
-      background-image: radial-gradient(circle at 85% 20%, #ffffff 0 3px, transparent 4px);
-      background-repeat: no-repeat;
-    }
   </style>
 </head>
 <body class="min-h-screen p-4 text-gray-100 bg-[#f8f5f2]">
-  <header class="text-center mb-6">
+
+  <!-- ✅ Logo Header -->
+  <header class="bg-white shadow p-4 mb-6">
+    <div class="logo-container relative flex justify-center items-center w-fit mx-auto p-4 rounded-xl bg-white overflow-hidden">
+      <div id="backgroundCrossword" class="background-crossword absolute top-0 left-0 w-full h-full grid opacity-50 pointer-events-none"></div>
+      <div class="crossword-grid grid grid-cols-8 gap-1 relative z-10">
+        <div class="letter-box transform scale-x-[-1]">K</div>
+        <div class="letter-box transform scale-x-[-1]">R</div>
+        <div class="letter-box">I</div>
+        <div class="letter-box transform scale-x-[-1]">P</div>
+        <div class="letter-box">T</div>
+        <div class="letter-box">I</div>
+        <div class="letter-box transform scale-x-[-1]">E</div>
+        <div class="letter-box">K</div>
+      </div>
+    </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const backgroundCrossword = document.getElementById('backgroundCrossword');
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        function getRandomLetter() { return letters[Math.floor(Math.random() * letters.length)]; }
+        function generateBackgroundGrid() {
+          backgroundCrossword.innerHTML = '';
+          const numRows = Math.ceil(backgroundCrossword.offsetHeight / 30);
+          const numCols = Math.ceil(backgroundCrossword.offsetWidth / 30);
+          const totalCells = (numRows * numCols) || 300;
+          for (let i = 0; i < totalCells; i++) {
+            const bgLetterBox = document.createElement('div');
+            bgLetterBox.classList.add('flex','justify-center','items-center','font-bold','text-gray-300','border','border-gray-200');
+            bgLetterBox.textContent = getRandomLetter();
+            backgroundCrossword.appendChild(bgLetterBox);
+          }
+        }
+        generateBackgroundGrid();
+        window.addEventListener('resize', generateBackgroundGrid);
+      });
+    </script>
+  </header>
+
+  <section class="text-center mb-6">
     <h1 class="text-3xl font-bold mb-3 text-[#374151]">Dilemma-argief</h1>
 
-    <!-- Legend -->
+    <!-- ✅ Updated Legend -->
     <div class="max-w-3xl mx-auto text-sm text-gray-700 flex items-center justify-center gap-6">
       <span class="inline-flex items-center gap-2">
-        <span class="legend-swatch today-indicator" style="background-color:#374151;"></span>
+        <span class="legend-swatch" style="background-color:#ea580c;"></span>
         Vandag
       </span>
       <span class="inline-flex items-center gap-2">
@@ -68,18 +104,18 @@
         Nog nie gespeel nie
       </span>
     </div>
-  </header>
+  </section>
 
   <main class="max-w-3xl mx-auto">
-    <!-- Month navigation -->
-    <div id="monthNav" class="flex justify-between mb-4 hidden">
+    <div id="archiveList" class="space-y-10"></div>
+    <div id="emptyMsg" class="text-center text-gray-500 hidden">Geen vorige speletjies om te wys nie.</div>
+
+    <!-- ✅ Month navigation moved below -->
+    <div id="monthNav" class="flex justify-between mt-6 hidden">
       <button id="prevMonth" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-[#374151]">← Vorige maand</button>
       <button id="nextMonth" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-[#374151]">Volgende maand →</button>
     </div>
-    <div id="archiveList" class="space-y-10"></div>
-    <div id="emptyMsg" class="text-center text-gray-500 hidden">Geen vorige speletjies om te wys nie.</div>
   </main>
-
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500 mt-8">
     &copy; 2025 Kriptiek. Alle regte voorbehou. |
     <a href="/index.html" class="underline">Tuis</a> |
@@ -112,9 +148,9 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    // Brand colors
-    const BLUE = "#374151";  // dark blue
-    const GREEN = "#166534"; // dark green
+    const ORANGE = "#ea580c"; // 🔸 Today
+    const BLUE = "#374151";   // Played
+    const GREEN = "#166534";  // Not played
     const BASE = "block px-2 py-2 rounded font-bold text-white";
 
     let monthKeys = [];
@@ -122,7 +158,6 @@
     let grouped = {};
     let playedIds = new Set();
 
-    // --- Today's date in SAST (Africa/Johannesburg) as YYYY-MM-DD ---
     function todayKeySAST() {
       const parts = new Intl.DateTimeFormat('en-CA', {
         timeZone: 'Africa/Johannesburg',
@@ -152,7 +187,6 @@
       const calendar = document.createElement("div");
       calendar.className = "calendar-grid";
 
-      // Day headers
       ["Ma","Di","Wo","Do","Vr","Sa","So"].forEach(d => {
         const header = document.createElement("div");
         header.className = "day-header";
@@ -160,17 +194,14 @@
         calendar.appendChild(header);
       });
 
-      // Prepare days
       const firstDay = new Date(`${year}-${month}-01`);
       const totalDays = new Date(year, month, 0).getDate();
-      const startDay = (firstDay.getDay() + 6) % 7; // Monday-start
+      const startDay = (firstDay.getDay() + 6) % 7;
 
-      // Leading blanks
       for (let i = 0; i < startDay; i++) {
         calendar.appendChild(document.createElement("div"));
       }
 
-      // Day cells
       for (let day = 1; day <= totalDays; day++) {
         const dateStr = `${year}-${month}-${String(day).padStart(2, "0")}`;
         const cell = document.createElement("div");
@@ -178,33 +209,20 @@
 
         if (game) {
           const a = document.createElement("a");
-          a.href = `/dilemmagame.html?gameId=${game.gameId}`; // gameId = doc.id (old or new)
+          a.href = `/dilemmagame.html?gameId=${game.gameId}`;
           a.textContent = day;
           a.className = BASE;
-          a.style.boxSizing = "border-box";
-          a.style.borderRadius = "4px";
 
           const isPlayed = playedIds.has(game.gameId);
-          const isToday = dateStr === todayKey; // today excluded by filter, but harmless
+          const isToday = dateStr === todayKey;
 
           if (isToday) {
-            a.style.backgroundColor = BLUE;
-            a.style.border = "none";
-            a.classList.add("today-indicator");
+            a.style.backgroundColor = ORANGE;
           } else if (isPlayed) {
             a.style.backgroundColor = BLUE;
-            a.style.border = "none";
           } else {
             a.style.backgroundColor = GREEN;
-            a.style.border = "none";
           }
-
-          a.setAttribute(
-            "aria-label",
-            isToday
-              ? `Vandag – ${dateStr}`
-              : (isPlayed ? `Gespeel op ${dateStr}` : `Nie gespeel op ${dateStr}`)
-          );
 
           cell.appendChild(a);
         } else {
@@ -213,7 +231,6 @@
           span.className = "text-gray-400";
           cell.appendChild(span);
         }
-
         calendar.appendChild(cell);
       }
 
@@ -231,29 +248,17 @@
     }
 
     async function loadArchive() {
-      // 1) Load ALL games (supports both old and new docs) then filter client-side.
-      //    This avoids index errors and handles missing 'dateKey' gracefully.
       const gamesCol = collection(db, "games");
       const snap = await getDocs(gamesCol);
 
       const entries = [];
       snap.forEach(docSnap => {
         const data = docSnap.data();
-        // Prefer new 'dateKey', fall back to old 'date', then to ID without "Game" prefix
         const dk = data?.dateKey || data?.date || docSnap.id.replace(/^Game/, "");
         if (!dk) return;
-
-        // Only include past games (strictly before today in SAST)
-        if (dk <= todayKey) {
-  entries.push({ dateKey: dk, gameId: docSnap.id });
-}
+        if (dk <= todayKey) entries.push({ dateKey: dk, gameId: docSnap.id });
       });
 
-      if (!entries.length) {
-        document.getElementById("emptyMsg").classList.remove("hidden");
-      }
-
-      // Group by YYYY-MM
       grouped = {};
       entries.forEach(({ dateKey, gameId }) => {
         const [y, m] = dateKey.split("-");
@@ -262,11 +267,9 @@
         grouped[key].push({ dateKey, gameId });
       });
 
-      // Month keys sorted desc; within a month sort by day asc for calendar feel
       monthKeys = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
       monthKeys.forEach(k => grouped[k].sort((a, b) => a.dateKey.localeCompare(b.dateKey)));
 
-      // 2) Get played gameIds for signed-in user (doc.id equals gameId used in links)
       await new Promise(resolve => {
         onAuthStateChanged(auth, async (user) => {
           playedIds = new Set();
@@ -282,12 +285,8 @@
         });
       });
 
-      // 3) Initial render (most recent month)
-      if (monthKeys.length) {
-        renderMonth(monthKeys[currentMonthIndex]);
-      }
+      if (monthKeys.length) renderMonth(monthKeys[currentMonthIndex]);
 
-      // Month nav
       document.getElementById("prevMonth").addEventListener("click", () => {
         if (currentMonthIndex < monthKeys.length - 1) {
           currentMonthIndex++;
@@ -305,7 +304,6 @@
         document.getElementById("monthNav").classList.remove("hidden");
       }
     }
-
     loadArchive();
   </script>
 </body>
