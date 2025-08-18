@@ -17,6 +17,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
   <style>
     body { font-family: 'Montserrat', sans-serif; background-color: #f8f5f2; }
+
+    /* Calendar */
     .calendar-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
@@ -32,34 +34,64 @@
       text-decoration: none;
       transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
       box-sizing: border-box;
+      color: #fff;
     }
     .calendar-grid a:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .day-header { font-weight: bold; color: #374151; }
 
     /* Legend swatches */
     .legend-swatch {
-      width: 20px;
-      height: 20px;
-      border-radius: 0.375rem;
-      display: inline-block;
-      box-sizing: border-box;
+      width: 20px; height: 20px; border-radius: 0.375rem; display: inline-block; box-sizing: border-box;
+    }
+
+    /* Header/logo (matches index.html visual) */
+    .logo-container {
+      position: relative; display: flex; justify-content: center; align-items: center;
+      width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
+    }
+    .crossword-grid { display: grid; grid-template-columns: repeat(8, minmax(40px, 1fr)); gap: 4px; position: relative; z-index: 10; }
+    .letter-box {
+      width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
+      background-color: #374151; color: white; font-size: 1.8rem; font-weight: bold; border: 2px solid #1f2937; border-radius: 0.375rem;
+      text-transform: uppercase; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    }
+    .background-crossword {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
+      opacity: 0.5; z-index: 1; pointer-events: none;
+    }
+    .bg-letter {
+      display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none;
+    }
+
+    @media (max-width: 768px) {
+      .letter-box { width: 40px; height: 40px; font-size: 1.5rem; }
+      .crossword-grid { gap: 3px; }
+      .logo-container { padding: 1rem; }
+      .bg-letter { font-size: 1rem; }
+    }
+    @media (max-width: 480px) {
+      .letter-box { width: 35px; height: 35px; font-size: 1.2rem; }
+      .crossword-grid { gap: 2px; }
+      .logo-container { padding: 0.75rem; }
+      .bg-letter { font-size: 0.9rem; }
     }
   </style>
 </head>
 <body class="min-h-screen p-4 text-gray-100 bg-[#f8f5f2]">
 
-  <!-- ✅ Logo Header -->
+  <!-- Header/logo from index.html -->
   <header class="bg-white shadow p-4 mb-6">
-    <div class="logo-container relative flex justify-center items-center w-fit mx-auto p-4 rounded-xl bg-white overflow-hidden">
-      <div id="backgroundCrossword" class="background-crossword absolute top-0 left-0 w-full h-full grid opacity-50 pointer-events-none"></div>
-      <div class="crossword-grid grid grid-cols-8 gap-1 relative z-10">
-        <div class="letter-box transform scale-x-[-1]">K</div>
-        <div class="letter-box transform scale-x-[-1]">R</div>
+    <div class="logo-container">
+      <div id="backgroundCrossword" class="background-crossword"></div>
+      <div class="crossword-grid">
+        <div class="letter-box" style="transform:scaleX(-1)">K</div>
+        <div class="letter-box" style="transform:scaleX(-1)">R</div>
         <div class="letter-box">I</div>
-        <div class="letter-box transform scale-x-[-1]">P</div>
+        <div class="letter-box" style="transform:scaleX(-1)">P</div>
         <div class="letter-box">T</div>
         <div class="letter-box">I</div>
-        <div class="letter-box transform scale-x-[-1]">E</div>
+        <div class="letter-box" style="transform:scaleX(-1)">E</div>
         <div class="letter-box">K</div>
       </div>
     </div>
@@ -67,21 +99,21 @@
       document.addEventListener('DOMContentLoaded', function () {
         const backgroundCrossword = document.getElementById('backgroundCrossword');
         const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        function getRandomLetter() { return letters[Math.floor(Math.random() * letters.length)]; }
-        function generateBackgroundGrid() {
+        function rand() { return letters[Math.floor(Math.random() * letters.length)]; }
+        function drawGrid() {
           backgroundCrossword.innerHTML = '';
-          const numRows = Math.ceil(backgroundCrossword.offsetHeight / 30);
-          const numCols = Math.ceil(backgroundCrossword.offsetWidth / 30);
-          const totalCells = (numRows * numCols) || 300;
-          for (let i = 0; i < totalCells; i++) {
-            const bgLetterBox = document.createElement('div');
-            bgLetterBox.classList.add('flex','justify-center','items-center','font-bold','text-gray-300','border','border-gray-200');
-            bgLetterBox.textContent = getRandomLetter();
-            backgroundCrossword.appendChild(bgLetterBox);
+          const rows = Math.ceil(backgroundCrossword.offsetHeight / 30);
+          const cols = Math.ceil(backgroundCrossword.offsetWidth / 30);
+          const total = (rows * cols) || 300;
+          for (let i = 0; i < total; i++) {
+            const d = document.createElement('div');
+            d.className = 'bg-letter';
+            d.textContent = rand();
+            backgroundCrossword.appendChild(d);
           }
         }
-        generateBackgroundGrid();
-        window.addEventListener('resize', generateBackgroundGrid);
+        drawGrid();
+        window.addEventListener('resize', drawGrid);
       });
     </script>
   </header>
@@ -89,7 +121,7 @@
   <section class="text-center mb-6">
     <h1 class="text-3xl font-bold mb-3 text-[#374151]">Dilemma-argief</h1>
 
-    <!-- ✅ Updated Legend -->
+    <!-- Legend: Vandag is now orange; others unchanged -->
     <div class="max-w-3xl mx-auto text-sm text-gray-700 flex items-center justify-center gap-6">
       <span class="inline-flex items-center gap-2">
         <span class="legend-swatch" style="background-color:#ea580c;"></span>
@@ -107,15 +139,17 @@
   </section>
 
   <main class="max-w-3xl mx-auto">
+    <!-- Calendar(s) render here -->
     <div id="archiveList" class="space-y-10"></div>
     <div id="emptyMsg" class="text-center text-gray-500 hidden">Geen vorige speletjies om te wys nie.</div>
 
-    <!-- ✅ Month navigation moved below -->
+    <!-- Month navigation moved BELOW the calendar -->
     <div id="monthNav" class="flex justify-between mt-6 hidden">
       <button id="prevMonth" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-[#374151]">← Vorige maand</button>
       <button id="nextMonth" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-[#374151]">Volgende maand →</button>
     </div>
   </main>
+
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500 mt-8">
     &copy; 2025 Kriptiek. Alle regte voorbehou. |
     <a href="/index.html" class="underline">Tuis</a> |
@@ -130,9 +164,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import {
-      getFirestore, collection, getDocs
-    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -148,16 +180,18 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    const ORANGE = "#ea580c"; // 🔸 Today
-    const BLUE = "#374151";   // Played
-    const GREEN = "#166534";  // Not played
-    const BASE = "block px-2 py-2 rounded font-bold text-white";
+    // Colors: 🔸 today, 🔵 played, 🟩 not played
+    const ORANGE = "#ea580c";
+    const BLUE   = "#374151";
+    const GREEN  = "#166534";
+    const BASE   = "block px-2 py-2 rounded font-bold text-white";
 
     let monthKeys = [];
     let currentMonthIndex = 0;
     let grouped = {};
     let playedIds = new Set();
 
+    // Today's date (SAST) as YYYY-MM-DD
     function todayKeySAST() {
       const parts = new Intl.DateTimeFormat('en-CA', {
         timeZone: 'Africa/Johannesburg',
@@ -187,6 +221,7 @@
       const calendar = document.createElement("div");
       calendar.className = "calendar-grid";
 
+      // Day headers
       ["Ma","Di","Wo","Do","Vr","Sa","So"].forEach(d => {
         const header = document.createElement("div");
         header.className = "day-header";
@@ -194,14 +229,17 @@
         calendar.appendChild(header);
       });
 
+      // Prepare days
       const firstDay = new Date(`${year}-${month}-01`);
       const totalDays = new Date(year, month, 0).getDate();
-      const startDay = (firstDay.getDay() + 6) % 7;
+      const startDay = (firstDay.getDay() + 6) % 7; // Monday-start
 
+      // Leading blanks
       for (let i = 0; i < startDay; i++) {
         calendar.appendChild(document.createElement("div"));
       }
 
+      // Day cells
       for (let day = 1; day <= totalDays; day++) {
         const dateStr = `${year}-${month}-${String(day).padStart(2, "0")}`;
         const cell = document.createElement("div");
@@ -217,12 +255,19 @@
           const isToday = dateStr === todayKey;
 
           if (isToday) {
-            a.style.backgroundColor = ORANGE;
+            a.style.backgroundColor = ORANGE;  // today = orange
           } else if (isPlayed) {
-            a.style.backgroundColor = BLUE;
+            a.style.backgroundColor = BLUE;    // played = blue
           } else {
-            a.style.backgroundColor = GREEN;
+            a.style.backgroundColor = GREEN;   // not played = green
           }
+
+          a.setAttribute(
+            "aria-label",
+            isToday
+              ? `Vandag – ${dateStr}`
+              : (isPlayed ? `Gespeel op ${dateStr}` : `Nie gespeel op ${dateStr}`)
+          );
 
           cell.appendChild(a);
         } else {
@@ -231,6 +276,7 @@
           span.className = "text-gray-400";
           cell.appendChild(span);
         }
+
         calendar.appendChild(cell);
       }
 
@@ -248,6 +294,7 @@
     }
 
     async function loadArchive() {
+      // Load all games (handles old + new doc formats), then filter client-side
       const gamesCol = collection(db, "games");
       const snap = await getDocs(gamesCol);
 
@@ -259,6 +306,11 @@
         if (dk <= todayKey) entries.push({ dateKey: dk, gameId: docSnap.id });
       });
 
+      if (!entries.length) {
+        document.getElementById("emptyMsg").classList.remove("hidden");
+      }
+
+      // Group by YYYY-MM
       grouped = {};
       entries.forEach(({ dateKey, gameId }) => {
         const [y, m] = dateKey.split("-");
@@ -267,9 +319,11 @@
         grouped[key].push({ dateKey, gameId });
       });
 
+      // Month keys sorted desc; within a month sort by day asc
       monthKeys = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
       monthKeys.forEach(k => grouped[k].sort((a, b) => a.dateKey.localeCompare(b.dateKey)));
 
+      // Get played gameIds for signed-in user
       await new Promise(resolve => {
         onAuthStateChanged(auth, async (user) => {
           playedIds = new Set();
@@ -285,8 +339,12 @@
         });
       });
 
-      if (monthKeys.length) renderMonth(monthKeys[currentMonthIndex]);
+      // Initial render (most recent month)
+      if (monthKeys.length) {
+        renderMonth(monthKeys[currentMonthIndex]);
+      }
 
+      // Month nav events
       document.getElementById("prevMonth").addEventListener("click", () => {
         if (currentMonthIndex < monthKeys.length - 1) {
           currentMonthIndex++;
@@ -304,6 +362,7 @@
         document.getElementById("monthNav").classList.remove("hidden");
       }
     }
+
     loadArchive();
   </script>
 </body>
