@@ -71,10 +71,15 @@
   <!-- Success/Fail status line -->
   <p id="statusLine" class="text-center font-bold text-[#1e3a8a] mb-4" style="display:none;"></p>
 
-  <!-- GESELS SAAM -->
-  <div class="mb-6 flex justify-center">
+  <!-- ACTION ROW: DEEL (left, hidden until finished) + GESELS SAAM (right) -->
+  <div class="mb-6 flex items-center justify-between">
+    <button id="persistentShareBtn"
+            class="hidden bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-4 py-2 rounded">
+      DEEL
+    </button>
+
     <a href="/forum.html" id="chatButton"
-       class="inline-block bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-4 py-2 rounded">
+       class="ml-4 inline-block bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-4 py-2 rounded">
       GESELS SAAM
     </a>
   </div>
@@ -166,6 +171,7 @@ const closeBtn = document.getElementById("closeModalBtn");
 const leaderboardList = document.getElementById("leaderboardList");
 const playerNameEl = document.getElementById("playerName");
 const statusLine = document.getElementById("statusLine");
+const persistentShareBtn = document.getElementById("persistentShareBtn");
 
 /* ---- State ---- */
 let gridRows = 6, gridCols = 5;
@@ -573,25 +579,24 @@ async function loadLeaderboard() {
       if (srVal == null) needSR.push(d.id);
     });
 
-   // Fallback: compute % for rows missing it — ignore permission errors
-if (needSR.length) {
-  try {
-    const results = await Promise.allSettled(
-      needSR.map(uid => getDoc(doc(db, "users", uid)))
-    );
-    results.forEach((res, i) => {
-      if (res.status !== "fulfilled") return; // skip blocked/failed reads
-      const snap = res.value;
-      if (!snap.exists()) return;
-      const u = snap.data() || {};
-      const gp = Number(u.gamesPlayed || 0);
-      const w  = Number(u.wins || 0);
-      const sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
-      const ent = entries.find(e => e.uid === needSR[i]);
-      if (ent) ent.sr = sr;
-    });
-  } catch {}
-}
+    if (needSR.length) {
+      try {
+        const results = await Promise.allSettled(
+          needSR.map(uid => getDoc(doc(db, "users", uid)))
+        );
+        results.forEach((res, i) => {
+          if (res.status !== "fulfilled") return; // skip blocked/failed reads
+          const snap = res.value;
+          if (!snap.exists()) return;
+          const u = snap.data() || {};
+          const gp = Number(u.gamesPlayed || 0);
+          const w  = Number(u.wins || 0);
+          const sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
+          const ent = entries.find(e => e.uid === needSR[i]);
+          if (ent) ent.sr = sr;
+        });
+      } catch {}
+    }
 
     leaderboardList.innerHTML = "";
     if (!entries.length) {
@@ -601,20 +606,47 @@ if (needSR.length) {
 
     entries.sort((a, b) => (a.guesses - b.guesses) || (a.when - b.when));
     entries.forEach((e, idx) => {
-  const li = document.createElement("li");
-  if (idx === 0) li.className = "font-bold bg-green-100";
+      const li = document.createElement("li");
+      if (idx === 0) li.className = "font-bold bg-green-100";
 
-  const guessLabel = e.guesses === 1 ? 'raai' : 'raaie';
-  const rateText = Number.isFinite(e.sr) ? ` (${e.sr}%)` : '';
+      const guessLabel = e.guesses === 1 ? 'raai' : 'raaie';
+      const rateText = Number.isFinite(e.sr) ? ` (${e.sr}%)` : '';
 
-  // Example: Admin (75%): 4 raaie
-  li.innerHTML = `<strong>${e.name}${rateText}</strong>: ${e.guesses} ${guessLabel}`;
-  leaderboardList.appendChild(li);
-});
+      li.innerHTML = `<strong>${e.name}${rateText}</strong>: ${e.guesses} ${guessLabel}`;
+      leaderboardList.appendChild(li);
+    });
   } catch (err) {
     console.error("Kon nie leierbord laai nie:", err);
     leaderboardList.innerHTML = `<li class="text-red-600">Kon nie leierbord laai nie.</li>`;
   }
+}
+
+/* ---- Share helpers (modal + persistent) ---- */
+function shareTextFromSummary(summary) {
+  if (!summary) return `Probeer vandag se DILEMMA by ${gameUrl}`;
+  if (summary.didWin) {
+    const woord = summary.guesses === 1 ? 'raaiskoot' : 'raaiskote';
+    return `Ek het hierdie DILEMMA in ${summary.guesses} ${woord} opgelos. Probeer self by ${gameUrl}`;
+  }
+  return `Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${gameUrl}`;
+}
+function bindShareButton(btn, summary) {
+  const text = shareTextFromSummary(summary);
+  btn.onclick = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({ text });
+      } else {
+        await navigator.clipboard.writeText(text);
+        alert("Skakel gekopieer!");
+      }
+    } catch(_){ /* user cancelled or unsupported */ }
+  };
+}
+function showPersistentShare(summary) {
+  if (!summary) return;
+  persistentShareBtn.classList.remove("hidden");
+  bindShareButton(persistentShareBtn, summary);
 }
 
 /* ---- Game end flows ---- */
@@ -627,7 +659,8 @@ async function gameCompleted(guessCount) {
 
   resultMsg.textContent = `Veels geluk, ${displayName}, jy het die woord in ${guessCount} ${woord} gekry!`;
   modal.style.display = "flex";
-  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het hierdie DILEMMA in ${guessCount} ${woord} opgelos. Probeer self by ${gameUrl}`);
+  bindShareButton(shareBtn, { didWin: true, guesses: guessCount });
+  showPersistentShare({ didWin: true, guesses: guessCount });
 
   saveLocalProgress(true);
   localStorage.setItem(`${doneKey}-result`, `win:${guessCount}`);
@@ -645,7 +678,8 @@ async function gameFailed() {
 
   resultMsg.textContent = `Jammer, ${displayName}! Vandag se oplossing is ${targetWord}.`;
   modal.style.display = "flex";
-  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${gameUrl}`);
+  bindShareButton(shareBtn, { didWin: false, guesses: null });
+  showPersistentShare({ didWin: false, guesses: null });
 
   saveLocalProgress(true);
   localStorage.setItem(`${doneKey}-result`, `loss`);
@@ -724,7 +758,7 @@ onAuthStateChanged(auth, async (user) => {
         statusLine.textContent = `Jy kon nie hierdie Dilemma oplos nie`;
       }
       statusLine.style.display = "block";
-
+      showPersistentShare(s);   // <-- make DEEL visible with correct text
       await ensureLeaderboardRow(s);
     } else {
       statusLine.textContent = `Hierdie Dilemma is reeds voltooi`;
