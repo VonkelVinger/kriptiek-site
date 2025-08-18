@@ -627,7 +627,7 @@ async function gameCompleted(guessCount) {
 
   resultMsg.textContent = `Veels geluk, ${displayName}, jy het die woord in ${guessCount} ${woord} gekry!`;
   modal.style.display = "flex";
-  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het DILEMMA in ${guessCount} ${woord} opgelos: ${gameUrl}`);
+  shareBtn.onclick = () => navigator.clipboard.writeText(`Ek het hierdie DILEMMA in ${guessCount} ${woord} opgelos. Probeer self by ${gameUrl}`);
 
   saveLocalProgress(true);
   localStorage.setItem(`${doneKey}-result`, `win:${guessCount}`);
