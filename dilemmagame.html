@@ -79,7 +79,7 @@
   <!-- Status line -->
   <p id="statusLine" class="text-center font-bold text-[#1e3a8a] mb-4" style="display:none;"></p>
 
-  <!-- ACTION ROW: centered, with a local dropdown anchored here -->
+  <!-- ACTION ROW -->
   <div class="mb-6 flex items-center justify-center">
     <div class="relative flex items-center gap-3 sm:gap-4">
       <button id="persistentShareBtn" type="button"
@@ -156,7 +156,6 @@
   <div class="modal-content">
     <p id="resultMessage" class="mb-4 font-bold"></p>
 
-    <!-- Wrap modal buttons so we can anchor a local dropdown -->
     <div class="relative flex items-center justify-center gap-2">
       <button id="modalShareBtn" type="button" class="btn-share">DEEL</button>
       <button id="closeModalBtn" type="button" class="btn-close">SLUIT</button>
@@ -207,12 +206,9 @@ const persistentShareBtn = document.getElementById("persistentShareBtn");
 
 const pMenu = document.getElementById("shareMenuPersistent");
 const mMenu = document.getElementById("shareMenuModal");
-
-/* Persistent menu buttons */
 const pWA = document.getElementById("pWhatsApp");
 const pCopy = document.getElementById("pCopy");
 const pSys = document.getElementById("pSystem");
-/* Modal menu buttons */
 const mWA = document.getElementById("mWhatsApp");
 const mCopy = document.getElementById("mCopy");
 const mSys = document.getElementById("mSystem");
@@ -239,6 +235,12 @@ const doneKey = `dilemma-${gameId}-done`;
 const progressKey = `dilemma-${gameId}-progress`;
 const gameUrl = window.location.href;
 
+function altIdIfOldFormat(id) {
+  const m = id.match(/^Game(\d{4}-\d{2}-\d{2})$/);
+  return m ? m[1] : null;
+}
+playerNameEl.textContent = displayName;
+
 /* ---- If not signed in ---- */
 function renderAuthRequired() {
   const clue = document.getElementById("clue");
@@ -253,19 +255,29 @@ function renderAuthRequired() {
 /* ---- Helpers ---- */
 function disableGame(){ gameOver = true; document.querySelectorAll(".key").forEach(k => k.disabled = true); }
 
-/* ---- Result text ---- */
-function shareTextFromSummary(summary) {
-  if (!summary) return `Probeer vandag se DILEMMA by ${gameUrl}`;
-  if (summary.didWin) {
-    const woord = summary.guesses === 1 ? 'raaiskoot' : 'raaiskote';
-    return `Ek het hierdie DILEMMA in ${summary.guesses} ${woord} opgelos. Probeer self by ${gameUrl}`;
+/* ---- Local result helpers ---- */
+function readLocalResult() {
+  const v = localStorage.getItem(`${doneKey}-result`);
+  if (!v) return null;
+  if (v.startsWith('win:')) {
+    const n = Number(v.split(':')[1]);
+    return { didWin: true, guesses: Number.isFinite(n) ? n : null };
   }
-  return `Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${gameUrl}`;
+  if (v === 'loss') return { didWin: false, guesses: null };
+  return null;
 }
-function openWhatsApp(text){
-  const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-  const w = window.open(url, '_blank', 'noopener,noreferrer');
-  if(!w && navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>alert("Skakel gekopieer!")); }
+function deriveLocalSummaryFromProgress() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(progressKey) || '{}');
+    const rows = Array.isArray(saved.rows) ? saved.rows : [];
+    if (!rows.length) return null;
+    const winIndex = rows.findIndex(r =>
+      Array.isArray(r.states) && r.states.length && r.states.every(s => s === 'correct')
+    );
+    if (winIndex >= 0) return { didWin: true, guesses: winIndex + 1 };
+    if (rows.length >= gridRows) return { didWin: false, guesses: null };
+    return null;
+  } catch { return null; }
 }
 
 /* ---- Game data ---- */
@@ -407,9 +419,7 @@ function saveLocalProgress(done=false) {
     );
     if (states.every(s=>["correct","present","absent"].includes(s))) {
       rows.push({ guess, states });
-    } else {
-      break;
-    }
+    } else { break; }
   }
   localStorage.setItem(progressKey, JSON.stringify({ rows }));
   if (done) localStorage.setItem(doneKey, "true");
@@ -436,34 +446,202 @@ function restoreLocalProgress() {
   } catch {}
 }
 
-/* ---- Leaderboard (unchanged) ---- */
-async function submitScore(guessCount, didWin) { /* ...same as before... */ }
-async function ensureLeaderboardRow(summary) { /* ...same as before... */ }
-async function loadLeaderboard() { /* ...same as before... */ }
+/* ---- Leaderboard: submit, ensure, load ---- */
+async function submitScore(guessCount, didWin) {
+  if (!currentUid) return;
 
-/* ---- SHARE: bottom + modal, each with its own dropdown ---- */
+  // refresh displayName from users doc
+  try {
+    const uDoc = await getDoc(doc(db, "users", currentUid));
+    if (uDoc.exists() && typeof uDoc.data().userName === "string") {
+      displayName = uDoc.data().userName || displayName;
+      playerNameEl.textContent = displayName;
+      localStorage.setItem("userName", displayName);
+    }
+  } catch (e) { console.warn("Could not read users doc:", e); }
+
+  // update user stats and compute success rate
+  let successRate = null;
+  try {
+    const uref = doc(db, "users", currentUid);
+    const before = await getDoc(uref);
+
+    let payload;
+    if (before.exists()) {
+      const u = before.data() || {};
+      const newGames  = (u.gamesPlayed || 0) + 1;
+      const newWins   = (u.wins || 0) + (didWin ? 1 : 0);
+      const newStreak = didWin ? (u.streak || 0) + 1 : 0;
+      const newBest   = Math.max(u.bestStreak || 0, newStreak);
+      const dist = { "1":0,"2":0,"3":0,"4":0,"5":0,"6":0, ...(u.guessDist || {}) };
+      if (didWin && guessCount >= 1 && guessCount <= 6) dist[String(guessCount)] = (dist[String(guessCount)] || 0) + 1;
+      payload = { userName: displayName, gamesPlayed: newGames, wins: newWins, streak: newStreak, bestStreak: newBest, guessDist: dist, updatedAt: serverTimestamp() };
+    } else {
+      payload = {
+        userName: displayName, gamesPlayed: 1, wins: didWin ? 1 : 0, streak: didWin ? 1 : 0, bestStreak: didWin ? 1 : 0,
+        guessDist: { "1":0,"2":0,"3":0,"4":0,"5":0,"6":0, ...(didWin && guessCount>=1 && guessCount<=6 ? { [String(guessCount)]: 1 } : {}) },
+        createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+      };
+    }
+    await setDoc(uref, payload, { merge: true });
+
+    const after = await getDoc(uref);
+    const nd = after.data() || {};
+    const games = Number(nd.gamesPlayed || 0);
+    const wins  = Number(nd.wins || 0);
+    successRate = games > 0 ? Math.round((wins / games) * 100) : 0;
+  } catch (e) {
+    console.warn("User stats update failed (non-fatal):", e);
+  }
+
+  // write leaderboard row
+  try {
+    await setDoc(
+      doc(db, "games", gameId, "leaderboard", currentUid),
+      {
+        userName: displayName,
+        guesses: Math.trunc(Number(guessCount)),
+        ...(successRate == null ? {} : { successRate }),
+        date: serverTimestamp(),
+        createdAtMs: Date.now()
+      },
+      { merge: true }
+    );
+  } catch (e) {
+    console.error("Kon nie leierbord-ry stoor nie:", e);
+  }
+}
+
+async function ensureLeaderboardRow(summary) {
+  try {
+    if (!currentUid || !summary) return;
+
+    const rowRef = doc(db, "games", gameId, "leaderboard", currentUid);
+    const existing = await getDoc(rowRef);
+    if (existing.exists()) return;
+
+    const guessCount = summary.didWin ? (Number(summary.guesses) || gridRows) : gridRows;
+
+    let sr = null;
+    try {
+      const uSnap = await getDoc(doc(db, "users", currentUid));
+      if (uSnap.exists()) {
+        const u = uSnap.data() || {};
+        const gp = Number(u.gamesPlayed || 0);
+        const w  = Number(u.wins || 0);
+        sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
+      }
+    } catch {}
+
+    const payload = {
+      userName: displayName,
+      guesses: Math.trunc(Number(guessCount)),
+      date: serverTimestamp(),
+      createdAtMs: Date.now(),
+      ...(sr == null ? {} : { successRate: sr })
+    };
+
+    await setDoc(rowRef, payload, { merge: true });
+    await loadLeaderboard();
+  } catch (e) {
+    console.warn("ensureLeaderboardRow failed:", e);
+  }
+}
+
+async function loadLeaderboard() {
+  try {
+    const snap = await getDocs(collection(db, "games", gameId, "leaderboard"));
+    const entries = [];
+    const needSR = [];
+
+    snap.forEach(d => {
+      const v = d.data() || {};
+      const guessesNum = Number(v.guesses);
+      if (!Number.isFinite(guessesNum) || guessesNum < 1 || guessesNum > gridRows) return;
+
+      const name = (typeof v.userName === "string" && v.userName.trim()) ? v.userName.trim() : "Onbekend";
+      const ts = v.date?.seconds ? v.date.seconds * 1000 : (typeof v.createdAtMs === "number" ? v.createdAtMs : 0);
+      const srVal = Number.isFinite(Number(v.successRate)) ? Math.trunc(Number(v.successRate)) : null;
+
+      const entry = { uid: d.id, name, guesses: guessesNum, when: ts, sr: srVal };
+      entries.push(entry);
+      if (srVal == null) needSR.push(d.id);
+    });
+
+    // fill missing successRate values client-side if allowed
+    if (needSR.length) {
+      try {
+        const results = await Promise.allSettled(
+          needSR.map(uid => getDoc(doc(db, "users", uid)))
+        );
+        results.forEach((res, i) => {
+          if (res.status !== "fulfilled") return;
+          const snap = res.value;
+          if (!snap.exists()) return;
+          const u = snap.data() || {};
+          const gp = Number(u.gamesPlayed || 0);
+          const w  = Number(u.wins || 0);
+          const sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
+          const ent = entries.find(e => e.uid === needSR[i]);
+          if (ent) ent.sr = sr;
+        });
+      } catch {}
+    }
+
+    leaderboardList.innerHTML = "";
+    if (!entries.length) {
+      leaderboardList.innerHTML = `<li class="bg-green-100 font-medium px-2 py-1 rounded">Jy kan eerste op die leierbord wees!</li>`;
+      return;
+    }
+
+    // order: fewest guesses first, then earliest timestamp
+    entries.sort((a, b) => (a.guesses - b.guesses) || (a.when - b.when));
+    entries.forEach((e, idx) => {
+      const li = document.createElement("li");
+      if (idx === 0) li.className = "font-bold bg-green-100";
+      const guessLabel = e.guesses === 1 ? 'raai' : 'raaie';
+      const rateText = Number.isFinite(e.sr) ? ` (${e.sr}%)` : '';
+      li.innerHTML = `<strong>${e.name}${rateText}</strong>: ${e.guesses} ${guessLabel}`;
+      leaderboardList.appendChild(li);
+    });
+  } catch (err) {
+    console.error("Kon nie leierbord laai nie:", err);
+    leaderboardList.innerHTML = `<li class="text-red-600">Kon nie leierbord laai nie.</li>`;
+  }
+}
+
+/* ---- Share: bottom + modal, each with its own dropdown ---- */
 let lastSummary = null;
 
+function shareTextFromSummary(summary) {
+  if (!summary) return `Probeer vandag se DILEMMA by ${gameUrl}`;
+  if (summary.didWin) {
+    const woord = summary.guesses === 1 ? 'raaiskoot' : 'raaiskote';
+    return `Ek het hierdie DILEMMA in ${summary.guesses} ${woord} opgelos. Probeer self by ${gameUrl}`;
+  }
+  return `Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${gameUrl}`;
+}
+function openWhatsApp(text){
+  const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+  const w = window.open(url, '_blank', 'noopener,noreferrer');
+  if(!w && navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>alert("Skakel gekopieer!")); }
+}
+
 function wireShareDropdown(triggerBtn, menuEl){
-  // Toggle menu
   triggerBtn.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
     document.querySelectorAll('.share-menu-local').forEach(m => { if(m!==menuEl) m.classList.add('hidden'); });
     menuEl.classList.toggle('hidden');
   });
-
-  // Close if clicking outside
   document.addEventListener('click', (e) => {
     if (!menuEl.contains(e.target) && e.target !== triggerBtn) menuEl.classList.add('hidden');
   });
   window.addEventListener('scroll', () => menuEl.classList.add('hidden'));
   window.addEventListener('resize', () => menuEl.classList.add('hidden'));
 }
-
 function bindMenuActions(menuEl, {waBtn, copyBtn, sysBtn}){
   const text = () => shareTextFromSummary(lastSummary);
-
   waBtn.onclick = () => { openWhatsApp(text()); menuEl.classList.add('hidden'); };
   copyBtn.onclick = async () => {
     try { await navigator.clipboard.writeText(text()); alert("Skakel gekopieer!"); }
@@ -471,10 +649,8 @@ function bindMenuActions(menuEl, {waBtn, copyBtn, sysBtn}){
     menuEl.classList.add('hidden');
   };
   sysBtn.onclick = async () => {
-    try {
-      if (navigator.share) await navigator.share({ text: text() });
-      else openWhatsApp(text());
-    } catch {}
+    try { if (navigator.share) await navigator.share({ text: text() }); else openWhatsApp(text()); }
+    catch {}
     menuEl.classList.add('hidden');
   };
 }
@@ -492,6 +668,16 @@ async function gameCompleted(guessCount) {
 
   lastSummary = { didWin:true, guesses:guessCount };
   persistentShareBtn.classList.remove("hidden");
+
+  // persist + leaderboard
+  saveLocalProgress(true);
+  localStorage.setItem(`${doneKey}-result`, `win:${guessCount}`);
+  await setDoc(doc(db, "userGames", currentUid, "plays", gameId),
+    { finished:true, result:"win", guesses:Math.trunc(Number(guessCount)), finishedAt: serverTimestamp() },
+    { merge:true });
+  await submitScore(guessCount, true);
+  await loadLeaderboard();
+  document.querySelectorAll(".key").forEach(k => k.disabled = true);
 }
 
 async function gameFailed() {
@@ -505,8 +691,19 @@ async function gameFailed() {
 
   lastSummary = { didWin:false, guesses:null };
   persistentShareBtn.classList.remove("hidden");
+
+  // persist + leaderboard
+  saveLocalProgress(true);
+  localStorage.setItem(`${doneKey}-result`, `loss`);
+  await setDoc(doc(db, "userGames", currentUid, "plays", gameId),
+    { finished:true, result:"loss", guesses:gridRows, finishedAt: serverTimestamp() },
+    { merge:true });
+  await submitScore(gridRows, false);
+  await loadLeaderboard();
+  document.querySelectorAll(".key").forEach(k => k.disabled = true);
 }
 
+/* ---- Modal + keyboard ---- */
 closeBtn.onclick = () => { modal.style.display = "none"; };
 document.addEventListener("keydown", e => {
   if (e.key === "Enter") handleEnter();
@@ -514,6 +711,7 @@ document.addEventListener("keydown", e => {
   else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
 });
 
+/* ---- Guess orchestration ---- */
 function checkGuessWithFlip(guess) {
   const states = computeStates(guess);
   applyStatesWithFlip(currentRow, guess, states);
@@ -538,13 +736,13 @@ function checkGuessWithFlip(guess) {
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     renderAuthRequired();
-    await loadLeaderboard();
+    await loadLeaderboard(); // still show public board
     return;
   }
 
   currentUid = user.uid;
 
-  // Load display name if stored
+  // load display name if stored
   try {
     const uDoc = await getDoc(doc(db, "users", currentUid));
     const nm = uDoc.exists() ? uDoc.data()?.userName : null;
@@ -560,27 +758,32 @@ onAuthStateChanged(auth, async (user) => {
   createKeyboard();
   restoreLocalProgress();
 
-  // Wire menus once DOM is ready
+  // Wire the two share menus
+  const shareBtnModal = document.getElementById("modalShareBtn");
+  wireShareDropdown(shareBtnModal, mMenu);
+  bindMenuActions(mMenu, { waBtn: mWA, copyBtn: mCopy, sysBtn: mSys });
   wireShareDropdown(persistentShareBtn, pMenu);
   bindMenuActions(pMenu, { waBtn: pWA, copyBtn: pCopy, sysBtn: pSys });
-  wireShareDropdown(shareBtn, mMenu);
-  bindMenuActions(mMenu, { waBtn: mWA, copyBtn: mCopy, sysBtn: mSys });
 
-  // If previously completed, show summary + keep DEEL available
-  const playsDoc = await getDoc(doc(db, "userGames", user.uid, "plays", gameId));
+  // If previously completed, show summary + ensure leaderboard row + keep DEEL exposed
   const lsDone = localStorage.getItem(doneKey) === "true";
-  if (lsDone || playsDoc.exists()) {
-    // Try to reconstruct summary
+  let fsDone = false;
+  try {
+    const p = await getDoc(doc(db, "userGames", currentUid, "plays", gameId));
+    fsDone = p.exists();
+  } catch {}
+
+  if (lsDone || fsDone) {
     let s = null;
-    if (playsDoc.exists()) {
-      const d = playsDoc.data() || {};
-      s = { didWin: d.result === "win", guesses: Number(d.guesses) || null };
-    }
-    if (!s) {
-      const v = localStorage.getItem(`${doneKey}-result`);
-      if (v?.startsWith('win:')) s = { didWin:true, guesses:Number(v.split(':')[1])||null };
-      else if (v==='loss') s = { didWin:false, guesses:null };
-    }
+    try {
+      const snap = await getDoc(doc(db, "userGames", currentUid, "plays", gameId));
+      if (snap.exists()) {
+        const d = snap.data() || {};
+        s = { didWin: d.result === "win", guesses: Number(d.guesses) || null };
+      }
+    } catch {}
+    if (!s) s = readLocalResult();
+    if (!s) s = deriveLocalSummaryFromProgress();
 
     if (s) {
       lastSummary = s;
@@ -589,6 +792,7 @@ onAuthStateChanged(auth, async (user) => {
         : `Jy kon nie hierdie Dilemma oplos nie`;
       statusLine.style.display = "block";
       persistentShareBtn.classList.remove("hidden");
+      await ensureLeaderboardRow(s);
     } else {
       statusLine.textContent = `Hierdie Dilemma is reeds voltooi`;
       statusLine.style.display = "block";
