@@ -44,7 +44,7 @@
       width: 20px; height: 20px; border-radius: 0.375rem; display: inline-block; box-sizing: border-box;
     }
 
-    /* Header/logo (matches index.html visual) */
+    /* Header/logo (matches index.html) */
     .logo-container {
       position: relative; display: flex; justify-content: center; align-items: center;
       width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
@@ -121,7 +121,7 @@
   <section class="text-center mb-6">
     <h1 class="text-3xl font-bold mb-3 text-[#374151]">Dilemma-argief</h1>
 
-    <!-- Legend: Vandag is now orange; others unchanged -->
+    <!-- Legend: Vandag now orange; others unchanged -->
     <div class="max-w-3xl mx-auto text-sm text-gray-700 flex items-center justify-center gap-6">
       <span class="inline-flex items-center gap-2">
         <span class="legend-swatch" style="background-color:#ea580c;"></span>
@@ -139,7 +139,7 @@
   </section>
 
   <main class="max-w-3xl mx-auto">
-    <!-- Calendar(s) render here -->
+    <!-- Calendars render here -->
     <div id="archiveList" class="space-y-10"></div>
     <div id="emptyMsg" class="text-center text-gray-500 hidden">Geen vorige speletjies om te wys nie.</div>
 
@@ -180,10 +180,10 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    // Colors: 🔸 today, 🔵 played, 🟩 not played
-    const ORANGE = "#ea580c";
-    const BLUE   = "#374151";
-    const GREEN  = "#166534";
+    // Colors
+    const ORANGE = "#ea580c"; // today
+    const BLUE   = "#374151"; // played
+    const GREEN  = "#166534"; // not played
     const BASE   = "block px-2 py-2 rounded font-bold text-white";
 
     let monthKeys = [];
@@ -255,11 +255,11 @@
           const isToday = dateStr === todayKey;
 
           if (isToday) {
-            a.style.backgroundColor = ORANGE;  // today = orange
+            a.style.backgroundColor = ORANGE;  // today
           } else if (isPlayed) {
-            a.style.backgroundColor = BLUE;    // played = blue
+            a.style.backgroundColor = BLUE;    // played
           } else {
-            a.style.backgroundColor = GREEN;   // not played = green
+            a.style.backgroundColor = GREEN;   // not played
           }
 
           a.setAttribute(
