@@ -44,15 +44,24 @@
     .key.bg-green-600{ background:#16a34a!important; }
     .key.bg-red-600{ background:#1e3a8a!important; }
 
-    /* Modal */
-    #resultModal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); align-items:center; justify-content:center; z-index:1000; }
+    /* Result modal */
+    #resultModal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); align-items:center; justify-content:center; z-index:2000; }
     #resultModal .modal-content{ background:#fff; padding:1.5rem; border-radius:8px; text-align:center; max-width:300px; width:100%; }
     #resultModal button{ margin:5px; padding:8px 16px; border-radius:4px; font-weight:700; }
     .btn-share{ background:#1e3a8a; color:#fff; }
     .btn-close{ background:#6b7280; color:#fff; }
 
     /* Share menu */
-    .share-menu{ position:fixed; z-index:1100; background:#fff; border:1px solid #e5e7eb; box-shadow:0 6px 24px rgba(0,0,0,.12); border-radius:.5rem; padding:.5rem; width:240px; }
+    .share-menu{
+      position:fixed;
+      z-index:3000;  /* ensure above everything */
+      background:#fff;
+      border:1px solid #e5e7eb;
+      box-shadow:0 6px 24px rgba(0,0,0,.12);
+      border-radius:.5rem;
+      padding:.5rem;
+      width:240px;
+    }
     .share-menu button{ width:100%; text-align:left; padding:.5rem .75rem; border-radius:.375rem; font-weight:600; }
     .share-menu button:hover{ background:#f3f4f6; }
   </style>
@@ -73,13 +82,13 @@
   <div id="game-grid" class="mb-6"></div>
   <div id="keyboard" class="mb-2"></div>
 
-  <!-- Status -->
+  <!-- Status line -->
   <p id="statusLine" class="text-center font-bold text-[#1e3a8a] mb-4" style="display:none;"></p>
 
-  <!-- ACTION ROW (centered, compact) -->
+  <!-- ACTION ROW: centered & compact -->
   <div class="mb-6 flex items-center justify-center gap-3 sm:gap-4">
     <button id="persistentShareBtn"
-            class="hidden bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-4 py-2 rounded">
+            class="hidden share-trigger bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-4 py-2 rounded">
       DEEL
     </button>
     <a href="/forum.html" id="chatButton"
@@ -139,12 +148,12 @@
 <div id="resultModal">
   <div class="modal-content">
     <p id="resultMessage" class="mb-4 font-bold"></p>
-    <button id="modalShareBtn" class="btn-share">DEEL</button>
+    <button id="modalShareBtn" class="btn-share share-trigger">DEEL</button>
     <button id="closeModalBtn" class="btn-close">SLUIT</button>
   </div>
 </div>
 
-<!-- Floating Share Menu (created once, reused for both buttons) -->
+<!-- Floating Share Menu -->
 <div id="shareMenu" class="share-menu hidden">
   <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
   <div class="space-y-1">
@@ -184,6 +193,7 @@ const leaderboardList = document.getElementById("leaderboardList");
 const playerNameEl = document.getElementById("playerName");
 const statusLine = document.getElementById("statusLine");
 const persistentShareBtn = document.getElementById("persistentShareBtn");
+
 const shareMenu = document.getElementById("shareMenu");
 const smWhatsApp = document.getElementById("smWhatsApp");
 const smCopy = document.getElementById("smCopy");
@@ -213,7 +223,7 @@ const gameUrl = window.location.href;
 
 function altIdIfOldFormat(id) {
   const m = id.match(/^Game(\d{4}-\d{2}-\d{2})$/);
-  return m ? m[1] : null; // legacy read support only
+  return m ? m[1] : null;
 }
 
 playerNameEl.textContent = displayName;
@@ -264,13 +274,15 @@ async function recordPlay(guessCount, didWin) {
   if (!currentUid) return;
   try {
     await setDoc(doc(db, "userGames", currentUid, "plays", gameId), {
-      finished: true, result: didWin ? "win" : "loss",
-      guesses: Math.trunc(Number(guessCount)), finishedAt: serverTimestamp(),
+      finished: true,
+      result: didWin ? "win" : "loss",
+      guesses: Math.trunc(Number(guessCount)),
+      finishedAt: serverTimestamp(),
     }, { merge: true });
   } catch (e) { console.warn("Could not store play-lock:", e); }
 }
 
-/* ---- Local result fallbacks ---- */
+/* ---- Local results ---- */
 function readLocalResult() {
   const v = localStorage.getItem(`${doneKey}-result`);
   if (!v) return null;
@@ -370,7 +382,7 @@ function updateKeyboard(letter, state) {
   }
 }
 
-/* ---- Input ---- */
+/* ---- Input handling ---- */
 function handleKey(letter) {
   if (gameOver) return;
   if (currentCol < gridCols && currentRow < gridRows) {
@@ -422,7 +434,7 @@ function applyStatesWithFlip(rowIndex, guess, states) {
   });
 }
 
-/* ---- Save/restore ---- */
+/* ---- Save/restore progress ---- */
 function saveLocalProgress(done=false) {
   const rows = [];
   for (let r = 0; r < gridRows; r++) {
@@ -432,8 +444,11 @@ function saveLocalProgress(done=false) {
       t.classList.contains("correct") ? "correct" :
       t.classList.contains("present") ? "present" : "absent"
     );
-    if (states.every(s=>["correct","present","absent"].includes(s))) rows.push({ guess, states });
-    else break;
+    if (states.every(s=>["correct","present","absent"].includes(s))) {
+      rows.push({ guess, states });
+    } else {
+      break;
+    }
   }
   localStorage.setItem(progressKey, JSON.stringify({ rows }));
   if (done) localStorage.setItem(doneKey, "true");
@@ -504,16 +519,16 @@ async function submitScore(guessCount, didWin) {
     successRate = games > 0 ? Math.round((wins / games) * 100) : 0;
   } catch (e) { console.warn("User stats update failed (non-fatal):", e); }
 
-    try {
-      await setDoc(
-        doc(db, "games", gameId, "leaderboard", currentUid),
-        { userName: displayName, guesses: Math.trunc(Number(guessCount)), successRate: (successRate == null ? undefined : successRate), date: serverTimestamp(), createdAtMs: Date.now() },
-        { merge: true }
-      );
-    } catch (e) { console.error("Kon nie leierbord-ry stoor nie:", e); }
+  try {
+    await setDoc(
+      doc(db, "games", gameId, "leaderboard", currentUid),
+      { userName: displayName, guesses: Math.trunc(Number(guessCount)), successRate: (successRate == null ? undefined : successRate), date: serverTimestamp(), createdAtMs: Date.now() },
+      { merge: true }
+    );
+  } catch (e) { console.error("Kon nie leierbord-ry stoor nie:", e); }
 }
 
-/* ensure/repair row on load if game already completed */
+/* ensure/repair row if missing */
 async function ensureLeaderboardRow(summary) {
   try {
     if (!currentUid || !summary) return;
@@ -541,7 +556,6 @@ async function ensureLeaderboardRow(summary) {
       createdAtMs: Date.now(),
       ...(sr == null ? {} : { successRate: sr })
     };
-
     await setDoc(rowRef, payload, { merge: true });
     await loadLeaderboard();
   } catch (e) { console.warn("ensureLeaderboardRow failed:", e); }
@@ -568,7 +582,9 @@ async function loadLeaderboard() {
 
     if (needSR.length) {
       try {
-        const results = await Promise.allSettled(needSR.map(uid => getDoc(doc(db, "users", uid))));
+        const results = await Promise.allSettled(
+          needSR.map(uid => getDoc(doc(db, "users", uid)))
+        );
         results.forEach((res, i) => {
           if (res.status !== "fulfilled") return;
           const snap = res.value;
@@ -622,7 +638,6 @@ function positionMenu(anchorEl) {
   shareMenu.style.top = `${top}px`;
   shareMenu.style.left = `${left}px`;
 }
-
 function toggleShareMenu(show, anchorEl) {
   if (show && anchorEl) {
     positionMenu(anchorEl);
@@ -631,7 +646,6 @@ function toggleShareMenu(show, anchorEl) {
     shareMenu.classList.add("hidden");
   }
 }
-
 function openWhatsApp(text) {
   const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
   const w = window.open(url, '_blank', 'noopener,noreferrer');
@@ -639,15 +653,19 @@ function openWhatsApp(text) {
     navigator.clipboard.writeText(text).then(() => alert("Skakel gekopieer!"));
   }
 }
-
 function bindShareButton(btn, summary) {
   const text = shareTextFromSummary(summary);
-  btn.onclick = () => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();                // prevent immediate close by outside-click handler
     currentShareText = text;
     toggleShareMenu(true, btn);
-  };
-}
 
+    // optional guard: if something prevented opening, fallback to WhatsApp
+    setTimeout(() => {
+      if (shareMenu.classList.contains("hidden")) openWhatsApp(currentShareText);
+    }, 0);
+  });
+}
 smWhatsApp.onclick = () => { openWhatsApp(currentShareText); toggleShareMenu(false); };
 smCopy.onclick = async () => {
   try { await navigator.clipboard.writeText(currentShareText); alert("Skakel gekopieer!"); }
@@ -661,15 +679,16 @@ smSystem.onclick = async () => {
   } catch { /* user cancelled */ }
   toggleShareMenu(false);
 };
+// Close when clicking outside (but not on any share-trigger)
 document.addEventListener("click", (e) => {
-  if (!shareMenu.classList.contains("hidden") &&
-      !shareMenu.contains(e.target) &&
-      !e.target.closest("#modalShareBtn") &&
-      !e.target.closest("#persistentShareBtn")) {
-    toggleShareMenu(false);
-  }
+  const isTrigger = e.target.closest(".share-trigger");
+  const clickedMenu = shareMenu.contains(e.target);
+  if (!isTrigger && !clickedMenu) toggleShareMenu(false);
 });
-window.addEventListener("resize", () => toggleShareMenu(false));
+// Close on ESC
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") toggleShareMenu(false);
+});
 
 function showPersistentShare(summary) {
   if (!summary) return;
@@ -748,7 +767,7 @@ function checkGuessWithFlip(guess) {
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     renderAuthRequired();
-    await loadLeaderboard(); // still show public board
+    await loadLeaderboard();
     return;
   }
 
@@ -770,7 +789,7 @@ onAuthStateChanged(auth, async (user) => {
   createKeyboard();
   restoreLocalProgress();
 
-  // Already finished?
+  // If previously completed
   const lsDone = localStorage.getItem(doneKey) === "true";
   const fsDone = await serverLockExists();
   if (lsDone || fsDone) {
