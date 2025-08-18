@@ -54,7 +54,7 @@
     /* Share menu */
     .share-menu{
       position:fixed;
-      z-index:3000;  /* ensure above everything */
+      z-index:3000;
       background:#fff;
       border:1px solid #e5e7eb;
       box-shadow:0 6px 24px rgba(0,0,0,.12);
@@ -87,8 +87,9 @@
 
   <!-- ACTION ROW: centered & compact -->
   <div class="mb-6 flex items-center justify-center gap-3 sm:gap-4">
-    <button id="persistentShareBtn"
-            class="hidden share-trigger bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-4 py-2 rounded">
+    <button id="persistentShareBtn" type="button"
+            class="hidden share-trigger bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-4 py-2 rounded"
+            aria-expanded="false">
       DEEL
     </button>
     <a href="/forum.html" id="chatButton"
@@ -148,18 +149,18 @@
 <div id="resultModal">
   <div class="modal-content">
     <p id="resultMessage" class="mb-4 font-bold"></p>
-    <button id="modalShareBtn" class="btn-share share-trigger">DEEL</button>
-    <button id="closeModalBtn" class="btn-close">SLUIT</button>
+    <button id="modalShareBtn" type="button" class="btn-share share-trigger" aria-expanded="false">DEEL</button>
+    <button id="closeModalBtn" type="button" class="btn-close">SLUIT</button>
   </div>
 </div>
 
 <!-- Floating Share Menu -->
-<div id="shareMenu" class="share-menu hidden">
+<div id="shareMenu" class="share-menu hidden" role="menu" aria-hidden="true">
   <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
   <div class="space-y-1">
-    <button id="smWhatsApp">📲 WhatsApp</button>
-    <button id="smCopy">📋 Kopieer skakel</button>
-    <button id="smSystem">🖥️ Stelsel‑deel</button>
+    <button id="smWhatsApp" type="button">📲 WhatsApp</button>
+    <button id="smCopy" type="button">📋 Kopieer skakel</button>
+    <button id="smSystem" type="button">🖥️ Stelsel-deel</button>
   </div>
 </div>
 
@@ -622,13 +623,15 @@ async function loadLeaderboard() {
 
 /* ---- Share helpers (menu) ---- */
 let currentShareText = "";
+let justOpenedAt = 0;
+
 function shareTextFromSummary(summary) {
-  if (!summary) return `Probeer vandag se DILEMMA by ${gameUrl}`;
+  if (!summary) return `Probeer vandag se DILEMMA by ${window.location.href}`;
   if (summary.didWin) {
     const woord = summary.guesses === 1 ? 'raaiskoot' : 'raaiskote';
-    return `Ek het hierdie DILEMMA in ${summary.guesses} ${woord} opgelos. Probeer self by ${gameUrl}`;
+    return `Ek het hierdie DILEMMA in ${summary.guesses} ${woord} opgelos. Probeer self by ${window.location.href}`;
   }
-  return `Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${gameUrl}`;
+  return `Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${window.location.href}`;
 }
 
 function positionMenu(anchorEl) {
@@ -638,14 +641,20 @@ function positionMenu(anchorEl) {
   shareMenu.style.top = `${top}px`;
   shareMenu.style.left = `${left}px`;
 }
+
 function toggleShareMenu(show, anchorEl) {
   if (show && anchorEl) {
     positionMenu(anchorEl);
     shareMenu.classList.remove("hidden");
+    anchorEl.setAttribute("aria-expanded", "true");
+    justOpenedAt = performance.now();
   } else {
     shareMenu.classList.add("hidden");
+    document.querySelectorAll(".share-trigger[aria-expanded='true']")
+      .forEach(el => el.setAttribute("aria-expanded","false"));
   }
 }
+
 function openWhatsApp(text) {
   const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
   const w = window.open(url, '_blank', 'noopener,noreferrer');
@@ -653,19 +662,21 @@ function openWhatsApp(text) {
     navigator.clipboard.writeText(text).then(() => alert("Skakel gekopieer!"));
   }
 }
+
 function bindShareButton(btn, summary) {
   const text = shareTextFromSummary(summary);
-  btn.addEventListener('click', (e) => {
-    e.stopPropagation();                // prevent immediate close by outside-click handler
+  btn.onclick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     currentShareText = text;
     toggleShareMenu(true, btn);
-
-    // optional guard: if something prevented opening, fallback to WhatsApp
-    setTimeout(() => {
+    // guard: if for any reason the menu didn't open, fall back to WA
+    requestAnimationFrame(() => {
       if (shareMenu.classList.contains("hidden")) openWhatsApp(currentShareText);
-    }, 0);
-  });
+    });
+  };
 }
+
 smWhatsApp.onclick = () => { openWhatsApp(currentShareText); toggleShareMenu(false); };
 smCopy.onclick = async () => {
   try { await navigator.clipboard.writeText(currentShareText); alert("Skakel gekopieer!"); }
@@ -676,19 +687,22 @@ smSystem.onclick = async () => {
   try {
     if (navigator.share) await navigator.share({ text: currentShareText });
     else openWhatsApp(currentShareText);
-  } catch { /* user cancelled */ }
+  } catch {}
   toggleShareMenu(false);
 };
-// Close when clicking outside (but not on any share-trigger)
-document.addEventListener("click", (e) => {
+
+/* Close when clicking outside — use pointerdown (capture) and ignore the open click */
+document.addEventListener("pointerdown", (e) => {
+  // Ignore the very first event right after we opened the menu
+  if (performance.now() - justOpenedAt < 80) return;
+
   const isTrigger = e.target.closest(".share-trigger");
   const clickedMenu = shareMenu.contains(e.target);
   if (!isTrigger && !clickedMenu) toggleShareMenu(false);
-});
-// Close on ESC
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") toggleShareMenu(false);
-});
+}, { capture: true });
+
+window.addEventListener("resize", () => toggleShareMenu(false));
+window.addEventListener("scroll", () => toggleShareMenu(false));
 
 function showPersistentShare(summary) {
   if (!summary) return;
