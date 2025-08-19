@@ -60,24 +60,23 @@
 
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500 z-10 relative">
     &copy; 2025 Kriptiek. Alle regte voorbehou. |
-  <a href="/index.html" class="underline">Tuis</a> |
+    <a href="/index.html" class="underline">Tuis</a> |
     <a href="/profile.html" class="underline">My profiel</a> |
-  <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
-  <a href="/terms.html" class="underline">Voorwaardes</a> |
-  <a href="/faq.html" class="underline">Gereelde vrae</a> |
-  <a href="/about.html" class="underline">Oor Kriptiek</a> |
-  <a href="/contact.html" class="underline">Kontak ons</a>
+    <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
+    <a href="/terms.html" class="underline">Voorwaardes</a> |
+    <a href="/faq.html" class="underline">Gereelde vrae</a> |
+    <a href="/about.html" class="underline">Oor Kriptiek</a> |
+    <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
       getFirestore, collection, addDoc, getDocs, serverTimestamp,
-      query, orderBy, updateDoc, doc, arrayUnion, increment, deleteDoc, limit, startAfter
+      query, orderBy, updateDoc, doc, increment, deleteDoc, limit, startAfter
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    /* --- TWEAK #1: import Auth --- */
     import {
-      getAuth, onAuthStateChanged, signInAnonymously
+      getAuth, onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const firebaseConfig = {
@@ -91,22 +90,20 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    /* --- TWEAK #2: init Auth + anonymous sign-in --- */
     const auth = getAuth(app);
+
     let currentUser = null;
     onAuthStateChanged(auth, (u) => {
       const wasNull = currentUser === null;
       currentUser = u;
-      // After auth first resolves, reload posts so own delete buttons show
-      if (wasNull && currentUser) loadPosts(true);
+      if (wasNull) loadPosts(true); // refresh UI when auth resolves
+      document.getElementById("new-post").style.display =
+        (localStorage.getItem("userRegistered") === "true" && !!currentUser) ? "block" : "none";
     });
-    // Silent auth so forum writes pass rules even for guests
-    signInAnonymously(auth).catch(() => {});
 
     const postsRef = collection(db, "forumPosts");
     const userName = localStorage.getItem("userName") || "Anoniem";
-    const userRegistered = localStorage.getItem("userRegistered") === "true";
-    document.getElementById('new-post').style.display = userRegistered ? 'block' : 'none';
+    document.getElementById("userDisplayName").textContent = (localStorage.getItem("userName") || "vriend");
 
     const postLimit = 5;
     let lastVisible = null;
@@ -139,23 +136,24 @@
       const title = document.getElementById('postTitle').value.trim();
       const content = document.getElementById('postContent').value.trim();
       const msg = document.getElementById('formMsg');
+
       if (!title || !content) {
         msg.textContent = 'Titel en boodskap is verpligtend.';
         return;
       }
       if (!currentUser) {
-        msg.textContent = 'Kon nie aanmeld nie. Probeer weer.';
+        msg.textContent = 'Jy moet aangemeld wees om te plaas.';
         return;
       }
       msg.textContent = '';
-      /* --- TWEAK #3: include authorUid on create --- */
+
       await addDoc(postsRef, {
         title, content, userName,
-        authorUid: currentUser.uid,
-        timestamp: serverTimestamp(),   // rules accept timestamp/createdAt/created
-        likes: 0,
-        replies: []
+        authorId: currentUser.uid,         // required by rules
+        timestamp: serverTimestamp(),
+        likes: 0
       });
+
       document.getElementById('postTitle').value = '';
       document.getElementById('postContent').value = '';
       document.getElementById('charCount').textContent = '0';
@@ -163,10 +161,37 @@
       loadPosts(true);
     }
 
+    async function loadReplies(postId) {
+      const repliesBox = document.getElementById(`replies-${postId}`);
+      if (!repliesBox) return;
+      repliesBox.innerHTML = `<div class="text-gray-400 text-xs">Laai antwoorde…</div>`;
+      try {
+        const repliesRef = collection(db, "forumPosts", postId, "replies");
+        const rs = await getDocs(query(repliesRef, orderBy("createdAt", "asc")));
+        if (rs.empty) {
+          repliesBox.innerHTML = "";
+          return;
+        }
+        const items = [];
+        rs.forEach(r => {
+          const rr = r.data();
+          items.push(
+            `<div class="border-l-4 border-blue-300 pl-2">
+               <span class="font-semibold">${(rr.userName || "Anoniem")}</span>: ${applyFormatting(rr.content || "")}
+             </div>`
+          );
+        });
+        repliesBox.innerHTML = items.join("");
+      } catch (e) {
+        repliesBox.innerHTML = `<div class="text-red-500 text-xs">Kon nie antwoorde laai nie.</div>`;
+      }
+    }
+
     async function loadPosts(reset = false) {
       const container = document.getElementById("forumPosts");
       const searchTerm = document.getElementById("searchInput").value.trim().toLowerCase();
       const loadMoreBtn = document.getElementById("loadMoreBtn");
+
       if (reset) {
         container.innerHTML = "";
         lastVisible = null;
@@ -200,9 +225,8 @@
         if (post.timestamp?.toDate) ts = post.timestamp.toDate();
         else if (typeof post.timestamp === "string") ts = new Date(post.timestamp);
 
-        /* --- TWEAK #4: show Delete only for the author (prefer authorUid; fallback old posts by userName) --- */
-        const canDelete = (post.authorUid && currentUser && post.authorUid === currentUser.uid)
-                          || (!post.authorUid && post.userName === userName);
+        const canDelete = (post.authorId && currentUser && post.authorId === currentUser.uid)
+                          || (!post.authorId && post.userName === userName); // fallback for legacy posts
 
         div.innerHTML = `
           <div class="flex items-center justify-between mb-2">
@@ -222,15 +246,14 @@
             <textarea class="w-full p-2 border rounded mb-1 reply-input" rows="2" maxlength="300" placeholder="Jou antwoord..."></textarea>
             <button class="send-reply bg-blue-600 text-white px-2 py-1 rounded text-sm" data-id="${docSnap.id}">Stuur</button>
           </div>
-          <div class="replies text-sm mt-2 space-y-1">
-            ${(post.replies || []).map(r =>
-              `<div class="border-l-4 border-blue-300 pl-2">
-                <span class="font-semibold">${r.userName}</span>: ${applyFormatting(r.content)}
-              </div>`
-            ).join("")}
+          <div class="replies text-sm mt-2 space-y-1" id="replies-${docSnap.id}">
+            <div class="text-gray-400 text-xs">Laai antwoorde…</div>
           </div>
         `;
         container.appendChild(div);
+
+        // load replies for this post
+        loadReplies(docSnap.id);
       });
 
       attachPostEvents();
@@ -250,11 +273,26 @@
           const input = document.querySelector(`#reply-${id} .reply-input`);
           const content = (input.value || "").trim();
           if (!content) return;
-          await updateDoc(doc(db, "forumPosts", id), {
-            replies: arrayUnion({ content, userName })
+          if (!currentUser) {
+            alert("Jy moet aangemeld wees om te antwoord.");
+            return;
+          }
+
+          // 1) Create reply in subcollection
+          await addDoc(collection(db, "forumPosts", id, "replies"), {
+            authorId: currentUser.uid,      // required by rules
+            userName,
+            content,
+            createdAt: serverTimestamp()
           });
+
+          // 2) Optional: bump replyCount on parent (rules allow only this field to change)
+          try {
+            await updateDoc(doc(db, "forumPosts", id), { replyCount: increment(1) });
+          } catch (_) {}
+
           input.value = "";
-          loadPosts(true);
+          loadReplies(id); // refresh replies for this post only
         };
       });
 
@@ -266,9 +304,14 @@
             alert("Jy het reeds gestem.");
             return;
           }
-          await updateDoc(doc(db, "forumPosts", id), { likes: increment(1) });
-          localStorage.setItem(likedKey, "true");
-          loadPosts(true);
+          try {
+            await updateDoc(doc(db, "forumPosts", id), { likes: increment(1) });
+            localStorage.setItem(likedKey, "true");
+            loadPosts(true);
+          } catch (e) {
+            // Likely blocked by rules if not the author / no likes clause
+            alert("Kon nie 'like' stoor nie.");
+          }
         };
       });
 
@@ -291,7 +334,6 @@
     document.getElementById("searchInput").addEventListener("input", () => loadPosts(true));
     document.getElementById("searchInput").value = "";
     loadPosts(true);
-    document.getElementById("userDisplayName").textContent = (localStorage.getItem("userName") || "vriend");
   </script>
 
   <script>
