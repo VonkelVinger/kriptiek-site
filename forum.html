@@ -73,11 +73,10 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
       getFirestore, collection, addDoc, getDocs, serverTimestamp,
-      query, orderBy, updateDoc, doc, increment, deleteDoc, limit, startAfter
+      query, orderBy, updateDoc, doc, deleteDoc, limit, startAfter,
+      getDoc, setDoc, getCountFromServer
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import {
-      getAuth, onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -96,7 +95,7 @@
     onAuthStateChanged(auth, (u) => {
       const wasNull = currentUser === null;
       currentUser = u;
-      if (wasNull) loadPosts(true); // refresh UI when auth resolves
+      if (wasNull) loadPosts(true); // refresh when auth resolves
       document.getElementById("new-post").style.display =
         (localStorage.getItem("userRegistered") === "true" && !!currentUser) ? "block" : "none";
     });
@@ -150,8 +149,7 @@
       await addDoc(postsRef, {
         title, content, userName,
         authorId: currentUser.uid,         // required by rules
-        timestamp: serverTimestamp(),
-        likes: 0
+        timestamp: serverTimestamp()
       });
 
       document.getElementById('postTitle').value = '';
@@ -184,6 +182,34 @@
         repliesBox.innerHTML = items.join("");
       } catch (e) {
         repliesBox.innerHTML = `<div class="text-red-500 text-xs">Kon nie antwoorde laai nie.</div>`;
+      }
+    }
+
+    async function refreshLikeUI(postId) {
+      const countEl = document.getElementById(`like-count-${postId}`);
+      const btn = document.querySelector(`.like-btn[data-id="${postId}"]`);
+
+      try {
+        const likesRef = collection(db, "forumPosts", postId, "likes");
+        const agg = await getCountFromServer(query(likesRef));
+        countEl.textContent = agg.data().count;
+      } catch {
+        // Fallback: non-aggregation count
+        const likesRef = collection(db, "forumPosts", postId, "likes");
+        const snap = await getDocs(likesRef);
+        countEl.textContent = snap.size;
+      }
+
+      if (currentUser) {
+        const likeRef = doc(db, "forumPosts", postId, "likes", currentUser.uid);
+        const likeDoc = await getDoc(likeRef);
+        const already = likeDoc.exists();
+        btn.disabled = already;
+        btn.classList.toggle("opacity-50", already);
+        btn.classList.toggle("cursor-not-allowed", already);
+        btn.title = already ? "Jy het reeds gestem" : "Stem vir hierdie plasing";
+      } else {
+        btn.title = "Meld aan om te stem";
       }
     }
 
@@ -239,7 +265,9 @@
           <h3 class="text-lg font-bold text-gray-800 mb-1">${post.title || ''}</h3>
           <p class="text-gray-700 whitespace-pre-line mb-2">${applyFormatting(post.content || '')}</p>
           <div class="flex items-center gap-4 text-sm text-gray-600 mb-2">
-            <button class="like-btn" data-id="${docSnap.id}">👍 ${post.likes || 0}</button>
+            <button class="like-btn flex items-center gap-1" data-id="${docSnap.id}">
+              👍 <span class="like-count" id="like-count-${docSnap.id}">0</span>
+            </button>
             <button class="reply-toggle" data-id="${docSnap.id}">💬 Reageer</button>
           </div>
           <div class="reply-box hidden mt-2" id="reply-${docSnap.id}">
@@ -252,8 +280,9 @@
         `;
         container.appendChild(div);
 
-        // load replies for this post
+        // load replies and likes for this post
         loadReplies(docSnap.id);
+        refreshLikeUI(docSnap.id);
       });
 
       attachPostEvents();
@@ -286,9 +315,9 @@
             createdAt: serverTimestamp()
           });
 
-          // 2) Optional: bump replyCount on parent (rules allow only this field to change)
+          // 2) Optional: update replyCount on parent (only that field is allowed by rules)
           try {
-            await updateDoc(doc(db, "forumPosts", id), { replyCount: increment(1) });
+            await updateDoc(doc(db, "forumPosts", id), { replyCount: (post.replyCount || 0) + 1 });
           } catch (_) {}
 
           input.value = "";
@@ -299,18 +328,16 @@
       document.querySelectorAll(".like-btn").forEach(btn => {
         btn.onclick = async () => {
           const id = btn.dataset.id;
-          const likedKey = `forumLiked_${id}`;
-          if (localStorage.getItem(likedKey)) {
-            alert("Jy het reeds gestem.");
+          if (!currentUser) {
+            alert("Meld asseblief aan om te stem.");
             return;
           }
           try {
-            await updateDoc(doc(db, "forumPosts", id), { likes: increment(1) });
-            localStorage.setItem(likedKey, "true");
-            loadPosts(true);
-          } catch (e) {
-            // Likely blocked by rules if not the author / no likes clause
-            alert("Kon nie 'like' stoor nie.");
+            const likeRef = doc(db, "forumPosts", id, "likes", currentUser.uid);
+            // Rules enforce one doc per user; if it exists, this throws
+            await setDoc(likeRef, { createdAt: serverTimestamp(), userName });
+          } finally {
+            await refreshLikeUI(id);
           }
         };
       });
