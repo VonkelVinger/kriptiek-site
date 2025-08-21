@@ -613,7 +613,7 @@ async function loadLeaderboard() {
       const srTxt = Number.isFinite(e.sr) ? `${e.sr}%` : '?%';
       const gpTxt = Number.isFinite(e.gp) ? e.gp : '?';
       // Requested format: deborah (100% of 23): 2 raaie
-      li.innerHTML = `<strong>${e.name} (${srTxt} of ${gpTxt})</strong>: ${e.guesses} ${guessLabel}`;
+      li.innerHTML = `<strong>${e.name} (${srTxt} van ${gpTxt})</strong>: ${e.guesses} ${guessLabel}`;
       leaderboardList.appendChild(li);
     });
   } catch (err) {
