@@ -9,19 +9,16 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
   <style>
-    :root {
-      --brand-dark: #0f2a43; /* Kriptiek dark-blue vibe */
-      --brand-accent: #0b5ed7;
-    }
-    body { font-family: 'Montserrat', sans-serif; background: #f7fafc; }
-    .logo-tile { background:#374151; color:#fff; border:2px solid #1f2937; border-radius:.375rem; }
-    .flipped-k { transform: scaleX(-1); }
-    .hidden{display:none;}
+    :root { --brand-dark:#0f2a43; --brand-accent:#0b5ed7; }
+    body { font-family: 'Montserrat', sans-serif; background:#f7fafc; }
+    .logo-tile{ background:#374151; color:#fff; border:2px solid #1f2937; border-radius:.375rem; }
+    .flipped-k{ transform:scaleX(-1); }
+    .hidden{ display:none; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-  <!-- Header / Logo -->
+  <!-- Header -->
   <header class="w-full bg-white shadow-sm">
     <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
       <div class="flex items-center gap-3">
@@ -37,21 +34,19 @@
         </div>
         <h1 class="text-xl md:text-2xl font-bold tracking-wide text-[var(--brand-dark)]">Admin – BLITSTIEK</h1>
       </div>
-
-      <button id="btnSignOut" class="hidden bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1.5 rounded-md text-sm">
-        Meld af
-      </button>
+      <button id="btnSignOut" class="hidden bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1.5 rounded-md text-sm">Meld af</button>
     </div>
   </header>
+
   <main class="flex-1">
     <div class="max-w-3xl mx-auto px-4 py-6">
-      <!-- Single admin-only banner -->
+      <!-- Single admin banner -->
       <div id="adminAlert" class="hidden border border-red-200 bg-red-50 text-red-800 p-4 rounded-lg mb-6">
         <p class="font-semibold">Net administrateurs</p>
         <p class="text-sm mt-1">Meld as admin aan om hierdie bladsy te gebruik.</p>
       </div>
 
-      <!-- Success / Error banners -->
+      <!-- Toasts -->
       <div id="msgOk"  class="hidden border border-green-200 bg-green-50 text-green-800 p-4 rounded-lg mb-4"></div>
       <div id="msgErr" class="hidden border border-red-200 bg-red-50 text-red-800 p-4 rounded-lg mb-4"></div>
 
@@ -59,21 +54,16 @@
       <div class="bg-white rounded-2xl shadow-sm border border-gray-100">
         <div class="px-5 py-4 border-b">
           <h2 class="text-lg font-semibold text-[var(--brand-dark)]">Skep nuwe BLITSTIEK speletjie</h2>
-          <p class="text-sm text-gray-500 mt-1">
-            Konvensie: GameID = <code>GameYYYY-MM-DD</code>. Die woord word in HOOFLETTERS gestoor.
-          </p>
+          <p class="text-sm text-gray-500 mt-1">Konvensie: GameID = <code>GameYYYY-MM-DD</code>. Die woord word in HOOFLETTERS gestoor.</p>
         </div>
 
         <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- Date -->
           <div>
             <label for="inpDate" class="block text-sm font-medium text-gray-700 mb-1">Datum</label>
-            <input id="inpDate" type="date"
-                   class="w-full rounded-lg border-gray-300 focus:border-[var(--brand-accent)] focus:ring-[var(--brand-accent)]" />
+            <input id="inpDate" type="date" class="w-full rounded-lg border-gray-300 focus:border-[var(--brand-accent)] focus:ring-[var(--brand-accent)]" />
             <p class="text-xs text-gray-500 mt-1">GameID: <span id="idPreview" class="font-semibold">Game—</span></p>
           </div>
 
-          <!-- Status -->
           <div>
             <label for="selStatus" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
             <select id="selStatus" class="w-full rounded-lg border-gray-300 focus:border-[var(--brand-accent)] focus:ring-[var(--brand-accent)]">
@@ -83,7 +73,6 @@
             </select>
           </div>
 
-          <!-- Word -->
           <div class="md:col-span-2">
             <label for="inpWord" class="block text-sm font-medium text-gray-700 mb-1">Teikenwoord (HOOFLETTERS)</label>
             <input id="inpWord" type="text" maxlength="12" placeholder="BYLAAG / SKOOL / VRIEND"
@@ -91,7 +80,6 @@
             <p class="text-xs text-gray-500 mt-1">Word outomaties na HOOFLETTERS omskep.</p>
           </div>
 
-          <!-- Leidraad (optional) -->
           <div class="md:col-span-2">
             <label for="inpLeidraad" class="block text-sm font-medium text-gray-700 mb-1">Leidraad (opsioneel)</label>
             <input id="inpLeidraad" type="text" maxlength="140"
@@ -107,49 +95,46 @@
         </div>
       </div>
 
-      <!-- Existing games (latest 10) -->
+      <!-- Recent list -->
       <div class="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100">
         <div class="px-5 py-4 border-b">
           <h3 class="text-base font-semibold text-[var(--brand-dark)]">Onlangse BLITSTIEK speletjies</h3>
         </div>
-        <div id="listGames" class="p-5 text-sm text-gray-700">
-          <p class="text-gray-500">Laai…</p>
-        </div>
+        <div id="listGames" class="p-5 text-sm text-gray-700"><p class="text-gray-500">Laai…</p></div>
       </div>
     </div>
   </main>
 
   <footer class="mt-auto bg-[var(--brand-dark)] text-white text-center py-6">
-    <div class="max-w-5xl mx-auto px-4">
-      <p class="text-sm opacity-90">Kriptiek – Admin</p>
-    </div>
+    <div class="max-w-5xl mx-auto px-4"><p class="text-sm opacity-90">Kriptiek – Admin</p></div>
   </footer>
+
   <!-- Firebase + Logic -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
-    import {
-      getAuth, onAuthStateChanged, signOut, getIdTokenResult
-    } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
+    import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
     import {
       getFirestore, serverTimestamp, doc, setDoc, getDoc,
       collection, query, where, orderBy, limit, getDocs
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
-    // TODO: Replace with your Kriptiek Firebase config (same as index.html / admindilemma.html)
+    // ---- CONFIG (from admindilemma) ----
     const firebaseConfig = {
-      apiKey: "REPLACE_ME",
-      authDomain: "REPLACE_ME.firebaseapp.com",
-      projectId: "REPLACE_ME",
-      storageBucket: "REPLACE_ME.appspot.com",
-      messagingSenderId: "REPLACE_ME",
-      appId: "REPLACE_ME"
+      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+      authDomain: "kriptiek-c9ea2.firebaseapp.com",
+      projectId: "kriptiek-c9ea2",
+      storageBucket: "kriptiek-c9ea2.appspot.com",
+      messagingSenderId: "620450620939",
+      appId: "1:620450620939:web:e93a18ac23b53b33db890e"
     };
+    // Optional: same fallback UID used in admindilemma
+    const ADMIN_UID = "jI7f0Wk4MqfPq7p69vjl8OlJUvS2";
 
-    const app = initializeApp(firebaseConfig);
+    const app  = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
-    // --- DOM refs ---
+    // DOM refs
     const adminAlert = document.getElementById('adminAlert');
     const btnSignOut = document.getElementById('btnSignOut');
     const inpDate = document.getElementById('inpDate');
@@ -170,181 +155,139 @@
     const toastErr = (t) => { msgErr.textContent = t; show(msgErr); hide(msgOk); };
 
     function pad(n){ return String(n).padStart(2,'0'); }
-    function todayISO() {
-      const d = new Date();
-      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    function todayISO(){ const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+    function toGameId(dateStr){ return `Game${dateStr}`; }
+    function sanitizeWord(s){
+      return (s||'').toUpperCase().replace(/[^A-ZÁÉÍÓÚÄËÏÖÜÂÊÎÔÛŸ\-]/g,'').trim();
     }
-    function toGameId(dateStr) { return `Game${dateStr}`; }
-    function sanitizeWord(s) {
-      return (s || '').toUpperCase()
-        .replace(/[^A-ZÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜŌŪÑ\-]/g,'')
-        .trim();
-    }
-    function updatePreview() {
-      const ds = inpDate.value || todayISO();
-      idPreview.textContent = toGameId(ds);
-    }
+    function updatePreview(){ const ds=inpDate.value||todayISO(); idPreview.textContent=toGameId(ds); }
     inpDate.addEventListener('change', updatePreview);
     inpWord.addEventListener('input', () => { inpWord.value = sanitizeWord(inpWord.value); });
 
-    // --- Admin gate (claims-first; optional /admins fallback) ---
-    async function checkIsAdmin(user) {
+    // Admin check (match admindilemma pattern)
+    async function isAdmin(user) {
       try {
-        const token = await getIdTokenResult(user, /*forceRefresh=*/true);
-        if (token?.claims?.admin === true) return true;
-      } catch (e) {
-        console.warn('ID token check failed:', e);
-      }
-      // Optional Firestore fallback
+        const tok = await user.getIdTokenResult(true); // refresh claims
+        if (tok?.claims?.admin === true) return true;
+      } catch {}
+      if (user.uid === ADMIN_UID) return true; // optional shortcut
       try {
-        const adminDoc = await getDoc(doc(db, 'admins', user.uid));
-        if (adminDoc.exists()) return true;
-      } catch (e) {
-        console.warn('Admin fallback check failed:', e);
-      }
-      return false;
+        const snap = await getDoc(doc(db, "admins", user.uid));
+        return snap.exists();
+      } catch { return false; }
     }
 
-    let isAdmin = false;
-
+    // Auth gate
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        isAdmin = false;
         show(adminAlert);
-        hide(btnSignOut);
+        btnSignOut.classList.add('hidden');
         return;
       }
       btnSignOut.classList.remove('hidden');
 
-      try {
-        isAdmin = await checkIsAdmin(user);
-      } catch (e) {
-        console.error('Admin check error:', e);
-        isAdmin = false;
-      }
-
-      if (!isAdmin) {
+      const ok = await isAdmin(user);
+      if (!ok) {
         show(adminAlert);
         return;
       }
-
-      // Admin unlocked
       hide(adminAlert);
+
       if (!inpDate.value) { inpDate.value = todayISO(); updatePreview(); }
       await loadRecent();
     });
 
     btnSignOut.addEventListener('click', async () => {
       await signOut(auth);
-      location.reload();
+      try { localStorage.clear(); sessionStorage.clear(); } catch {}
+      location.href = "/index.html";
     });
 
-    // --- Duplicate checks ---
-    async function checkDuplicates(dateStr, wordUpper) {
+    // Duplicate checks
+    async function checkDuplicates(dateStr, wordUpper){
       const gameId = toGameId(dateStr);
 
-      // 1) direct ID exists?
       const byIdRef = doc(db, 'blitstiekGames', gameId);
       const byIdSnap = await getDoc(byIdRef);
-      if (byIdSnap.exists()) {
+      if (byIdSnap.exists()){
         return {
-          existsById: true, existsByDate: true,
-          existsByWord: (byIdSnap.data()?.word === wordUpper),
-          matches: [ { id: gameId, ...byIdSnap.data() } ]
+          existsById:true, existsByDate:true,
+          existsByWord:(byIdSnap.data()?.word === wordUpper),
+          matches:[{ id:gameId, ...byIdSnap.data() }]
         };
       }
 
-      // 2) same date or same word elsewhere?
       const colRef = collection(db, 'blitstiekGames');
-      const qDate = query(colRef, where('activeDate','==',dateStr));
-      const qWord = query(colRef, where('word','==',wordUpper));
-      const [rDate, rWord] = await Promise.all([getDocs(qDate), getDocs(qWord)]);
-
-      const matches = [];
-      rDate.forEach(d => matches.push({ id: d.id, ...d.data() }));
-      rWord.forEach(d => { if (!matches.find(m => m.id === d.id)) matches.push({ id: d.id, ...d.data() }); });
+      const [rDate, rWord] = await Promise.all([
+        getDocs(query(colRef, where('activeDate','==',dateStr))),
+        getDocs(query(colRef, where('word','==',wordUpper)))
+      ]);
 
       return {
-        existsById: false,
-        existsByDate: !rDate.empty,
-        existsByWord: !rWord.empty,
-        matches
+        existsById:false,
+        existsByDate:!rDate.empty,
+        existsByWord:!rWord.empty
       };
     }
 
-    // --- Create game ---
-    async function createGame() {
-      if (!isAdmin) { toastErr('Net administrateurs'); return; }
+    // Create
+    async function createGame(){
+      const user = auth.currentUser;
+      if (!user || !(await isAdmin(user))) { toastErr('Net administrateurs'); return; }
 
       const dateStr = inpDate.value || todayISO();
       const wordUpper = sanitizeWord(inpWord.value);
       const leidraad = (inpLeidraad.value || '').trim();
       const status = selStatus.value || 'scheduled';
+      if (!wordUpper){ toastErr('Voer ’n geldige teikenwoord in.'); return; }
 
-      if (!wordUpper) { toastErr('Voer ’n geldige teikenwoord in.'); return; }
       show(busy); hide(msgOk); hide(msgErr);
-
-      try {
+      try{
         const dups = await checkDuplicates(dateStr, wordUpper);
-        if (dups.existsById || dups.existsByDate || dups.existsByWord) {
+        if (dups.existsById || dups.existsByDate || dups.existsByWord){
           hide(busy);
           const reason = [
-            dups.existsById   ? 'dieselfde GameID' : null,
-            dups.existsByDate ? 'dieselfde datum'  : null,
-            dups.existsByWord ? 'dieselfde woord'  : null
+            dups.existsById ? 'dieselfde GameID' : null,
+            dups.existsByDate ? 'dieselfde datum' : null,
+            dups.existsByWord ? 'dieselfde woord' : null
           ].filter(Boolean).join(', ');
           toastErr(`Duplikaat gevind (${reason}).`);
           return;
         }
 
         const gameId = toGameId(dateStr);
-        const docRef = doc(db, 'blitstiekGames', gameId);
-        const payload = {
+        await setDoc(doc(db, 'blitstiekGames', gameId), {
           word: wordUpper,
           leidraad: leidraad || null,
           status,
-          activeDate: dateStr,             // YYYY-MM-DD
+          activeDate: dateStr,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
-        };
-        await setDoc(docRef, payload, { merge: true });
+        }, { merge:true });
 
         hide(busy);
         toastOk(`Geskep: ${gameId} (${wordUpper})`);
-        inpWord.value = '';
-        inpLeidraad.value = '';
+        inpWord.value=''; inpLeidraad.value='';
         await loadRecent();
-      } catch (e) {
+      }catch(e){
         hide(busy);
         console.error(e);
         toastErr('Kon nie speletjie skep nie.');
       }
     }
 
-    // --- Load recent list ---
-    async function loadRecent() {
-      const colRef = collection(db, 'blitstiekGames');
-      const qy = query(colRef, orderBy('activeDate','desc'), limit(10));
-      const res = await getDocs(qy);
-
-      if (res.empty) {
-        listGames.innerHTML = '<p class="text-gray-500">Geen spelletjies nog nie.</p>';
-        return;
-      }
+    // List recent
+    async function loadRecent(){
+      const res = await getDocs(query(collection(db,'blitstiekGames'), orderBy('activeDate','desc'), limit(10)));
+      if (res.empty){ listGames.innerHTML = '<p class="text-gray-500">Geen spelletjies nog nie.</p>'; return; }
       let html = `
         <div class="overflow-x-auto">
           <table class="min-w-full text-left text-sm">
-            <thead>
-              <tr class="text-gray-500">
-                <th class="py-2 pr-4">GameID</th>
-                <th class="py-2 pr-4">Woord</th>
-                <th class="py-2 pr-4">Datum</th>
-                <th class="py-2">Status</th>
-              </tr>
-            </thead>
-            <tbody>`;
+            <thead><tr class="text-gray-500">
+              <th class="py-2 pr-4">GameID</th><th class="py-2 pr-4">Woord</th><th class="py-2 pr-4">Datum</th><th class="py-2">Status</th>
+            </tr></thead><tbody>`;
       res.forEach(d => {
-        const v = d.data();
+        const v=d.data();
         html += `<tr class="border-t">
           <td class="py-2 pr-4 font-mono">${d.id}</td>
           <td class="py-2 pr-4 font-semibold">${v.word}</td>
@@ -361,14 +304,14 @@
     btnCheck.addEventListener('click', async () => {
       const dateStr = inpDate.value || todayISO();
       const wordUpper = sanitizeWord(inpWord.value);
-      if (!wordUpper) { toastErr('Voer eers ’n teikenwoord in.'); return; }
+      if (!wordUpper){ toastErr('Voer eers ’n teikenwoord in.'); return; }
       show(busy); hide(msgOk); hide(msgErr);
-      try {
+      try{
         const d = await checkDuplicates(dateStr, wordUpper);
         hide(busy);
-        if (d.existsById || d.existsByDate || d.existsByWord) {
+        if (d.existsById || d.existsByDate || d.existsByWord){
           const reason = [
-            d.existsById   ? 'GameID' : null,
+            d.existsById ? 'GameID' : null,
             d.existsByDate ? 'datum'  : null,
             d.existsByWord ? 'woord'  : null
           ].filter(Boolean).join(', ');
@@ -376,14 +319,14 @@
         } else {
           toastOk('Geen duplikate gevind nie.');
         }
-      } catch(e) {
+      }catch(e){
         hide(busy);
         console.error(e);
         toastErr('Kon nie duplikate toets nie.');
       }
     });
 
-    // Initial preview
+    // Init
     if (!inpDate.value) { inpDate.value = todayISO(); }
     updatePreview();
   </script>
