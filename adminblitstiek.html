@@ -12,16 +12,16 @@
     :root {
       --brand-dark: #0f2a43; /* Kriptiek dark-blue vibe */
       --brand-accent: #0b5ed7;
-      --tile: #1f2937;
     }
     body { font-family: 'Montserrat', sans-serif; background: #f7fafc; }
     .logo-tile { background:#374151; color:#fff; border:2px solid #1f2937; border-radius:.375rem; }
     .flipped-k { transform: scaleX(-1); }
+    .hidden{display:none;}
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-  <!-- Header / Logo (matches Kriptiek style) -->
+  <!-- Header / Logo -->
   <header class="w-full bg-white shadow-sm">
     <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
       <div class="flex items-center gap-3">
@@ -38,36 +38,39 @@
         <h1 class="text-xl md:text-2xl font-bold tracking-wide text-[var(--brand-dark)]">Admin – BLITSTIEK</h1>
       </div>
 
-      <div class="flex items-center gap-2">
-        <button id="btnSignOut" class="hidden bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1.5 rounded-md text-sm">Meld af</button>
-      </div>
+      <button id="btnSignOut" class="hidden bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1.5 rounded-md text-sm">
+        Meld af
+      </button>
     </div>
   </header>
   <main class="flex-1">
     <div class="max-w-3xl mx-auto px-4 py-6">
-      <!-- Admin gate -->
-      <div id="adminGate" class="hidden border border-red-200 bg-red-50 text-red-800 p-4 rounded-lg mb-6">
+      <!-- Single admin-only banner -->
+      <div id="adminAlert" class="hidden border border-red-200 bg-red-50 text-red-800 p-4 rounded-lg mb-6">
         <p class="font-semibold">Net administrateurs</p>
         <p class="text-sm mt-1">Meld as admin aan om hierdie bladsy te gebruik.</p>
       </div>
 
       <!-- Success / Error banners -->
-      <div id="msgOk" class="hidden border border-green-200 bg-green-50 text-green-800 p-4 rounded-lg mb-4"></div>
+      <div id="msgOk"  class="hidden border border-green-200 bg-green-50 text-green-800 p-4 rounded-lg mb-4"></div>
       <div id="msgErr" class="hidden border border-red-200 bg-red-50 text-red-800 p-4 rounded-lg mb-4"></div>
 
-      <!-- Card -->
+      <!-- Create card -->
       <div class="bg-white rounded-2xl shadow-sm border border-gray-100">
         <div class="px-5 py-4 border-b">
           <h2 class="text-lg font-semibold text-[var(--brand-dark)]">Skep nuwe BLITSTIEK speletjie</h2>
-          <p class="text-sm text-gray-500 mt-1">Volg die DILEMMA‑konvensies: GameID = <code>GameYYYY-MM-DD</code>. Die woord word in HOOFLETTERS gestoor.</p>
+          <p class="text-sm text-gray-500 mt-1">
+            Konvensie: GameID = <code>GameYYYY-MM-DD</code>. Die woord word in HOOFLETTERS gestoor.
+          </p>
         </div>
 
         <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
           <!-- Date -->
           <div>
             <label for="inpDate" class="block text-sm font-medium text-gray-700 mb-1">Datum</label>
-            <input id="inpDate" type="date" class="w-full rounded-lg border-gray-300 focus:border-[var(--brand-accent)] focus:ring-[var(--brand-accent)]" />
-            <p class="text-xs text-gray-500 mt-1">Hierdie word gebruik om die GameID te vorm: <span id="idPreview" class="font-semibold">Game—</span></p>
+            <input id="inpDate" type="date"
+                   class="w-full rounded-lg border-gray-300 focus:border-[var(--brand-accent)] focus:ring-[var(--brand-accent)]" />
+            <p class="text-xs text-gray-500 mt-1">GameID: <span id="idPreview" class="font-semibold">Game—</span></p>
           </div>
 
           <!-- Status -->
@@ -147,7 +150,7 @@
     const db   = getFirestore(app);
 
     // --- DOM refs ---
-    const adminGate = document.getElementById('adminGate');
+    const adminAlert = document.getElementById('adminAlert');
     const btnSignOut = document.getElementById('btnSignOut');
     const inpDate = document.getElementById('inpDate');
     const idPreview = document.getElementById('idPreview');
@@ -161,61 +164,74 @@
     const msgErr = document.getElementById('msgErr');
     const listGames = document.getElementById('listGames');
 
-    const ADMIN_UID = "jI7f0Wk4MqfPq7p69vjl8OlJUvS2";
-
     const show = el => el.classList.remove('hidden');
     const hide = el => el.classList.add('hidden');
     const toastOk  = (t) => { msgOk.textContent = t; show(msgOk); hide(msgErr); };
     const toastErr = (t) => { msgErr.textContent = t; show(msgErr); hide(msgOk); };
 
-    function toGameId(dateStr) {
-      // dateStr is "YYYY-MM-DD"
-      return `Game${dateStr}`;
-    }
     function pad(n){ return String(n).padStart(2,'0'); }
     function todayISO() {
       const d = new Date();
       return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
     }
+    function toGameId(dateStr) { return `Game${dateStr}`; }
     function sanitizeWord(s) {
-      return (s || '').toUpperCase().replace(/[^A-ZÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜŌŪÑ\-]/g,'').trim();
+      return (s || '').toUpperCase()
+        .replace(/[^A-ZÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜŌŪÑ\-]/g,'')
+        .trim();
     }
-
-    // Update preview on date change
     function updatePreview() {
       const ds = inpDate.value || todayISO();
       idPreview.textContent = toGameId(ds);
     }
-
     inpDate.addEventListener('change', updatePreview);
     inpWord.addEventListener('input', () => { inpWord.value = sanitizeWord(inpWord.value); });
 
-    // --- Admin gate ---
+    // --- Admin gate (claims-first; optional /admins fallback) ---
+    async function checkIsAdmin(user) {
+      try {
+        const token = await getIdTokenResult(user, /*forceRefresh=*/true);
+        if (token?.claims?.admin === true) return true;
+      } catch (e) {
+        console.warn('ID token check failed:', e);
+      }
+      // Optional Firestore fallback
+      try {
+        const adminDoc = await getDoc(doc(db, 'admins', user.uid));
+        if (adminDoc.exists()) return true;
+      } catch (e) {
+        console.warn('Admin fallback check failed:', e);
+      }
+      return false;
+    }
+
     let isAdmin = false;
+
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         isAdmin = false;
-        show(adminGate);
+        show(adminAlert);
         hide(btnSignOut);
         return;
       }
       btnSignOut.classList.remove('hidden');
 
       try {
-        const token = await getIdTokenResult(user, true);
-        isAdmin = (user.uid === ADMIN_UID) || !!token.claims.admin;
-      } catch {
-        isAdmin = (user.uid === ADMIN_UID);
+        isAdmin = await checkIsAdmin(user);
+      } catch (e) {
+        console.error('Admin check error:', e);
+        isAdmin = false;
       }
 
       if (!isAdmin) {
-        show(adminGate);
-      } else {
-        hide(adminGate);
-        // defaults
-        if (!inpDate.value) { inpDate.value = todayISO(); updatePreview(); }
-        await loadRecent();
+        show(adminAlert);
+        return;
       }
+
+      // Admin unlocked
+      hide(adminAlert);
+      if (!inpDate.value) { inpDate.value = todayISO(); updatePreview(); }
+      await loadRecent();
     });
 
     btnSignOut.addEventListener('click', async () => {
@@ -225,34 +241,33 @@
 
     // --- Duplicate checks ---
     async function checkDuplicates(dateStr, wordUpper) {
-      // check if doc with same GameID exists
       const gameId = toGameId(dateStr);
-      const docRef = doc(db, 'blitstiekGames', gameId);
-      const snap = await getDoc(docRef);
-      if (snap.exists()) {
-        return { existsById: true, existsByDate: true, existsByWord: (snap.data()?.word === wordUpper), matches: [ { id: gameId, ...snap.data() } ] };
+
+      // 1) direct ID exists?
+      const byIdRef = doc(db, 'blitstiekGames', gameId);
+      const byIdSnap = await getDoc(byIdRef);
+      if (byIdSnap.exists()) {
+        return {
+          existsById: true, existsByDate: true,
+          existsByWord: (byIdSnap.data()?.word === wordUpper),
+          matches: [ { id: gameId, ...byIdSnap.data() } ]
+        };
       }
 
-      // search any game with same activeDate or same word
+      // 2) same date or same word elsewhere?
       const colRef = collection(db, 'blitstiekGames');
-      const q = query(colRef,
-        where('activeDate', '==', dateStr)
-      );
-      const q2 = query(colRef,
-        where('word', '==', wordUpper)
-      );
+      const qDate = query(colRef, where('activeDate','==',dateStr));
+      const qWord = query(colRef, where('word','==',wordUpper));
+      const [rDate, rWord] = await Promise.all([getDocs(qDate), getDocs(qWord)]);
 
-      const [resDate, resWord] = await Promise.all([getDocs(q), getDocs(q2)]);
       const matches = [];
-      resDate.forEach(d => matches.push({ id: d.id, ...d.data() }));
-      resWord.forEach(d => {
-        if (!matches.find(m => m.id === d.id)) matches.push({ id: d.id, ...d.data() });
-      });
+      rDate.forEach(d => matches.push({ id: d.id, ...d.data() }));
+      rWord.forEach(d => { if (!matches.find(m => m.id === d.id)) matches.push({ id: d.id, ...d.data() }); });
 
       return {
         existsById: false,
-        existsByDate: !resDate.empty,
-        existsByWord: !resWord.empty,
+        existsByDate: !rDate.empty,
+        existsByWord: !rWord.empty,
         matches
       };
     }
@@ -273,15 +288,12 @@
         const dups = await checkDuplicates(dateStr, wordUpper);
         if (dups.existsById || dups.existsByDate || dups.existsByWord) {
           hide(busy);
-          let reason = [];
-          if (dups.existsById)   reason.push('dieselfde GameID');
-          if (dups.existsByDate) reason.push('dieselfde datum');
-          if (dups.existsByWord) reason.push('dieselfde woord');
-          toastErr(`Duplikaat gevind (${reason.join(', ')}).`);
-          if (dups.matches?.length) {
-            const lines = dups.matches.map(m => `• ${m.id} — ${m.word} [${m.status || '—'}] (${m.activeDate || '—'})`).join('\n');
-            console.warn('Duplikaat wedstryde:\n' + lines);
-          }
+          const reason = [
+            dups.existsById   ? 'dieselfde GameID' : null,
+            dups.existsByDate ? 'dieselfde datum'  : null,
+            dups.existsByWord ? 'dieselfde woord'  : null
+          ].filter(Boolean).join(', ');
+          toastErr(`Duplikaat gevind (${reason}).`);
           return;
         }
 
@@ -319,7 +331,18 @@
         listGames.innerHTML = '<p class="text-gray-500">Geen spelletjies nog nie.</p>';
         return;
       }
-      let html = '<div class="overflow-x-auto"><table class="min-w-full text-left text-sm"><thead><tr class="text-gray-500"><th class="py-2 pr-4">GameID</th><th class="py-2 pr-4">Woord</th><th class="py-2 pr-4">Datum</th><th class="py-2">Status</th></tr></thead><tbody>';
+      let html = `
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-left text-sm">
+            <thead>
+              <tr class="text-gray-500">
+                <th class="py-2 pr-4">GameID</th>
+                <th class="py-2 pr-4">Woord</th>
+                <th class="py-2 pr-4">Datum</th>
+                <th class="py-2">Status</th>
+              </tr>
+            </thead>
+            <tbody>`;
       res.forEach(d => {
         const v = d.data();
         html += `<tr class="border-t">
@@ -329,11 +352,11 @@
           <td class="py-2">${v.status || ''}</td>
         </tr>`;
       });
-      html += '</tbody></table></div>';
+      html += `</tbody></table></div>`;
       listGames.innerHTML = html;
     }
 
-    // --- Wire up ---
+    // Wire up
     btnCreate.addEventListener('click', createGame);
     btnCheck.addEventListener('click', async () => {
       const dateStr = inpDate.value || todayISO();
@@ -344,11 +367,12 @@
         const d = await checkDuplicates(dateStr, wordUpper);
         hide(busy);
         if (d.existsById || d.existsByDate || d.existsByWord) {
-          let reason = [];
-          if (d.existsById)   reason.push('GameID');
-          if (d.existsByDate) reason.push('datum');
-          if (d.existsByWord) reason.push('woord');
-          toastErr(`⚠️ Duplikaat: ${reason.join(', ')}`);
+          const reason = [
+            d.existsById   ? 'GameID' : null,
+            d.existsByDate ? 'datum'  : null,
+            d.existsByWord ? 'woord'  : null
+          ].filter(Boolean).join(', ');
+          toastErr(`⚠️ Duplikaat: ${reason}`);
         } else {
           toastOk('Geen duplikate gevind nie.');
         }
