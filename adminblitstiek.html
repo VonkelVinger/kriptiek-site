@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="af">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin – Skep BLITSTIEK Speletjie</title>
+
+  <!-- Tailwind & Font -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --brand-dark: #0f2a43; /* Kriptiek dark-blue vibe */
+      --brand-accent: #0b5ed7;
+      --tile: #1f2937;
+    }
+    body { font-family: 'Montserrat', sans-serif; background: #f7fafc; }
+    .logo-tile { background:#374151; color:#fff; border:2px solid #1f2937; border-radius:.375rem; }
+    .flipped-k { transform: scaleX(-1); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Header / Logo (matches Kriptiek style) -->
+  <header class="w-full bg-white shadow-sm">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="grid grid-cols-8 gap-1">
+          <div class="logo-tile w-7 h-7 flex items-center justify-center flipped-k">K</div>
+          <div class="logo-tile w-7 h-7 flex items-center justify-center">R</div>
+          <div class="logo-tile w-7 h-7 flex items-center justify-center">I</div>
+          <div class="logo-tile w-7 h-7 flex items-center justify-center">P</div>
+          <div class="logo-tile w-7 h-7 flex items-center justify-center">T</div>
+          <div class="logo-tile w-7 h-7 flex items-center justify-center">I</div>
+          <div class="logo-tile w-7 h-7 flex items-center justify-center">E</div>
+          <div class="logo-tile w-7 h-7 flex items-center justify-center">K</div>
+        </div>
+        <h1 class="text-xl md:text-2xl font-bold tracking-wide text-[var(--brand-dark)]">Admin – BLITSTIEK</h1>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="btnSignOut" class="hidden bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1.5 rounded-md text-sm">Meld af</button>
+      </div>
+    </div>
+  </header>
+  <main class="flex-1">
+    <div class="max-w-3xl mx-auto px-4 py-6">
+      <!-- Admin gate -->
+      <div id="adminGate" class="hidden border border-red-200 bg-red-50 text-red-800 p-4 rounded-lg mb-6">
+        <p class="font-semibold">Net administrateurs</p>
+        <p class="text-sm mt-1">Meld as admin aan om hierdie bladsy te gebruik.</p>
+      </div>
+
+      <!-- Success / Error banners -->
+      <div id="msgOk" class="hidden border border-green-200 bg-green-50 text-green-800 p-4 rounded-lg mb-4"></div>
+      <div id="msgErr" class="hidden border border-red-200 bg-red-50 text-red-800 p-4 rounded-lg mb-4"></div>
+
+      <!-- Card -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100">
+        <div class="px-5 py-4 border-b">
+          <h2 class="text-lg font-semibold text-[var(--brand-dark)]">Skep nuwe BLITSTIEK speletjie</h2>
+          <p class="text-sm text-gray-500 mt-1">Volg die DILEMMA‑konvensies: GameID = <code>GameYYYY-MM-DD</code>. Die woord word in HOOFLETTERS gestoor.</p>
+        </div>
+
+        <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Date -->
+          <div>
+            <label for="inpDate" class="block text-sm font-medium text-gray-700 mb-1">Datum</label>
+            <input id="inpDate" type="date" class="w-full rounded-lg border-gray-300 focus:border-[var(--brand-accent)] focus:ring-[var(--brand-accent)]" />
+            <p class="text-xs text-gray-500 mt-1">Hierdie word gebruik om die GameID te vorm: <span id="idPreview" class="font-semibold">Game—</span></p>
+          </div>
+
+          <!-- Status -->
+          <div>
+            <label for="selStatus" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select id="selStatus" class="w-full rounded-lg border-gray-300 focus:border-[var(--brand-accent)] focus:ring-[var(--brand-accent)]">
+              <option value="scheduled">Geskeduleer</option>
+              <option value="active">Aktief</option>
+              <option value="archived">Gearchiveer</option>
+            </select>
+          </div>
+
+          <!-- Word -->
+          <div class="md:col-span-2">
+            <label for="inpWord" class="block text-sm font-medium text-gray-700 mb-1">Teikenwoord (HOOFLETTERS)</label>
+            <input id="inpWord" type="text" maxlength="12" placeholder="BYLAAG / SKOOL / VRIEND"
+                   class="w-full rounded-lg border-gray-300 focus:border-[var(--brand-accent)] focus:ring-[var(--brand-accent)] uppercase tracking-wider" />
+            <p class="text-xs text-gray-500 mt-1">Word outomaties na HOOFLETTERS omskep.</p>
+          </div>
+
+          <!-- Leidraad (optional) -->
+          <div class="md:col-span-2">
+            <label for="inpLeidraad" class="block text-sm font-medium text-gray-700 mb-1">Leidraad (opsioneel)</label>
+            <input id="inpLeidraad" type="text" maxlength="140"
+                   class="w-full rounded-lg border-gray-300 focus:border-[var(--brand-accent)] focus:ring-[var(--brand-accent)]"
+                   placeholder="Kort leidraad (indien van toepassing)" />
+          </div>
+        </div>
+
+        <div class="px-5 pb-5 flex flex-wrap items-center gap-3">
+          <button id="btnCreate" class="bg-[var(--brand-dark)] hover:bg-slate-800 text-white font-semibold px-5 py-2 rounded-xl">Skep speletjie</button>
+          <button id="btnCheck"  class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold px-4 py-2 rounded-xl">Toets vir duplikate</button>
+          <span id="busy" class="hidden text-sm text-gray-500">Besig…</span>
+        </div>
+      </div>
+
+      <!-- Existing games (latest 10) -->
+      <div class="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+        <div class="px-5 py-4 border-b">
+          <h3 class="text-base font-semibold text-[var(--brand-dark)]">Onlangse BLITSTIEK speletjies</h3>
+        </div>
+        <div id="listGames" class="p-5 text-sm text-gray-700">
+          <p class="text-gray-500">Laai…</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="mt-auto bg-[var(--brand-dark)] text-white text-center py-6">
+    <div class="max-w-5xl mx-auto px-4">
+      <p class="text-sm opacity-90">Kriptiek – Admin</p>
+    </div>
+  </footer>
+  <!-- Firebase + Logic -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
+    import {
+      getAuth, onAuthStateChanged, signOut, getIdTokenResult
+    } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
+    import {
+      getFirestore, serverTimestamp, doc, setDoc, getDoc,
+      collection, query, where, orderBy, limit, getDocs
+    } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
+
+    // TODO: Replace with your Kriptiek Firebase config (same as index.html / admindilemma.html)
+    const firebaseConfig = {
+      apiKey: "REPLACE_ME",
+      authDomain: "REPLACE_ME.firebaseapp.com",
+      projectId: "REPLACE_ME",
+      storageBucket: "REPLACE_ME.appspot.com",
+      messagingSenderId: "REPLACE_ME",
+      appId: "REPLACE_ME"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    // --- DOM refs ---
+    const adminGate = document.getElementById('adminGate');
+    const btnSignOut = document.getElementById('btnSignOut');
+    const inpDate = document.getElementById('inpDate');
+    const idPreview = document.getElementById('idPreview');
+    const inpWord = document.getElementById('inpWord');
+    const inpLeidraad = document.getElementById('inpLeidraad');
+    const selStatus = document.getElementById('selStatus');
+    const btnCreate = document.getElementById('btnCreate');
+    const btnCheck = document.getElementById('btnCheck');
+    const busy = document.getElementById('busy');
+    const msgOk = document.getElementById('msgOk');
+    const msgErr = document.getElementById('msgErr');
+    const listGames = document.getElementById('listGames');
+
+    const ADMIN_UID = "jI7f0Wk4MqfPq7p69vjl8OlJUvS2";
+
+    const show = el => el.classList.remove('hidden');
+    const hide = el => el.classList.add('hidden');
+    const toastOk  = (t) => { msgOk.textContent = t; show(msgOk); hide(msgErr); };
+    const toastErr = (t) => { msgErr.textContent = t; show(msgErr); hide(msgOk); };
+
+    function toGameId(dateStr) {
+      // dateStr is "YYYY-MM-DD"
+      return `Game${dateStr}`;
+    }
+    function pad(n){ return String(n).padStart(2,'0'); }
+    function todayISO() {
+      const d = new Date();
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    }
+    function sanitizeWord(s) {
+      return (s || '').toUpperCase().replace(/[^A-ZÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜŌŪÑ\-]/g,'').trim();
+    }
+
+    // Update preview on date change
+    function updatePreview() {
+      const ds = inpDate.value || todayISO();
+      idPreview.textContent = toGameId(ds);
+    }
+
+    inpDate.addEventListener('change', updatePreview);
+    inpWord.addEventListener('input', () => { inpWord.value = sanitizeWord(inpWord.value); });
+
+    // --- Admin gate ---
+    let isAdmin = false;
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        isAdmin = false;
+        show(adminGate);
+        hide(btnSignOut);
+        return;
+      }
+      btnSignOut.classList.remove('hidden');
+
+      try {
+        const token = await getIdTokenResult(user, true);
+        isAdmin = (user.uid === ADMIN_UID) || !!token.claims.admin;
+      } catch {
+        isAdmin = (user.uid === ADMIN_UID);
+      }
+
+      if (!isAdmin) {
+        show(adminGate);
+      } else {
+        hide(adminGate);
+        // defaults
+        if (!inpDate.value) { inpDate.value = todayISO(); updatePreview(); }
+        await loadRecent();
+      }
+    });
+
+    btnSignOut.addEventListener('click', async () => {
+      await signOut(auth);
+      location.reload();
+    });
+
+    // --- Duplicate checks ---
+    async function checkDuplicates(dateStr, wordUpper) {
+      // check if doc with same GameID exists
+      const gameId = toGameId(dateStr);
+      const docRef = doc(db, 'blitstiekGames', gameId);
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        return { existsById: true, existsByDate: true, existsByWord: (snap.data()?.word === wordUpper), matches: [ { id: gameId, ...snap.data() } ] };
+      }
+
+      // search any game with same activeDate or same word
+      const colRef = collection(db, 'blitstiekGames');
+      const q = query(colRef,
+        where('activeDate', '==', dateStr)
+      );
+      const q2 = query(colRef,
+        where('word', '==', wordUpper)
+      );
+
+      const [resDate, resWord] = await Promise.all([getDocs(q), getDocs(q2)]);
+      const matches = [];
+      resDate.forEach(d => matches.push({ id: d.id, ...d.data() }));
+      resWord.forEach(d => {
+        if (!matches.find(m => m.id === d.id)) matches.push({ id: d.id, ...d.data() });
+      });
+
+      return {
+        existsById: false,
+        existsByDate: !resDate.empty,
+        existsByWord: !resWord.empty,
+        matches
+      };
+    }
+
+    // --- Create game ---
+    async function createGame() {
+      if (!isAdmin) { toastErr('Net administrateurs'); return; }
+
+      const dateStr = inpDate.value || todayISO();
+      const wordUpper = sanitizeWord(inpWord.value);
+      const leidraad = (inpLeidraad.value || '').trim();
+      const status = selStatus.value || 'scheduled';
+
+      if (!wordUpper) { toastErr('Voer ’n geldige teikenwoord in.'); return; }
+      show(busy); hide(msgOk); hide(msgErr);
+
+      try {
+        const dups = await checkDuplicates(dateStr, wordUpper);
+        if (dups.existsById || dups.existsByDate || dups.existsByWord) {
+          hide(busy);
+          let reason = [];
+          if (dups.existsById)   reason.push('dieselfde GameID');
+          if (dups.existsByDate) reason.push('dieselfde datum');
+          if (dups.existsByWord) reason.push('dieselfde woord');
+          toastErr(`Duplikaat gevind (${reason.join(', ')}).`);
+          if (dups.matches?.length) {
+            const lines = dups.matches.map(m => `• ${m.id} — ${m.word} [${m.status || '—'}] (${m.activeDate || '—'})`).join('\n');
+            console.warn('Duplikaat wedstryde:\n' + lines);
+          }
+          return;
+        }
+
+        const gameId = toGameId(dateStr);
+        const docRef = doc(db, 'blitstiekGames', gameId);
+        const payload = {
+          word: wordUpper,
+          leidraad: leidraad || null,
+          status,
+          activeDate: dateStr,             // YYYY-MM-DD
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
+        await setDoc(docRef, payload, { merge: true });
+
+        hide(busy);
+        toastOk(`Geskep: ${gameId} (${wordUpper})`);
+        inpWord.value = '';
+        inpLeidraad.value = '';
+        await loadRecent();
+      } catch (e) {
+        hide(busy);
+        console.error(e);
+        toastErr('Kon nie speletjie skep nie.');
+      }
+    }
+
+    // --- Load recent list ---
+    async function loadRecent() {
+      const colRef = collection(db, 'blitstiekGames');
+      const qy = query(colRef, orderBy('activeDate','desc'), limit(10));
+      const res = await getDocs(qy);
+
+      if (res.empty) {
+        listGames.innerHTML = '<p class="text-gray-500">Geen spelletjies nog nie.</p>';
+        return;
+      }
+      let html = '<div class="overflow-x-auto"><table class="min-w-full text-left text-sm"><thead><tr class="text-gray-500"><th class="py-2 pr-4">GameID</th><th class="py-2 pr-4">Woord</th><th class="py-2 pr-4">Datum</th><th class="py-2">Status</th></tr></thead><tbody>';
+      res.forEach(d => {
+        const v = d.data();
+        html += `<tr class="border-t">
+          <td class="py-2 pr-4 font-mono">${d.id}</td>
+          <td class="py-2 pr-4 font-semibold">${v.word}</td>
+          <td class="py-2 pr-4">${v.activeDate || ''}</td>
+          <td class="py-2">${v.status || ''}</td>
+        </tr>`;
+      });
+      html += '</tbody></table></div>';
+      listGames.innerHTML = html;
+    }
+
+    // --- Wire up ---
+    btnCreate.addEventListener('click', createGame);
+    btnCheck.addEventListener('click', async () => {
+      const dateStr = inpDate.value || todayISO();
+      const wordUpper = sanitizeWord(inpWord.value);
+      if (!wordUpper) { toastErr('Voer eers ’n teikenwoord in.'); return; }
+      show(busy); hide(msgOk); hide(msgErr);
+      try {
+        const d = await checkDuplicates(dateStr, wordUpper);
+        hide(busy);
+        if (d.existsById || d.existsByDate || d.existsByWord) {
+          let reason = [];
+          if (d.existsById)   reason.push('GameID');
+          if (d.existsByDate) reason.push('datum');
+          if (d.existsByWord) reason.push('woord');
+          toastErr(`⚠️ Duplikaat: ${reason.join(', ')}`);
+        } else {
+          toastOk('Geen duplikate gevind nie.');
+        }
+      } catch(e) {
+        hide(busy);
+        console.error(e);
+        toastErr('Kon nie duplikate toets nie.');
+      }
+    });
+
+    // Initial preview
+    if (!inpDate.value) { inpDate.value = todayISO(); }
+    updatePreview();
+  </script>
+</body>
+</html>
