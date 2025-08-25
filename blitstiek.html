@@ -8,43 +8,44 @@
   <!-- Tailwind + Font -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
+
   <style>
     :root{
       --brand-dark:#0f2a43;
-      --brand-accent:#0b5ed7;
-      --board:#003b32;           /* cell color */
-      --line:#0f3f39;            /* grid lines */
       --btn:#003366;
+      --board-cell:#003b32;   /* cells */
+      --board-line:#0f3f39;   /* grid lines + border */
     }
     html,body{ height:100%; }
     body{ font-family:'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:#f7fafc; }
 
+    /* Kriptiek tiles (like Dilemma) */
     .logo-tile{ background:#374151; color:#fff; border:2px solid #1f2937; border-radius:.375rem; }
     .flipped-k{ transform:scaleX(-1); }
 
-    /* Cards */
+    /* Cards like Dilemma */
     .card{ background:#fff; border:1px solid #e5e7eb; border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
 
     /* Pills */
     .pill{ background:#f3f4f6; color:#374151; padding:.4rem .7rem; border-radius:999px; font-weight:600; }
 
-    /* Target chips */
-    #target{ background:#0c4a3e; padding:4px 6px; border-radius:10px; color:#fff; display:flex; gap:2px; }
+    /* Target tiles */
+    #target{ display:flex; gap:2px; background:#0c4a3e; color:#fff; padding:4px 6px; border-radius:10px; }
     #target span{ width:28px; height:28px; display:grid; place-items:center; font-weight:800; border:1px solid rgba(255,255,255,.18); border-radius:4px; }
 
-    /* Game board with real grid lines (gap) */
+    /* Game board with crisp lines */
     #grid{
       display:grid;
-      gap:1px;                       /* visible lines */
-      background:var(--line);
-      border:1px solid var(--line);
+      gap:1px;                               /* visible grid lines */
+      background:var(--board-line);
+      border:1px solid var(--board-line);
       border-radius:12px;
       overflow:hidden;
       width:100%;
-      max-width:540px;               /* sensible cap */
+      max-width:540px;
       margin:10px auto;
     }
-    .cell{ background:var(--board); position:relative; }
+    .cell{ background:var(--board-cell); position:relative; }
     .cell.f{
       display:grid; place-items:center;
       color:#fff; font-weight:800;
@@ -60,11 +61,10 @@
     .btn{ background:var(--btn); color:#fff; font-weight:700; padding:12px 14px; border-radius:12px; }
     .btn:disabled{ opacity:.5; }
 
-    /* Leaderboard tidy */
+    /* Table polish */
     #lbBody tr{ border-top:1px solid #eef2f7; }
     #lbBody td{ padding:.5rem .75rem; }
 
-    /* Mobile tweaks */
     @media (max-width:480px){
       #target span{ width:24px; height:24px; font-size:13px; }
       .btn{ padding:10px 12px; }
@@ -73,7 +73,7 @@
 </head>
 <body class="min-h-full flex flex-col">
 
-  <!-- Header -->
+  <!-- Header (like Dilemma) -->
   <header class="w-full bg-white shadow-sm">
     <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
       <a href="/index.html" class="flex items-center gap-3">
@@ -96,23 +96,22 @@
     </div>
   </header>
 
-  <!-- Main -->
   <main class="flex-1">
     <div class="max-w-3xl mx-auto px-4 py-6">
 
-      <!-- Info -->
+      <!-- Info pills -->
       <div class="flex flex-wrap items-center gap-2 mb-3">
         <span id="pillId" class="pill">GameID: —</span>
         <span id="pillStatus" class="pill">Status: —</span>
       </div>
 
-      <!-- Target -->
+      <!-- Target word -->
       <div class="flex items-center gap-2 mb-3">
         <span class="pill">Teikenwoord</span>
         <div id="target"></div>
       </div>
 
-      <!-- GAME -->
+      <!-- GAME card -->
       <section class="card p-4">
         <div class="relative">
           <div id="grid"></div>
@@ -141,7 +140,7 @@
         </p>
       </section>
 
-      <!-- LEADERBOARD -->
+      <!-- LEADERBOARD card -->
       <section class="card mt-6">
         <div class="px-5 py-4 border-b">
           <h2 class="text-base font-semibold text-[var(--brand-dark)]">BLITSTIEK Top 10</h2>
@@ -151,7 +150,9 @@
             <thead>
               <tr class="text-gray-500"><th class="py-2 pr-4">#</th><th class="py-2 pr-4">Naam</th><th class="py-2">Tyd</th></tr>
             </thead>
-            <tbody id="lbBody"><tr><td class="py-2 pr-4">—</td><td class="py-2 pr-4">—</td><td class="py-2">—</td></tr></tbody>
+            <tbody id="lbBody">
+              <tr><td class="py-2 pr-4">—</td><td class="py-2 pr-4">—</td><td class="py-2">—</td></tr>
+            </tbody>
           </table>
         </div>
       </section>
@@ -161,8 +162,6 @@
   <footer class="bg-[var(--brand-dark)] text-white text-center py-6 mt-auto">
     <div class="max-w-5xl mx-auto px-4 text-sm opacity-90">&copy; 2025 Kriptiek. Alle regte voorbehou.</div>
   </footer>
-
-  <!-- Firebase + Game Logic -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
@@ -185,7 +184,7 @@
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
-    // ---- DOM ----
+    // ---- DOM refs ----
     const loginLink  = document.getElementById('loginLink');
     const btnSignOut = document.getElementById('btnSignOut');
     const pillId     = document.getElementById('pillId');
@@ -206,18 +205,21 @@
     const btnPause= document.getElementById('btnPause');
     const btnShare= document.getElementById('btnShare');
 
-    // ---- Helpers / State ----
+    // ---- Helpers ----
     const pad = n => String(n).padStart(2,'0');
     const fmt = s => s==null ? '--:--' : `${pad(Math.floor(s/60))}:${pad(s%60)}`;
     const todayISO = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
     const qs = new URLSearchParams(location.search);
     const explicitId = qs.get('gameId');
 
+    // ---- Gameplay constants (Lexispeed) ----
     const H = 10;
-    let W = 8;               // dynamic after we read TARGET
+    let   W = 8;   // set after TARGET loads
     const COLORS = ['#2196f3','#f44336','#4caf50','#ffc107','#9c27b0','#003366','#009688'];
-    const CONS='BCDFGHJKLMNPQRSTVWXZ', VOWS='AEIOUY';
+    const CONS   = 'BCDFGHJKLMNPQRSTVWXZ';
+    const VOWS   = 'AEIOUY';
 
+    // ---- State ----
     let user=null;
     let GAME_ID=null, TARGET='';
     let grid=Array.from({length:H},()=>Array(W).fill(null));
@@ -228,12 +230,12 @@
     // ---- Auth ----
     onAuthStateChanged(auth, (u)=>{
       user=u||null;
-      if (user) { loginLink.classList.add('hidden'); btnSignOut.classList.remove('hidden'); authNote.classList.add('hidden'); }
-      else { loginLink.classList.remove('hidden'); btnSignOut.classList.add('hidden'); authNote.classList.remove('hidden'); }
+      if(user){ loginLink.classList.add('hidden'); btnSignOut.classList.remove('hidden'); authNote.classList.add('hidden'); }
+      else{     loginLink.classList.remove('hidden'); btnSignOut.classList.add('hidden'); authNote.classList.remove('hidden'); }
     });
     btnSignOut.addEventListener('click', async ()=>{ await signOut(auth); try{localStorage.clear();sessionStorage.clear();}catch{} location.reload(); });
 
-    // ---- Grid drawing (uses dynamic W/H) ----
+    // ---- Grid rendering ----
     function drawGrid(){
       gridEl.innerHTML='';
       gridEl.style.gridTemplateColumns = `repeat(${W}, 1fr)`;
@@ -253,24 +255,27 @@
       if(!b) return;
       const c=gridEl.querySelector(`.cell[data-x="${b.x}"][data-y="${b.y}"]`);
       if(!c) return;
-      c.className='cell'; c.style.background='var(--board)'; c.textContent='';
+      c.className='cell'; c.style.background='var(--board-cell)'; c.textContent='';
     }
 
+    // ---- Core mechanics (Lexispeed) ----
     const partOfTarget = L => TARGET.includes(L);
     const collide = b => !b || b.x<0||b.x>=W||b.y>=H || (b.y>=0 && grid[b.y][b.x]);
 
     function createBlock(){
-      const color=COLORS[Math.floor(Math.random()*COLORS.length)];
-      const letter=Math.random()<0.3? VOWS[Math.floor(Math.random()*VOWS.length)] : CONS[Math.floor(Math.random()*CONS.length)];
+      const color = COLORS[Math.floor(Math.random()*COLORS.length)];
+      const letter = Math.random()<0.3
+        ? VOWS[Math.floor(Math.random()*VOWS.length)]
+        : CONS[Math.floor(Math.random()*CONS.length)];
       return { color, letter, x:Math.floor(W/2), y:0 };
     }
 
     async function move(dx,dy){
       if(!cur||paused||ended) return;
       clearBlock(cur);
-      const test={...cur,x:cur.x+dx,y:cur.y+dy};
+      const test = { ...cur, x:cur.x+dx, y:cur.y+dy };
       if(!collide(test)){ cur=test; drawBlock(cur); }
-      else if(dy>0){ drawBlock(cur); place(); }   // landed
+      else if(dy>0){ drawBlock(cur); place(); }
       else{ drawBlock(cur); }
     }
     function hardDrop(){
@@ -282,7 +287,7 @@
     async function place(){
       if(!cur||cur.y<0) return;
       grid[cur.y][cur.x]={...cur}; drawBlock(cur);
-      await matchAndDrop();   // Lexispeed: remove same letter OR same color, excluding target letters
+      await matchAndDrop();      // remove adjacent same-letter OR same-color blocks (excluding target letters)
       checkWin(); checkFail();
       cur=nxt; nxt=createBlock(); drawBlock(cur);
     }
@@ -298,13 +303,15 @@
         }
       }
       if(!del.size) return;
+
       await Promise.all(Array.from(del).map(key=>new Promise(res=>{
         const [x,y]=key.split(',').map(Number);
         const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
         if(c){ c.style.opacity=.15; setTimeout(()=>{ c.style.opacity=''; res(); },120);} else res();
         grid[y][x]=null;
       })));
-      // compact columns (from bottom up)
+
+      // compact columns
       for(let x=0;x<W;x++){
         let wY=H-1;
         for(let y=H-1;y>=0;y--){
@@ -314,15 +321,15 @@
           }
         }
       }
-      // redraw whole board
+      // redraw
       for(let y=0;y<H;y++) for(let x=0;x<W;x++){
         const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
-        c.className='cell'; c.style.background='var(--board)'; c.textContent='';
+        c.className='cell'; c.style.background='var(--board-cell)'; c.textContent='';
         if(grid[y][x]) drawBlock({...grid[y][x],x,y});
       }
     }
 
-    // Win = exact horizontal match of TARGET
+    // Win = exact horizontal TARGET
     function checkWin(){
       for(let y=0;y<H;y++) for(let x=0;x<=W-TARGET.length;x++){
         let ok=true;
@@ -332,6 +339,7 @@
     }
     function checkFail(){ if(nxt && collide(nxt)) end(false); }
 
+    // ---- Timer & control ----
     function setTime(v){ t=v; timeText.textContent=fmt(t); }
     function start(){
       ended=false; over.style.display='none'; setTime(0);
@@ -345,6 +353,7 @@
     }
     function togglePause(){ if(ended) return; paused=!paused; btnPause.textContent = paused ? 'HERVAT' : 'POUSE'; }
 
+    // ---- Overlay + submit ----
     function overlay(html){ overCard.innerHTML=html; over.style.display='flex'; }
     async function submitTime(){
       if(!user) return;
@@ -397,7 +406,7 @@
     }
     btnShare.addEventListener('click', handleShare);
 
-    // ---- Game / leaderboard loading ----
+    // ---- Load game & leaderboard ----
     async function loadGame(){
       GAME_ID = explicitId || `Game${todayISO()}`;
       pillId.textContent = `GameID: ${GAME_ID}`;
@@ -406,7 +415,7 @@
       if(!snap.exists()){
         pillStatus.textContent = 'Status: nie gevind';
         targetEl.innerHTML = `<span>—</span>`;
-        drawGrid();   // default grid
+        W = 4; drawGrid();
         return;
       }
       const data=snap.data();
@@ -416,7 +425,7 @@
       // Target chips
       targetEl.innerHTML=''; TARGET.split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
 
-      // Dynamic board width based on target length (>=3)
+      // Dynamic width = target length (min 3)
       W = Math.max(3, TARGET.length);
       grid = Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
@@ -449,12 +458,12 @@
     document.addEventListener('keydown', (e)=>{
       if(e.key==='ArrowLeft') move(-1,0);
       if(e.key==='ArrowRight') move(1,0);
-      if(e.key==='ArrowDown') move(0,1);     // step down
+      if(e.key==='ArrowDown') move(0,1);       // soft step
       if(e.key===' ') { e.preventDefault(); hardDrop(); }  // hard drop
     });
 
     // ---- Init ----
-    await loadGame();  // sets TARGET + W and draws the grid
+    await loadGame();   // sets TARGET and W, then draws grid
   </script>
 </body>
 </html>
