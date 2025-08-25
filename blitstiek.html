@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="af">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+  <title>BLITSTIEK (toets)</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; padding: 12px; }
+    .wrap { max-width: 380px; margin: 0 auto; }
+    h1 { font-size: 20px; margin: 0 0 8px; }
+    .row { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+    .pill { padding:6px 10px; border-radius:999px; background:#eee; font-weight:600; }
+    #target { display:flex; gap:2px; padding:3px; background:#003b32; color:#fff; }
+    #target span { width:28px; height:28px; display:grid; place-items:center; font-weight:700; border:1px solid rgba(255,255,255,.15); }
+    #grid { width:100%; aspect-ratio:8/10; display:grid; grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(10,1fr); gap:1px; background:#004d40; border:1px solid #004d40; margin:8px 0; position:relative; overflow:hidden; }
+    .cell { background:#004d40; position:relative; }
+    .cell.f { display:grid; place-items:center; color:#fff; font-weight:700; }
+    .ctrls { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin:8px 0; }
+    .btn { padding:10px; border:0; border-radius:8px; font-weight:700; background:#003366; color:#fff; }
+    .btn:disabled { opacity:.5; }
+    #time, #best { flex:1; background:#003b32; color:#fff; text-align:center; padding:8px; border-radius:6px; font-weight:700; }
+    #over { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.6); }
+    #over .card { background:#900C3F; color:#fff; padding:16px; border-radius:8px; width:90%; max-width:320px; text-align:center; }
+    table { width:100%; border-collapse:collapse; margin:12px 0; font-size:14px; }
+    th,td { padding:6px; border-bottom:1px solid #eee; text-align:left; }
+    caption { font-weight:800; padding:6px; }
+    .warn { background:#fff4e5; border:1px solid #f7c97b; padding:8px; border-radius:6px; margin:8px 0; }
+    .ok { background:#e7f6ec; border:1px solid #9ad0ae; padding:8px; border-radius:6px; margin:8px 0; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>BLITSTIEK · Toets</h1>
+
+    <div id="authBox" class="warn" style="display:none">
+      Meld aan om te speel en jou tyd te stoor.
+      <div style="margin-top:6px">
+        <a href="/login.html?new=1">Gaan na aanmelding</a>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="pill" id="gameIdPill">GameID: —</div>
+      <div class="pill" id="statusPill">Status: —</div>
+    </div>
+
+    <div class="row">
+      <div class="pill">Teikenwoord:</div>
+      <div id="target"></div>
+    </div>
+
+    <div id="grid"></div>
+
+    <div class="ctrls">
+      <button class="btn" id="left">◀</button>
+      <button class="btn" id="down">▼</button>
+      <button class="btn" id="right">▶</button>
+    </div>
+
+    <div class="row">
+      <button class="btn" id="start">BEGIN</button>
+      <button class="btn" id="pause">POUSE</button>
+    </div>
+
+    <div class="row">
+      <div id="time">Jou tyd: <b>00:00</b></div>
+      <div id="best">Beste tyd: <b>--:--</b></div>
+    </div>
+
+    <table id="lb">
+      <caption>BLITSTIEK Top 10</caption>
+      <thead><tr><th>#</th><th>Naam</th><th>Tyd</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- Overlay -->
+  <div id="over">
+    <div class="card" id="overCard"></div>
+  </div>
+
+  <!-- Firebase + Logic -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
+    import {
+      getFirestore, serverTimestamp, doc, getDoc, setDoc,
+      collection, query, orderBy, limit, getDocs
+    } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
+
+    // ---- Kriptiek config (from admindilemma) ----
+    const firebaseConfig = {
+      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+      authDomain: "kriptiek-c9ea2.firebaseapp.com",
+      projectId: "kriptiek-c9ea2",
+      storageBucket: "kriptiek-c9ea2.appspot.com",
+      messagingSenderId: "620450620939",
+      appId: "1:620450620939:web:e93a18ac23b53b33db890e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // --- Helpers ---
+    const pad = n => String(n).padStart(2,'0');
+    const fmt = s => s==null ? '--:--' : `${pad(Math.floor(s/60))}:${pad(s%60)}`;
+    const todayISO = () => {
+      const d = new Date();
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    };
+    const qs = new URLSearchParams(location.search);
+    const explicitId = qs.get('gameId');
+
+    // --- DOM ---
+    const gridEl = document.getElementById('grid');
+    const targetEl = document.getElementById('target');
+    const timeEl = document.querySelector('#time b');
+    const bestEl = document.querySelector('#best b');
+    const startBtn = document.getElementById('start');
+    const pauseBtn = document.getElementById('pause');
+    const leftBtn = document.getElementById('left');
+    const rightBtn = document.getElementById('right');
+    const downBtn = document.getElementById('down');
+    const over = document.getElementById('over');
+    const overCard = document.getElementById('overCard');
+    const authBox = document.getElementById('authBox');
+    const gameIdPill = document.getElementById('gameIdPill');
+    const statusPill = document.getElementById('statusPill');
+    const lbBody = document.querySelector('#lb tbody');
+
+    // --- Game constants (compact) ---
+    const W = 8, H = 10;
+    const COLORS = ['#2196f3','#f44336','#4caf50','#ffc107','#9c27b0','#003366','#009688'];
+    const CONS = 'BCDFGHJKLMNPQRSTVWXZ', VOWS = 'AEIOUY';
+
+    // --- State ---
+    let GAME_ID = null, TARGET = '';
+    let grid = Array.from({length:H}, ()=>Array(W).fill(null));
+    let cur = null, nxt = null;
+    let timer = 0, tInt = null, gInt = null;
+    let paused = false, overFlag = false;
+    let user = null;
+
+    onAuthStateChanged(auth, u => {
+      user = u || null;
+      authBox.style.display = user ? 'none' : 'block';
+    });
+
+    // Build grid UI
+    function drawGrid() {
+      gridEl.innerHTML = '';
+      for (let y=0; y<H; y++) for (let x=0; x<W; x++) {
+        const d = document.createElement('div');
+        d.className='cell';
+        d.dataset.x=x; d.dataset.y=y;
+        gridEl.appendChild(d);
+      }
+    }
+    function drawBlock(b) {
+      if (!b) return;
+      if (b.x<0||b.x>=W||b.y<0||b.y>=H) return;
+      const cell = gridEl.querySelector(`.cell[data-x="${b.x}"][data-y="${b.y}"]`);
+      if (!cell) return;
+      cell.className='cell f';
+      cell.style.background=b.color;
+      cell.textContent=b.letter;
+    }
+    function clearBlock(b) {
+      if (!b) return;
+      const cell = gridEl.querySelector(`.cell[data-x="${b.x}"][data-y="${b.y}"]`);
+      if (!cell) return;
+      cell.className='cell';
+      cell.style.background='#004d40';
+      cell.textContent='';
+    }
+    const partOfTarget = L => TARGET.includes(L);
+    const collide = b => !b || b.x<0||b.x>=W||b.y>=H || (b.y>=0 && grid[b.y][b.x]);
+
+    function createBlock(){
+      const color = COLORS[Math.floor(Math.random()*COLORS.length)];
+      const letter = Math.random()<0.3
+        ? VOWS[Math.floor(Math.random()*VOWS.length)]
+        : CONS[Math.floor(Math.random()*CONS.length)];
+      return { color, letter, x: Math.floor(W/2), y: 0 };
+    }
+
+    async function move(dx,dy){
+      if (!cur || paused || overFlag) return;
+      clearBlock(cur);
+      const test = { ...cur, x:cur.x+dx, y:cur.y+dy };
+      if (!collide(test)) {
+        cur = test; drawBlock(cur);
+      } else if (dy>0) {
+        // stick
+        drawBlock(cur);
+        place();
+      } else {
+        drawBlock(cur);
+      }
+    }
+    function drop() {
+      if (!cur || paused || overFlag) return;
+      clearBlock(cur);
+      while (cur.y < H-1 && !collide({ ...cur, y: cur.y+1 })) cur.y++;
+      place();
+    }
+    async function place(){
+      if (!cur || cur.y<0) return;
+      grid[cur.y][cur.x] = { ...cur };
+      drawBlock(cur);
+      await matchAndDrop();
+      checkWin();
+      checkFail();
+      cur = nxt; nxt = createBlock();
+      drawBlock(cur);
+    }
+
+    async function matchAndDrop(){
+      const toDel = new Set();
+      for (let y=0;y<H;y++) for (let x=0;x<W;x++){
+        const a = grid[y][x]; if (!a || partOfTarget(a.letter)) continue;
+        for (const [dx,dy] of [[1,0],[0,1],[-1,0],[0,-1]]){
+          const nx=x+dx, ny=y+dy;
+          if (nx<0||nx>=W||ny<0||ny>=H) continue;
+          const b = grid[ny][nx];
+          if (!b || partOfTarget(b.letter)) continue;
+          if (a.letter===b.letter || a.color===b.color){ toDel.add(`${x},${y}`); toDel.add(`${nx},${ny}`); }
+        }
+      }
+      if (!toDel.size) return;
+      await Promise.all(Array.from(toDel).map(key => new Promise(res=>{
+        const [x,y]=key.split(',').map(Number);
+        const c = gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+        if (c) { c.style.opacity=.2; setTimeout(()=>{ c.style.opacity=''; res(); },120); } else res();
+        grid[y][x]=null;
+      })));
+      // drop columns
+      for (let x=0;x<W;x++){
+        let wY=H-1;
+        for (let y=H-1;y>=0;y--){
+          if (grid[y][x]) {
+            if (y!==wY){ grid[wY][x]=grid[y][x]; grid[y][x]=null; }
+            wY--;
+          }
+        }
+      }
+      // redraw
+      for (let y=0;y<H;y++) for (let x=0;x<W;x++){
+        const cell = gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+        cell.className='cell';
+        cell.style.background='#004d40';
+        cell.textContent='';
+        if (grid[y][x]) drawBlock({ ...grid[y][x], x, y });
+      }
+    }
+
+    function checkWin(){
+      for (let y=0;y<H;y++) for (let x=0;x<=W-TARGET.length;x++){
+        let ok=true;
+        for (let i=0;i<TARGET.length;i++){
+          const g=grid[y][x+i];
+          if (!g || g.letter!==TARGET[i]) { ok=false; break; }
+        }
+        if (ok){ endGame(true); return; }
+      }
+    }
+    function checkFail(){
+      if (nxt && collide(nxt)) endGame(false);
+    }
+
+    function start() {
+      overFlag=false; over.style.display='none';
+      grid = Array.from({length:H}, ()=>Array(W).fill(null));
+      drawGrid();
+      time(0);
+      cur = createBlock();
+      nxt = createBlock();
+      drawBlock(cur);
+      paused=false;
+      clearInterval(gInt); clearInterval(tInt);
+      gInt = setInterval(()=>{ if (!paused && !overFlag) move(0,1); }, 1000);
+      tInt = setInterval(()=>{ if (!paused && !overFlag) time(timer+1); }, 1000);
+    }
+    function togglePause(){ if (overFlag) return; paused=!paused; pauseBtn.textContent = paused ? 'HERVAT' : 'POUSE'; }
+    function time(v){ timer=v; timeEl.textContent = fmt(timer); }
+
+    function overlay(html){ overCard.innerHTML=html; over.style.display='flex'; }
+
+    async function submitTime() {
+      if (!user) return; // should not happen if button hidden
+      try {
+        const name = user.displayName || user.email || 'Speler';
+        await setDoc(doc(db, 'blitstiekGames', GAME_ID, 'leaderboard', user.uid), {
+          userName: String(name).slice(0, 24),
+          time: Number(timer),
+          timestamp: serverTimestamp()
+        }, { merge: true });
+        overlay(`<div class="ok">Tyd gestoor ✔</div>
+                 <button class="btn" onclick="document.getElementById('over').style.display='none'">SLUIT</button>`);
+      } catch (e) {
+        overlay(`<div class="warn">Kon nie stoor nie.</div>
+                 <div style="font-size:12px;opacity:.8;margin:6px 0">${e?.message||e}</div>
+                 <button class="btn" onclick="document.getElementById('over').style.display='none'">SLUIT</button>`);
+      }
+    }
+
+    function endGame(win){
+      overFlag=true;
+      clearInterval(gInt); clearInterval(tInt);
+      if (win) {
+        const msg = `Puik! Jou tyd: <b>${fmt(timer)}</b> vir <b>${TARGET}</b>.`;
+        const submitBtn = user
+          ? `<button class="btn" id="saveBtn">DIEN TYD IN</button>`
+          : `<div class="warn" style="text-align:left">Meld aan om jou tyd op die leiertafel te stoor.</div>`;
+        overlay(`<div style="margin-bottom:8px">${msg}</div>${submitBtn}
+                 <button class="btn" id="closeBtn" style="margin-top:6px;background:#666">SLUIT</button>`);
+        const closeBtn = document.getElementById('closeBtn');
+        closeBtn?.addEventListener('click', ()=> over.style.display='none');
+        const saveBtn = document.getElementById('saveBtn');
+        saveBtn?.addEventListener('click', submitTime);
+      } else {
+        overlay(`<div style="margin-bottom:8px"><b>GAME OVER</b></div>
+                 <button class="btn" onclick="document.getElementById('over').style.display='none'">SLUIT</button>`);
+      }
+    }
+
+    // --- Load game & leaderboard ---
+    async function loadGame() {
+      // Determine GAME_ID
+      GAME_ID = explicitId || `Game${todayISO()}`;
+      const snap = await getDoc(doc(db, 'blitstiekGames', GAME_ID));
+      if (!snap.exists()) {
+        document.getElementById('statusPill').textContent = 'Status: nie gevind';
+        throw new Error(`Geen spel vir ${GAME_ID}`);
+      }
+      const data = snap.data();
+      TARGET = (data.word || '').toUpperCase();
+      gameIdPill.textContent = `GameID: ${GAME_ID}`;
+      statusPill.textContent = `Status: ${data.status || '—'}`;
+
+      // render target
+      targetEl.innerHTML = '';
+      TARGET.split('').forEach(ch => {
+        const s = document.createElement('span'); s.textContent = ch; targetEl.appendChild(s);
+      });
+
+      // load leaderboard
+      const qy = query(collection(db,'blitstiekGames', GAME_ID, 'leaderboard'),
+                       orderBy('time','asc'), limit(10));
+      const lb = await getDocs(qy);
+      lbBody.innerHTML = '';
+      let r=1, firstTime=null;
+      lb.forEach(d => {
+        const v = d.data();
+        if (r===1) { firstTime=v.time; bestEl.textContent = fmt(firstTime); }
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${r}</td><td>${(v.userName||'-')}</td><td>${fmt(v.time)}</td>`;
+        lbBody.appendChild(tr);
+        r++;
+      });
+    }
+
+    // --- Wire up controls ---
+    startBtn.addEventListener('click', start);
+    pauseBtn.addEventListener('click', togglePause);
+    leftBtn.addEventListener('click', ()=>move(-1,0));
+    rightBtn.addEventListener('click', ()=>move(1,0));
+    downBtn.addEventListener('click', drop);
+    document.addEventListener('keydown', (e)=>{
+      if (e.key==='ArrowLeft') move(-1,0);
+      if (e.key==='ArrowRight') move(1,0);
+      if (e.key==='ArrowDown') move(0,1);
+      if (e.key===' ') { e.preventDefault(); drop(); }
+    });
+
+    // --- Init ---
+    drawGrid();
+    try { await loadGame(); } catch(e){ console.error(e); }
+
+  </script>
+</body>
+</html>
