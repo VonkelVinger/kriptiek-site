@@ -3,92 +3,135 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
-  <title>BLITSTIEK (toets)</title>
+  <title>BLITSTIEK · Kriptiek</title>
+
+  <!-- Tailwind + Font -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; padding: 12px; }
-    .wrap { max-width: 380px; margin: 0 auto; }
-    h1 { font-size: 20px; margin: 0 0 8px; }
-    .row { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
-    .pill { padding:6px 10px; border-radius:999px; background:#eee; font-weight:600; }
-    #target { display:flex; gap:2px; padding:3px; background:#003b32; color:#fff; }
-    #target span { width:28px; height:28px; display:grid; place-items:center; font-weight:700; border:1px solid rgba(255,255,255,.15); }
-    #grid { width:100%; aspect-ratio:8/10; display:grid; grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(10,1fr); gap:1px; background:#004d40; border:1px solid #004d40; margin:8px 0; position:relative; overflow:hidden; }
+    :root { --brand-dark:#0f2a43; --brand-accent:#0b5ed7; --tile:#1f2937; }
+    html,body{ height:100%; }
+    body { font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:#f7fafc; }
+    .logo-tile { background:#374151; color:#fff; border:2px solid #1f2937; border-radius:.375rem; }
+    .flipped-k { transform: scaleX(-1); }
+    /* Game board */
+    #grid { aspect-ratio:8/10; display:grid; grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(10,1fr); gap:1px; background:#004d40; border:1px solid #004d40; position:relative; overflow:hidden; }
     .cell { background:#004d40; position:relative; }
     .cell.f { display:grid; place-items:center; color:#fff; font-weight:700; }
-    .ctrls { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin:8px 0; }
-    .btn { padding:10px; border:0; border-radius:8px; font-weight:700; background:#003366; color:#fff; }
-    .btn:disabled { opacity:.5; }
-    #time, #best { flex:1; background:#003b32; color:#fff; text-align:center; padding:8px; border-radius:6px; font-weight:700; }
-    #over { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.6); }
-    #over .card { background:#900C3F; color:#fff; padding:16px; border-radius:8px; width:90%; max-width:320px; text-align:center; }
-    table { width:100%; border-collapse:collapse; margin:12px 0; font-size:14px; }
-    th,td { padding:6px; border-bottom:1px solid #eee; text-align:left; }
-    caption { font-weight:800; padding:6px; }
-    .warn { background:#fff4e5; border:1px solid #f7c97b; padding:8px; border-radius:6px; margin:8px 0; }
-    .ok { background:#e7f6ec; border:1px solid #9ad0ae; padding:8px; border-radius:6px; margin:8px 0; }
+    /* Overlay */
+    #over { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.6); z-index:40; }
+    #over .card { background:#900C3F; color:#fff; padding:18px; border-radius:14px; width:92%; max-width:380px; text-align:center; }
+    /* Title target tiles */
+    #target span { width:30px; height:30px; display:grid; place-items:center; font-weight:800; border:1px solid rgba(255,255,255,.18); }
+    @media (max-width:640px){ #target span { width:26px; height:26px; } }
   </style>
 </head>
-<body>
-  <div class="wrap">
-    <h1>BLITSTIEK · Toets</h1>
+<body class="min-h-full flex flex-col">
 
-    <div id="authBox" class="warn" style="display:none">
-      Meld aan om te speel en jou tyd te stoor.
-      <div style="margin-top:6px">
-        <a href="/login.html?new=1">Gaan na aanmelding</a>
+  <!-- Header -->
+  <header class="w-full bg-white shadow-sm">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/index.html" class="flex items-center gap-3">
+        <div class="grid grid-cols-8 gap-1">
+          <div class="logo-tile w-7 h-7 grid place-items-center flipped-k">K</div>
+          <div class="logo-tile w-7 h-7 grid place-items-center">R</div>
+          <div class="logo-tile w-7 h-7 grid place-items-center">I</div>
+          <div class="logo-tile w-7 h-7 grid place-items-center">P</div>
+          <div class="logo-tile w-7 h-7 grid place-items-center">T</div>
+          <div class="logo-tile w-7 h-7 grid place-items-center">I</div>
+          <div class="logo-tile w-7 h-7 grid place-items-center">E</div>
+          <div class="logo-tile w-7 h-7 grid place-items-center">K</div>
+        </div>
+        <h1 class="text-xl md:text-2xl font-bold tracking-wide text-[var(--brand-dark)]">BLITSTIEK</h1>
+      </a>
+
+      <div class="flex items-center gap-2">
+        <a id="loginLink" href="/login.html?new=1" class="text-sm px-3 py-1.5 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800">Meld aan</a>
+        <button id="btnSignOut" class="hidden text-sm px-3 py-1.5 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800">Meld af</button>
       </div>
     </div>
+  </header>
 
-    <div class="row">
-      <div class="pill" id="gameIdPill">GameID: —</div>
-      <div class="pill" id="statusPill">Status: —</div>
+  <!-- Main -->
+  <main class="flex-1">
+    <div class="max-w-3xl mx-auto px-4 py-6">
+      <!-- Game info -->
+      <div class="flex flex-wrap items-center gap-2 mb-3">
+        <span id="pillId" class="px-3 py-1.5 rounded-full bg-gray-100 text-gray-700 text-sm font-semibold">GameID: —</span>
+        <span id="pillStatus" class="px-3 py-1.5 rounded-full bg-gray-100 text-gray-700 text-sm font-semibold">Status: —</span>
+      </div>
+
+      <!-- Target word -->
+      <div class="flex items-center gap-2 mb-3">
+        <span class="px-3 py-1.5 rounded-full bg-gray-100 text-gray-700 text-sm font-semibold">Teikenwoord</span>
+        <div id="target" class="flex gap-1 bg-[#003b32] p-1 rounded text-white"></div>
+      </div>
+
+      <!-- Board + Controls -->
+      <section class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+        <div class="relative">
+          <div id="grid" class="w-full rounded"></div>
+          <!-- Overlay -->
+          <div id="over">
+            <div class="card" id="overCard"></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 mt-3">
+          <button id="btnLeft"  class="px-3 py-3 rounded-xl bg-[#003366] text-white font-bold">◀</button>
+          <button id="btnDown"  class="px-3 py-3 rounded-xl bg-[#003366] text-white font-bold">▼</button>
+          <button id="btnRight" class="px-3 py-3 rounded-xl bg-[#003366] text-white font-bold">▶</button>
+        </div>
+
+        <div class="flex items-center gap-2 mt-3">
+          <button id="btnStart" class="px-4 py-2 rounded-xl bg-[var(--brand-dark)] hover:bg-slate-800 text-white font-bold">BEGIN</button>
+          <button id="btnPause" class="px-4 py-2 rounded-xl bg-gray-700 text-white font-bold">POUSE</button>
+          <button id="btnShare" class="ml-auto px-4 py-2 rounded-xl bg-emerald-700 text-white font-bold">DEEL</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 mt-3">
+          <div id="timeBox" class="text-center font-bold rounded-lg bg-[#003b32] text-white p-2">Jou tyd: <b>00:00</b></div>
+          <div id="bestBox" class="text-center font-bold rounded-lg bg-[#003b32] text-white p-2">Beste tyd: <b>--:--</b></div>
+        </div>
+
+        <p id="authNote" class="hidden mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+          Meld aan om jou tyd op die leiertafel te stoor.
+        </p>
+      </section>
+
+      <!-- Leaderboard -->
+      <section class="bg-white rounded-2xl shadow-sm border border-gray-100 mt-6">
+        <div class="px-5 py-4 border-b">
+          <h2 class="text-base font-semibold text-[var(--brand-dark)]">BLITSTIEK Top 10</h2>
+        </div>
+        <div class="p-4 overflow-x-auto">
+          <table class="min-w-full text-left text-sm">
+            <thead>
+              <tr class="text-gray-500">
+                <th class="py-2 pr-4">#</th>
+                <th class="py-2 pr-4">Naam</th>
+                <th class="py-2">Tyd</th>
+              </tr>
+            </thead>
+            <tbody id="lbBody"><tr><td class="py-2 pr-4">—</td><td class="py-2 pr-4">—</td><td class="py-2">—</td></tr></tbody>
+          </table>
+        </div>
+      </section>
     </div>
+  </main>
 
-    <div class="row">
-      <div class="pill">Teikenwoord:</div>
-      <div id="target"></div>
-    </div>
+  <!-- Footer -->
+  <footer class="bg-[var(--brand-dark)] text-white text-center py-6 mt-auto">
+    <div class="max-w-5xl mx-auto px-4 text-sm opacity-90">&copy; 2025 Kriptiek. Alle regte voorbehou.</div>
+  </footer>
 
-    <div id="grid"></div>
-
-    <div class="ctrls">
-      <button class="btn" id="left">◀</button>
-      <button class="btn" id="down">▼</button>
-      <button class="btn" id="right">▶</button>
-    </div>
-
-    <div class="row">
-      <button class="btn" id="start">BEGIN</button>
-      <button class="btn" id="pause">POUSE</button>
-    </div>
-
-    <div class="row">
-      <div id="time">Jou tyd: <b>00:00</b></div>
-      <div id="best">Beste tyd: <b>--:--</b></div>
-    </div>
-
-    <table id="lb">
-      <caption>BLITSTIEK Top 10</caption>
-      <thead><tr><th>#</th><th>Naam</th><th>Tyd</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </div>
-
-  <!-- Overlay -->
-  <div id="over">
-    <div class="card" id="overCard"></div>
-  </div>
-
-  <!-- Firebase + Logic -->
+  <!-- Firebase + Game Logic -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
-    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
-    import {
-      getFirestore, serverTimestamp, doc, getDoc, setDoc,
-      collection, query, orderBy, limit, getDocs
-    } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
+    import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
+    import { getFirestore, serverTimestamp, doc, getDoc, setDoc, collection, query, orderBy, limit, getDocs } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
-    // ---- Kriptiek config (from admindilemma) ----
+    // ---- CONFIG (same as admindilemma) ----
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
       authDomain: "kriptiek-c9ea2.firebaseapp.com",
@@ -100,284 +143,279 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getFirestore(app);
+    const db   = getFirestore(app);
 
-    // --- Helpers ---
+    // ---- DOM ----
+    const loginLink  = document.getElementById('loginLink');
+    const btnSignOut = document.getElementById('btnSignOut');
+    const pillId     = document.getElementById('pillId');
+    const pillStatus = document.getElementById('pillStatus');
+    const targetEl   = document.getElementById('target');
+    const gridEl     = document.getElementById('grid');
+    const over       = document.getElementById('over');
+    const overCard   = document.getElementById('overCard');
+    const lbBody     = document.getElementById('lbBody');
+    const timeText   = document.querySelector('#timeBox b');
+    const bestText   = document.querySelector('#bestBox b');
+    const authNote   = document.getElementById('authNote');
+
+    const btnLeft = document.getElementById('btnLeft');
+    const btnRight= document.getElementById('btnRight');
+    const btnDown = document.getElementById('btnDown');
+    const btnStart= document.getElementById('btnStart');
+    const btnPause= document.getElementById('btnPause');
+    const btnShare= document.getElementById('btnShare');
+
+    // ---- Helpers ----
     const pad = n => String(n).padStart(2,'0');
     const fmt = s => s==null ? '--:--' : `${pad(Math.floor(s/60))}:${pad(s%60)}`;
-    const todayISO = () => {
-      const d = new Date();
-      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-    };
+    const todayISO = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
     const qs = new URLSearchParams(location.search);
     const explicitId = qs.get('gameId');
+    const shareUrl = () => {
+      const url = new URL(location.href);
+      if (!explicitId && GAME_ID) url.searchParams.set('gameId', GAME_ID);
+      return url.toString();
+    };
 
-    // --- DOM ---
-    const gridEl = document.getElementById('grid');
-    const targetEl = document.getElementById('target');
-    const timeEl = document.querySelector('#time b');
-    const bestEl = document.querySelector('#best b');
-    const startBtn = document.getElementById('start');
-    const pauseBtn = document.getElementById('pause');
-    const leftBtn = document.getElementById('left');
-    const rightBtn = document.getElementById('right');
-    const downBtn = document.getElementById('down');
-    const over = document.getElementById('over');
-    const overCard = document.getElementById('overCard');
-    const authBox = document.getElementById('authBox');
-    const gameIdPill = document.getElementById('gameIdPill');
-    const statusPill = document.getElementById('statusPill');
-    const lbBody = document.querySelector('#lb tbody');
-
-    // --- Game constants (compact) ---
-    const W = 8, H = 10;
+    // ---- Game constants ----
+    const W=8, H=10;
     const COLORS = ['#2196f3','#f44336','#4caf50','#ffc107','#9c27b0','#003366','#009688'];
-    const CONS = 'BCDFGHJKLMNPQRSTVWXZ', VOWS = 'AEIOUY';
+    const CONS='BCDFGHJKLMNPQRSTVWXZ', VOWS='AEIOUY';
 
-    // --- State ---
-    let GAME_ID = null, TARGET = '';
-    let grid = Array.from({length:H}, ()=>Array(W).fill(null));
-    let cur = null, nxt = null;
-    let timer = 0, tInt = null, gInt = null;
-    let paused = false, overFlag = false;
-    let user = null;
+    // ---- State ----
+    let user=null;
+    let GAME_ID=null, TARGET='';
+    let grid=Array.from({length:H},()=>Array(W).fill(null));
+    let cur=null, nxt=null;
+    let paused=false, ended=false;
+    let t=0, tInt=null, gInt=null;
 
-    onAuthStateChanged(auth, u => {
-      user = u || null;
-      authBox.style.display = user ? 'none' : 'block';
+    // ---- Auth wiring ----
+    onAuthStateChanged(auth, (u)=>{
+      user=u||null;
+      if (user) {
+        loginLink.classList.add('hidden');
+        btnSignOut.classList.remove('hidden');
+        authNote.classList.add('hidden');
+      } else {
+        loginLink.classList.remove('hidden');
+        btnSignOut.classList.add('hidden');
+        authNote.classList.remove('hidden');
+      }
+    });
+    btnSignOut.addEventListener('click', async ()=>{
+      await signOut(auth);
+      try{ localStorage.clear(); sessionStorage.clear(); }catch{}
+      location.reload();
     });
 
-    // Build grid UI
-    function drawGrid() {
-      gridEl.innerHTML = '';
-      for (let y=0; y<H; y++) for (let x=0; x<W; x++) {
-        const d = document.createElement('div');
-        d.className='cell';
-        d.dataset.x=x; d.dataset.y=y;
+    // ---- Grid drawing ----
+    function drawGrid(){
+      gridEl.innerHTML='';
+      for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+        const d=document.createElement('div'); d.className='cell'; d.dataset.x=x; d.dataset.y=y;
         gridEl.appendChild(d);
       }
     }
-    function drawBlock(b) {
-      if (!b) return;
-      if (b.x<0||b.x>=W||b.y<0||b.y>=H) return;
-      const cell = gridEl.querySelector(`.cell[data-x="${b.x}"][data-y="${b.y}"]`);
-      if (!cell) return;
-      cell.className='cell f';
-      cell.style.background=b.color;
-      cell.textContent=b.letter;
+    function drawBlock(b){
+      if(!b||b.x<0||b.x>=W||b.y<0||b.y>=H) return;
+      const c=gridEl.querySelector(`.cell[data-x="${b.x}"][data-y="${b.y}"]`);
+      if(!c) return;
+      c.className='cell f'; c.style.background=b.color; c.textContent=b.letter;
     }
-    function clearBlock(b) {
-      if (!b) return;
-      const cell = gridEl.querySelector(`.cell[data-x="${b.x}"][data-y="${b.y}"]`);
-      if (!cell) return;
-      cell.className='cell';
-      cell.style.background='#004d40';
-      cell.textContent='';
+    function clearBlock(b){
+      if(!b) return;
+      const c=gridEl.querySelector(`.cell[data-x="${b.x}"][data-y="${b.y}"]`);
+      if(!c) return;
+      c.className='cell'; c.style.background='#004d40'; c.textContent='';
     }
+
     const partOfTarget = L => TARGET.includes(L);
     const collide = b => !b || b.x<0||b.x>=W||b.y>=H || (b.y>=0 && grid[b.y][b.x]);
 
     function createBlock(){
-      const color = COLORS[Math.floor(Math.random()*COLORS.length)];
-      const letter = Math.random()<0.3
-        ? VOWS[Math.floor(Math.random()*VOWS.length)]
-        : CONS[Math.floor(Math.random()*CONS.length)];
-      return { color, letter, x: Math.floor(W/2), y: 0 };
+      const color=COLORS[Math.floor(Math.random()*COLORS.length)];
+      const letter=Math.random()<0.3? VOWS[Math.floor(Math.random()*VOWS.length)] : CONS[Math.floor(Math.random()*CONS.length)];
+      return { color, letter, x:Math.floor(W/2), y:0 };
     }
 
     async function move(dx,dy){
-      if (!cur || paused || overFlag) return;
+      if(!cur||paused||ended) return;
       clearBlock(cur);
-      const test = { ...cur, x:cur.x+dx, y:cur.y+dy };
-      if (!collide(test)) {
-        cur = test; drawBlock(cur);
-      } else if (dy>0) {
-        // stick
-        drawBlock(cur);
-        place();
-      } else {
-        drawBlock(cur);
-      }
+      const test={...cur,x:cur.x+dx,y:cur.y+dy};
+      if(!collide(test)){ cur=test; drawBlock(cur); }
+      else if(dy>0){ drawBlock(cur); place(); }
+      else{ drawBlock(cur); }
     }
-    function drop() {
-      if (!cur || paused || overFlag) return;
+    function hardDrop(){
+      if(!cur||paused||ended) return;
       clearBlock(cur);
-      while (cur.y < H-1 && !collide({ ...cur, y: cur.y+1 })) cur.y++;
+      while(cur.y<H-1 && !collide({...cur,y:cur.y+1})) cur.y++;
       place();
     }
     async function place(){
-      if (!cur || cur.y<0) return;
-      grid[cur.y][cur.x] = { ...cur };
-      drawBlock(cur);
+      if(!cur||cur.y<0) return;
+      grid[cur.y][cur.x]={...cur}; drawBlock(cur);
       await matchAndDrop();
-      checkWin();
-      checkFail();
-      cur = nxt; nxt = createBlock();
-      drawBlock(cur);
+      checkWin(); checkFail();
+      cur=nxt; nxt=createBlock(); drawBlock(cur);
     }
 
     async function matchAndDrop(){
-      const toDel = new Set();
-      for (let y=0;y<H;y++) for (let x=0;x<W;x++){
-        const a = grid[y][x]; if (!a || partOfTarget(a.letter)) continue;
-        for (const [dx,dy] of [[1,0],[0,1],[-1,0],[0,-1]]){
-          const nx=x+dx, ny=y+dy;
-          if (nx<0||nx>=W||ny<0||ny>=H) continue;
-          const b = grid[ny][nx];
-          if (!b || partOfTarget(b.letter)) continue;
-          if (a.letter===b.letter || a.color===b.color){ toDel.add(`${x},${y}`); toDel.add(`${nx},${ny}`); }
+      const del=new Set();
+      for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+        const a=grid[y][x]; if(!a||partOfTarget(a.letter)) continue;
+        for(const [dx,dy] of [[1,0],[0,1],[-1,0],[0,-1]]){
+          const nx=x+dx, ny=y+dy; if(nx<0||nx>=W||ny<0||ny>=H) continue;
+          const b=grid[ny][nx]; if(!b||partOfTarget(b.letter)) continue;
+          if(a.letter===b.letter || a.color===b.color){ del.add(`${x},${y}`); del.add(`${nx},${ny}`); }
         }
       }
-      if (!toDel.size) return;
-      await Promise.all(Array.from(toDel).map(key => new Promise(res=>{
+      if(!del.size) return;
+      await Promise.all(Array.from(del).map(key=>new Promise(res=>{
         const [x,y]=key.split(',').map(Number);
-        const c = gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
-        if (c) { c.style.opacity=.2; setTimeout(()=>{ c.style.opacity=''; res(); },120); } else res();
+        const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+        if(c){ c.style.opacity=.2; setTimeout(()=>{ c.style.opacity=''; res(); },120);} else res();
         grid[y][x]=null;
       })));
-      // drop columns
-      for (let x=0;x<W;x++){
-        let wY=H-1;
-        for (let y=H-1;y>=0;y--){
-          if (grid[y][x]) {
-            if (y!==wY){ grid[wY][x]=grid[y][x]; grid[y][x]=null; }
-            wY--;
-          }
-        }
-      }
+      // compact columns
+      for(let x=0;x<W;x++){ let wY=H-1; for(let y=H-1;y>=0;y--){ if(grid[y][x]){ if(y!==wY){ grid[wY][x]=grid[y][x]; grid[y][x]=null; } wY--; } } }
       // redraw
-      for (let y=0;y<H;y++) for (let x=0;x<W;x++){
-        const cell = gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
-        cell.className='cell';
-        cell.style.background='#004d40';
-        cell.textContent='';
-        if (grid[y][x]) drawBlock({ ...grid[y][x], x, y });
+      for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+        const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+        c.className='cell'; c.style.background='#004d40'; c.textContent='';
+        if(grid[y][x]) drawBlock({...grid[y][x],x,y});
       }
     }
 
     function checkWin(){
-      for (let y=0;y<H;y++) for (let x=0;x<=W-TARGET.length;x++){
-        let ok=true;
-        for (let i=0;i<TARGET.length;i++){
-          const g=grid[y][x+i];
-          if (!g || g.letter!==TARGET[i]) { ok=false; break; }
-        }
-        if (ok){ endGame(true); return; }
+      for(let y=0;y<H;y++) for(let x=0;x<=W-TARGET.length;x++){
+        let ok=true; for(let i=0;i<TARGET.length;i++){ const g=grid[y][x+i]; if(!g||g.letter!==TARGET[i]){ ok=false; break; } }
+        if(ok){ end(true); return; }
       }
     }
-    function checkFail(){
-      if (nxt && collide(nxt)) endGame(false);
-    }
+    function checkFail(){ if(nxt && collide(nxt)) end(false); }
 
-    function start() {
-      overFlag=false; over.style.display='none';
-      grid = Array.from({length:H}, ()=>Array(W).fill(null));
+    function setTime(v){ t=v; timeText.textContent=fmt(t); }
+    function start(){
+      ended=false; over.style.display='none'; setTime(0);
+      grid=Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
-      time(0);
-      cur = createBlock();
-      nxt = createBlock();
-      drawBlock(cur);
-      paused=false;
-      clearInterval(gInt); clearInterval(tInt);
-      gInt = setInterval(()=>{ if (!paused && !overFlag) move(0,1); }, 1000);
-      tInt = setInterval(()=>{ if (!paused && !overFlag) time(timer+1); }, 1000);
+      cur=createBlock(); nxt=createBlock(); drawBlock(cur);
+      paused=false; btnPause.textContent='POUSE';
+      clearInterval(tInt); clearInterval(gInt);
+      gInt=setInterval(()=>{ if(!paused && !ended) move(0,1); },1000);
+      tInt=setInterval(()=>{ if(!paused && !ended) setTime(t+1); },1000);
     }
-    function togglePause(){ if (overFlag) return; paused=!paused; pauseBtn.textContent = paused ? 'HERVAT' : 'POUSE'; }
-    function time(v){ timer=v; timeEl.textContent = fmt(timer); }
+    function togglePause(){ if(ended) return; paused=!paused; btnPause.textContent = paused ? 'HERVAT' : 'POUSE'; }
 
     function overlay(html){ overCard.innerHTML=html; over.style.display='flex'; }
-
-    async function submitTime() {
-      if (!user) return; // should not happen if button hidden
-      try {
+    async function submitTime(){
+      if(!user) return;
+      try{
         const name = user.displayName || user.email || 'Speler';
-        await setDoc(doc(db, 'blitstiekGames', GAME_ID, 'leaderboard', user.uid), {
-          userName: String(name).slice(0, 24),
-          time: Number(timer),
-          timestamp: serverTimestamp()
-        }, { merge: true });
-        overlay(`<div class="ok">Tyd gestoor ✔</div>
-                 <button class="btn" onclick="document.getElementById('over').style.display='none'">SLUIT</button>`);
-      } catch (e) {
-        overlay(`<div class="warn">Kon nie stoor nie.</div>
-                 <div style="font-size:12px;opacity:.8;margin:6px 0">${e?.message||e}</div>
-                 <button class="btn" onclick="document.getElementById('over').style.display='none'">SLUIT</button>`);
+        await setDoc(doc(db,'blitstiekGames',GAME_ID,'leaderboard',user.uid),{
+          userName:String(name).slice(0,24),
+          time:Number(t),
+          timestamp:serverTimestamp()
+        },{ merge:true });
+        overlay(`<div class="bg-emerald-50 text-emerald-900 border border-emerald-200 rounded p-2 mb-2 text-sm">Tyd gestoor ✔</div>
+                 <button id="closeOver" class="mt-2 px-4 py-2 rounded-xl bg-gray-700 text-white font-bold">SLUIT</button>`);
+        document.getElementById('closeOver').addEventListener('click', ()=> over.style.display='none');
+        // refresh leaderboard
+        await loadLeaderboard();
+      }catch(e){
+        overlay(`<div class="bg-amber-50 text-amber-900 border border-amber-200 rounded p-2 mb-2 text-sm">Kon nie stoor nie.</div>
+                 <div class="text-xs opacity-80 mb-2">${e?.message||e}</div>
+                 <button id="closeErr" class="px-4 py-2 rounded-xl bg-gray-700 text-white font-bold">SLUIT</button>`);
+        document.getElementById('closeErr').addEventListener('click', ()=> over.style.display='none');
       }
     }
 
-    function endGame(win){
-      overFlag=true;
-      clearInterval(gInt); clearInterval(tInt);
-      if (win) {
-        const msg = `Puik! Jou tyd: <b>${fmt(timer)}</b> vir <b>${TARGET}</b>.`;
-        const submitBtn = user
-          ? `<button class="btn" id="saveBtn">DIEN TYD IN</button>`
-          : `<div class="warn" style="text-align:left">Meld aan om jou tyd op die leiertafel te stoor.</div>`;
-        overlay(`<div style="margin-bottom:8px">${msg}</div>${submitBtn}
-                 <button class="btn" id="closeBtn" style="margin-top:6px;background:#666">SLUIT</button>`);
-        const closeBtn = document.getElementById('closeBtn');
-        closeBtn?.addEventListener('click', ()=> over.style.display='none');
-        const saveBtn = document.getElementById('saveBtn');
-        saveBtn?.addEventListener('click', submitTime);
+    function end(win){
+      ended=true; clearInterval(tInt); clearInterval(gInt);
+      if(win){
+        const msg=`Puik! Jou tyd: <b>${fmt(t)}</b> vir <b>${TARGET}</b>.`;
+        const saveBtn = user ? `<button id="saveBtn" class="px-4 py-2 rounded-xl bg-[var(--brand-dark)] text-white font-bold">DIEN TYD IN</button>`
+                             : `<div class="text-left text-sm bg-amber-50 text-amber-900 border border-amber-200 rounded p-2 mb-2">Meld aan om jou tyd op die leiertafel te stoor.</div>`;
+        overlay(`<div class="mb-2">${msg}</div>${saveBtn}
+                 <button id="closeBtn" class="mt-2 px-4 py-2 rounded-xl bg-gray-700 text-white font-bold">SLUIT</button>`);
+        document.getElementById('closeBtn').addEventListener('click', ()=> over.style.display='none');
+        const sb=document.getElementById('saveBtn'); if(sb) sb.addEventListener('click', submitTime);
       } else {
-        overlay(`<div style="margin-bottom:8px"><b>GAME OVER</b></div>
-                 <button class="btn" onclick="document.getElementById('over').style.display='none'">SLUIT</button>`);
+        overlay(`<div class="mb-2 text-lg font-bold">GAME OVER</div>
+                 <button id="closeBtn2" class="px-4 py-2 rounded-xl bg-gray-700 text-white font-bold">SLUIT</button>`);
+        document.getElementById('closeBtn2').addEventListener('click', ()=> over.style.display='none');
       }
     }
 
-    // --- Load game & leaderboard ---
-    async function loadGame() {
-      // Determine GAME_ID
-      GAME_ID = explicitId || `Game${todayISO()}`;
-      const snap = await getDoc(doc(db, 'blitstiekGames', GAME_ID));
-      if (!snap.exists()) {
-        document.getElementById('statusPill').textContent = 'Status: nie gevind';
-        throw new Error(`Geen spel vir ${GAME_ID}`);
+    // ---- Share ----
+    async function handleShare(){
+      const msg = `Ek het ${TARGET} in ${fmt(t)} op BLITSTIEK voltooi! Kan jy my tyd klop? Speel saam: ${shareUrl()}`;
+      // Try Web Share
+      if(navigator.share){
+        try{ await navigator.share({ text: msg }); return; } catch { /* fall through */ }
       }
-      const data = snap.data();
-      TARGET = (data.word || '').toUpperCase();
-      gameIdPill.textContent = `GameID: ${GAME_ID}`;
-      statusPill.textContent = `Status: ${data.status || '—'}`;
+      // Clipboard + WhatsApp fallback
+      try{ await navigator.clipboard.writeText(msg); } catch {}
+      const wa = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      window.open(wa,'_blank');
+    }
 
-      // render target
-      targetEl.innerHTML = '';
-      TARGET.split('').forEach(ch => {
-        const s = document.createElement('span'); s.textContent = ch; targetEl.appendChild(s);
-      });
+    btnShare.addEventListener('click', handleShare);
 
-      // load leaderboard
-      const qy = query(collection(db,'blitstiekGames', GAME_ID, 'leaderboard'),
-                       orderBy('time','asc'), limit(10));
-      const lb = await getDocs(qy);
-      lbBody.innerHTML = '';
-      let r=1, firstTime=null;
-      lb.forEach(d => {
-        const v = d.data();
-        if (r===1) { firstTime=v.time; bestEl.textContent = fmt(firstTime); }
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${r}</td><td>${(v.userName||'-')}</td><td>${fmt(v.time)}</td>`;
+    // ---- Load game & leaderboard ----
+    async function loadGame(){
+      GAME_ID = explicitId || `Game${todayISO()}`;
+      const snap = await getDoc(doc(db,'blitstiekGames',GAME_ID));
+      pillId.textContent = `GameID: ${GAME_ID}`;
+      if(!snap.exists()){
+        pillStatus.textContent = 'Status: nie gevind';
+        targetEl.innerHTML = `<span class="text-red-100 px-2">—</span>`;
+        return;
+      }
+      const data=snap.data();
+      TARGET=(data.word||'').toUpperCase();
+      pillStatus.textContent = `Status: ${data.status || '—'}`;
+      // render target tiles
+      targetEl.innerHTML='';
+      TARGET.split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
+      await loadLeaderboard();
+    }
+
+    async function loadLeaderboard(){
+      const qy=query(collection(db,'blitstiekGames',GAME_ID,'leaderboard'), orderBy('time','asc'), limit(10));
+      const res=await getDocs(qy);
+      lbBody.innerHTML='';
+      let r=1, first=null;
+      res.forEach(d=>{
+        const v=d.data();
+        if(r===1){ first=v.time; bestText.textContent=fmt(first); }
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td class="py-2 pr-4">${r}</td><td class="py-2 pr-4">${v.userName||'-'}</td><td class="py-2">${fmt(v.time)}</td>`;
         lbBody.appendChild(tr);
         r++;
       });
+      if(res.empty){ bestText.textContent='--:--'; lbBody.innerHTML='<tr><td class="py-2 pr-4">—</td><td class="py-2 pr-4">—</td><td class="py-2">—</td></tr>'; }
     }
 
-    // --- Wire up controls ---
-    startBtn.addEventListener('click', start);
-    pauseBtn.addEventListener('click', togglePause);
-    leftBtn.addEventListener('click', ()=>move(-1,0));
-    rightBtn.addEventListener('click', ()=>move(1,0));
-    downBtn.addEventListener('click', drop);
+    // ---- Controls ----
+    btnStart.addEventListener('click', start);
+    btnPause.addEventListener('click', ()=>togglePause());
+    btnLeft.addEventListener('click', ()=>move(-1,0));
+    btnRight.addEventListener('click',()=>move(1,0));
+    btnDown.addEventListener('click', ()=>hardDrop());
     document.addEventListener('keydown', (e)=>{
-      if (e.key==='ArrowLeft') move(-1,0);
-      if (e.key==='ArrowRight') move(1,0);
-      if (e.key==='ArrowDown') move(0,1);
-      if (e.key===' ') { e.preventDefault(); drop(); }
+      if(e.key==='ArrowLeft') move(-1,0);
+      if(e.key==='ArrowRight') move(1,0);
+      if(e.key==='ArrowDown') move(0,1);
+      if(e.key===' ') { e.preventDefault(); hardDrop(); }
     });
 
-    // --- Init ---
+    // ---- Init ----
     drawGrid();
-    try { await loadGame(); } catch(e){ console.error(e); }
-
+    await loadGame();
   </script>
 </body>
 </html>
