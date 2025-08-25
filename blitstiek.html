@@ -9,21 +9,66 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
   <style>
-    :root { --brand-dark:#0f2a43; --brand-accent:#0b5ed7; --tile:#1f2937; }
+    :root{
+      --brand-dark:#0f2a43;
+      --brand-accent:#0b5ed7;
+      --board:#003b32;           /* cell color */
+      --line:#0f3f39;            /* grid lines */
+      --btn:#003366;
+    }
     html,body{ height:100%; }
-    body { font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:#f7fafc; }
-    .logo-tile { background:#374151; color:#fff; border:2px solid #1f2937; border-radius:.375rem; }
-    .flipped-k { transform: scaleX(-1); }
-    /* Game board */
-    #grid { aspect-ratio:8/10; display:grid; grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(10,1fr); gap:1px; background:#004d40; border:1px solid #004d40; position:relative; overflow:hidden; }
-    .cell { background:#004d40; position:relative; }
-    .cell.f { display:grid; place-items:center; color:#fff; font-weight:700; }
+    body{ font-family:'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:#f7fafc; }
+
+    .logo-tile{ background:#374151; color:#fff; border:2px solid #1f2937; border-radius:.375rem; }
+    .flipped-k{ transform:scaleX(-1); }
+
+    /* Cards */
+    .card{ background:#fff; border:1px solid #e5e7eb; border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
+
+    /* Pills */
+    .pill{ background:#f3f4f6; color:#374151; padding:.4rem .7rem; border-radius:999px; font-weight:600; }
+
+    /* Target chips */
+    #target{ background:#0c4a3e; padding:4px 6px; border-radius:10px; color:#fff; display:flex; gap:2px; }
+    #target span{ width:28px; height:28px; display:grid; place-items:center; font-weight:800; border:1px solid rgba(255,255,255,.18); border-radius:4px; }
+
+    /* Game board with real grid lines (gap) */
+    #grid{
+      display:grid;
+      gap:1px;                       /* visible lines */
+      background:var(--line);
+      border:1px solid var(--line);
+      border-radius:12px;
+      overflow:hidden;
+      width:100%;
+      max-width:540px;               /* sensible cap */
+      margin:10px auto;
+    }
+    .cell{ background:var(--board); position:relative; }
+    .cell.f{
+      display:grid; place-items:center;
+      color:#fff; font-weight:800;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.14);
+      text-shadow: 0 1px 1px rgba(0,0,0,.35);
+    }
+
     /* Overlay */
-    #over { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.6); z-index:40; }
-    #over .card { background:#900C3F; color:#fff; padding:18px; border-radius:14px; width:92%; max-width:380px; text-align:center; }
-    /* Title target tiles */
-    #target span { width:30px; height:30px; display:grid; place-items:center; font-weight:800; border:1px solid rgba(255,255,255,.18); }
-    @media (max-width:640px){ #target span { width:26px; height:26px; } }
+    #over{ position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.6); z-index:40; }
+    #over .cardx{ background:#900C3F; color:#fff; padding:18px; border-radius:14px; width:92%; max-width:380px; text-align:center; }
+
+    /* Buttons */
+    .btn{ background:var(--btn); color:#fff; font-weight:700; padding:12px 14px; border-radius:12px; }
+    .btn:disabled{ opacity:.5; }
+
+    /* Leaderboard tidy */
+    #lbBody tr{ border-top:1px solid #eef2f7; }
+    #lbBody td{ padding:.5rem .75rem; }
+
+    /* Mobile tweaks */
+    @media (max-width:480px){
+      #target span{ width:24px; height:24px; font-size:13px; }
+      .btn{ padding:10px 12px; }
+    }
   </style>
 </head>
 <body class="min-h-full flex flex-col">
@@ -44,7 +89,6 @@
         </div>
         <h1 class="text-xl md:text-2xl font-bold tracking-wide text-[var(--brand-dark)]">BLITSTIEK</h1>
       </a>
-
       <div class="flex items-center gap-2">
         <a id="loginLink" href="/login.html?new=1" class="text-sm px-3 py-1.5 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800">Meld aan</a>
         <button id="btnSignOut" class="hidden text-sm px-3 py-1.5 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800">Meld af</button>
@@ -55,38 +99,36 @@
   <!-- Main -->
   <main class="flex-1">
     <div class="max-w-3xl mx-auto px-4 py-6">
-      <!-- Game info -->
+
+      <!-- Info -->
       <div class="flex flex-wrap items-center gap-2 mb-3">
-        <span id="pillId" class="px-3 py-1.5 rounded-full bg-gray-100 text-gray-700 text-sm font-semibold">GameID: —</span>
-        <span id="pillStatus" class="px-3 py-1.5 rounded-full bg-gray-100 text-gray-700 text-sm font-semibold">Status: —</span>
+        <span id="pillId" class="pill">GameID: —</span>
+        <span id="pillStatus" class="pill">Status: —</span>
       </div>
 
-      <!-- Target word -->
+      <!-- Target -->
       <div class="flex items-center gap-2 mb-3">
-        <span class="px-3 py-1.5 rounded-full bg-gray-100 text-gray-700 text-sm font-semibold">Teikenwoord</span>
-        <div id="target" class="flex gap-1 bg-[#003b32] p-1 rounded text-white"></div>
+        <span class="pill">Teikenwoord</span>
+        <div id="target"></div>
       </div>
 
-      <!-- Board + Controls -->
-      <section class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+      <!-- GAME -->
+      <section class="card p-4">
         <div class="relative">
-          <div id="grid" class="w-full rounded"></div>
-          <!-- Overlay -->
-          <div id="over">
-            <div class="card" id="overCard"></div>
-          </div>
+          <div id="grid"></div>
+          <div id="over"><div class="cardx" id="overCard"></div></div>
         </div>
 
         <div class="grid grid-cols-3 gap-2 mt-3">
-          <button id="btnLeft"  class="px-3 py-3 rounded-xl bg-[#003366] text-white font-bold">◀</button>
-          <button id="btnDown"  class="px-3 py-3 rounded-xl bg-[#003366] text-white font-bold">▼</button>
-          <button id="btnRight" class="px-3 py-3 rounded-xl bg-[#003366] text-white font-bold">▶</button>
+          <button id="btnLeft"  class="btn">◀</button>
+          <button id="btnDown"  class="btn">▼</button>
+          <button id="btnRight" class="btn">▶</button>
         </div>
 
         <div class="flex items-center gap-2 mt-3">
-          <button id="btnStart" class="px-4 py-2 rounded-xl bg-[var(--brand-dark)] hover:bg-slate-800 text-white font-bold">BEGIN</button>
-          <button id="btnPause" class="px-4 py-2 rounded-xl bg-gray-700 text-white font-bold">POUSE</button>
-          <button id="btnShare" class="ml-auto px-4 py-2 rounded-xl bg-emerald-700 text-white font-bold">DEEL</button>
+          <button id="btnStart" class="btn">BEGIN</button>
+          <button id="btnPause" class="btn" style="background:#555">POUSE</button>
+          <button id="btnShare" class="btn ml-auto" style="background:#0f766e">DEEL</button>
         </div>
 
         <div class="grid grid-cols-2 gap-2 mt-3">
@@ -99,19 +141,15 @@
         </p>
       </section>
 
-      <!-- Leaderboard -->
-      <section class="bg-white rounded-2xl shadow-sm border border-gray-100 mt-6">
+      <!-- LEADERBOARD -->
+      <section class="card mt-6">
         <div class="px-5 py-4 border-b">
           <h2 class="text-base font-semibold text-[var(--brand-dark)]">BLITSTIEK Top 10</h2>
         </div>
         <div class="p-4 overflow-x-auto">
           <table class="min-w-full text-left text-sm">
             <thead>
-              <tr class="text-gray-500">
-                <th class="py-2 pr-4">#</th>
-                <th class="py-2 pr-4">Naam</th>
-                <th class="py-2">Tyd</th>
-              </tr>
+              <tr class="text-gray-500"><th class="py-2 pr-4">#</th><th class="py-2 pr-4">Naam</th><th class="py-2">Tyd</th></tr>
             </thead>
             <tbody id="lbBody"><tr><td class="py-2 pr-4">—</td><td class="py-2 pr-4">—</td><td class="py-2">—</td></tr></tbody>
           </table>
@@ -120,7 +158,6 @@
     </div>
   </main>
 
-  <!-- Footer -->
   <footer class="bg-[var(--brand-dark)] text-white text-center py-6 mt-auto">
     <div class="max-w-5xl mx-auto px-4 text-sm opacity-90">&copy; 2025 Kriptiek. Alle regte voorbehou.</div>
   </footer>
@@ -129,9 +166,12 @@
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
-    import { getFirestore, serverTimestamp, doc, getDoc, setDoc, collection, query, orderBy, limit, getDocs } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
+    import {
+      getFirestore, serverTimestamp, doc, getDoc, setDoc,
+      collection, query, orderBy, limit, getDocs
+    } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
-    // ---- CONFIG (same as admindilemma) ----
+    // ---- Firebase (same as admindilemma) ----
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
       authDomain: "kriptiek-c9ea2.firebaseapp.com",
@@ -166,24 +206,18 @@
     const btnPause= document.getElementById('btnPause');
     const btnShare= document.getElementById('btnShare');
 
-    // ---- Helpers ----
+    // ---- Helpers / State ----
     const pad = n => String(n).padStart(2,'0');
     const fmt = s => s==null ? '--:--' : `${pad(Math.floor(s/60))}:${pad(s%60)}`;
     const todayISO = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
     const qs = new URLSearchParams(location.search);
     const explicitId = qs.get('gameId');
-    const shareUrl = () => {
-      const url = new URL(location.href);
-      if (!explicitId && GAME_ID) url.searchParams.set('gameId', GAME_ID);
-      return url.toString();
-    };
 
-    // ---- Game constants ----
-    const W=8, H=10;
+    const H = 10;
+    let W = 8;               // dynamic after we read TARGET
     const COLORS = ['#2196f3','#f44336','#4caf50','#ffc107','#9c27b0','#003366','#009688'];
     const CONS='BCDFGHJKLMNPQRSTVWXZ', VOWS='AEIOUY';
 
-    // ---- State ----
     let user=null;
     let GAME_ID=null, TARGET='';
     let grid=Array.from({length:H},()=>Array(W).fill(null));
@@ -191,28 +225,19 @@
     let paused=false, ended=false;
     let t=0, tInt=null, gInt=null;
 
-    // ---- Auth wiring ----
+    // ---- Auth ----
     onAuthStateChanged(auth, (u)=>{
       user=u||null;
-      if (user) {
-        loginLink.classList.add('hidden');
-        btnSignOut.classList.remove('hidden');
-        authNote.classList.add('hidden');
-      } else {
-        loginLink.classList.remove('hidden');
-        btnSignOut.classList.add('hidden');
-        authNote.classList.remove('hidden');
-      }
+      if (user) { loginLink.classList.add('hidden'); btnSignOut.classList.remove('hidden'); authNote.classList.add('hidden'); }
+      else { loginLink.classList.remove('hidden'); btnSignOut.classList.add('hidden'); authNote.classList.remove('hidden'); }
     });
-    btnSignOut.addEventListener('click', async ()=>{
-      await signOut(auth);
-      try{ localStorage.clear(); sessionStorage.clear(); }catch{}
-      location.reload();
-    });
+    btnSignOut.addEventListener('click', async ()=>{ await signOut(auth); try{localStorage.clear();sessionStorage.clear();}catch{} location.reload(); });
 
-    // ---- Grid drawing ----
+    // ---- Grid drawing (uses dynamic W/H) ----
     function drawGrid(){
       gridEl.innerHTML='';
+      gridEl.style.gridTemplateColumns = `repeat(${W}, 1fr)`;
+      gridEl.style.aspectRatio = `${W}/${H}`;
       for(let y=0;y<H;y++) for(let x=0;x<W;x++){
         const d=document.createElement('div'); d.className='cell'; d.dataset.x=x; d.dataset.y=y;
         gridEl.appendChild(d);
@@ -228,7 +253,7 @@
       if(!b) return;
       const c=gridEl.querySelector(`.cell[data-x="${b.x}"][data-y="${b.y}"]`);
       if(!c) return;
-      c.className='cell'; c.style.background='#004d40'; c.textContent='';
+      c.className='cell'; c.style.background='var(--board)'; c.textContent='';
     }
 
     const partOfTarget = L => TARGET.includes(L);
@@ -245,7 +270,7 @@
       clearBlock(cur);
       const test={...cur,x:cur.x+dx,y:cur.y+dy};
       if(!collide(test)){ cur=test; drawBlock(cur); }
-      else if(dy>0){ drawBlock(cur); place(); }
+      else if(dy>0){ drawBlock(cur); place(); }   // landed
       else{ drawBlock(cur); }
     }
     function hardDrop(){
@@ -257,7 +282,7 @@
     async function place(){
       if(!cur||cur.y<0) return;
       grid[cur.y][cur.x]={...cur}; drawBlock(cur);
-      await matchAndDrop();
+      await matchAndDrop();   // Lexispeed: remove same letter OR same color, excluding target letters
       checkWin(); checkFail();
       cur=nxt; nxt=createBlock(); drawBlock(cur);
     }
@@ -276,22 +301,32 @@
       await Promise.all(Array.from(del).map(key=>new Promise(res=>{
         const [x,y]=key.split(',').map(Number);
         const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
-        if(c){ c.style.opacity=.2; setTimeout(()=>{ c.style.opacity=''; res(); },120);} else res();
+        if(c){ c.style.opacity=.15; setTimeout(()=>{ c.style.opacity=''; res(); },120);} else res();
         grid[y][x]=null;
       })));
-      // compact columns
-      for(let x=0;x<W;x++){ let wY=H-1; for(let y=H-1;y>=0;y--){ if(grid[y][x]){ if(y!==wY){ grid[wY][x]=grid[y][x]; grid[y][x]=null; } wY--; } } }
-      // redraw
+      // compact columns (from bottom up)
+      for(let x=0;x<W;x++){
+        let wY=H-1;
+        for(let y=H-1;y>=0;y--){
+          if(grid[y][x]){
+            if(y!==wY){ grid[wY][x]=grid[y][x]; grid[y][x]=null; }
+            wY--;
+          }
+        }
+      }
+      // redraw whole board
       for(let y=0;y<H;y++) for(let x=0;x<W;x++){
         const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
-        c.className='cell'; c.style.background='#004d40'; c.textContent='';
+        c.className='cell'; c.style.background='var(--board)'; c.textContent='';
         if(grid[y][x]) drawBlock({...grid[y][x],x,y});
       }
     }
 
+    // Win = exact horizontal match of TARGET
     function checkWin(){
       for(let y=0;y<H;y++) for(let x=0;x<=W-TARGET.length;x++){
-        let ok=true; for(let i=0;i<TARGET.length;i++){ const g=grid[y][x+i]; if(!g||g.letter!==TARGET[i]){ ok=false; break; } }
+        let ok=true;
+        for(let i=0;i<TARGET.length;i++){ const g=grid[y][x+i]; if(!g||g.letter!==TARGET[i]){ ok=false; break; } }
         if(ok){ end(true); return; }
       }
     }
@@ -323,7 +358,6 @@
         overlay(`<div class="bg-emerald-50 text-emerald-900 border border-emerald-200 rounded p-2 mb-2 text-sm">Tyd gestoor ✔</div>
                  <button id="closeOver" class="mt-2 px-4 py-2 rounded-xl bg-gray-700 text-white font-bold">SLUIT</button>`);
         document.getElementById('closeOver').addEventListener('click', ()=> over.style.display='none');
-        // refresh leaderboard
         await loadLeaderboard();
       }catch(e){
         overlay(`<div class="bg-amber-50 text-amber-900 border border-amber-200 rounded p-2 mb-2 text-sm">Kon nie stoor nie.</div>
@@ -332,7 +366,6 @@
         document.getElementById('closeErr').addEventListener('click', ()=> over.style.display='none');
       }
     }
-
     function end(win){
       ended=true; clearInterval(tInt); clearInterval(gInt);
       if(win){
@@ -351,40 +384,47 @@
     }
 
     // ---- Share ----
+    function shareUrl(){
+      const url = new URL(location.href);
+      url.searchParams.set('gameId', GAME_ID);
+      return url.toString();
+    }
     async function handleShare(){
       const msg = `Ek het ${TARGET} in ${fmt(t)} op BLITSTIEK voltooi! Kan jy my tyd klop? Speel saam: ${shareUrl()}`;
-      // Try Web Share
-      if(navigator.share){
-        try{ await navigator.share({ text: msg }); return; } catch { /* fall through */ }
-      }
-      // Clipboard + WhatsApp fallback
-      try{ await navigator.clipboard.writeText(msg); } catch {}
-      const wa = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-      window.open(wa,'_blank');
+      if(navigator.share){ try{ await navigator.share({ text: msg }); return; }catch{} }
+      try{ await navigator.clipboard.writeText(msg); }catch{}
+      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
     }
-
     btnShare.addEventListener('click', handleShare);
 
-    // ---- Load game & leaderboard ----
+    // ---- Game / leaderboard loading ----
     async function loadGame(){
       GAME_ID = explicitId || `Game${todayISO()}`;
-      const snap = await getDoc(doc(db,'blitstiekGames',GAME_ID));
       pillId.textContent = `GameID: ${GAME_ID}`;
+
+      const snap = await getDoc(doc(db,'blitstiekGames',GAME_ID));
       if(!snap.exists()){
         pillStatus.textContent = 'Status: nie gevind';
-        targetEl.innerHTML = `<span class="text-red-100 px-2">—</span>`;
+        targetEl.innerHTML = `<span>—</span>`;
+        drawGrid();   // default grid
         return;
       }
       const data=snap.data();
       TARGET=(data.word||'').toUpperCase();
       pillStatus.textContent = `Status: ${data.status || '—'}`;
-      // render target tiles
-      targetEl.innerHTML='';
-      TARGET.split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
+
+      // Target chips
+      targetEl.innerHTML=''; TARGET.split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
+
+      // Dynamic board width based on target length (>=3)
+      W = Math.max(3, TARGET.length);
+      grid = Array.from({length:H},()=>Array(W).fill(null));
+      drawGrid();
+
       await loadLeaderboard();
     }
-
     async function loadLeaderboard(){
+      if(!GAME_ID) return;
       const qy=query(collection(db,'blitstiekGames',GAME_ID,'leaderboard'), orderBy('time','asc'), limit(10));
       const res=await getDocs(qy);
       lbBody.innerHTML='';
@@ -409,13 +449,12 @@
     document.addEventListener('keydown', (e)=>{
       if(e.key==='ArrowLeft') move(-1,0);
       if(e.key==='ArrowRight') move(1,0);
-      if(e.key==='ArrowDown') move(0,1);
-      if(e.key===' ') { e.preventDefault(); hardDrop(); }
+      if(e.key==='ArrowDown') move(0,1);     // step down
+      if(e.key===' ') { e.preventDefault(); hardDrop(); }  // hard drop
     });
 
     // ---- Init ----
-    drawGrid();
-    await loadGame();
+    await loadGame();  // sets TARGET + W and draws the grid
   </script>
 </body>
 </html>
