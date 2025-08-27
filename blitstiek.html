@@ -19,12 +19,11 @@
     html,body{height:100%}
     body{font-family:'Montserrat',system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#f9fafb;color:#1f2937}
 
-    /* HEADER — Dilemma style (no KRIPTIEK tiles) */
+    /* HEADER — Dilemma-like simple block logo */
     header { background:#fff; box-shadow:0 2px 4px rgba(0,0,0,.08); padding:1rem; text-align:center; position:relative; }
     .logo-container { display:flex; justify-content:center; align-items:center; margin-bottom:10px; }
     .logo-container .letter-box { width:40px; height:40px; margin:2px; display:flex; justify-content:center; align-items:center; background:#374151; color:#fff; font-size:1.2rem; font-weight:700; border-radius:4px; }
     .welcome { font-size:.9rem; color:#6b7280 }
-    .signout { position:absolute; right:1rem; top:1rem; }
 
     /* Cards */
     .card{ background:#fff; border:1px solid #e5e7eb; border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
@@ -72,7 +71,7 @@
     @media (min-width:460px){ .dir-btn{ min-width:64px; min-height:64px; font-size:26px; } }
     @media (min-width:640px){ .dir-btn{ min-width:72px; min-height:72px; font-size:28px; } }
 
-    .btn{ background:#1e3a8a; color:#fff; font-weight:700; padding:10px 14px; border-radius:8px; }
+    .btn{ background:#1e3a8a; color:#fff; font-weight:700; padding:10px 14px; border-radius:12px; }
     .btn.gray{ background:#6b7280 }
     .pill{ background:#0c4a3e; color:#fff; font-weight:700; padding:6px 10px; border-radius:8px; text-align:center; }
 
@@ -81,7 +80,7 @@
     #leaderboardList li:nth-child(odd){ background:#f3f4f6; }
     #leaderboardList li:first-child{ background:#d1fae5; font-weight:700; }
 
-    /* Share dropdown (Dilemma style) */
+    /* Share dropdown — Dilemma-style (no emojis) */
     .share-menu-local{
       background:#fff; border:1px solid #e5e7eb; box-shadow:0 8px 24px rgba(0,0,0,.12);
       border-radius:.5rem; width:240px; padding:.5rem; z-index:3000;
@@ -92,7 +91,7 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-  <!-- HEADER (no KRIPTIEK tiles) -->
+  <!-- HEADER -->
   <header>
     <div class="logo-container">
       <div class="letter-box">B</div><div class="letter-box">L</div>
@@ -102,7 +101,6 @@
       <div class="letter-box">K</div>
     </div>
     <p class="welcome">Welkom terug, <span id="playerName" class="font-semibold text-green-700"></span>!</p>
-    <button id="btnSignOut" class="signout text-sm px-3 py-1.5 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800 hidden">Meld af</button>
   </header>
 
   <main class="flex-1">
@@ -133,13 +131,14 @@
           <button id="btnStart" class="btn">BEGIN</button>
           <button id="btnPause" class="btn gray">POUSE</button>
 
+          <!-- Hidden until completed, then shown -->
           <button id="persistentShareBtn" type="button" class="btn hidden">DEEL</button>
           <div id="shareMenuPersistent" class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden share-menu-local">
             <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
             <div class="space-y-1">
-              <button id="pWhatsApp" type="button">📲 WhatsApp</button>
-              <button id="pCopy" type="button">📋 Kopieer skakel</button>
-              <button id="pSystem" type="button">🖥️ Stelsel-deel</button>
+              <button id="pWhatsApp" type="button">WhatsApp</button>
+              <button id="pCopy" type="button">Kopieer skakel</button>
+              <button id="pSystem" type="button">Stelsel-deel</button>
             </div>
           </div>
         </div>
@@ -155,14 +154,33 @@
         </p>
       </section>
 
-      <!-- RULES placeholder -->
+      <!-- HOE OM TE SPEEL (Afrikaans, no emojis) -->
       <section class="mt-4 bg-white rounded shadow p-4">
         <h2 class="text-xl font-bold mb-2">HOE OM BLITSTIEK TE SPEEL</h2>
-        <p class="text-gray-700 leading-relaxed">
-          Voeg hier die reëls vir Blitstiek (Lexispeed) in. Jy kan die teks vanaf
-          <a href="https://www.playleximax.com" class="underline" target="_blank" rel="noopener">playleximax.com</a>
-          kopieer. Hierdie boks volg dieselfde styl as Dilemma se verduidelikings-afdeling.
-        </p>
+
+        <ol class="space-y-3 text-gray-700 leading-relaxed">
+          <li>
+            <p class="font-semibold">1. Doel</p>
+            <p>Blitstiek gaan oor spoed: vorm die <strong>Teikenwoord</strong> so vinnig as moontlik deur die vallende blokke sywaarts te skuif voordat hulle onder land. Die teikenwoord moet in <strong>dieselfde ry</strong> gevorm word, sonder gapings of verkeerde letters. Skuif onnodige letters na die kante of laat hulle verdwyn volgens die blokreëls. Daar is <strong>elke dag ’n nuwe woord</strong>.</p>
+          </li>
+          <li>
+            <p class="font-semibold">2. Beheer</p>
+            <p><strong>Rekenaar:</strong> Gebruik die links-, regs- en af-pyltjies om blokke te skuif. Druk die <strong>spasie</strong> om die blok onmiddellik te laat val.</p>
+            <p><strong>Selfoon:</strong> Gebruik die op-skerm pyltjies.</p>
+          </li>
+          <li>
+            <p class="font-semibold">3. Blokreëls</p>
+            <ul class="list-disc pl-6">
+              <li><strong>Pas letters:</strong> Aanliggende blokke met dieselfde letter verdwyn.</li>
+              <li><strong>Pas kleure:</strong> Aanliggende blokke met dieselfde kleur verdwyn.</li>
+              <li><strong>Uitsondering:</strong> Blokke wat deel vorm van die Teikenwoord verdwyn nie.</li>
+            </ul>
+          </li>
+          <li>
+            <p class="font-semibold">4. Leierbord</p>
+            <p>As jou tyd vinnig genoeg is, verskyn jou naam op die <strong>leierbord</strong>. Gebruik <strong>DEEL</strong> om vriende uit te daag en jou tyd te wys.</p>
+          </li>
+        </ol>
       </section>
 
       <!-- LEADERBOARD -->
@@ -186,10 +204,9 @@
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
-
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
-    import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
     import {
       getFirestore, serverTimestamp, doc, getDoc, setDoc,
       collection, query, orderBy, limit, getDocs, onSnapshot, where
@@ -211,7 +228,6 @@
 
     /* ---- DOM ---- */
     const playerNameEl = document.getElementById('playerName');
-    const btnSignOut   = document.getElementById('btnSignOut');
 
     const targetEl   = document.getElementById('target');
     const gridEl     = document.getElementById('grid');
@@ -249,6 +265,7 @@
 
     /* ---- State ---- */
     let user=null;
+    let currentUserName='Speler';
     let GAME_ID=null, TARGET='';
     let grid=Array.from({length:H},()=>Array(W).fill(null));
     let cur=null, nxt=null;
@@ -256,20 +273,36 @@
     let t=0, tInt=null, gInt=null;
     let lbUnsub=null;
 
+    /* ---- Username (prefer Firestore users/{uid}.userName) ---- */
+    async function resolveUserName(u){
+      try{
+        const uref = doc(db,'users',u.uid);
+        const snap = await getDoc(uref);
+        if(snap.exists() && snap.data().userName){
+          return String(snap.data().userName).slice(0,24);
+        }
+      }catch{}
+      if (u.displayName) return String(u.displayName).slice(0,24);
+      if (u.email){
+        const local = u.email.split('@')[0];
+        return local ? local.slice(0,24) : 'Speler';
+      }
+      return 'Speler';
+    }
+
     /* ---- Auth ---- */
-    onAuthStateChanged(auth, (u)=>{
+    onAuthStateChanged(auth, async (u)=>{
       user=u||null;
       if(user){
-        playerNameEl.textContent = user.displayName || user.email || 'Speler';
-        btnSignOut.classList.remove('hidden');
+        currentUserName = await resolveUserName(user);
+        playerNameEl.textContent = currentUserName;
         authNote.classList.add('hidden');
       } else {
-        playerNameEl.textContent = 'Speler';
-        btnSignOut.classList.add('hidden');
+        currentUserName = 'Speler';
+        playerNameEl.textContent = currentUserName;
         authNote.classList.remove('hidden');
       }
     });
-    btnSignOut.addEventListener('click', async ()=>{ await signOut(auth); try{localStorage.clear();sessionStorage.clear();}catch{} location.reload(); });
 
     /* ---- Pixel-perfect grid sizing ---- */
     function resizeGrid(){
@@ -448,7 +481,7 @@
     async function submitTimeToBoard(){
       if(!user) return;
       try{
-        const name = (user.displayName || user.email || 'Speler').slice(0,24);
+        const name = currentUserName.slice(0,24);
         await setDoc(doc(db,'blitstiekGames',GAME_ID,'leaderboard',user.uid),{
           userName:name, time:Number(t), timestamp:serverTimestamp()
         },{ merge:true });
