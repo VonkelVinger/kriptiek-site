@@ -41,7 +41,7 @@
       display:grid;
       grid-template-columns:repeat(8,1fr);
       grid-template-rows:repeat(10,1fr);
-      gap:1px;                              /* visible lines */
+      gap:1px;
       background:#fff;
       border:1px solid #0c4a3e;
       border-radius:8px;
@@ -58,8 +58,6 @@
     /* Overlay + modal (match Dilemma) */
     #over{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.55); z-index:50; }
     .modal{ background:#fff; border-radius:16px; box-shadow:0 20px 50px rgba(0,0,0,.2); width:min(92%,520px); padding:18px; text-align:center; border:1px solid #e5e7eb; }
-    .modal h3{ font-weight:700; color:#111827; }
-    .modal p{ color:#374151; }
     .modal .actions{ display:flex; gap:.75rem; justify-content:center; margin-top:12px; }
     .btn{ background:#1e3a8a; color:#fff; font-weight:700; padding:10px 16px; border-radius:10px; }
     .btn.gray{ background:#6b7280 }
@@ -119,16 +117,16 @@
         <div class="relative">
           <div id="grid"></div>
 
-          <!-- Success modal (hidden) -->
-          <div id="over">
+          <!-- Success modal -->
+          <div id="over" aria-hidden="true">
             <div class="modal">
-              <p id="winMsg" class="mb-3 text-base"></p>
+              <p id="winMsg" class="mb-3 text-base text-gray-800"></p>
               <div class="actions">
                 <button id="modalShareBtn" type="button" class="btn">DEEL</button>
                 <button id="modalCloseBtn" type="button" class="btn gray">SLUIT</button>
               </div>
 
-              <!-- share dropdown (appears under DEEL) -->
+              <!-- share dropdown inside modal -->
               <div id="shareMenu" class="hidden share-menu-local mx-auto mt-2">
                 <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
                 <div class="space-y-1">
@@ -145,15 +143,25 @@
         <div class="controls mt-3">
           <div class="arrow-row">
             <button id="btnLeft"  class="dir-btn" aria-label="Links">◀</button>
-            <button id="btnDown"  class="dir-btn" aria-label="Laat val">▼</button>
+            <button id="btnDown"  class="dir-btn" aria-label="Laat sak">▼</button>
             <button id="btnRight" class="dir-btn" aria-label="Regs">▶</button>
           </div>
         </div>
 
-        <!-- Actions -->
-        <div class="controls mt-3 flex items-center justify-center gap-2">
+        <!-- Actions + persistent DEEL (hidden until time recorded) -->
+        <div class="controls mt-3 flex items-center justify-center gap-2 relative">
           <button id="btnStart" class="btn">BEGIN</button>
           <button id="btnPause" class="btn gray">POUSE</button>
+
+          <button id="persistentShareBtn" type="button" class="btn hidden">DEEL</button>
+          <div id="shareMenuPersistent" class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden share-menu-local">
+            <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
+            <div class="space-y-1">
+              <button id="pWhatsApp" type="button">WhatsApp</button>
+              <button id="pCopy" type="button">Kopieer skakel</button>
+              <button id="pSystem" type="button">Stelsel-deel</button>
+            </div>
+          </div>
         </div>
 
         <!-- Timers -->
@@ -167,7 +175,7 @@
         </p>
       </section>
 
-      <!-- HOE OM TE SPEEL (Afrikaans, no emojis) -->
+      <!-- HOE OM TE SPEEL -->
       <section class="mt-4 bg-white rounded shadow p-4">
         <h2 class="text-xl font-bold mb-2">HOE OM BLITSTIEK TE SPEEL</h2>
 
@@ -217,6 +225,7 @@
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
+
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
@@ -252,7 +261,7 @@
 
     const lbList     = document.getElementById('leaderboardList');
     const timeText   = document.querySelector('#timeBox b');
-    const bestText   = document.querySelector('#bestBox b');
+    aconst bestText   = document.querySelector('#bestBox b');
     const authNote   = document.getElementById('authNote');
 
     const btnLeft = document.getElementById('btnLeft');
@@ -260,6 +269,12 @@
     const btnDown = document.getElementById('btnDown');
     const btnStart= document.getElementById('btnStart');
     const btnPause= document.getElementById('btnPause');
+
+    const persistentShareBtn = document.getElementById('persistentShareBtn');
+    const shareMenuPersistent = document.getElementById('shareMenuPersistent');
+    const pWA = document.getElementById('pWhatsApp');
+    const pCopy = document.getElementById('pCopy');
+    const pSys  = document.getElementById('pSystem');
 
     const mWA   = document.getElementById('mWhatsApp');
     const mCopy = document.getElementById('mCopy');
@@ -393,7 +408,6 @@
       if(!cur||cur.y<0) return;
       grid[cur.y][cur.x]={...cur}; drawBlock(cur);
       await matchAndDrop();
-      checkFail();
       await checkWin();
       cur=nxt; nxt=createBlock();
       if(cur) drawBlock(cur);
@@ -448,12 +462,13 @@
         }
       }
     }
-    function checkFail(){ /* geen misluk-tevraag in Blitstiek */ }
 
     /* ---- Timer & control ---- */
     function setTime(v){ t=v; timeText.textContent=fmt(v); }
     function start(){
-      ended=false; over.style.display='none'; shareMenu.classList.add('hidden'); setTime(0);
+      ended=false; over.style.display='none';
+      shareMenu.classList.add('hidden'); shareMenuPersistent.classList.add('hidden');
+      setTime(0);
       grid=Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
       cur=createBlock(); nxt=createBlock(); drawBlock(cur);
@@ -464,28 +479,62 @@
     }
     function togglePause(){ if(ended) return; paused=!paused; btnPause.textContent = paused ? 'HERVAT' : 'POUSE'; }
 
-    /* ---- Share (modal-based, Dilemma-style) ---- */
-    function shareText(){
-      const url = new URL(location.href); if (GAME_ID) url.searchParams.set('gameId', GAME_ID);
-      const time = fmt(t);
-      return `Ek het ${TARGET} in ${time} op BLITSTIEK voltooi! Probeer hier: ${url.toString()}`;
+    /* ---- Share URL + message (always Blitstiek + include word) ---- */
+    function shareUrl(){
+      const origin = location.origin || 'https://www.kriptiek.com';
+      const path = location.pathname.endsWith('blitstiek.html') ? location.pathname : '/blitstiek.html';
+      const id = (GAME_ID || `Game${todayISO()}`);
+      return `${origin}${path}?gameId=${encodeURIComponent(id)}`;
     }
-    function toggleShareMenu(){
-      shareMenu.classList.toggle('hidden');
+    function shareText(){
+      return `Ek het ${TARGET} in ${fmt(t)} op BLITSTIEK voltooi! Probeer hier: ${shareUrl()}`;
+    }
+
+    /* ---- Dropdown helpers ---- */
+    function wireShareDropdown(triggerBtn, menuEl){
+      triggerBtn.addEventListener('click', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        document.querySelectorAll('.share-menu-local').forEach(m => { if(m!==menuEl) m.classList.add('hidden'); });
+        menuEl.classList.toggle('hidden');
+      });
+      document.addEventListener('click', (e) => {
+        if (!menuEl.contains(e.target) && e.target !== triggerBtn) menuEl.classList.add('hidden');
+      });
+      window.addEventListener('scroll', () => menuEl.classList.add('hidden'));
+      window.addEventListener('resize', () => menuEl.classList.add('hidden'));
     }
     function openWhatsApp(text){
       const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
       const w = window.open(url,'_blank','noopener,noreferrer');
       if(!w && navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>alert("Skakel gekopieer!")); }
     }
-    modalShareBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleShareMenu(); });
-    document.addEventListener('click', (e)=>{ if(!shareMenu.contains(e.target) && e.target!==modalShareBtn) shareMenu.classList.add('hidden'); });
-    window.addEventListener('scroll', ()=>shareMenu.classList.add('hidden'));
-    window.addEventListener('resize', ()=>shareMenu.classList.add('hidden'));
 
+    // modal share
+    wireShareDropdown(modalShareBtn, shareMenu);
     mWA.onclick   = () => { openWhatsApp(shareText()); shareMenu.classList.add('hidden'); };
     mCopy.onclick = async () => { try{ await navigator.clipboard.writeText(shareText()); alert('Skakel gekopieer!'); }catch{} shareMenu.classList.add('hidden'); };
     mSys.onclick  = async () => { try{ if(navigator.share) await navigator.share({ text:shareText() }); else openWhatsApp(shareText()); }catch{} shareMenu.classList.add('hidden'); };
+
+    // persistent share
+    wireShareDropdown(persistentShareBtn, shareMenuPersistent);
+    pWA.onclick   = () => { openWhatsApp(shareText()); shareMenuPersistent.classList.add('hidden'); };
+    pCopy.onclick = async () => { try{ await navigator.clipboard.writeText(shareText()); alert('Skakel gekopieer!'); }catch{} shareMenuPersistent.classList.add('hidden'); };
+    pSys.onclick  = async () => { try{ if(navigator.share) await navigator.share({ text:shareText() }); else openWhatsApp(shareText()); }catch{} shareMenuPersistent.classList.add('hidden'); };
+
+    /* ---- Persist DEEL after completion ---- */
+    function makeSharePersistent(){
+      try{ localStorage.setItem(`blitstiekDone_${GAME_ID}`, '1'); }catch{}
+      persistentShareBtn.classList.remove('hidden');
+    }
+
+    /* ---- URL normalizer: ensure ?gameId=... in address bar ---- */
+    function ensureUrlHasGameId(id){
+      if(!id) return;
+      const origin = location.origin || 'https://www.kriptiek.com';
+      const path   = location.pathname.endsWith('blitstiek.html') ? location.pathname : '/blitstiek.html';
+      const url    = `${origin}${path}?gameId=${encodeURIComponent(id)}`;
+      if (location.href !== url) history.replaceState(null, '', url);
+    }
 
     /* ---- Overlay + leaderboard submit ---- */
     async function submitTimeToBoard(){
@@ -499,17 +548,16 @@
     }
 
     function end(win){
+      if(!win) return;
       ended=true; clearInterval(tInt); clearInterval(gInt);
-      if(!win) return; // no fail modal in Blitstiek
 
       submitTimeToBoard();
-
-      // Message to match Dilemma pattern (time-based)
-      winMsg.innerHTML = `Veels geluk, <strong>${currentUserName}</strong>, jy het die woord in <strong>${fmt(t)}</strong> voltooi!`;
+      winMsg.innerHTML = `Veels geluk, <strong>${currentUserName}</strong>, jy het <strong>${TARGET}</strong> in <strong>${fmt(t)}</strong> voltooi!`;
 
       over.style.display='flex';
-
       modalCloseBtn.onclick = ()=>{ over.style.display='none'; };
+
+      makeSharePersistent();
     }
 
     /* ---- LIVE Leaderboard (name + time only, top 10) ---- */
@@ -576,6 +624,9 @@
         return;
       }
 
+      /* rewrite URL bar to include ?gameId=... */
+      ensureUrlHasGameId(GAME_ID);
+
       const data=snap.data();
       TARGET=(data.word||'').toUpperCase();
 
@@ -586,6 +637,13 @@
       grid = Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
 
+      // persistent share if already completed earlier
+      try{
+        if(localStorage.getItem(`blitstiekDone_${GAME_ID}`)==='1'){
+          persistentShareBtn.classList.remove('hidden');
+        }
+      }catch{}
+
       // live leaderboard
       startLiveLeaderboard();
     }
@@ -595,12 +653,12 @@
     btnPause.addEventListener('click', ()=>togglePause());
     btnLeft.addEventListener('click', ()=>move(-1,0));
     btnRight.addEventListener('click',()=>move(1,0));
-    btnDown.addEventListener('click', ()=>hardDrop());
+    btnDown.addEventListener('click', ()=>move(0,1));   // soft drop
     document.addEventListener('keydown', (e)=>{
       if(e.key==='ArrowLeft') move(-1,0);
       if(e.key==='ArrowRight') move(1,0);
-      if(e.key==='ArrowDown') move(0,1);
-      if(e.key===' ') { e.preventDefault(); hardDrop(); }
+      if(e.key==='ArrowDown') move(0,1);               // soft drop
+      if(e.key===' ') { e.preventDefault(); hardDrop(); } // space = hard drop
     });
 
     /* ---- Init ---- */
