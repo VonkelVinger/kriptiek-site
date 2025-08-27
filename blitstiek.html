@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
   <title>BLITSTIEK · Kriptiek</title>
 
-  <!-- Tailwind + Font -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
 
@@ -13,57 +12,54 @@
     :root{
       --brand-dark:#0f2a43;
       --btn:#003366;
-      --board-cell:#004d40;   /* Lexispeed-like cell color */
-      --board-line:#004d40;   /* grid border/lines */
+      --cell:#004d40;        /* deep green like Lexispeed */
+      --line:#004d40;        /* outer border */
     }
-    html,body{ height:100%; }
-    body{ font-family:'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:#f7fafc; }
+    html,body{height:100%}
+    body{font-family:'Montserrat',system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#f7fafc}
 
-    /* Kriptiek tiles (like Dilemma) */
+    /* Header — Dilemma style with centered title */
+    .header-wrap{position:relative}
+    .header-title{
+      position:absolute; left:50%; transform:translateX(-50%);
+      font-weight:800; letter-spacing:.08em; color:var(--brand-dark);
+    }
     .logo-tile{ background:#374151; color:#fff; border:2px solid #1f2937; border-radius:.375rem; }
     .flipped-k{ transform:scaleX(-1); }
 
-    /* Cards like Dilemma */
     .card{ background:#fff; border:1px solid #e5e7eb; border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
 
-    /* Pills */
-    .pill{ background:#f3f4f6; color:#374151; padding:.4rem .7rem; border-radius:999px; font-weight:600; }
-
-    /* Target tiles */
-    #target{ display:flex; gap:1px; background:#004d40; color:#fff; padding:2px; border-radius:6px; }
+    /* Target word chips */
+    #target{ display:flex; gap:1px; background:var(--cell); color:#fff; padding:2px; border-radius:6px; }
     #target span{ width:30px; height:30px; display:grid; place-items:center; font-weight:800; border:1px solid rgba(255,255,255,.12); }
 
-    /* Game board — match Lexispeed look */
+    /* Game grid — match Lexispeed look */
     #grid{
       display:grid;
-      grid-template-columns:repeat(8,1fr);   /* fixed 8×10 */
+      grid-template-columns:repeat(8,1fr);
       grid-template-rows:repeat(10,1fr);
-      gap:1px;                               /* visible grid lines */
-      background:var(--board-line);
-      border:1px solid var(--board-line);
+      gap:1px;                       /* visible white grid lines */
+      background:#fff;               /* the lines themselves */
+      border:1px solid var(--line);
       border-radius:12px;
       overflow:hidden;
-      width:100%;
-      max-width:360px;                       /* similar to Lexispeed’s 320px max, with a touch of breathing room */
+      width:100%; max-width:320px;   /* Lexispeed footprint */
       margin:10px auto;
       aspect-ratio:8/10;
     }
     .cell{
-      background:var(--board-cell);
       position:relative;
+      background:var(--cell);
       transition:transform .15s ease-out, opacity .15s ease-out;
     }
-    /* subtle inner border like Lexispeed */
-    .cell::after{
-      content:'';
-      position:absolute; inset:0;
-      border:1px solid rgba(255,255,255,.10);
-      pointer-events:none;
+    .cell::after{                    /* subtle inner line like Lexispeed */
+      content:''; position:absolute; inset:0;
+      border:1px solid rgba(255,255,255,.10); pointer-events:none;
     }
     .cell.f{
       display:grid; place-items:center;
       color:#fff; font-weight:800; font-size:16px;
-      text-shadow: 0 1px 1px rgba(0,0,0,.35);
+      text-shadow:0 1px 1px rgba(0,0,0,.35);
     }
     .cell.pop{ transform:scale(1.15); opacity:0; }
 
@@ -71,28 +67,22 @@
     #over{ position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.6); z-index:40; }
     #over .cardx{ background:#900C3F; color:#fff; padding:18px; border-radius:14px; width:92%; max-width:380px; text-align:center; }
 
-    /* Controls — chunkier buttons, Kriptiek styling */
+    /* Buttons */
     .btn{ background:var(--btn); color:#fff; font-weight:700; padding:12px 14px; border-radius:12px; }
     .btn:disabled{ opacity:.5; }
     .dir-btn{ aspect-ratio:1/1; font-size:36px; display:flex; align-items:center; justify-content:center; }
 
-    /* Table polish */
+    /* Leaderboard table */
     #lbBody tr{ border-top:1px solid #eef2f7; }
     #lbBody td{ padding:.5rem .75rem; }
-
-    @media (max-width:480px){
-      #target span{ width:26px; height:26px; font-size:13px; }
-      .btn{ padding:10px 12px; }
-      .dir-btn{ font-size:32px; }
-    }
   </style>
 </head>
 <body class="min-h-full flex flex-col">
 
-  <!-- Header (like Dilemma) -->
+  <!-- Header -->
   <header class="w-full bg-white shadow-sm">
-    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-      <a href="/index.html" class="flex items-center gap-3">
+    <div class="max-w-5xl mx-auto px-4 py-4 header-wrap flex items-center justify-between">
+      <a href="/index.html" class="flex items-center gap-2">
         <div class="grid grid-cols-8 gap-1">
           <div class="logo-tile w-7 h-7 grid place-items-center flipped-k">K</div>
           <div class="logo-tile w-7 h-7 grid place-items-center">R</div>
@@ -103,8 +93,8 @@
           <div class="logo-tile w-7 h-7 grid place-items-center">E</div>
           <div class="logo-tile w-7 h-7 grid place-items-center">K</div>
         </div>
-        <h1 class="text-xl md:text-2xl font-bold tracking-wide text-[var(--brand-dark)]">BLITSTIEK</h1>
       </a>
+      <h1 class="header-title text-lg md:text-xl">BLITSTIEK</h1>
       <div class="flex items-center gap-2">
         <a id="loginLink" href="/login.html?new=1" class="text-sm px-3 py-1.5 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800">Meld aan</a>
         <button id="btnSignOut" class="hidden text-sm px-3 py-1.5 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800">Meld af</button>
@@ -115,15 +105,11 @@
   <main class="flex-1">
     <div class="max-w-3xl mx-auto px-4 py-6">
 
-      <!-- Info pills -->
-      <div class="flex flex-wrap items-center gap-2 mb-3">
-        <span id="pillId" class="pill">GameID: —</span>
-        <span id="pillStatus" class="pill">Status: —</span>
-      </div>
+      <!-- (Removed GameID & Status pills) -->
 
       <!-- Target word -->
       <div class="flex items-center gap-2 mb-3">
-        <span class="pill">Teikenwoord</span>
+        <span class="px-3 py-1 rounded-full bg-gray-100 font-semibold text-gray-700">Teikenwoord</span>
         <div id="target"></div>
       </div>
 
@@ -147,8 +133,8 @@
         </div>
 
         <div class="grid grid-cols-2 gap-2 mt-3">
-          <div id="timeBox" class="text-center font-bold rounded-lg bg-[var(--board-cell)] text-white p-2">Jou tyd: <b>00:00</b></div>
-          <div id="bestBox" class="text-center font-bold rounded-lg bg-[var(--board-cell)] text-white p-2">Beste tyd: <b>--:--</b></div>
+          <div id="timeBox" class="text-center font-bold rounded-lg bg-[var(--cell)] text-white p-2">Jou tyd: <b>00:00</b></div>
+          <div id="bestBox" class="text-center font-bold rounded-lg bg-[var(--cell)] text-white p-2">Beste tyd: <b>--:--</b></div>
         </div>
 
         <p id="authNote" class="hidden mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
@@ -187,7 +173,6 @@
       collection, query, orderBy, limit, getDocs
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
-    // ---- Firebase (same as admindilemma) ----
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
       authDomain: "kriptiek-c9ea2.firebaseapp.com",
@@ -201,11 +186,9 @@
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
-    // ---- DOM refs ----
+    // DOM
     const loginLink  = document.getElementById('loginLink');
     const btnSignOut = document.getElementById('btnSignOut');
-    const pillId     = document.getElementById('pillId');
-    const pillStatus = document.getElementById('pillStatus');
     const targetEl   = document.getElementById('target');
     const gridEl     = document.getElementById('grid');
     const over       = document.getElementById('over');
@@ -222,21 +205,20 @@
     const btnPause= document.getElementById('btnPause');
     const btnShare= document.getElementById('btnShare');
 
-    // ---- Helpers ----
+    // Helpers
     const pad = n => String(n).padStart(2,'0');
     const fmt = s => s==null ? '--:--' : `${pad(Math.floor(s/60))}:${pad(s%60)}`;
     const todayISO = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
     const qs = new URLSearchParams(location.search);
     const explicitId = qs.get('gameId');
 
-    // ---- Gameplay constants (Lexispeed parity) ----
-    const H = 10;
-    const W = 8;   // fixed 8 like Lexispeed
+    // Gameplay constants
+    const H = 10, W = 8;
     const COLORS = ['#2196f3','#f44336','#4caf50','#ffc107','#9c27b0','#003366','#009688'];
     const CONS   = 'BCDFGHJKLMNPQRSTVWXZ';
     const VOWS   = 'AEIOUY';
 
-    // ---- State ----
+    // State
     let user=null;
     let GAME_ID=null, TARGET='';
     let grid=Array.from({length:H},()=>Array(W).fill(null));
@@ -244,7 +226,7 @@
     let paused=false, ended=false, moving=false;
     let t=0, tInt=null, gInt=null;
 
-    // ---- Auth ----
+    // Auth UI
     onAuthStateChanged(auth, (u)=>{
       user=u||null;
       if(user){ loginLink.classList.add('hidden'); btnSignOut.classList.remove('hidden'); authNote.classList.add('hidden'); }
@@ -252,7 +234,7 @@
     });
     btnSignOut.addEventListener('click', async ()=>{ await signOut(auth); try{localStorage.clear();sessionStorage.clear();}catch{} location.reload(); });
 
-    // ---- Grid rendering ----
+    // Grid
     function drawGrid(){
       gridEl.innerHTML='';
       for(let y=0;y<H;y++) for(let x=0;x<W;x++){
@@ -270,10 +252,10 @@
       if(!b) return;
       const c=gridEl.querySelector(`.cell[data-x="${b.x}"][data-y="${b.y}"]`);
       if(!c) return;
-      c.className='cell'; c.style.background='var(--board-cell)'; c.textContent='';
+      c.className='cell'; c.style.background='var(--cell)'; c.textContent='';
     }
 
-    // ---- Core mechanics (Lexispeed) ----
+    // Mechanics (Lexispeed)
     const partOfTarget = L => TARGET.includes(L);
     const collide = b => !b || b.x<0||b.x>=W||b.y>=H || (b.y>=0 && grid[b.y][b.x]);
 
@@ -295,7 +277,6 @@
       else{ drawBlock(cur); }
       moving = false;
     }
-
     function hardDrop(){
       if(!cur||paused||ended) return;
       clearBlock(cur);
@@ -306,14 +287,9 @@
     async function place(){
       if(!cur||cur.y<0) return;
       grid[cur.y][cur.x]={...cur}; drawBlock(cur);
-
-      // Remove adjacent matches (letter or color), excluding target letters
       await matchAndDrop();
-
-      // Order like Lexispeed: check spawn-space (fail) first, then win
       checkFail();
       await checkWin();
-
       cur=nxt; nxt=createBlock();
       if(cur) drawBlock(cur);
     }
@@ -337,7 +313,6 @@
         grid[y][x]=null;
       })));
 
-      // compact columns
       for(let x=0;x<W;x++){
         let wY=H-1;
         for(let y=H-1;y>=0;y--){
@@ -347,15 +322,13 @@
           }
         }
       }
-      // redraw
       for(let y=0;y<H;y++) for(let x=0;x<W;x++){
         const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
-        c.className='cell'; c.style.background='var(--board-cell)'; c.textContent='';
+        c.className='cell'; c.style.background='var(--cell)'; c.textContent='';
         if(grid[y][x]) drawBlock({...grid[y][x],x,y});
       }
     }
 
-    // Win = exact horizontal TARGET anywhere
     async function checkWin(){
       for(let y=0;y<H;y++) for(let x=0;x<=W-TARGET.length;x++){
         let ok=true;
@@ -372,7 +345,7 @@
     }
     function checkFail(){ if(nxt && collide(nxt)) end(false); }
 
-    // ---- Timer & control ----
+    // Timer & control
     function setTime(v){ t=v; timeText.textContent=fmt(t); }
     function start(){
       ended=false; over.style.display='none'; setTime(0);
@@ -386,7 +359,7 @@
     }
     function togglePause(){ if(ended) return; paused=!paused; btnPause.textContent = paused ? 'HERVAT' : 'POUSE'; }
 
-    // ---- Overlay + submit ----
+    // Overlay + submit
     function overlay(html){ overCard.innerHTML=html; over.style.display='flex'; }
     async function submitTime(){
       if(!user) return;
@@ -425,7 +398,7 @@
       }
     }
 
-    // ---- Share ----
+    // Share
     function shareUrl(){
       const url = new URL(location.href);
       url.searchParams.set('gameId', GAME_ID);
@@ -439,27 +412,22 @@
     }
     btnShare.addEventListener('click', handleShare);
 
-    // ---- Load game & leaderboard ----
+    // Load game & leaderboard
     async function loadGame(){
       GAME_ID = explicitId || `Game${todayISO()}`;
-      pillId.textContent = `GameID: ${GAME_ID}`;
 
       const snap = await getDoc(doc(db,'blitstiekGames',GAME_ID));
       if(!snap.exists()){
-        pillStatus.textContent = 'Status: nie gevind';
         targetEl.innerHTML = `<span>—</span>`;
-        drawGrid(); // still render 8×10
+        drawGrid();
         return;
       }
       const data=snap.data();
       TARGET=(data.word||'').toUpperCase();
-      pillStatus.textContent = `Status: ${data.status || '—'}`;
 
-      // Target chips
       targetEl.innerHTML='';
       TARGET.split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
 
-      // Fixed-width mechanics (8×10), like Lexispeed
       grid = Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
 
@@ -487,21 +455,20 @@
       });
     }
 
-    // ---- Controls ----
+    // Controls
     btnStart.addEventListener('click', start);
     btnPause.addEventListener('click', ()=>togglePause());
     btnLeft.addEventListener('click', ()=>move(-1,0));
     btnRight.addEventListener('click',()=>move(1,0));
     btnDown.addEventListener('click', ()=>hardDrop());
-
     document.addEventListener('keydown', (e)=>{
       if(e.key==='ArrowLeft') move(-1,0);
       if(e.key==='ArrowRight') move(1,0);
-      if(e.key==='ArrowDown') move(0,1);       // soft step
+      if(e.key==='ArrowDown') move(0,1);   // soft step
       if(e.key===' ') { e.preventDefault(); hardDrop(); }  // hard drop
     });
 
-    // ---- Init ----
+    // Init
     await loadGame();
   </script>
 </body>
