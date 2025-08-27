@@ -13,8 +13,8 @@
     :root{
       --brand-dark:#0f2a43;
       --btn:#003366;
-      --board-cell:#003b32;   /* cells */
-      --board-line:#0f3f39;   /* grid lines + border */
+      --board-cell:#004d40;   /* Lexispeed-like cell color */
+      --board-line:#004d40;   /* grid border/lines */
     }
     html,body{ height:100%; }
     body{ font-family:'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:#f7fafc; }
@@ -30,26 +30,39 @@
     .pill{ background:#f3f4f6; color:#374151; padding:.4rem .7rem; border-radius:999px; font-weight:600; }
 
     /* Target tiles */
-    #target{ display:flex; gap:2px; background:#0c4a3e; color:#fff; padding:4px 6px; border-radius:10px; }
-    #target span{ width:28px; height:28px; display:grid; place-items:center; font-weight:800; border:1px solid rgba(255,255,255,.18); border-radius:4px; }
+    #target{ display:flex; gap:1px; background:#004d40; color:#fff; padding:2px; border-radius:6px; }
+    #target span{ width:30px; height:30px; display:grid; place-items:center; font-weight:800; border:1px solid rgba(255,255,255,.12); }
 
-    /* Game board with crisp lines */
+    /* Game board — match Lexispeed look */
     #grid{
       display:grid;
+      grid-template-columns:repeat(8,1fr);   /* fixed 8×10 */
+      grid-template-rows:repeat(10,1fr);
       gap:1px;                               /* visible grid lines */
       background:var(--board-line);
       border:1px solid var(--board-line);
       border-radius:12px;
       overflow:hidden;
       width:100%;
-      max-width:540px;
+      max-width:360px;                       /* similar to Lexispeed’s 320px max, with a touch of breathing room */
       margin:10px auto;
+      aspect-ratio:8/10;
     }
-    .cell{ background:var(--board-cell); position:relative; transition:transform .15s ease-out, opacity .15s ease-out; }
+    .cell{
+      background:var(--board-cell);
+      position:relative;
+      transition:transform .15s ease-out, opacity .15s ease-out;
+    }
+    /* subtle inner border like Lexispeed */
+    .cell::after{
+      content:'';
+      position:absolute; inset:0;
+      border:1px solid rgba(255,255,255,.10);
+      pointer-events:none;
+    }
     .cell.f{
       display:grid; place-items:center;
-      color:#fff; font-weight:800;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.14);
+      color:#fff; font-weight:800; font-size:16px;
       text-shadow: 0 1px 1px rgba(0,0,0,.35);
     }
     .cell.pop{ transform:scale(1.15); opacity:0; }
@@ -58,17 +71,19 @@
     #over{ position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.6); z-index:40; }
     #over .cardx{ background:#900C3F; color:#fff; padding:18px; border-radius:14px; width:92%; max-width:380px; text-align:center; }
 
-    /* Buttons */
+    /* Controls — chunkier buttons, Kriptiek styling */
     .btn{ background:var(--btn); color:#fff; font-weight:700; padding:12px 14px; border-radius:12px; }
     .btn:disabled{ opacity:.5; }
+    .dir-btn{ aspect-ratio:1/1; font-size:36px; display:flex; align-items:center; justify-content:center; }
 
     /* Table polish */
     #lbBody tr{ border-top:1px solid #eef2f7; }
     #lbBody td{ padding:.5rem .75rem; }
 
     @media (max-width:480px){
-      #target span{ width:24px; height:24px; font-size:13px; }
+      #target span{ width:26px; height:26px; font-size:13px; }
       .btn{ padding:10px 12px; }
+      .dir-btn{ font-size:32px; }
     }
   </style>
 </head>
@@ -120,9 +135,9 @@
         </div>
 
         <div class="grid grid-cols-3 gap-2 mt-3">
-          <button id="btnLeft"  class="btn">◀</button>
-          <button id="btnDown"  class="btn">▼</button>
-          <button id="btnRight" class="btn">▶</button>
+          <button id="btnLeft"  class="btn dir-btn">◀</button>
+          <button id="btnDown"  class="btn dir-btn">▼</button>
+          <button id="btnRight" class="btn dir-btn">▶</button>
         </div>
 
         <div class="flex items-center gap-2 mt-3">
@@ -132,8 +147,8 @@
         </div>
 
         <div class="grid grid-cols-2 gap-2 mt-3">
-          <div id="timeBox" class="text-center font-bold rounded-lg bg-[#003b32] text-white p-2">Jou tyd: <b>00:00</b></div>
-          <div id="bestBox" class="text-center font-bold rounded-lg bg-[#003b32] text-white p-2">Beste tyd: <b>--:--</b></div>
+          <div id="timeBox" class="text-center font-bold rounded-lg bg-[var(--board-cell)] text-white p-2">Jou tyd: <b>00:00</b></div>
+          <div id="bestBox" class="text-center font-bold rounded-lg bg-[var(--board-cell)] text-white p-2">Beste tyd: <b>--:--</b></div>
         </div>
 
         <p id="authNote" class="hidden mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
@@ -216,7 +231,7 @@
 
     // ---- Gameplay constants (Lexispeed parity) ----
     const H = 10;
-    let   W = 8;   // fixed 8 like Lexispeed
+    const W = 8;   // fixed 8 like Lexispeed
     const COLORS = ['#2196f3','#f44336','#4caf50','#ffc107','#9c27b0','#003366','#009688'];
     const CONS   = 'BCDFGHJKLMNPQRSTVWXZ';
     const VOWS   = 'AEIOUY';
@@ -240,9 +255,6 @@
     // ---- Grid rendering ----
     function drawGrid(){
       gridEl.innerHTML='';
-      gridEl.style.gridTemplateColumns = `repeat(${W}, 1fr)`;
-      gridEl.style.gridTemplateRows    = `repeat(${H}, 1fr)`;
-      gridEl.style.aspectRatio = `${W}/${H}`;
       for(let y=0;y<H;y++) for(let x=0;x<W;x++){
         const d=document.createElement('div'); d.className='cell'; d.dataset.x=x; d.dataset.y=y;
         gridEl.appendChild(d);
@@ -298,7 +310,7 @@
       // Remove adjacent matches (letter or color), excluding target letters
       await matchAndDrop();
 
-      // Order like Lexispeed: check spawn space / fail first, then win
+      // Order like Lexispeed: check spawn-space (fail) first, then win
       checkFail();
       await checkWin();
 
@@ -325,7 +337,7 @@
         grid[y][x]=null;
       })));
 
-      // compact columns (gravity)
+      // compact columns
       for(let x=0;x<W;x++){
         let wY=H-1;
         for(let y=H-1;y>=0;y--){
@@ -349,7 +361,6 @@
         let ok=true;
         for(let i=0;i<TARGET.length;i++){ const g=grid[y][x+i]; if(!g||g.letter!==TARGET[i]){ ok=false; break; } }
         if(ok){
-          // tiny highlight flourish
           for(let i=0;i<TARGET.length;i++){
             const c=gridEl.querySelector(`.cell[data-x="${x+i}"][data-y="${y}"]`);
             if(c) c.style.transform='scale(1.05)';
@@ -448,7 +459,7 @@
       targetEl.innerHTML='';
       TARGET.split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
 
-      // Fixed width mechanics (8×10), like Lexispeed
+      // Fixed-width mechanics (8×10), like Lexispeed
       grid = Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
 
@@ -486,12 +497,12 @@
     document.addEventListener('keydown', (e)=>{
       if(e.key==='ArrowLeft') move(-1,0);
       if(e.key==='ArrowRight') move(1,0);
-      if(e.key==='ArrowDown') move(0,1);       // soft step (Lexispeed)
+      if(e.key==='ArrowDown') move(0,1);       // soft step
       if(e.key===' ') { e.preventDefault(); hardDrop(); }  // hard drop
     });
 
     // ---- Init ----
-    await loadGame();   // sets TARGET
+    await loadGame();
   </script>
 </body>
 </html>
