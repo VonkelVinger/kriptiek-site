@@ -45,13 +45,14 @@
       max-width:540px;
       margin:10px auto;
     }
-    .cell{ background:var(--board-cell); position:relative; }
+    .cell{ background:var(--board-cell); position:relative; transition:transform .15s ease-out, opacity .15s ease-out; }
     .cell.f{
       display:grid; place-items:center;
       color:#fff; font-weight:800;
       box-shadow: inset 0 0 0 1px rgba(255,255,255,.14);
       text-shadow: 0 1px 1px rgba(0,0,0,.35);
     }
+    .cell.pop{ transform:scale(1.15); opacity:0; }
 
     /* Overlay */
     #over{ position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.6); z-index:40; }
@@ -162,6 +163,7 @@
   <footer class="bg-[var(--brand-dark)] text-white text-center py-6 mt-auto">
     <div class="max-w-5xl mx-auto px-4 text-sm opacity-90">&copy; 2025 Kriptiek. Alle regte voorbehou.</div>
   </footer>
+
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
@@ -212,9 +214,9 @@
     const qs = new URLSearchParams(location.search);
     const explicitId = qs.get('gameId');
 
-    // ---- Gameplay constants (Lexispeed) ----
+    // ---- Gameplay constants (Lexispeed parity) ----
     const H = 10;
-    let   W = 8;   // set after TARGET loads
+    let   W = 8;   // fixed 8 like Lexispeed
     const COLORS = ['#2196f3','#f44336','#4caf50','#ffc107','#9c27b0','#003366','#009688'];
     const CONS   = 'BCDFGHJKLMNPQRSTVWXZ';
     const VOWS   = 'AEIOUY';
@@ -224,7 +226,7 @@
     let GAME_ID=null, TARGET='';
     let grid=Array.from({length:H},()=>Array(W).fill(null));
     let cur=null, nxt=null;
-    let paused=false, ended=false;
+    let paused=false, ended=false, moving=false;
     let t=0, tInt=null, gInt=null;
 
     // ---- Auth ----
@@ -239,6 +241,7 @@
     function drawGrid(){
       gridEl.innerHTML='';
       gridEl.style.gridTemplateColumns = `repeat(${W}, 1fr)`;
+      gridEl.style.gridTemplateRows    = `repeat(${H}, 1fr)`;
       gridEl.style.aspectRatio = `${W}/${H}`;
       for(let y=0;y<H;y++) for(let x=0;x<W;x++){
         const d=document.createElement('div'); d.className='cell'; d.dataset.x=x; d.dataset.y=y;
@@ -271,25 +274,36 @@
     }
 
     async function move(dx,dy){
-      if(!cur||paused||ended) return;
+      if(!cur||paused||ended||moving) return;
+      moving = true;
       clearBlock(cur);
       const test = { ...cur, x:cur.x+dx, y:cur.y+dy };
       if(!collide(test)){ cur=test; drawBlock(cur); }
       else if(dy>0){ drawBlock(cur); place(); }
       else{ drawBlock(cur); }
+      moving = false;
     }
+
     function hardDrop(){
       if(!cur||paused||ended) return;
       clearBlock(cur);
       while(cur.y<H-1 && !collide({...cur,y:cur.y+1})) cur.y++;
       place();
     }
+
     async function place(){
       if(!cur||cur.y<0) return;
       grid[cur.y][cur.x]={...cur}; drawBlock(cur);
-      await matchAndDrop();      // remove adjacent same-letter OR same-color blocks (excluding target letters)
-      checkWin(); checkFail();
-      cur=nxt; nxt=createBlock(); drawBlock(cur);
+
+      // Remove adjacent matches (letter or color), excluding target letters
+      await matchAndDrop();
+
+      // Order like Lexispeed: check spawn space / fail first, then win
+      checkFail();
+      await checkWin();
+
+      cur=nxt; nxt=createBlock();
+      if(cur) drawBlock(cur);
     }
 
     async function matchAndDrop(){
@@ -307,11 +321,11 @@
       await Promise.all(Array.from(del).map(key=>new Promise(res=>{
         const [x,y]=key.split(',').map(Number);
         const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
-        if(c){ c.style.opacity=.15; setTimeout(()=>{ c.style.opacity=''; res(); },120);} else res();
+        if(c){ c.classList.add('pop'); setTimeout(()=>{ c.classList.remove('pop'); res(); },150);} else res();
         grid[y][x]=null;
       })));
 
-      // compact columns
+      // compact columns (gravity)
       for(let x=0;x<W;x++){
         let wY=H-1;
         for(let y=H-1;y>=0;y--){
@@ -329,12 +343,20 @@
       }
     }
 
-    // Win = exact horizontal TARGET
-    function checkWin(){
+    // Win = exact horizontal TARGET anywhere
+    async function checkWin(){
       for(let y=0;y<H;y++) for(let x=0;x<=W-TARGET.length;x++){
         let ok=true;
         for(let i=0;i<TARGET.length;i++){ const g=grid[y][x+i]; if(!g||g.letter!==TARGET[i]){ ok=false; break; } }
-        if(ok){ end(true); return; }
+        if(ok){
+          // tiny highlight flourish
+          for(let i=0;i<TARGET.length;i++){
+            const c=gridEl.querySelector(`.cell[data-x="${x+i}"][data-y="${y}"]`);
+            if(c) c.style.transform='scale(1.05)';
+          }
+          setTimeout(()=>end(true), 450);
+          return;
+        }
       }
     }
     function checkFail(){ if(nxt && collide(nxt)) end(false); }
@@ -415,7 +437,7 @@
       if(!snap.exists()){
         pillStatus.textContent = 'Status: nie gevind';
         targetEl.innerHTML = `<span>—</span>`;
-        W = 4; drawGrid();
+        drawGrid(); // still render 8×10
         return;
       }
       const data=snap.data();
@@ -423,30 +445,35 @@
       pillStatus.textContent = `Status: ${data.status || '—'}`;
 
       // Target chips
-      targetEl.innerHTML=''; TARGET.split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
+      targetEl.innerHTML='';
+      TARGET.split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
 
-      // Dynamic width = target length (min 3)
-      W = Math.max(3, TARGET.length);
+      // Fixed width mechanics (8×10), like Lexispeed
       grid = Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
 
       await loadLeaderboard();
     }
+
     async function loadLeaderboard(){
       if(!GAME_ID) return;
       const qy=query(collection(db,'blitstiekGames',GAME_ID,'leaderboard'), orderBy('time','asc'), limit(10));
       const res=await getDocs(qy);
       lbBody.innerHTML='';
-      let r=1, first=null;
+      if(res.empty){
+        bestText.textContent='--:--';
+        lbBody.innerHTML='<tr><td class="py-2 pr-4">—</td><td class="py-2 pr-4">—</td><td class="py-2">—</td></tr>';
+        return;
+      }
+      let r=1;
       res.forEach(d=>{
         const v=d.data();
-        if(r===1){ first=v.time; bestText.textContent=fmt(first); }
+        if(r===1){ bestText.textContent=fmt(v.time); }
         const tr=document.createElement('tr');
         tr.innerHTML=`<td class="py-2 pr-4">${r}</td><td class="py-2 pr-4">${v.userName||'-'}</td><td class="py-2">${fmt(v.time)}</td>`;
         lbBody.appendChild(tr);
         r++;
       });
-      if(res.empty){ bestText.textContent='--:--'; lbBody.innerHTML='<tr><td class="py-2 pr-4">—</td><td class="py-2 pr-4">—</td><td class="py-2">—</td></tr>'; }
     }
 
     // ---- Controls ----
@@ -455,15 +482,16 @@
     btnLeft.addEventListener('click', ()=>move(-1,0));
     btnRight.addEventListener('click',()=>move(1,0));
     btnDown.addEventListener('click', ()=>hardDrop());
+
     document.addEventListener('keydown', (e)=>{
       if(e.key==='ArrowLeft') move(-1,0);
       if(e.key==='ArrowRight') move(1,0);
-      if(e.key==='ArrowDown') move(0,1);       // soft step
+      if(e.key==='ArrowDown') move(0,1);       // soft step (Lexispeed)
       if(e.key===' ') { e.preventDefault(); hardDrop(); }  // hard drop
     });
 
     // ---- Init ----
-    await loadGame();   // sets TARGET and W, then draws grid
+    await loadGame();   // sets TARGET
   </script>
 </body>
 </html>
