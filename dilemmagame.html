@@ -2,56 +2,102 @@
 <html lang="af">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DILEMMA – Kriptiek</title>
-
-  <!-- Favicon and Meta -->
-  <link rel="icon" href="/assets/favicon.ico" type="image/x-icon" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
-  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  <link rel="manifest" href="/assets/site.webmanifest">
-  <meta property="og:title" content="KRIPTIEK" />
-  <meta property="og:description" content="Tuiste van DILEMMA en ander Afrikaanse woordraaisels" />
-  <meta property="og:url" content="https://www.kriptiek.com/" />
-  <meta property="og:type" content="website" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta property="og:image" content="https://www.kriptiek.com/assets/WAshare-logo.png" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+  <title>BLITSTIEK – Kriptiek</title>
 
   <!-- Tailwind + font -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
 
   <style>
-    body { font-family: 'Montserrat', sans-serif; background-color: #f9fafb; color: #1f2937; }
-    header { background-color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,.1); padding: 1rem; text-align: center; }
+    :root{
+      --brand:#1e3a8a;
+      --brand-dark:#0f2a43;
+      --btn:#003366;
+      --cell:#004d40;
+      --line:#004d40;
+      --gridW:320px;
+      --cell-font:16px;
+    }
+    html,body{height:100%}
+    body{font-family:'Montserrat',system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#f9fafb;color:#1f2937}
+
+    /* HEADER (Dilemma-style) */
+    header { background-color:#fff; box-shadow:0 2px 4px rgba(0,0,0,.08); padding:1rem; text-align:center; position:relative; }
     .logo-container { display:flex; justify-content:center; align-items:center; margin-bottom:10px; }
-    .logo-container .letter-box { width:40px; height:40px; margin:2px; display:flex; justify-content:center; align-items:center; background-color:#374151; color:#fff; font-size:1.5rem; font-weight:700; border-radius:4px; }
+    .logo-container .letter-box { width:40px; height:40px; margin:2px; display:flex; justify-content:center; align-items:center; background:#374151; color:#fff; font-size:1.2rem; font-weight:700; border-radius:4px; }
+    .welcome { font-size:.9rem; color:#6b7280 }
 
-    .game-container { max-width: 640px; margin: 0 auto; padding: 1rem; }
-    .tile-row{ display:flex; justify-content:center; margin-bottom:5px; }
-    .letter-tile{ width:50px; height:50px; display:flex; justify-content:center; align-items:center; border:2px solid #374151; font-size:1.5rem; font-weight:bold; text-transform:uppercase; margin:2px; background:#fff; color:#1f2937; transition:transform .3s ease; }
-    .letter-tile.flip{ animation: flipAnim .5s ease forwards; }
-    @keyframes flipAnim{ 0%{transform:rotateX(0)} 50%{transform:rotateX(90deg)} 100%{transform:rotateX(0)} }
-    .correct{ background:#16a34a!important; color:#fff!important; }
-    .present{ background:#facc15!important; color:#000!important; }
-    .absent{ background:#9ca3af!important; color:#fff!important; }
+    /* CARD */
+    .card{ background:#fff; border:1px solid #e5e7eb; border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
 
-    .keyboard-row{ display:flex; justify-content:center; margin:5px 0; }
-    .key{ min-width:30px; padding:10px 12px; margin:2px; border-radius:4px; background:#374151; color:#fff; font-weight:700; cursor:pointer; text-transform:uppercase; }
-    .key.bg-green-600{ background:#16a34a!important; }
-    .key.bg-red-600{ background:#1e3a8a!important; }
+    /* “Teikenwoord” (match Dilemma headline tone) */
+    .headline { text-align:center; font-size:1.125rem; font-weight:700; color:#374151; margin:16px 0 8px; }
 
-    /* Result modal */
-    #resultModal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); align-items:center; justify-content:center; z-index:2000; }
-    #resultModal .modal-content{ background:#fff; padding:1.5rem; border-radius:8px; text-align:center; max-width:320px; width:100%; }
-    #resultModal button{ margin:5px; padding:8px 16px; border-radius:4px; font-weight:700; }
-    .btn-share{ background:#1e3a8a; color:#fff; }
-    .btn-close{ background:#6b7280; color:#fff; }
+    /* Target chips */
+    #targetWrap{ width:100%; max-width:var(--gridW); margin:0 auto 8px; display:flex; justify-content:center; }
+    #target{ display:inline-flex; gap:1px; background:var(--cell); color:#fff; padding:2px; border-radius:6px; }
+    #target span{ width:30px; height:30px; display:grid; place-items:center; font-weight:800; border:1px solid rgba(255,255,255,.12); }
 
-    /* Local share dropdowns */
+    /* GRID — crisp lines */
+    #grid{
+      display:grid;
+      grid-template-columns:repeat(8,1fr);
+      grid-template-rows:repeat(10,1fr);
+      gap:1px;               /* the grid lines */
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:8px;
+      overflow:hidden;
+      width:var(--gridW);
+      height:400px;
+      margin:10px auto 8px;
+    }
+    .cell{ position:relative; background:var(--cell); transition:transform .15s ease-out, opacity .15s ease-out; }
+    .cell::after{ content:''; position:absolute; inset:0; border:1px solid rgba(255,255,255,.10); pointer-events:none; }
+    .cell.f{
+      display:grid; place-items:center;
+      color:#fff; font-weight:800; font-size:var(--cell-font);
+      text-shadow:0 1px 1px rgba(0,0,0,.35);
+    }
+    .cell.pop{ transform:scale(1.15); opacity:0; }
+
+    /* Overlay (keep simple; share moved to persistent button below) */
+    #over{ position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.6); z-index:40; }
+    #over .cardx{ background:#900C3F; color:#fff; padding:18px; border-radius:14px; width:92%; max-width:380px; text-align:center; }
+
+    /* CONTROLS — flush edges, square buttons that grow */
+    .controls {
+      width:100%;
+      max-width:calc(var(--gridW) - 2px);
+      margin:8px auto 0;
+    }
+    .arrow-row{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:.5rem;
+    }
+    .dir-btn{
+      width:100%; aspect-ratio:1/1;
+      min-width:56px; min-height:56px;
+      display:flex; align-items:center; justify-content:center;
+      background:#053a6b; color:#fff; border-radius:14px; font-weight:800; font-size:24px;
+    }
+    @media (min-width:460px){ .dir-btn{ min-width:64px; min-height:64px; font-size:26px; } }
+    @media (min-width:640px){ .dir-btn{ min-width:72px; min-height:72px; font-size:28px; } }
+
+    .btn{ background:#1e3a8a; color:#fff; font-weight:700; padding:10px 14px; border-radius:8px; }
+    .btn.gray{ background:#6b7280 }
+
+    /* Time badges like Dilemma’s chips */
+    .pill{ background:#0c4a3e; color:#fff; font-weight:700; padding:6px 10px; border-radius:8px; text-align:center; }
+
+    /* Leaderboard (match Dilemma—simple list) */
+    #leaderboardList li{ padding:.35rem .5rem; border-radius:.375rem; }
+    #leaderboardList li:nth-child(odd){ background:#f3f4f6; }
+    #leaderboardList li:first-child{ background:#d1fae5; font-weight:700; }
+
+    /* Share dropdown (clone of Dilemma) */
     .share-menu-local{
       background:#fff; border:1px solid #e5e7eb; box-shadow:0 8px 24px rgba(0,0,0,.12);
       border-radius:.5rem; width:240px; padding:.5rem; z-index:3000;
@@ -60,760 +106,443 @@
     .share-menu-local button:hover{ background:#f3f4f6; }
   </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col">
 
-<header>
-  <div class="logo-container">
-    <div class="letter-box">D</div><div class="letter-box">I</div><div class="letter-box">L</div>
-    <div class="letter-box">E</div><div class="letter-box">M</div><div class="letter-box">M</div>
-    <div class="letter-box">A</div>
-  </div>
-  <p class="text-sm text-gray-500">Welkom terug, <span id="playerName" class="font-semibold text-green-700"></span>!</p>
-</header>
+  <!-- HEADER (no Kriptiek tiles on the left; Dilemma-style title instead) -->
+  <header>
+    <div class="logo-container">
+      <div class="letter-box">B</div><div class="letter-box">L</div>
+      <div class="letter-box">I</div><div class="letter-box">T</div>
+      <div class="letter-box">S</div><div class="letter-box">T</div>
+      <div class="letter-box">I</div><div class="letter-box">E</div>
+      <div class="letter-box">K</div>
+    </div>
+    <p class="welcome">Welkom terug, <span id="playerName" class="font-semibold text-green-700"></span>!</p>
 
-<main class="flex-grow game-container">
-  <div id="clue" class="text-center text-lg mb-4 text-gray-700 font-semibold">Laai die leidraad...</div>
-  <div id="game-grid" class="mb-6"></div>
-  <div id="keyboard" class="mb-2"></div>
+    <!-- optional sign-out at top-right -->
+    <button id="btnSignOut" class="absolute right-4 top-4 text-sm px-3 py-1.5 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800 hidden">Meld af</button>
+  </header>
 
-  <!-- Status line -->
-  <p id="statusLine" class="text-center font-bold text-[#1e3a8a] mb-4" style="display:none;"></p>
+  <main class="flex-1">
+    <div class="max-w-3xl mx-auto px-4 py-4">
 
-  <!-- ACTION ROW -->
-  <div class="mb-6 flex items-center justify-center">
-    <div class="relative flex items-center gap-3 sm:gap-4">
-      <button id="persistentShareBtn" type="button"
-              class="hidden bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-4 py-2 rounded">
-        DEEL
-      </button>
+      <!-- Headline like Dilemma -->
+      <div class="headline">TEIKENWOORD:</div>
+      <div id="targetWrap"><div id="target"></div></div>
 
-      <a href="/forum.html" id="chatButton"
-         class="inline-block bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-4 py-2 rounded">
-        GESELS SAAM
-      </a>
-
-      <!-- Local dropdown for bottom DEEL -->
-      <div id="shareMenuPersistent" class="absolute left-0 top-full mt-2 hidden share-menu-local">
-        <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
-        <div class="space-y-1">
-          <button id="pWhatsApp" type="button">📲 WhatsApp</button>
-          <button id="pCopy" type="button">📋 Kopieer skakel</button>
-          <button id="pSystem" type="button">🖥️ Stelsel-deel</button>
+      <!-- GAME card -->
+      <section class="card p-4">
+        <div class="relative">
+          <div id="grid"></div>
+          <div id="over"><div class="cardx" id="overCard"></div></div>
         </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- HOW TO PLAY -->
-  <div class="mt-2 bg-white rounded shadow p-4">
-    <h2 class="text-xl font-bold mb-2">HOE OM DILEMMA TE SPEEL</h2>
-    <p class="text-gray-700 leading-relaxed mb-2">
-      Jy het ses kanse om die woord te raai.<br>
-      Jy mag vir elke probeerslag enige letters in enige volgorde kies, maar elke raaiskoot moet dieselfde aantal letters hê as die woord waarna jy soek. Dit hoef nie ook 'n woord te vorm nie.<br>
-      Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER.
-    </p>
-    <p class="text-gray-700 italic mb-2">
-      WENK: Op kleiner skerms kan jy Dilemma soos 'n foto met jou vingers kleiner trek totdat dit heeltemal inpas.
-    </p>
-    <p class="text-gray-700 leading-relaxed">
-      <span class="font-bold text-green-700">GROEN</span>: Die letter is in die antwoord en in die regte blokkie.<br>
-      <span class="font-bold text-yellow-600">GEEL</span>: Die letter is in die antwoord, maar nie in die regte blokkie nie.<br>
-      <span class="font-bold text-gray-500">GRYS</span>: Die letter is glad nie in die antwoord nie.
-    </p>
-    <h3 class="text-lg font-bold mt-4">JOU STATISTIEK</h3>
-    <ul class="list-disc pl-6 text-gray-700 space-y-1">
-      <li><strong>Een poging per raaisel:</strong> Wanneer jy klaar gespeel het (wen of verloor), word daardie raaisel vir jou gesluit.</li>
-      <li><strong>Ouer raaisels is oop:</strong> Jy kan enige vroeëre Dilemma doen as jy nog nie het nie.</li>
-      <li><strong>Alles tel:</strong> Elke voltooide raaisel tel vir jou <strong>sukseskoers</strong>.</li>
-      <li><strong>Wenlopie:</strong> Suksesvolle opeenvolgende Dilemmas (in enige volgorde).</li>
-      <li><strong>Leierbord:</strong> Jou naam verskyn net een keer per dag.</li>
-    </ul>
-  </div>
-
-  <!-- LEADERBOARD -->
-  <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
-    <div class="flex items-center justify-between mb-2">
-      <h2 class="text-xl font-bold">Vandag se bestes:</h2>
-    </div>
-    <ul id="leaderboardList" class="text-gray-700 text-left"><li>Laai...</li></ul>
-  </div>
-</main>
-
-<footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
-  &copy; 2025 Kriptiek. Alle regte voorbehou. |
-  <a href="/index.html" class="underline">Tuis</a> |
-  <a href="/profile.html" class="underline">My profiel</a> |
-  <a href="/forum.html" class="underline">Gesels saam</a> |
-  <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
-  <a href="/terms.html" class="underline">Voorwaardes</a> |
-  <a href="/faq.html" class="underline">Gereelde vrae</a> |
-  <a href="/about.html" class="underline">Oor Kriptiek</a> |
-  <a href="/contact.html" class="underline">Kontak ons</a>
-</footer>
-
-<!-- RESULT MODAL -->
-<div id="resultModal">
-  <div class="modal-content">
-    <p id="resultMessage" class="mb-4 font-bold"></p>
-
-    <div class="relative flex items-center justify-center gap-2">
-      <button id="modalShareBtn" type="button" class="btn-share">DEEL</button>
-      <button id="closeModalBtn" type="button" class="btn-close">SLUIT</button>
-
-      <!-- Local dropdown for modal DEEL -->
-      <div id="shareMenuModal" class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden share-menu-local">
-        <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
-        <div class="space-y-1">
-          <button id="mWhatsApp" type="button">📲 WhatsApp</button>
-          <button id="mCopy" type="button">📋 Kopieer skakel</button>
-          <button id="mSystem" type="button">🖥️ Stelsel-deel</button>
+        <!-- Arrows -->
+        <div class="controls mt-3">
+          <div class="arrow-row">
+            <button id="btnLeft"  class="dir-btn">◀</button>
+            <button id="btnDown"  class="dir-btn">▼</button>
+            <button id="btnRight" class="dir-btn">▶</button>
+          </div>
         </div>
-      </div>
+
+        <!-- Actions + DEEL (Dilemma-style) -->
+        <div class="controls mt-3 flex items-center justify-center gap-2 relative">
+          <button id="btnStart" class="btn">BEGIN</button>
+          <button id="btnPause" class="btn gray">POUSE</button>
+
+          <button id="persistentShareBtn" type="button" class="btn hidden">DEEL</button>
+          <div id="shareMenuPersistent" class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden share-menu-local">
+            <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
+            <div class="space-y-1">
+              <button id="pWhatsApp" type="button">📲 WhatsApp</button>
+              <button id="pCopy" type="button">📋 Kopieer skakel</button>
+              <button id="pSystem" type="button">🖥️ Stelsel-deel</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timers -->
+        <div class="controls grid grid-cols-2 gap-2 mt-3">
+          <div id="timeBox" class="pill">Jou tyd: <b>00:00</b></div>
+          <div id="bestBox" class="pill">Beste tyd: <b>--:--</b></div>
+        </div>
+
+        <p id="authNote" class="hidden mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2 controls">
+          Meld aan om jou tyd op die leierbord te stoor.
+        </p>
+      </section>
+
+      <!-- LEADERBOARD (Dilemma-style list) -->
+      <section class="card mt-6 p-4">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-xl font-bold">Vandag se bestes:</h2>
+        </div>
+        <ul id="leaderboardList" class="text-gray-700 text-left"><li>Laai...</li></ul>
+      </section>
     </div>
-  </div>
-</div>
+  </main>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-import { getFirestore, doc, getDoc, collection, setDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+  <!-- FOOTER (match Dilemma) -->
+  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
+    &copy; 2025 Kriptiek. Alle regte voorbehou. |
+    <a href="/index.html" class="underline">Tuis</a> |
+    <a href="/profile.html" class="underline">My profiel</a> |
+    <a href="/forum.html" class="underline">Gesels saam</a> |
+    <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
+    <a href="/terms.html" class="underline">Voorwaardes</a> |
+    <a href="/faq.html" class="underline">Gereelde vrae</a> |
+    <a href="/about.html" class="underline">Oor Kriptiek</a> |
+    <a href="/contact.html" class="underline">Kontak ons</a>
+  </footer>
 
-/* ---- Firebase config ---- */
-const firebaseConfig = {
-  apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
-  authDomain: "kriptiek-c9ea2.firebaseapp.com",
-  projectId: "kriptiek-c9ea2",
-  storageBucket: "kriptiek-c9ea2.appspot.com",
-  messagingSenderId: "620450620939",
-  appId: "1:620450620939:web:e93a18ac23b53b33db890e"
-};
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
+    import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
+    import {
+      getFirestore, serverTimestamp, doc, getDoc, setDoc,
+      collection, query, orderBy, limit, getDocs
+    } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
-const auth = getAuth(app);
-
-/* ---- UI refs ---- */
-const gameGrid = document.getElementById("game-grid");
-const keyboard = document.getElementById("keyboard");
-const modal = document.getElementById("resultModal");
-const resultMsg = document.getElementById("resultMessage");
-const shareBtn = document.getElementById("modalShareBtn");
-const closeBtn = document.getElementById("closeModalBtn");
-const leaderboardList = document.getElementById("leaderboardList");
-const playerNameEl = document.getElementById("playerName");
-const statusLine = document.getElementById("statusLine");
-const persistentShareBtn = document.getElementById("persistentShareBtn");
-
-const pMenu = document.getElementById("shareMenuPersistent");
-const mMenu = document.getElementById("shareMenuModal");
-const pWA = document.getElementById("pWhatsApp");
-const pCopy = document.getElementById("pCopy");
-const pSys = document.getElementById("pSystem");
-const mWA = document.getElementById("mWhatsApp");
-const mCopy = document.getElementById("mCopy");
-const mSys = document.getElementById("mSystem");
-
-/* ---- State ---- */
-let gridRows = 6, gridCols = 5;
-let currentRow = 0, currentCol = 0;
-let board = [], targetWord = "", gameOver = false;
-
-let currentUid = null;
-let displayName = localStorage.getItem("userName") || "Speler";
-
-const params = new URLSearchParams(window.location.search);
-function todayZA() {
-  const now = new Date();
-  const parts = new Intl.DateTimeFormat('af-ZA', {
-    timeZone: 'Africa/Johannesburg',
-    year: 'numeric', month: '2-digit', day: '2-digit'
-  }).formatToParts(now).reduce((a, x) => (a[x.type] = x.value, a), {});
-  return `${parts.year}-${parts.month}-${parts.day}`;
-}
-const gameId = params.get("gameId") || `Game${todayZA()}`;
-const doneKey = `dilemma-${gameId}-done`;
-const progressKey = `dilemma-${gameId}-progress`;
-const gameUrl = window.location.href;
-
-function altIdIfOldFormat(id) {
-  const m = id.match(/^Game(\d{4}-\d{2}-\d{2})$/);
-  return m ? m[1] : null;
-}
-playerNameEl.textContent = displayName;
-
-/* ---- If not signed in ---- */
-function renderAuthRequired() {
-  const clue = document.getElementById("clue");
-  clue.textContent = "Jy moet aangemeld wees om te speel.";
-  keyboard.innerHTML = `
-    <div class="text-center mt-2">
-      <a href="/login.html" class="underline font-bold text-[#1e3a8a] mr-4">Meld aan</a>
-      <a href="/register.html" class="underline">Registreer</a>
-    </div>`;
-}
-
-/* ---- Helpers ---- */
-function disableGame(){ gameOver = true; document.querySelectorAll(".key").forEach(k => k.disabled = true); }
-
-/* ---- Local result helpers ---- */
-function readLocalResult() {
-  const v = localStorage.getItem(`${doneKey}-result`);
-  if (!v) return null;
-  if (v.startsWith('win:')) {
-    const n = Number(v.split(':')[1]);
-    return { didWin: true, guesses: Number.isFinite(n) ? n : null };
-  }
-  if (v === 'loss') return { didWin: false, guesses: null };
-  return null;
-}
-function deriveLocalSummaryFromProgress() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(progressKey) || '{}');
-    const rows = Array.isArray(saved.rows) ? saved.rows : [];
-    if (!rows.length) return null;
-    const winIndex = rows.findIndex(r =>
-      Array.isArray(r.states) && r.states.length && r.states.every(s => s === 'correct')
-    );
-    if (winIndex >= 0) return { didWin: true, guesses: winIndex + 1 };
-    if (rows.length >= gridRows) return { didWin: false, guesses: null };
-    return null;
-  } catch { return null; }
-}
-
-/* ---- Game data ---- */
-async function loadGameData() {
-  const gameRef = doc(db, "games", gameId);
-  const snap = await getDoc(gameRef);
-  if (snap.exists()) {
-    const data = snap.data();
-    targetWord = (data.word || "").toUpperCase();
-    gridCols = targetWord.length || 5;
-    document.getElementById("clue").textContent = data.clue || "Geen leidraad beskikbaar nie.";
-  } else {
-    targetWord = "WATER";
-    gridCols = targetWord.length;
-    document.getElementById("clue").textContent = "Geen leidraad beskikbaar nie.";
-  }
-}
-
-function createGrid() {
-  gameGrid.innerHTML = "";
-  board = [];
-  for (let r = 0; r < gridRows; r++) {
-    const row = document.createElement("div");
-    row.className = "tile-row";
-    const rowTiles = [];
-    for (let c = 0; c < gridCols; c++) {
-      const tile = document.createElement("div");
-      tile.className = "letter-tile";
-      row.appendChild(tile);
-      rowTiles.push(tile);
-    }
-    board.push(rowTiles);
-    gameGrid.appendChild(row);
-  }
-}
-
-function createKeyboard() {
-  keyboard.innerHTML = "";
-  const layout = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
-  layout.forEach(row => {
-    const rowDiv = document.createElement("div");
-    rowDiv.className = "keyboard-row";
-    [...row].forEach(letter => {
-      const key = document.createElement("button");
-      key.className = "key";
-      key.textContent = letter;
-      key.onclick = () => handleKey(letter);
-      rowDiv.appendChild(key);
-    });
-    if (row === "ZXCVBNM") {
-      const enter = document.createElement("button");
-      enter.className = "key bg-green-600";
-      enter.textContent = "Enter";
-      enter.onclick = handleEnter;
-      rowDiv.appendChild(enter);
-
-      const back = document.createElement("button");
-      back.className = "key bg-red-600";
-      back.textContent = "←";
-      back.onclick = handleBackspace;
-      rowDiv.appendChild(back);
-    }
-    keyboard.appendChild(rowDiv);
-  });
-}
-
-function updateKeyboard(letter, state) {
-  const keyBtn = [...document.querySelectorAll(".key")].find(k => k.textContent === letter);
-  if (!keyBtn) return;
-  if (state === "correct" || (state === "present" && !keyBtn.classList.contains("correct"))) {
-    keyBtn.classList.remove("present", "absent");
-    keyBtn.classList.add(state);
-  } else if (state === "absent" && !keyBtn.classList.contains("correct") && !keyBtn.classList.contains("present")) {
-    keyBtn.classList.add("absent");
-  }
-}
-
-/* ---- Input handling ---- */
-function handleKey(letter) {
-  if (gameOver) return;
-  if (currentCol < gridCols && currentRow < gridRows) {
-    board[currentRow][currentCol].textContent = letter;
-    currentCol++;
-  }
-}
-function handleBackspace() {
-  if (gameOver || currentCol === 0) return;
-  currentCol--;
-  board[currentRow][currentCol].textContent = "";
-}
-function handleEnter() {
-  if (gameOver) return;
-  if (currentCol < gridCols) return alert("Vul al die letters in!");
-  const guess = board[currentRow].map(t => t.textContent).join("");
-  checkGuessWithFlip(guess);
-}
-
-function computeStates(guess) {
-  const states = new Array(gridCols).fill("absent");
-  const letterCounts = {};
-  for (let ch of targetWord) letterCounts[ch] = (letterCounts[ch] || 0) + 1;
-
-  for (let i = 0; i < gridCols; i++) {
-    if (guess[i] === targetWord[i]) {
-      states[i] = "correct";
-      letterCounts[guess[i]]--;
-    }
-  }
-  for (let i = 0; i < gridCols; i++) {
-    if (states[i] === "correct") continue;
-    if (letterCounts[guess[i]] > 0) {
-      states[i] = "present";
-      letterCounts[guess[i]]--;
-    }
-  }
-  return states;
-}
-
-function applyStatesWithFlip(rowIndex, guess, states) {
-  states.forEach((s, i) => {
-    const tile = board[rowIndex][i];
-    setTimeout(() => {
-      tile.classList.remove("correct","present","absent");
-      tile.classList.add("flip", s);
-      updateKeyboard(guess[i], s);
-    }, i * 350);
-  });
-}
-
-/* ---- Save/restore progress ---- */
-function saveLocalProgress(done=false) {
-  const rows = [];
-  for (let r = 0; r < gridRows; r++) {
-    const guess = board[r].map(t => t.textContent).join("");
-    if (!guess.trim()) break;
-    const states = board[r].map(t =>
-      t.classList.contains("correct") ? "correct" :
-      t.classList.contains("present") ? "present" : "absent"
-    );
-    if (states.every(s=>["correct","present","absent"].includes(s))) {
-      rows.push({ guess, states });
-    } else { break; }
-  }
-  localStorage.setItem(progressKey, JSON.stringify({ rows }));
-  if (done) localStorage.setItem(doneKey, "true");
-}
-
-function restoreLocalProgress() {
-  const saved = localStorage.getItem(progressKey);
-  if (!saved) return;
-  try {
-    const data = JSON.parse(saved);
-    if (!data?.rows) return;
-    data.rows.forEach(({ guess, states }) => {
-      const letters = guess.split("");
-      for (let i = 0; i < letters.length; i++) {
-        const tile = board[currentRow][i];
-        tile.textContent = letters[i];
-        tile.classList.remove("correct","present","absent");
-        tile.classList.add(states[i], "flip");
-        updateKeyboard(letters[i], states[i]);
-      }
-      currentRow++;
-      currentCol = 0;
-    });
-  } catch {}
-}
-
-/* ---- Leaderboard: submit, ensure, load ---- */
-async function submitScore(guessCount, didWin) {
-  if (!currentUid) return;
-
-  // refresh displayName from users doc
-  try {
-    const uDoc = await getDoc(doc(db, "users", currentUid));
-    if (uDoc.exists() && typeof uDoc.data().userName === "string") {
-      displayName = uDoc.data().userName || displayName;
-      playerNameEl.textContent = displayName;
-      localStorage.setItem("userName", displayName);
-    }
-  } catch (e) { console.warn("Could not read users doc:", e); }
-
-  // update user stats and compute success rate + gamesPlayed for render
-  let successRate = null;
-  let gamesForRow = null; // <-- used to store alongside leaderboard
-  try {
-    const uref = doc(db, "users", currentUid);
-    const before = await getDoc(uref);
-
-    let payload;
-    if (before.exists()) {
-      const u = before.data() || {};
-      const newGames  = (u.gamesPlayed || 0) + 1;
-      const newWins   = (u.wins || 0) + (didWin ? 1 : 0);
-      const newStreak = didWin ? (u.streak || 0) + 1 : 0;
-      const newBest   = Math.max(u.bestStreak || 0, newStreak);
-      const dist = { "1":0,"2":0,"3":0,"4":0,"5":0,"6":0, ...(u.guessDist || {}) };
-      if (didWin && guessCount >= 1 && guessCount <= 6) dist[String(guessCount)] = (dist[String(guessCount)] || 0) + 1;
-      payload = { userName: displayName, gamesPlayed: newGames, wins: newWins, streak: newStreak, bestStreak: newBest, guessDist: dist, updatedAt: serverTimestamp() };
-    } else {
-      payload = {
-        userName: displayName, gamesPlayed: 1, wins: didWin ? 1 : 0, streak: didWin ? 1 : 0, bestStreak: didWin ? 1 : 0,
-        guessDist: { "1":0,"2":0,"3":0,"4":0,"5":0,"6":0, ...(didWin && guessCount>=1 && guessCount<=6 ? { [String(guessCount)]: 1 } : {}) },
-        createdAt: serverTimestamp(), updatedAt: serverTimestamp()
-      };
-    }
-    await setDoc(uref, payload, { merge: true });
-
-    const after = await getDoc(uref);
-    const nd = after.data() || {};
-    const games = Number(nd.gamesPlayed || 0);
-    const wins  = Number(nd.wins || 0);
-    gamesForRow = games;
-    successRate = games > 0 ? Math.round((wins / games) * 100) : 0;
-  } catch (e) {
-    console.warn("User stats update failed (non-fatal):", e);
-  }
-
-  // write leaderboard row (now includes gamesPlayed)
-  try {
-    await setDoc(
-      doc(db, "games", gameId, "leaderboard", currentUid),
-      {
-        userName: displayName,
-        guesses: Math.trunc(Number(guessCount)),
-        ...(successRate == null ? {} : { successRate }),
-        ...(gamesForRow == null ? {} : { gamesPlayed: gamesForRow }),
-        date: serverTimestamp(),
-        createdAtMs: Date.now()
-      },
-      { merge: true }
-    );
-  } catch (e) {
-    console.error("Kon nie leierbord-ry stoor nie:", e);
-  }
-}
-
-async function ensureLeaderboardRow(summary) {
-  try {
-    if (!currentUid || !summary) return;
-
-    const rowRef = doc(db, "games", gameId, "leaderboard", currentUid);
-    const existing = await getDoc(rowRef);
-    if (existing.exists()) return;
-
-    const guessCount = summary.didWin ? (Number(summary.guesses) || gridRows) : gridRows;
-
-    let sr = null, gp = null;
-    try {
-      const uSnap = await getDoc(doc(db, "users", currentUid));
-      if (uSnap.exists()) {
-        const u = uSnap.data() || {};
-        gp = Number(u.gamesPlayed || 0);
-        const w  = Number(u.wins || 0);
-        sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
-      }
-    } catch {}
-
-    const payload = {
-      userName: displayName,
-      guesses: Math.trunc(Number(guessCount)),
-      date: serverTimestamp(),
-      createdAtMs: Date.now(),
-      ...(sr == null ? {} : { successRate: sr }),
-      ...(gp == null ? {} : { gamesPlayed: gp })
+    /* ---- Firebase ---- */
+    const firebaseConfig = {
+      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+      authDomain: "kriptiek-c9ea2.firebaseapp.com",
+      projectId: "kriptiek-c9ea2",
+      storageBucket: "kriptiek-c9ea2.appspot.com",
+      messagingSenderId: "620450620939",
+      appId: "1:620450620939:web:e93a18ac23b53b33db890e"
     };
 
-    await setDoc(rowRef, payload, { merge: true });
-    await loadLeaderboard();
-  } catch (e) {
-    console.warn("ensureLeaderboardRow failed:", e);
-  }
-}
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
 
-async function loadLeaderboard() {
-  try {
-    const snap = await getDocs(collection(db, "games", gameId, "leaderboard"));
-    const entries = [];
-    const needUser = []; // uids where successRate or gamesPlayed is missing
+    /* ---- DOM ---- */
+    const playerNameEl = document.getElementById('playerName');
+    const btnSignOut   = document.getElementById('btnSignOut');
 
-    snap.forEach(d => {
-      const v = d.data() || {};
-      const guessesNum = Number(v.guesses);
-      if (!Number.isFinite(guessesNum) || guessesNum < 1 || guessesNum > gridRows) return;
+    const targetEl   = document.getElementById('target');
+    const gridEl     = document.getElementById('grid');
+    const over       = document.getElementById('over');
+    const overCard   = document.getElementById('overCard');
+    const lbList     = document.getElementById('leaderboardList');
+    const timeText   = document.querySelector('#timeBox b');
+    const bestText   = document.querySelector('#bestBox b');
+    const authNote   = document.getElementById('authNote');
 
-      const name = (typeof v.userName === "string" && v.userName.trim()) ? v.userName.trim() : "Onbekend";
-      const ts = v.date?.seconds ? v.date.seconds * 1000 : (typeof v.createdAtMs === "number" ? v.createdAtMs : 0);
+    const btnLeft = document.getElementById('btnLeft');
+    const btnRight= document.getElementById('btnRight');
+    const btnDown = document.getElementById('btnDown');
+    const btnStart= document.getElementById('btnStart');
+    const btnPause= document.getElementById('btnPause');
 
-      const srVal = Number.isFinite(Number(v.successRate)) ? Math.trunc(Number(v.successRate)) : null;
-      const gpVal = Number.isFinite(Number(v.gamesPlayed)) ? Math.trunc(Number(v.gamesPlayed)) : null;
+    const shareBtn = document.getElementById('persistentShareBtn');
+    const shareMenu = document.getElementById('shareMenuPersistent');
+    const pWA = document.getElementById('pWhatsApp');
+    const pCopy = document.getElementById('pCopy');
+    const pSys = document.getElementById('pSystem');
 
-      const entry = { uid: d.id, name, guesses: guessesNum, when: ts, sr: srVal, gp: gpVal };
-      entries.push(entry);
+    /* ---- Helpers ---- */
+    const pad = n => String(n).padStart(2,'0');
+    const fmt = s => s==null ? '--:--' : `${pad(Math.floor(s/60))}:${pad(s%60)}`;
+    const todayISO = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+    const qs = new URLSearchParams(location.search);
+    const explicitId = qs.get('gameId');
 
-      if (srVal == null || gpVal == null) needUser.push(d.id);
-    });
+    /* ---- Mechanics constants (Lexispeed) ---- */
+    const H = 10, W = 8;
+    const COLORS = ['#2196f3','#f44336','#4caf50','#ffc107','#9c27b0','#003366','#009688'];
+    const CONS   = 'BCDFGHJKLMNPQRSTVWXZ';
+    const VOWS   = 'AEIOUY';
 
-    // Backfill missing successRate/gamesPlayed from users/{uid}
-    if (needUser.length) {
-      try {
-        const results = await Promise.allSettled(
-          needUser.map(uid => getDoc(doc(db, "users", uid)))
-        );
-        results.forEach((res, i) => {
-          if (res.status !== "fulfilled") return;
-          const snap = res.value;
-          if (!snap.exists()) return;
-          const u = snap.data() || {};
-          const gp = Number(u.gamesPlayed || 0);
-          const w  = Number(u.wins || 0);
-          const sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
-          const ent = entries.find(e => e.uid === needUser[i]);
-          if (ent) {
-            if (ent.sr == null) ent.sr = sr;
-            if (ent.gp == null) ent.gp = gp;
-          }
-        });
-      } catch {}
-    }
+    /* ---- State ---- */
+    let user=null;
+    let GAME_ID=null, TARGET='';
+    let grid=Array.from({length:H},()=>Array(W).fill(null));
+    let cur=null, nxt=null;
+    let paused=false, ended=false, moving=false;
+    let t=0, tInt=null, gInt=null;
+    let bestTime=null;
 
-    leaderboardList.innerHTML = "";
-    if (!entries.length) {
-      leaderboardList.innerHTML = `<li class="bg-green-100 font-medium px-2 py-1 rounded">Jy kan eerste op die leierbord wees!</li>`;
-      return;
-    }
-
-    // order: fewest guesses first, then earliest timestamp
-    entries.sort((a, b) => (a.guesses - b.guesses) || (a.when - b.when));
-    entries.forEach((e, idx) => {
-      const li = document.createElement("li");
-      if (idx === 0) li.className = "font-bold bg-green-100";
-      const guessLabel = e.guesses === 1 ? 'raai' : 'raaie';
-      const srTxt = Number.isFinite(e.sr) ? `${e.sr}%` : '?%';
-      const gpTxt = Number.isFinite(e.gp) ? e.gp : '?';
-      // Requested format: deborah (100% of 23): 2 raaie
-      li.innerHTML = `<strong>${e.name} (${srTxt} van ${gpTxt})</strong>: ${e.guesses} ${guessLabel}`;
-      leaderboardList.appendChild(li);
-    });
-  } catch (err) {
-    console.error("Kon nie leierbord laai nie:", err);
-    leaderboardList.innerHTML = `<li class="text-red-600">Kon nie leierbord laai nie.</li>`;
-  }
-}
-
-/* ---- Share: bottom + modal, each with its own dropdown ---- */
-let lastSummary = null;
-
-function shareTextFromSummary(summary) {
-  if (!summary) return `Probeer vandag se DILEMMA by ${gameUrl}`;
-  if (summary.didWin) {
-    const woord = summary.guesses === 1 ? 'raaiskoot' : 'raaiskote';
-    return `Ek het hierdie DILEMMA in ${summary.guesses} ${woord} opgelos. Probeer self by ${gameUrl}`;
-  }
-  return `Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${gameUrl}`;
-}
-function openWhatsApp(text){
-  const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-  const w = window.open(url, '_blank', 'noopener,noreferrer');
-  if(!w && navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>alert("Skakel gekopieer!")); }
-}
-
-function wireShareDropdown(triggerBtn, menuEl){
-  triggerBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    document.querySelectorAll('.share-menu-local').forEach(m => { if(m!==menuEl) m.classList.add('hidden'); });
-    menuEl.classList.toggle('hidden');
-  });
-  document.addEventListener('click', (e) => {
-    if (!menuEl.contains(e.target) && e.target !== triggerBtn) menuEl.classList.add('hidden');
-  });
-  window.addEventListener('scroll', () => menuEl.classList.add('hidden'));
-  window.addEventListener('resize', () => menuEl.classList.add('hidden'));
-}
-function bindMenuActions(menuEl, {waBtn, copyBtn, sysBtn}){
-  const text = () => shareTextFromSummary(lastSummary);
-  waBtn.onclick = () => { openWhatsApp(text()); menuEl.classList.add('hidden'); };
-  copyBtn.onclick = async () => {
-    try { await navigator.clipboard.writeText(text()); alert("Skakel gekopieer!"); }
-    catch(_) {}
-    menuEl.classList.add('hidden');
-  };
-  sysBtn.onclick = async () => {
-    try { if (navigator.share) await navigator.share({ text: text() }); else openWhatsApp(text()); }
-    catch {}
-    menuEl.classList.add('hidden');
-  };
-}
-
-/* ---- Game end flows ---- */
-async function gameCompleted(guessCount) {
-  gameOver = true;
-  const woord = guessCount === 1 ? 'raaiskoot' : 'raaiskote';
-
-  statusLine.textContent = `Jy het hierdie Dilemma in ${guessCount} ${woord} opgelos`;
-  statusLine.style.display = "block";
-
-  resultMsg.textContent = `Veels geluk, ${displayName}, jy het die woord in ${guessCount} ${woord} gekry!`;
-  modal.style.display = "flex";
-
-  lastSummary = { didWin:true, guesses:guessCount };
-  persistentShareBtn.classList.remove("hidden");
-
-  // persist + leaderboard
-  saveLocalProgress(true);
-  localStorage.setItem(`${doneKey}-result`, `win:${guessCount}`);
-  await setDoc(doc(db, "userGames", currentUid, "plays", gameId),
-    { finished:true, result:"win", guesses:Math.trunc(Number(guessCount)), finishedAt: serverTimestamp() },
-    { merge:true });
-  await submitScore(guessCount, true);
-  await loadLeaderboard();
-  document.querySelectorAll(".key").forEach(k => k.disabled = true);
-}
-
-async function gameFailed() {
-  gameOver = true;
-
-  statusLine.textContent = `Jy kon nie hierdie Dilemma oplos nie`;
-  statusLine.style.display = "block";
-
-  resultMsg.textContent = `Jammer, ${displayName}! Vandag se oplossing is ${targetWord}.`;
-  modal.style.display = "flex";
-
-  lastSummary = { didWin:false, guesses:null };
-  persistentShareBtn.classList.remove("hidden");
-
-  // persist + leaderboard
-  saveLocalProgress(true);
-  localStorage.setItem(`${doneKey}-result`, `loss`);
-  await setDoc(doc(db, "userGames", currentUid, "plays", gameId),
-    { finished:true, result:"loss", guesses:gridRows, finishedAt: serverTimestamp() },
-    { merge:true });
-  await submitScore(gridRows, false);
-  await loadLeaderboard();
-  document.querySelectorAll(".key").forEach(k => k.disabled = true);
-}
-
-/* ---- Modal + keyboard ---- */
-closeBtn.onclick = () => { modal.style.display = "none"; };
-document.addEventListener("keydown", e => {
-  if (e.key === "Enter") handleEnter();
-  else if (e.key === "Backspace") handleBackspace();
-  else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
-});
-
-/* ---- Guess orchestration ---- */
-function checkGuessWithFlip(guess) {
-  const states = computeStates(guess);
-  applyStatesWithFlip(currentRow, guess, states);
-
-  setTimeout(async () => {
-    saveLocalProgress(false);
-    if (guess === targetWord) {
-      await gameCompleted(currentRow + 1);
-    } else {
-      currentRow++;
-      currentCol = 0;
-      if (currentRow >= gridRows) {
-        await gameFailed();
+    /* ---- Auth ---- */
+    onAuthStateChanged(auth, (u)=>{
+      user=u||null;
+      if(user){
+        playerNameEl.textContent = user.displayName || user.email || 'Speler';
+        btnSignOut.classList.remove('hidden');
+        authNote.classList.add('hidden');
       } else {
-        saveLocalProgress(false);
+        playerNameEl.textContent = 'Speler';
+        btnSignOut.classList.add('hidden');
+        authNote.classList.remove('hidden');
+      }
+    });
+    btnSignOut.addEventListener('click', async ()=>{ await signOut(auth); try{localStorage.clear();sessionStorage.clear();}catch{} location.reload(); });
+
+    /* ---- Pixel-perfect grid sizing (fix line thickness at zoom) ---- */
+    function resizeGrid(){
+      const wrap = gridEl.parentElement;
+      const avail = Math.min(320, Math.floor(wrap.clientWidth));
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      const snap = v => Math.floor((v*dpr)/8)/dpr*8;            // snap to multiple of 8 in device pixels
+      const quantW = Math.max(240, snap(avail));
+      const cell   = Math.floor(quantW/8);
+      const quantH = cell * 10;
+
+      gridEl.style.width  = quantW + 'px';
+      gridEl.style.height = quantH + 'px';
+      document.documentElement.style.setProperty('--gridW', quantW + 'px');
+
+      // glyph ≈ 0.5 of cell
+      const glyph = Math.max(15, Math.min(28, Math.round(cell * 0.50)));
+      document.documentElement.style.setProperty('--cell-font', glyph + 'px');
+    }
+    window.addEventListener('resize', resizeGrid);
+
+    /* ---- Grid rendering ---- */
+    function drawGrid(){
+      gridEl.innerHTML='';
+      for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+        const d=document.createElement('div'); d.className='cell'; d.dataset.x=x; d.dataset.y=y;
+        gridEl.appendChild(d);
+      }
+      resizeGrid();
+    }
+    function drawBlock(b){
+      if(!b||b.x<0||b.x>=W||b.y<0||b.y>=H) return;
+      const c=gridEl.querySelector(`.cell[data-x="${b.x}"][data-y="${b.y}"]`);
+      if(!c) return;
+      c.className='cell f'; c.style.background=b.color; c.textContent=b.letter;
+    }
+    function clearBlock(b){
+      if(!b) return;
+      const c=gridEl.querySelector(`.cell[data-x="${b.x}"][data-y="${b.y}"]`);
+      if(!c) return;
+      c.className='cell'; c.style.background='var(--cell)'; c.textContent='';
+    }
+
+    /* ---- Core mechanics ---- */
+    const partOfTarget = L => TARGET.includes(L);
+    const collide = b => !b || b.x<0||b.x>=W||b.y>=H || (b.y>=0 && grid[b.y][b.x]);
+
+    function createBlock(){
+      const color = COLORS[Math.floor(Math.random()*COLORS.length)];
+      const letter = Math.random()<0.3
+        ? VOWS[Math.floor(Math.random()*VOWS.length)]
+        : CONS[Math.floor(Math.random()*CONS.length)];
+      return { color, letter, x:Math.floor(W/2), y:0 };
+    }
+
+    async function move(dx,dy){
+      if(!cur||paused||ended||moving) return;
+      moving = true;
+      clearBlock(cur);
+      const test = { ...cur, x:cur.x+dx, y:cur.y+dy };
+      if(!collide(test)){ cur=test; drawBlock(cur); }
+      else if(dy>0){ drawBlock(cur); place(); }
+      else{ drawBlock(cur); }
+      moving = false;
+    }
+    function hardDrop(){
+      if(!cur||paused||ended) return;
+      clearBlock(cur);
+      while(cur.y<H-1 && !collide({...cur,y:cur.y+1})) cur.y++;
+      place();
+    }
+
+    async function place(){
+      if(!cur||cur.y<0) return;
+      grid[cur.y][cur.x]={...cur}; drawBlock(cur);
+      await matchAndDrop();
+      checkFail();
+      await checkWin();
+      cur=nxt; nxt=createBlock();
+      if(cur) drawBlock(cur);
+    }
+
+    async function matchAndDrop(){
+      const del=new Set();
+      for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+        const a=grid[y][x]; if(!a||partOfTarget(a.letter)) continue;
+        for(const [dx,dy] of [[1,0],[0,1],[-1,0],[0,-1]]){
+          const nx=x+dx, ny=y+dy; if(nx<0||nx>=W||ny<0||ny>=H) continue;
+          const b=grid[ny][nx]; if(!b||partOfTarget(b.letter)) continue;
+          if(a.letter===b.letter || a.color===b.color){ del.add(`${x},${y}`); del.add(`${nx},${ny}`); }
+        }
+      }
+      if(!del.size) return;
+
+      await Promise.all(Array.from(del).map(key=>new Promise(res=>{
+        const [x,y]=key.split(',').map(Number);
+        const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+        if(c){ c.classList.add('pop'); setTimeout(()=>{ c.classList.remove('pop'); res(); },150);} else res();
+        grid[y][x]=null;
+      })));
+
+      for(let x=0;x<W;x++){
+        let wY=H-1;
+        for(let y=H-1;y>=0;y--){
+          if(grid[y][x]){
+            if(y!==wY){ grid[wY][x]=grid[y][x]; grid[y][x]=null; }
+            wY--;
+          }
+        }
+      }
+      for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+        const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+        c.className='cell'; c.style.background='var(--cell)'; c.textContent='';
+        if(grid[y][x]) drawBlock({...grid[y][x],x,y});
       }
     }
-  }, gridCols * 350 + 20);
-}
 
-/* ---- Auth gate + init ---- */
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    renderAuthRequired();
-    await loadLeaderboard(); // still show public board
-    return;
-  }
-
-  currentUid = user.uid;
-
-  // load display name if stored
-  try {
-    const uDoc = await getDoc(doc(db, "users", currentUid));
-    const nm = uDoc.exists() ? uDoc.data()?.userName : null;
-    if (typeof nm === "string" && nm.trim()) {
-      displayName = nm.trim();
-      localStorage.setItem("userName", displayName);
-    }
-  } catch {}
-  playerNameEl.textContent = displayName;
-
-  await loadGameData();
-  createGrid();
-  createKeyboard();
-  restoreLocalProgress();
-
-  // Wire the two share menus
-  const shareBtnModal = document.getElementById("modalShareBtn");
-  wireShareDropdown(shareBtnModal, mMenu);
-  bindMenuActions(mMenu, { waBtn: mWA, copyBtn: mCopy, sysBtn: mSys });
-  wireShareDropdown(persistentShareBtn, pMenu);
-  bindMenuActions(pMenu, { waBtn: pWA, copyBtn: pCopy, sysBtn: pSys });
-
-  // If previously completed, show summary + ensure leaderboard row + keep DEEL exposed
-  const lsDone = localStorage.getItem(doneKey) === "true";
-  let fsDone = false;
-  try {
-    const p = await getDoc(doc(db, "userGames", currentUid, "plays", gameId));
-    fsDone = p.exists();
-  } catch {}
-
-  if (lsDone || fsDone) {
-    let s = null;
-    try {
-      const snap = await getDoc(doc(db, "userGames", currentUid, "plays", gameId));
-      if (snap.exists()) {
-        const d = snap.data() || {};
-        s = { didWin: d.result === "win", guesses: Number(d.guesses) || null };
+    async function checkWin(){
+      for(let y=0;y<H;y++) for(let x=0;x<=W-TARGET.length;x++){
+        let ok=true;
+        for(let i=0;i<TARGET.length;i++){ const g=grid[y][x+i]; if(!g||g.letter!==TARGET[i]){ ok=false; break; } }
+        if(ok){
+          for(let i=0;i<TARGET.length;i++){
+            const c=gridEl.querySelector(`.cell[data-x="${x+i}"][data-y="${y}"]`);
+            if(c) c.style.transform='scale(1.05)';
+          }
+          setTimeout(()=>end(true), 450);
+          return;
+        }
       }
-    } catch {}
-    if (!s) s = readLocalResult();
-    if (!s) s = deriveLocalSummaryFromProgress();
-
-    if (s) {
-      lastSummary = s;
-      statusLine.textContent = s.didWin
-        ? `Jy het hierdie Dilemma in ${s.guesses} ${(s.guesses===1?'raaiskoot':'raaiskote')} opgelos`
-        : `Jy kon nie hierdie Dilemma oplos nie`;
-      statusLine.style.display = "block";
-      persistentShareBtn.classList.remove("hidden");
-      await ensureLeaderboardRow(s);
-    } else {
-      statusLine.textContent = `Hierdie Dilemma is reeds voltooi`;
-      statusLine.style.display = "block";
     }
-    disableGame();
-  }
+    function checkFail(){ if(nxt && collide(nxt)) end(false); }
 
-  await loadLeaderboard();
-});
-</script>
+    /* ---- Timer & control ---- */
+    function setTime(v){ t=v; timeText.textContent=fmt(v); }
+    function start(){
+      ended=false; over.style.display='none'; setTime(0);
+      grid=Array.from({length:H},()=>Array(W).fill(null));
+      drawGrid();
+      cur=createBlock(); nxt=createBlock(); drawBlock(cur);
+      paused=false; btnPause.textContent='POUSE';
+      clearInterval(tInt); clearInterval(gInt);
+      gInt=setInterval(()=>{ if(!paused && !ended) move(0,1); },1000);
+      tInt=setInterval(()=>{ if(!paused && !ended) setTime(t+1); },1000);
+    }
+    function togglePause(){ if(ended) return; paused=!paused; btnPause.textContent = paused ? 'HERVAT' : 'POUSE'; }
+
+    /* ---- Share (Dilemma-style persistent button) ---- */
+    function shareText(){
+      const url = new URL(location.href); url.searchParams.set('gameId', GAME_ID);
+      const time = fmt(t);
+      return `Ek het ${TARGET} in ${time} op BLITSTIEK voltooi! Probeer hier: ${url.toString()}`;
+    }
+    function wireShareDropdown(triggerBtn, menuEl){
+      triggerBtn.addEventListener('click', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        document.querySelectorAll('.share-menu-local').forEach(m => { if(m!==menuEl) m.classList.add('hidden'); });
+        menuEl.classList.toggle('hidden');
+      });
+      document.addEventListener('click', (e) => {
+        if (!menuEl.contains(e.target) && e.target !== triggerBtn) menuEl.classList.add('hidden');
+      });
+      window.addEventListener('scroll', () => menuEl.classList.add('hidden'));
+      window.addEventListener('resize', () => menuEl.classList.add('hidden'));
+    }
+    function openWhatsApp(text){
+      const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+      const w = window.open(url,'_blank','noopener,noreferrer');
+      if(!w && navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>alert("Skakel gekopieer!")); }
+    }
+    pWA.onclick = () => { openWhatsApp(shareText()); shareMenu.classList.add('hidden'); };
+    pCopy.onclick = async () => { try{ await navigator.clipboard.writeText(shareText()); alert('Skakel gekopieer!'); }catch{} shareMenu.classList.add('hidden'); };
+    pSys.onclick = async () => { try{ if(navigator.share) await navigator.share({ text:shareText() }); else openWhatsApp(shareText()); }catch{} shareMenu.classList.add('hidden'); };
+    wireShareDropdown(shareBtn, shareMenu);
+
+    /* ---- Overlay + submit ---- */
+    async function submitTimeToBoard(){
+      if(!user) return;
+      try{
+        const name = (user.displayName || user.email || 'Speler').slice(0,24);
+        await setDoc(doc(db,'blitstiekGames',GAME_ID,'leaderboard',user.uid),{
+          userName:name, time:Number(t), timestamp:serverTimestamp()
+        },{ merge:true });
+        await loadLeaderboard();
+      }catch(e){ console.warn(e); }
+    }
+    function end(win){
+      ended=true; clearInterval(tInt); clearInterval(gInt);
+      if(win){
+        // Save and expose DEEL button like Dilemma
+        submitTimeToBoard();
+        shareBtn.classList.remove('hidden');
+        overCard.innerHTML=`<div class="mb-2">Puik! Jou tyd: <b>${fmt(t)}</b> vir <b>${TARGET}</b>.</div>
+          <button id="closeBtn" class="px-4 py-2 rounded-xl bg-gray-700 text-white font-bold">SLUIT</button>`;
+        over.style.display='flex';
+        document.getElementById('closeBtn').addEventListener('click', ()=> over.style.display='none');
+      } else {
+        overCard.innerHTML=`<div class="mb-2 text-lg font-bold">GAME OVER</div>
+          <button id="closeBtn2" class="px-4 py-2 rounded-xl bg-gray-700 text-white font-bold">SLUIT</button>`;
+        over.style.display='flex';
+        document.getElementById('closeBtn2').addEventListener('click', ()=> over.style.display='none');
+      }
+    }
+
+    /* ---- Leaderboard (Dilemma-style list) ---- */
+    async function loadLeaderboard(){
+      if(!GAME_ID){ lbList.innerHTML='<li>Laai...</li>'; return; }
+      const qy=query(collection(db,'blitstiekGames',GAME_ID,'leaderboard'), orderBy('time','asc'), limit(10));
+      const res=await getDocs(qy);
+      lbList.innerHTML='';
+      let r=1, first=null;
+      if(res.empty){
+        lbList.innerHTML = `<li class="bg-green-100 font-medium">Jy kan eerste op die leierbord wees!</li>`;
+        bestText.textContent='--:--';
+        return;
+      }
+      res.forEach(d=>{
+        const v=d.data()||{};
+        if(r===1){ first=v.time; bestText.textContent=fmt(first); }
+        const li=document.createElement('li');
+        li.innerHTML = `<strong>${v.userName||'Onbekend'}</strong>: ${fmt(Number(v.time))}`;
+        lbList.appendChild(li);
+        r++;
+      });
+    }
+
+    /* ---- Load game (word + board) ---- */
+    async function loadGame(){
+      GAME_ID = explicitId || `Game${todayISO()}`;
+
+      const snap = await getDoc(doc(db,'blitstiekGames',GAME_ID));
+      if(!snap.exists()){
+        targetEl.innerHTML = `<span>—</span>`;
+        drawGrid(); shareBtn.classList.add('hidden');
+        return;
+      }
+      const data=snap.data();
+      TARGET=(data.word||'').toUpperCase();
+
+      // target chips
+      targetEl.innerHTML=''; TARGET.split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
+
+      grid = Array.from({length:H},()=>Array(W).fill(null));
+      drawGrid();
+
+      await loadLeaderboard();
+    }
+
+    /* ---- Controls ---- */
+    btnStart.addEventListener('click', start);
+    btnPause.addEventListener('click', ()=>togglePause());
+    btnLeft.addEventListener('click', ()=>move(-1,0));
+    btnRight.addEventListener('click',()=>move(1,0));
+    btnDown.addEventListener('click', ()=>hardDrop());
+
+    document.addEventListener('keydown', (e)=>{
+      if(e.key==='ArrowLeft') move(-1,0);
+      if(e.key==='ArrowRight') move(1,0);
+      if(e.key==='ArrowDown') move(0,1);
+      if(e.key===' ') { e.preventDefault(); hardDrop(); }
+    });
+
+    /* ---- Init ---- */
+    await loadGame();
+  </script>
 </body>
 </html>
