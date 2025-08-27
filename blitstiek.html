@@ -12,48 +12,51 @@
     :root{
       --brand-dark:#0f2a43;
       --btn:#003366;
-      --cell:#004d40;        /* deep green board cells */
+      --cell:#004d40;        /* deep green like Lexispeed */
       --line:#004d40;        /* board border */
     }
     html,body{height:100%}
     body{font-family:'Montserrat',system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#f7fafc}
 
-    /* Header — Dilemma style with centered title */
+    /* Header — Dilemma-style centered title */
     .header-wrap{position:relative}
     .header-title{
       position:absolute; left:50%; transform:translateX(-50%);
       font-weight:800; letter-spacing:.08em; color:var(--brand-dark);
     }
 
+    /* Kriptiek logo tiles */
     .logo-tile{ background:#374151; color:#fff; border:2px solid #1f2937; border-radius:.375rem; }
     .flipped-k{ transform:scaleX(-1); }
 
     .card{ background:#fff; border:1px solid #e5e7eb; border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
 
-    /* Target word chips */
+    /* Target word chips (align with grid width) */
+    #targetWrap{ width:100%; max-width:320px; margin:0 auto 8px; display:flex; align-items:center; gap:8px; }
+    #targetLabel{ padding:.25rem .75rem; border-radius:999px; background:#eef2f7; font-weight:700; color:#374151; font-size:.9rem; }
     #target{ display:flex; gap:1px; background:var(--cell); color:#fff; padding:2px; border-radius:6px; }
     #target span{ width:30px; height:30px; display:grid; place-items:center; font-weight:800; border:1px solid rgba(255,255,255,.12); }
 
-    /* Game grid — Lexispeed look */
+    /* Game grid — crisp 1px white lines */
     #grid{
       display:grid;
       grid-template-columns:repeat(8,1fr);
       grid-template-rows:repeat(10,1fr);
-      gap:1px;                       /* white grid lines */
-      background:#fff;               /* the lines themselves */
+      gap:1px;                     /* visible grid lines */
+      background:#fff;             /* the lines themselves */
       border:1px solid var(--line);
       border-radius:12px;
       overflow:hidden;
-      width:100%; max-width:320px;   /* same footprint as Lexispeed */
+      width:320px;                 /* will be quantized via JS */
+      height:400px;
       margin:10px auto;
-      aspect-ratio:8/10;
     }
     .cell{
       position:relative;
       background:var(--cell);
       transition:transform .15s ease-out, opacity .15s ease-out;
     }
-    .cell::after{                    /* inner white tint like Lexispeed */
+    .cell::after{                  /* subtle inner border like Lexispeed */
       content:''; position:absolute; inset:0;
       border:1px solid rgba(255,255,255,.10); pointer-events:none;
     }
@@ -69,11 +72,21 @@
     #over .cardx{ background:#900C3F; color:#fff; padding:18px; border-radius:14px; width:92%; max-width:380px; text-align:center; }
 
     /* Buttons */
-    .btn{ background:var(--btn); color:#fff; font-weight:700; padding:12px 14px; border-radius:12px; }
+    .btn{ background:var(--btn); color:#fff; font-weight:700; padding:10px 12px; border-radius:12px; }
     .btn:disabled{ opacity:.5; }
-    .dir-btn{ aspect-ratio:1/1; font-size:36px; display:flex; align-items:center; justify-content:center; }
 
-    /* Leaderboard */
+    /* Compact arrow controls like Lexispeed */
+    .controls { width:100%; max-width:320px; margin:10px auto 0; }
+    .dir-btn{
+      width:84px; height:84px; font-size:28px; border-radius:14px;
+      display:flex; align-items:center; justify-content:center;
+    }
+    @media (max-width:480px){
+      .dir-btn{ width:64px; height:64px; font-size:24px; }
+      #target span{ width:26px; height:26px; font-size:13px; }
+    }
+
+    /* Leaderboard table polish */
     #lbBody tr{ border-top:1px solid #eef2f7; }
     #lbBody td{ padding:.5rem .75rem; }
   </style>
@@ -107,8 +120,8 @@
     <div class="max-w-3xl mx-auto px-4 py-6">
 
       <!-- Target word -->
-      <div class="flex items-center gap-2 mb-3">
-        <span class="px-3 py-1 rounded-full bg-gray-100 font-semibold text-gray-700">Teikenwoord</span>
+      <div id="targetWrap">
+        <span id="targetLabel">Teikenwoord</span>
         <div id="target"></div>
       </div>
 
@@ -119,24 +132,24 @@
           <div id="over"><div class="cardx" id="overCard"></div></div>
         </div>
 
-        <div class="grid grid-cols-3 gap-2 mt-3">
+        <div class="grid grid-cols-3 gap-2 mt-3 controls">
           <button id="btnLeft"  class="btn dir-btn">◀</button>
           <button id="btnDown"  class="btn dir-btn">▼</button>
           <button id="btnRight" class="btn dir-btn">▶</button>
         </div>
 
-        <div class="flex items-center gap-2 mt-3">
+        <div class="flex items-center gap-2 mt-3 controls">
           <button id="btnStart" class="btn">BEGIN</button>
           <button id="btnPause" class="btn" style="background:#555">POUSE</button>
           <button id="btnShare" class="btn ml-auto" style="background:#0f766e">DEEL</button>
         </div>
 
-        <div class="grid grid-cols-2 gap-2 mt-3">
+        <div class="grid grid-cols-2 gap-2 mt-3 controls">
           <div id="timeBox" class="text-center font-bold rounded-lg bg-[var(--cell)] text-white p-2">Jou tyd: <b>00:00</b></div>
           <div id="bestBox" class="text-center font-bold rounded-lg bg-[var(--cell)] text-white p-2">Beste tyd: <b>--:--</b></div>
         </div>
 
-        <p id="authNote" class="hidden mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+        <p id="authNote" class="hidden mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2 controls" style="max-width:320px;">
           Meld aan om jou tyd op die leiertafel te stoor.
         </p>
       </section>
@@ -163,7 +176,6 @@
   <footer class="bg-[var(--brand-dark)] text-white text-center py-6 mt-auto">
     <div class="max-w-5xl mx-auto px-4 text-sm opacity-90">&copy; 2025 Kriptiek. Alle regte voorbehou.</div>
   </footer>
-
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
@@ -172,6 +184,7 @@
       collection, query, orderBy, limit, getDocs
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
+    // ---- Firebase (Kriptiek) ----
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
       authDomain: "kriptiek-c9ea2.firebaseapp.com",
@@ -185,7 +198,7 @@
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
-    // DOM
+    // ---- DOM refs ----
     const loginLink  = document.getElementById('loginLink');
     const btnSignOut = document.getElementById('btnSignOut');
     const targetEl   = document.getElementById('target');
@@ -204,20 +217,20 @@
     const btnPause= document.getElementById('btnPause');
     const btnShare= document.getElementById('btnShare');
 
-    // Helpers
+    // ---- Helpers ----
     const pad = n => String(n).padStart(2,'0');
     const fmt = s => s==null ? '--:--' : `${pad(Math.floor(s/60))}:${pad(s%60)}`;
     const todayISO = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
     const qs = new URLSearchParams(location.search);
     const explicitId = qs.get('gameId');
 
-    // Gameplay constants
-    const H = 10, W = 8;
+    // ---- Gameplay constants (Lexispeed parity) ----
+    const H = 10, W = 8;                   // fixed 8×10
     const COLORS = ['#2196f3','#f44336','#4caf50','#ffc107','#9c27b0','#003366','#009688'];
     const CONS   = 'BCDFGHJKLMNPQRSTVWXZ';
     const VOWS   = 'AEIOUY';
 
-    // State
+    // ---- State ----
     let user=null;
     let GAME_ID=null, TARGET='';
     let grid=Array.from({length:H},()=>Array(W).fill(null));
@@ -225,7 +238,7 @@
     let paused=false, ended=false, moving=false;
     let t=0, tInt=null, gInt=null;
 
-    // Auth UI
+    // ---- Auth ----
     onAuthStateChanged(auth, (u)=>{
       user=u||null;
       if(user){ loginLink.classList.add('hidden'); btnSignOut.classList.remove('hidden'); authNote.classList.add('hidden'); }
@@ -233,13 +246,26 @@
     });
     btnSignOut.addEventListener('click', async ()=>{ await signOut(auth); try{localStorage.clear();sessionStorage.clear();}catch{} location.reload(); });
 
-    // Grid
+    // ---- Pixel-perfect grid sizing (prevents fuzzy grid lines) ----
+    function resizeGrid(){
+      const wrap = gridEl.parentElement;       // card inner div
+      const avail = Math.min(320, Math.floor(wrap.clientWidth)); // clamp to 320
+      const quantW = Math.max(240, Math.floor(avail/8)*8);       // multiple of 8, min 240
+      const cell   = Math.floor(quantW/8);
+      const quantH = cell * 10;
+      gridEl.style.width  = quantW + 'px';
+      gridEl.style.height = quantH + 'px';
+    }
+    window.addEventListener('resize', resizeGrid);
+
+    // ---- Grid rendering ----
     function drawGrid(){
       gridEl.innerHTML='';
       for(let y=0;y<H;y++) for(let x=0;x<W;x++){
         const d=document.createElement('div'); d.className='cell'; d.dataset.x=x; d.dataset.y=y;
         gridEl.appendChild(d);
       }
+      resizeGrid();
     }
     function drawBlock(b){
       if(!b||b.x<0||b.x>=W||b.y<0||b.y>=H) return;
@@ -254,7 +280,7 @@
       c.className='cell'; c.style.background='var(--cell)'; c.textContent='';
     }
 
-    // Mechanics (Lexispeed)
+    // ---- Core mechanics (Lexispeed) ----
     const partOfTarget = L => TARGET.includes(L);
     const collide = b => !b || b.x<0||b.x>=W||b.y>=H || (b.y>=0 && grid[b.y][b.x]);
 
@@ -286,9 +312,9 @@
     async function place(){
       if(!cur||cur.y<0) return;
       grid[cur.y][cur.x]={...cur}; drawBlock(cur);
-      await matchAndDrop();
-      checkFail();
-      await checkWin();
+      await matchAndDrop();   // clear adjacent non-target letter/color matches
+      checkFail();            // spawn-space full?
+      await checkWin();       // horizontal TARGET anywhere
       cur=nxt; nxt=createBlock();
       if(cur) drawBlock(cur);
     }
@@ -312,6 +338,7 @@
         grid[y][x]=null;
       })));
 
+      // gravity
       for(let x=0;x<W;x++){
         let wY=H-1;
         for(let y=H-1;y>=0;y--){
@@ -321,6 +348,7 @@
           }
         }
       }
+      // redraw
       for(let y=0;y<H;y++) for(let x=0;x<W;x++){
         const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
         c.className='cell'; c.style.background='var(--cell)'; c.textContent='';
@@ -344,8 +372,8 @@
     }
     function checkFail(){ if(nxt && collide(nxt)) end(false); }
 
-    // Timer & control
-    function setTime(v){ t=v; timeText.textContent=fmt(v); }
+    // ---- Timer & control ----
+    function setTime(v){ t=v; timeText.textContent=fmt(t); }
     function start(){
       ended=false; over.style.display='none'; setTime(0);
       grid=Array.from({length:H},()=>Array(W).fill(null));
@@ -358,7 +386,7 @@
     }
     function togglePause(){ if(ended) return; paused=!paused; btnPause.textContent = paused ? 'HERVAT' : 'POUSE'; }
 
-    // Overlay + submit
+    // ---- Overlay + submit ----
     function overlay(html){ overCard.innerHTML=html; over.style.display='flex'; }
     async function submitTime(){
       if(!user) return;
@@ -397,7 +425,7 @@
       }
     }
 
-    // Share
+    // ---- Share ----
     function shareUrl(){
       const url = new URL(location.href);
       url.searchParams.set('gameId', GAME_ID);
@@ -411,7 +439,7 @@
     }
     btnShare.addEventListener('click', handleShare);
 
-    // Load game & leaderboard
+    // ---- Load game & leaderboard ----
     async function loadGame(){
       GAME_ID = explicitId || `Game${todayISO()}`;
 
@@ -424,9 +452,11 @@
       const data=snap.data();
       TARGET=(data.word||'').toUpperCase();
 
+      // Target chips
       targetEl.innerHTML='';
       TARGET.split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
 
+      // Fixed-width mechanics (8×10)
       grid = Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
 
@@ -454,20 +484,21 @@
       });
     }
 
-    // Controls
+    // ---- Controls ----
     btnStart.addEventListener('click', start);
     btnPause.addEventListener('click', ()=>togglePause());
     btnLeft.addEventListener('click', ()=>move(-1,0));
     btnRight.addEventListener('click',()=>move(1,0));
     btnDown.addEventListener('click', ()=>hardDrop());
+
     document.addEventListener('keydown', (e)=>{
       if(e.key==='ArrowLeft') move(-1,0);
       if(e.key==='ArrowRight') move(1,0);
-      if(e.key==='ArrowDown') move(0,1);   // soft step
+      if(e.key==='ArrowDown') move(0,1);       // soft step
       if(e.key===' ') { e.preventDefault(); hardDrop(); }  // hard drop
     });
 
-    // Init
+    // ---- Init ----
     await loadGame();
   </script>
 </body>
