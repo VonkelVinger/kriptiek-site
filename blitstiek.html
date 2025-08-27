@@ -3,124 +3,114 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
-  <title>BLITSTIEK · Kriptiek</title>
+  <title>BLITSTIEK – Kriptiek</title>
 
+  <!-- Tailwind + font -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
 
   <style>
     :root{
-      --brand-dark:#0f2a43;
-      --btn:#003366;
-      --cell:#004d40;        /* deep green like Lexispeed */
-      --line:#004d40;        /* board border */
-      --gridW:320px;         /* JS keeps this in sync with the grid width */
-      --cell-font:16px;      /* JS updates letter size based on cell px */
+      --brand:#1e3a8a;
+      --cell:#004d40;
+      --gridW:320px;
+      --cell-font:16px;
     }
     html,body{height:100%}
-    body{font-family:'Montserrat',system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#f7fafc}
+    body{font-family:'Montserrat',system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#f9fafb;color:#1f2937}
 
-    /* Header — Dilemma-style centered title */
-    .header-wrap{position:relative}
-    .header-title{
-      position:absolute; left:50%; transform:translateX(-50%);
-      font-weight:800; letter-spacing:.08em; color:var(--brand-dark);
-    }
+    /* HEADER — Dilemma style (no KRIPTIEK tiles) */
+    header { background:#fff; box-shadow:0 2px 4px rgba(0,0,0,.08); padding:1rem; text-align:center; position:relative; }
+    .logo-container { display:flex; justify-content:center; align-items:center; margin-bottom:10px; }
+    .logo-container .letter-box { width:40px; height:40px; margin:2px; display:flex; justify-content:center; align-items:center; background:#374151; color:#fff; font-size:1.2rem; font-weight:700; border-radius:4px; }
+    .welcome { font-size:.9rem; color:#6b7280 }
+    .signout { position:absolute; right:1rem; top:1rem; }
 
-    /* Kriptiek logo tiles */
-    .logo-tile{ background:#374151; color:#fff; border:2px solid #1f2937; border-radius:.375rem; }
-    .flipped-k{ transform:scaleX(-1); }
-
+    /* Cards */
     .card{ background:#fff; border:1px solid #e5e7eb; border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
 
-    /* Target word chips (lock width to grid) */
-    #targetWrap{ width:100%; max-width:var(--gridW); margin:0 auto 8px; display:flex; align-items:center; gap:10px; }
-    #targetLabel{ padding:.25rem .75rem; border-radius:999px; background:#eef2f7; font-weight:700; color:#374151; font-size:.9rem; }
-    #target{ display:flex; gap:1px; background:var(--cell); color:#fff; padding:2px; border-radius:6px; }
+    /* Headline strip like Dilemma’s clue line */
+    .headline { text-align:center; font-size:1.125rem; font-weight:700; color:#374151; margin:16px 0 8px; }
+
+    /* Target chips */
+    #targetWrap{ width:100%; max-width:var(--gridW); margin:0 auto 8px; display:flex; justify-content:center; }
+    #target{ display:inline-flex; gap:1px; background:var(--cell); color:#fff; padding:2px; border-radius:6px; }
     #target span{ width:30px; height:30px; display:grid; place-items:center; font-weight:800; border:1px solid rgba(255,255,255,.12); }
 
-    /* Game grid — crisp 1px white lines (exact size set by JS) */
+    /* GRID — crisp lines + snapping */
     #grid{
       display:grid;
       grid-template-columns:repeat(8,1fr);
       grid-template-rows:repeat(10,1fr);
-      gap:1px;
-      background:#fff;             /* white lines */
-      border:1px solid var(--line);
+      gap:1px;                              /* visible lines */
+      background:#fff;
+      border:1px solid #0c4a3e;
       border-radius:8px;
       overflow:hidden;
-      width:var(--gridW);          /* set by JS */
+      width:var(--gridW);
       height:400px;
-      margin:10px auto 6px;
+      margin:10px auto 8px;
     }
     .cell{ position:relative; background:var(--cell); transition:transform .15s ease-out, opacity .15s ease-out; }
     .cell::after{ content:''; position:absolute; inset:0; border:1px solid rgba(255,255,255,.10); pointer-events:none; }
-    .cell.f{
-      display:grid; place-items:center;
-      color:#fff; font-weight:800; font-size:var(--cell-font);
-      text-shadow:0 1px 1px rgba(0,0,0,.35);
-    }
+    .cell.f{ display:grid; place-items:center; color:#fff; font-weight:800; font-size:var(--cell-font); text-shadow:0 1px 1px rgba(0,0,0,.35); }
     .cell.pop{ transform:scale(1.15); opacity:0; }
 
     /* Overlay */
     #over{ position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.6); z-index:40; }
     #over .cardx{ background:#900C3F; color:#fff; padding:18px; border-radius:14px; width:92%; max-width:380px; text-align:center; }
 
-    /* Buttons */
-    .btn{ background:var(--btn); color:#fff; font-weight:700; padding:10px 12px; border-radius:12px; }
-    .btn:disabled{ opacity:.5; }
-
-    /* Controls: lock width to grid “inner edge” (grid has 1px border per side) */
-    .controls{
-      width:100%;
-      max-width:calc(var(--gridW) - 2px);
-      margin:8px auto 0;
-    }
+    /* Controls — flush edges */
+    .controls { width:100%; max-width:calc(var(--gridW) - 2px); margin:8px auto 0; }
+    .arrow-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:.5rem; }
     .dir-btn{
-      width:64px; height:64px; font-size:24px; border-radius:14px;
+      width:100%; aspect-ratio:1/1;
+      min-width:56px; min-height:56px;
       display:flex; align-items:center; justify-content:center;
+      background:#053a6b; color:#fff; border-radius:14px; font-weight:800; font-size:24px;
     }
-    @media (min-width:460px){ .dir-btn{ width:72px; height:72px; font-size:26px; } }
-    @media (min-width:640px){ .dir-btn{ width:80px; height:80px; font-size:28px; } }
+    @media (min-width:460px){ .dir-btn{ min-width:64px; min-height:64px; font-size:26px; } }
+    @media (min-width:640px){ .dir-btn{ min-width:72px; min-height:72px; font-size:28px; } }
 
-    /* Leaderboard */
-    #lbBody tr{ border-top:1px solid #eef2f7; }
-    #lbBody td{ padding:.5rem .75rem; }
+    .btn{ background:#1e3a8a; color:#fff; font-weight:700; padding:10px 14px; border-radius:8px; }
+    .btn.gray{ background:#6b7280 }
+    .pill{ background:#0c4a3e; color:#fff; font-weight:700; padding:6px 10px; border-radius:8px; text-align:center; }
+
+    /* Leaderboard list (name + time only) */
+    #leaderboardList li{ padding:.35rem .5rem; border-radius:.375rem; }
+    #leaderboardList li:nth-child(odd){ background:#f3f4f6; }
+    #leaderboardList li:first-child{ background:#d1fae5; font-weight:700; }
+
+    /* Share dropdown (Dilemma style) */
+    .share-menu-local{
+      background:#fff; border:1px solid #e5e7eb; box-shadow:0 8px 24px rgba(0,0,0,.12);
+      border-radius:.5rem; width:240px; padding:.5rem; z-index:3000;
+    }
+    .share-menu-local button{ width:100%; text-align:left; padding:.5rem .75rem; border-radius:.375rem; font-weight:600; }
+    .share-menu-local button:hover{ background:#f3f4f6; }
   </style>
 </head>
-<body class="min-h-full flex flex-col">
+<body class="min-h-screen flex flex-col">
 
-  <!-- Header -->
-  <header class="w-full bg-white shadow-sm">
-    <div class="max-w-5xl mx-auto px-4 py-4 header-wrap flex items-center justify-between">
-      <a href="/index.html" class="flex items-center gap-2">
-        <div class="grid grid-cols-8 gap-1">
-          <div class="logo-tile w-7 h-7 grid place-items-center flipped-k">K</div>
-          <div class="logo-tile w-7 h-7 grid place-items-center">R</div>
-          <div class="logo-tile w-7 h-7 grid place-items-center">I</div>
-          <div class="logo-tile w-7 h-7 grid place-items-center">P</div>
-          <div class="logo-tile w-7 h-7 grid place-items-center">T</div>
-          <div class="logo-tile w-7 h-7 grid place-items-center">I</div>
-          <div class="logo-tile w-7 h-7 grid place-items-center">E</div>
-          <div class="logo-tile w-7 h-7 grid place-items-center">K</div>
-        </div>
-      </a>
-      <h1 class="header-title text-lg md:text-xl">BLITSTIEK</h1>
-      <div class="flex items-center gap-2">
-        <a id="loginLink" href="/login.html?new=1" class="text-sm px-3 py-1.5 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800">Meld aan</a>
-        <button id="btnSignOut" class="hidden text-sm px-3 py-1.5 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800">Meld af</button>
-      </div>
+  <!-- HEADER (no KRIPTIEK tiles) -->
+  <header>
+    <div class="logo-container">
+      <div class="letter-box">B</div><div class="letter-box">L</div>
+      <div class="letter-box">I</div><div class="letter-box">T</div>
+      <div class="letter-box">S</div><div class="letter-box">T</div>
+      <div class="letter-box">I</div><div class="letter-box">E</div>
+      <div class="letter-box">K</div>
     </div>
+    <p class="welcome">Welkom terug, <span id="playerName" class="font-semibold text-green-700"></span>!</p>
+    <button id="btnSignOut" class="signout text-sm px-3 py-1.5 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800 hidden">Meld af</button>
   </header>
 
   <main class="flex-1">
-    <div class="max-w-3xl mx-auto px-4 py-6">
+    <div class="max-w-3xl mx-auto px-4 py-4">
 
-      <!-- Target word -->
-      <div id="targetWrap">
-        <span id="targetLabel">Teikenwoord</span>
-        <div id="target"></div>
-      </div>
+      <!-- Headline like Dilemma -->
+      <div class="headline">TEIKENWOORD:</div>
+      <div id="targetWrap"><div id="target"></div></div>
 
       <!-- GAME card -->
       <section class="card p-4">
@@ -129,61 +119,83 @@
           <div id="over"><div class="cardx" id="overCard"></div></div>
         </div>
 
-        <div class="grid grid-cols-3 gap-2 mt-3 controls">
-          <button id="btnLeft"  class="btn dir-btn">◀</button>
-          <button id="btnDown"  class="btn dir-btn">▼</button>
-          <button id="btnRight" class="btn dir-btn">▶</button>
+        <!-- Arrows -->
+        <div class="controls mt-3">
+          <div class="arrow-row">
+            <button id="btnLeft"  class="dir-btn" aria-label="Links">◀</button>
+            <button id="btnDown"  class="dir-btn" aria-label="Laat val">▼</button>
+            <button id="btnRight" class="dir-btn" aria-label="Regs">▶</button>
+          </div>
         </div>
 
-        <div class="flex items-center gap-2 mt-3 controls">
+        <!-- Actions + DEEL (Dilemma-style) -->
+        <div class="controls mt-3 flex items-center justify-center gap-2 relative">
           <button id="btnStart" class="btn">BEGIN</button>
-          <button id="btnPause" class="btn" style="background:#555">POUSE</button>
-          <button id="btnShare" class="btn ml-auto" style="background:#0f766e">DEEL</button>
+          <button id="btnPause" class="btn gray">POUSE</button>
+
+          <button id="persistentShareBtn" type="button" class="btn hidden">DEEL</button>
+          <div id="shareMenuPersistent" class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden share-menu-local">
+            <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
+            <div class="space-y-1">
+              <button id="pWhatsApp" type="button">📲 WhatsApp</button>
+              <button id="pCopy" type="button">📋 Kopieer skakel</button>
+              <button id="pSystem" type="button">🖥️ Stelsel-deel</button>
+            </div>
+          </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-2 mt-3 controls">
-          <div id="timeBox" class="text-center font-bold rounded-lg bg-[var(--cell)] text-white p-2">Jou tyd: <b>00:00</b></div>
-          <div id="bestBox" class="text-center font-bold rounded-lg bg-[var(--cell)] text-white p-2">Beste tyd: <b>--:--</b></div>
+        <!-- Timers -->
+        <div class="controls grid grid-cols-2 gap-2 mt-3">
+          <div id="timeBox" class="pill">Jou tyd: <b>00:00</b></div>
+          <div id="bestBox" class="pill">Beste tyd: <b>--:--</b></div>
         </div>
 
         <p id="authNote" class="hidden mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2 controls">
-          Meld aan om jou tyd op die leiertafel te stoor.
+          Meld aan om jou tyd op die leierbord te stoor.
         </p>
       </section>
 
-      <!-- LEADERBOARD card -->
-      <section class="card mt-6">
-        <div class="px-5 py-4 border-b">
-          <h2 class="text-base font-semibold text-[var(--brand-dark)]">BLITSTIEK Top 10</h2>
+      <!-- RULES placeholder -->
+      <section class="mt-4 bg-white rounded shadow p-4">
+        <h2 class="text-xl font-bold mb-2">HOE OM BLITSTIEK TE SPEEL</h2>
+        <p class="text-gray-700 leading-relaxed">
+          Voeg hier die reëls vir Blitstiek (Lexispeed) in. Jy kan die teks vanaf
+          <a href="https://www.playleximax.com" class="underline" target="_blank" rel="noopener">playleximax.com</a>
+          kopieer. Hierdie boks volg dieselfde styl as Dilemma se verduidelikings-afdeling.
+        </p>
+      </section>
+
+      <!-- LEADERBOARD -->
+      <section class="card mt-6 p-4">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-xl font-bold">Vandag se bestes:</h2>
         </div>
-        <div class="p-4 overflow-x-auto">
-          <table class="min-w-full text-left text-sm">
-            <thead>
-              <tr class="text-gray-500"><th class="py-2 pr-4">#</th><th class="py-2 pr-4">Naam</th><th class="py-2">Tyd</th></tr>
-            </thead>
-            <tbody id="lbBody">
-              <tr><td class="py-2 pr-4">—</td><td class="py-2 pr-4">—</td><td class="py-2">—</td></tr>
-            </tbody>
-          </table>
-        </div>
+        <ul id="leaderboardList" class="text-gray-700 text-left"><li>Laai...</li></ul>
       </section>
     </div>
   </main>
 
-  <footer class="bg-[var(--brand-dark)] text-white text-center py-6 mt-auto">
-    <div class="max-w-5xl mx-auto px-4 text-sm opacity-90">&copy; 2025 Kriptiek. Alle regte voorbehou.</div>
+  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
+    &copy; 2025 Kriptiek. Alle regte voorbehou. |
+    <a href="/index.html" class="underline">Tuis</a> |
+    <a href="/profile.html" class="underline">My profiel</a> |
+    <a href="/forum.html" class="underline">Gesels saam</a> |
+    <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
+    <a href="/terms.html" class="underline">Voorwaardes</a> |
+    <a href="/faq.html" class="underline">Gereelde vrae</a> |
+    <a href="/about.html" class="underline">Oor Kriptiek</a> |
+    <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
 
-  <!-- SCRIPT -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
     import {
       getFirestore, serverTimestamp, doc, getDoc, setDoc,
-      collection, query, orderBy, limit, getDocs
+      collection, query, orderBy, limit, getDocs, onSnapshot, where
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
-    // ---- Firebase (Kriptiek) ----
+    /* ---- Firebase ---- */
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
       authDomain: "kriptiek-c9ea2.firebaseapp.com",
@@ -197,14 +209,15 @@
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
-    // ---- DOM refs ----
-    const loginLink  = document.getElementById('loginLink');
-    const btnSignOut = document.getElementById('btnSignOut');
+    /* ---- DOM ---- */
+    const playerNameEl = document.getElementById('playerName');
+    const btnSignOut   = document.getElementById('btnSignOut');
+
     const targetEl   = document.getElementById('target');
     const gridEl     = document.getElementById('grid');
     const over       = document.getElementById('over');
     const overCard   = document.getElementById('overCard');
-    const lbBody     = document.getElementById('lbBody');
+    const lbList     = document.getElementById('leaderboardList');
     const timeText   = document.querySelector('#timeBox b');
     const bestText   = document.querySelector('#bestBox b');
     const authNote   = document.getElementById('authNote');
@@ -214,58 +227,70 @@
     const btnDown = document.getElementById('btnDown');
     const btnStart= document.getElementById('btnStart');
     const btnPause= document.getElementById('btnPause');
-    const btnShare= document.getElementById('btnShare');
 
-    // ---- Helpers ----
+    const shareBtn = document.getElementById('persistentShareBtn');
+    const shareMenu = document.getElementById('shareMenuPersistent');
+    const pWA = document.getElementById('pWhatsApp');
+    const pCopy = document.getElementById('pCopy');
+    const pSys = document.getElementById('pSystem');
+
+    /* ---- Helpers ---- */
     const pad = n => String(n).padStart(2,'0');
     const fmt = s => s==null ? '--:--' : `${pad(Math.floor(s/60))}:${pad(s%60)}`;
     const todayISO = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
     const qs = new URLSearchParams(location.search);
     const explicitId = qs.get('gameId');
 
-    // ---- Gameplay constants ----
-    const H = 10, W = 8;                   // fixed 8×10
+    /* ---- Mechanics constants (Lexispeed) ---- */
+    const H = 10, W = 8;
     const COLORS = ['#2196f3','#f44336','#4caf50','#ffc107','#9c27b0','#003366','#009688'];
     const CONS   = 'BCDFGHJKLMNPQRSTVWXZ';
     const VOWS   = 'AEIOUY';
 
-    // ---- State ----
+    /* ---- State ---- */
     let user=null;
     let GAME_ID=null, TARGET='';
     let grid=Array.from({length:H},()=>Array(W).fill(null));
     let cur=null, nxt=null;
     let paused=false, ended=false, moving=false;
     let t=0, tInt=null, gInt=null;
+    let lbUnsub=null;
 
-    // ---- Auth ----
+    /* ---- Auth ---- */
     onAuthStateChanged(auth, (u)=>{
       user=u||null;
-      if(user){ loginLink.classList.add('hidden'); btnSignOut.classList.remove('hidden'); authNote.classList.add('hidden'); }
-      else{     loginLink.classList.remove('hidden'); btnSignOut.classList.add('hidden'); authNote.classList.remove('hidden'); }
+      if(user){
+        playerNameEl.textContent = user.displayName || user.email || 'Speler';
+        btnSignOut.classList.remove('hidden');
+        authNote.classList.add('hidden');
+      } else {
+        playerNameEl.textContent = 'Speler';
+        btnSignOut.classList.add('hidden');
+        authNote.classList.remove('hidden');
+      }
     });
     btnSignOut.addEventListener('click', async ()=>{ await signOut(auth); try{localStorage.clear();sessionStorage.clear();}catch{} location.reload(); });
 
-    // ---- Pixel-perfect grid sizing (prevents fuzzy grid lines) ----
+    /* ---- Pixel-perfect grid sizing ---- */
     function resizeGrid(){
-      const wrap = gridEl.parentElement;                       // card inner
+      const wrap = gridEl.parentElement;
       const avail = Math.min(320, Math.floor(wrap.clientWidth));
-      const quantW = Math.max(240, Math.floor(avail/8)*8);     // multiple of 8, min 240
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      const snap = v => Math.floor((v*dpr)/8)/dpr*8;  // snap to multiple of 8 device pixels
+      const quantW = Math.max(240, snap(avail));
       const cell   = Math.floor(quantW/8);
       const quantH = cell * 10;
 
       gridEl.style.width  = quantW + 'px';
       gridEl.style.height = quantH + 'px';
-
-      // publish to CSS for sibling sizing
       document.documentElement.style.setProperty('--gridW', quantW + 'px');
 
-      // slightly larger glyphs for clarity (≈ half the cell, clamped)
       const glyph = Math.max(15, Math.min(28, Math.round(cell * 0.50)));
       document.documentElement.style.setProperty('--cell-font', glyph + 'px');
     }
     window.addEventListener('resize', resizeGrid);
 
-    // ---- Grid rendering ----
+    /* ---- Grid rendering ---- */
     function drawGrid(){
       gridEl.innerHTML='';
       for(let y=0;y<H;y++) for(let x=0;x<W;x++){
@@ -287,7 +312,7 @@
       c.className='cell'; c.style.background='var(--cell)'; c.textContent='';
     }
 
-    // ---- Core mechanics (Lexispeed) ----
+    /* ---- Core mechanics ---- */
     const partOfTarget = L => TARGET.includes(L);
     const collide = b => !b || b.x<0||b.x>=W||b.y>=H || (b.y>=0 && grid[b.y][b.x]);
 
@@ -319,9 +344,9 @@
     async function place(){
       if(!cur||cur.y<0) return;
       grid[cur.y][cur.x]={...cur}; drawBlock(cur);
-      await matchAndDrop();   // clear adjacent non-target letter/color matches
-      checkFail();            // spawn-space full?
-      await checkWin();       // horizontal TARGET anywhere
+      await matchAndDrop();
+      checkFail();
+      await checkWin();
       cur=nxt; nxt=createBlock();
       if(cur) drawBlock(cur);
     }
@@ -345,7 +370,6 @@
         grid[y][x]=null;
       })));
 
-      // gravity
       for(let x=0;x<W;x++){
         let wY=H-1;
         for(let y=H-1;y>=0;y--){
@@ -355,7 +379,6 @@
           }
         }
       }
-      // redraw
       for(let y=0;y<H;y++) for(let x=0;x<W;x++){
         const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
         c.className='cell'; c.style.background='var(--cell)'; c.textContent='';
@@ -379,7 +402,7 @@
     }
     function checkFail(){ if(nxt && collide(nxt)) end(false); }
 
-    // ---- Timer & control ----
+    /* ---- Timer & control ---- */
     function setTime(v){ t=v; timeText.textContent=fmt(v); }
     function start(){
       ended=false; over.style.display='none'; setTime(0);
@@ -393,119 +416,155 @@
     }
     function togglePause(){ if(ended) return; paused=!paused; btnPause.textContent = paused ? 'HERVAT' : 'POUSE'; }
 
-    // ---- Overlay + submit ----
-    function overlay(html){ overCard.innerHTML=html; over.style.display='flex'; }
-    async function submitTime(){
+    /* ---- Share (Dilemma-style persistent button) ---- */
+    function shareText(){
+      const url = new URL(location.href); url.searchParams.set('gameId', GAME_ID);
+      const time = fmt(t);
+      return `Ek het ${TARGET} in ${time} op BLITSTIEK voltooi! Probeer hier: ${url.toString()}`;
+    }
+    function wireShareDropdown(triggerBtn, menuEl){
+      triggerBtn.addEventListener('click', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        document.querySelectorAll('.share-menu-local').forEach(m => { if(m!==menuEl) m.classList.add('hidden'); });
+        menuEl.classList.toggle('hidden');
+      });
+      document.addEventListener('click', (e) => {
+        if (!menuEl.contains(e.target) && e.target !== triggerBtn) menuEl.classList.add('hidden');
+      });
+      window.addEventListener('scroll', () => menuEl.classList.add('hidden'));
+      window.addEventListener('resize', () => menuEl.classList.add('hidden'));
+    }
+    function openWhatsApp(text){
+      const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+      const w = window.open(url,'_blank','noopener,noreferrer');
+      if(!w && navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>alert("Skakel gekopieer!")); }
+    }
+    wireShareDropdown(shareBtn, shareMenu);
+    pWA.onclick = () => { openWhatsApp(shareText()); shareMenu.classList.add('hidden'); };
+    pCopy.onclick = async () => { try{ await navigator.clipboard.writeText(shareText()); alert('Skakel gekopieer!'); }catch{} shareMenu.classList.add('hidden'); };
+    pSys.onclick = async () => { try{ if(navigator.share) await navigator.share({ text:shareText() }); else openWhatsApp(shareText()); }catch{} shareMenu.classList.add('hidden'); };
+
+    /* ---- Overlay + leaderboard submit ---- */
+    async function submitTimeToBoard(){
       if(!user) return;
       try{
-        const name = user.displayName || user.email || 'Speler';
+        const name = (user.displayName || user.email || 'Speler').slice(0,24);
         await setDoc(doc(db,'blitstiekGames',GAME_ID,'leaderboard',user.uid),{
-          userName:String(name).slice(0,24),
-          time:Number(t),
-          timestamp:serverTimestamp()
+          userName:name, time:Number(t), timestamp:serverTimestamp()
         },{ merge:true });
-        overlay(`<div class="bg-emerald-50 text-emerald-900 border border-emerald-200 rounded p-2 mb-2 text-sm">Tyd gestoor ✔</div>
-                 <button id="closeOver" class="mt-2 px-4 py-2 rounded-xl bg-gray-700 text-white font-bold">SLUIT</button>`);
-        document.getElementById('closeOver').addEventListener('click', ()=> over.style.display='none');
-        await loadLeaderboard();
-      }catch(e){
-        overlay(`<div class="bg-amber-50 text-amber-900 border border-amber-200 rounded p-2 mb-2 text-sm">Kon nie stoor nie.</div>
-                 <div class="text-xs opacity-80 mb-2">${e?.message||e}</div>
-                 <button id="closeErr" class="px-4 py-2 rounded-xl bg-gray-700 text-white font-bold">SLUIT</button>`);
-        document.getElementById('closeErr').addEventListener('click', ()=> over.style.display='none');
-      }
+      }catch(e){ console.warn(e); }
     }
     function end(win){
       ended=true; clearInterval(tInt); clearInterval(gInt);
       if(win){
-        const msg=`Puik! Jou tyd: <b>${fmt(t)}</b> vir <b>${TARGET}</b>.`;
-        const saveBtn = user ? `<button id="saveBtn" class="px-4 py-2 rounded-xl bg-[var(--brand-dark)] text-white font-bold">DIEN TYD IN</button>`
-                             : `<div class="text-left text-sm bg-amber-50 text-amber-900 border border-amber-200 rounded p-2 mb-2">Meld aan om jou tyd op die leiertafel te stoor.</div>`;
-        overlay(`<div class="mb-2">${msg}</div>${saveBtn}
-                 <button id="closeBtn" class="mt-2 px-4 py-2 rounded-xl bg-gray-700 text-white font-bold">SLUIT</button>`);
+        submitTimeToBoard();
+        shareBtn.classList.remove('hidden');
+        overCard.innerHTML=`<div class="mb-2">Puik! Jou tyd: <b>${fmt(t)}</b> vir <b>${TARGET}</b>.</div>
+          <button id="closeBtn" class="px-4 py-2 rounded-xl bg-gray-700 text-white font-bold">SLUIT</button>`;
+        over.style.display='flex';
         document.getElementById('closeBtn').addEventListener('click', ()=> over.style.display='none');
-        const sb=document.getElementById('saveBtn'); if(sb) sb.addEventListener('click', submitTime);
       } else {
-        overlay(`<div class="mb-2 text-lg font-bold">GAME OVER</div>
-                 <button id="closeBtn2" class="px-4 py-2 rounded-xl bg-gray-700 text-white font-bold">SLUIT</button>`);
+        overCard.innerHTML=`<div class="mb-2 text-lg font-bold">GAME OVER</div>
+          <button id="closeBtn2" class="px-4 py-2 rounded-xl bg-gray-700 text-white font-bold">SLUIT</button>`;
+        over.style.display='flex';
         document.getElementById('closeBtn2').addEventListener('click', ()=> over.style.display='none');
       }
     }
 
-    // ---- Share ----
-    function shareUrl(){
-      const url = new URL(location.href);
-      url.searchParams.set('gameId', GAME_ID);
-      return url.toString();
+    /* ---- LIVE Leaderboard (name + time only, top 10) ---- */
+    function startLiveLeaderboard(){
+      if(lbUnsub) { lbUnsub(); lbUnsub=null; }
+      const qy=query(collection(db,'blitstiekGames',GAME_ID,'leaderboard'), orderBy('time','asc'), limit(10));
+      lbUnsub = onSnapshot(qy, (snap)=>{
+        lbList.innerHTML='';
+        if(snap.empty){
+          bestText.textContent='--:--';
+          lbList.innerHTML = `<li class="bg-green-100 font-medium">Jy kan eerste op die leierbord wees!</li>`;
+          return;
+        }
+        let idx=0;
+        snap.forEach(docSnap=>{
+          const v = docSnap.data()||{};
+          if(idx===0) bestText.textContent = fmt(Number(v.time));
+          const li=document.createElement('li');
+          li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>: ${fmt(Number(v.time))}`;
+          lbList.appendChild(li);
+          idx++;
+        });
+      }, (err) => {
+        console.warn('Leaderboard stream error:', err);
+        lbList.innerHTML = `<li class="text-red-600">Kon nie leierbord laai nie.</li>`;
+      });
     }
-    async function handleShare(){
-      const msg = `Ek het ${TARGET} in ${fmt(t)} op BLITSTIEK voltooi! Kan jy my tyd klop? Speel saam: ${shareUrl()}`;
-      if(navigator.share){ try{ await navigator.share({ text: msg }); return; }catch{} }
-      try{ await navigator.clipboard.writeText(msg); }catch{}
-      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
-    }
-    btnShare.addEventListener('click', handleShare);
 
-    // ---- Load game & leaderboard ----
+    /* ---- Dynamic resolver (gameId -> today -> latest active -> latest created) ---- */
+    async function resolveGameId(){
+      if (explicitId) return explicitId;
+      const todayId = `Game${todayISO()}`;
+      try {
+        const todaySnap = await getDoc(doc(db,'blitstiekGames',todayId));
+        if (todaySnap.exists()) return todayId;
+      } catch {}
+      try {
+        const gamesRef = collection(db,'blitstiekGames');
+        let q = query(gamesRef, where('status','==','active'), orderBy('createdAt','desc'), limit(1));
+        let qs = await getDocs(q);
+        if (!qs.empty) return qs.docs[0].id;
+        q = query(gamesRef, orderBy('createdAt','desc'), limit(1));
+        qs = await getDocs(q);
+        if (!qs.empty) return qs.docs[0].id;
+      } catch {}
+      return null;
+    }
+
+    /* ---- Load game ---- */
     async function loadGame(){
-      GAME_ID = explicitId || `Game${todayISO()}`;
+      GAME_ID = await resolveGameId();
 
+      if(!GAME_ID){
+        targetEl.innerHTML = `<span>—</span>`;
+        drawGrid();
+        shareBtn.classList.add('hidden');
+        lbList.innerHTML = `<li class="text-red-600">Geen spel beskikbaar nie.</li>`;
+        return;
+      }
       const snap = await getDoc(doc(db,'blitstiekGames',GAME_ID));
       if(!snap.exists()){
         targetEl.innerHTML = `<span>—</span>`;
         drawGrid();
+        shareBtn.classList.add('hidden');
+        lbList.innerHTML = `<li class="text-red-600">Kon nie spel laai nie.</li>`;
         return;
       }
+
       const data=snap.data();
       TARGET=(data.word||'').toUpperCase();
 
-      // Target chips
+      // target chips
       targetEl.innerHTML='';
       TARGET.split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
 
-      // Fixed 8×10 board
       grid = Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
 
-      await loadLeaderboard();
+      // live leaderboard
+      startLiveLeaderboard();
     }
 
-    async function loadLeaderboard(){
-      if(!GAME_ID) return;
-      const qy=query(collection(db,'blitstiekGames',GAME_ID,'leaderboard'), orderBy('time','asc'), limit(10));
-      const res=await getDocs(qy);
-      lbBody.innerHTML='';
-      if(res.empty){
-        bestText.textContent='--:--';
-        lbBody.innerHTML='<tr><td class="py-2 pr-4">—</td><td class="py-2 pr-4">—</td><td class="py-2">—</td></tr>';
-        return;
-      }
-      let r=1;
-      res.forEach(d=>{
-        const v=d.data();
-        if(r===1){ bestText.textContent=fmt(v.time); }
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td class="py-2 pr-4">${r}</td><td class="py-2 pr-4">${v.userName||'-'}</td><td class="py-2">${fmt(v.time)}</td>`;
-        lbBody.appendChild(tr);
-        r++;
-      });
-    }
-
-    // ---- Controls ----
+    /* ---- Controls ---- */
     btnStart.addEventListener('click', start);
     btnPause.addEventListener('click', ()=>togglePause());
     btnLeft.addEventListener('click', ()=>move(-1,0));
     btnRight.addEventListener('click',()=>move(1,0));
     btnDown.addEventListener('click', ()=>hardDrop());
-
     document.addEventListener('keydown', (e)=>{
       if(e.key==='ArrowLeft') move(-1,0);
       if(e.key==='ArrowRight') move(1,0);
-      if(e.key==='ArrowDown') move(0,1);       // soft step
-      if(e.key===' ') { e.preventDefault(); hardDrop(); }  // hard drop
+      if(e.key==='ArrowDown') move(0,1);
+      if(e.key===' ') { e.preventDefault(); hardDrop(); }
     });
 
-    // ---- Init ----
+    /* ---- Init ---- */
     await loadGame();
   </script>
 </body>
