@@ -14,6 +14,8 @@
       --btn:#003366;
       --cell:#004d40;        /* deep green like Lexispeed */
       --line:#004d40;        /* board border */
+      --gridW:320px;         /* JS keeps this in sync with the grid width */
+      --cell-font:16px;      /* JS updates letter size based on cell px */
     }
     html,body{height:100%}
     body{font-family:'Montserrat',system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#f7fafc}
@@ -31,38 +33,31 @@
 
     .card{ background:#fff; border:1px solid #e5e7eb; border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
 
-    /* Target word chips (align with grid width) */
-    #targetWrap{ width:100%; max-width:320px; margin:0 auto 8px; display:flex; align-items:center; gap:8px; }
+    /* Target word chips (lock width to grid) */
+    #targetWrap{ width:100%; max-width:var(--gridW); margin:0 auto 8px; display:flex; align-items:center; gap:10px; }
     #targetLabel{ padding:.25rem .75rem; border-radius:999px; background:#eef2f7; font-weight:700; color:#374151; font-size:.9rem; }
     #target{ display:flex; gap:1px; background:var(--cell); color:#fff; padding:2px; border-radius:6px; }
     #target span{ width:30px; height:30px; display:grid; place-items:center; font-weight:800; border:1px solid rgba(255,255,255,.12); }
 
-    /* Game grid — crisp 1px white lines */
+    /* Game grid — crisp 1px white lines (exact size set by JS) */
     #grid{
       display:grid;
       grid-template-columns:repeat(8,1fr);
       grid-template-rows:repeat(10,1fr);
-      gap:1px;                     /* visible grid lines */
-      background:#fff;             /* the lines themselves */
+      gap:1px;
+      background:#fff;             /* white lines */
       border:1px solid var(--line);
-      border-radius:12px;
+      border-radius:8px;
       overflow:hidden;
-      width:320px;                 /* will be quantized via JS */
+      width:var(--gridW);          /* set by JS */
       height:400px;
-      margin:10px auto;
+      margin:10px auto 6px;
     }
-    .cell{
-      position:relative;
-      background:var(--cell);
-      transition:transform .15s ease-out, opacity .15s ease-out;
-    }
-    .cell::after{                  /* subtle inner border like Lexispeed */
-      content:''; position:absolute; inset:0;
-      border:1px solid rgba(255,255,255,.10); pointer-events:none;
-    }
+    .cell{ position:relative; background:var(--cell); transition:transform .15s ease-out, opacity .15s ease-out; }
+    .cell::after{ content:''; position:absolute; inset:0; border:1px solid rgba(255,255,255,.10); pointer-events:none; }
     .cell.f{
       display:grid; place-items:center;
-      color:#fff; font-weight:800; font-size:16px;
+      color:#fff; font-weight:800; font-size:var(--cell-font);
       text-shadow:0 1px 1px rgba(0,0,0,.35);
     }
     .cell.pop{ transform:scale(1.15); opacity:0; }
@@ -75,18 +70,20 @@
     .btn{ background:var(--btn); color:#fff; font-weight:700; padding:10px 12px; border-radius:12px; }
     .btn:disabled{ opacity:.5; }
 
-    /* Compact arrow controls like Lexispeed */
-    .controls { width:100%; max-width:320px; margin:10px auto 0; }
+    /* Controls: lock width to grid “inner edge” (grid has 1px border per side) */
+    .controls{
+      width:100%;
+      max-width:calc(var(--gridW) - 2px);
+      margin:8px auto 0;
+    }
     .dir-btn{
-      width:84px; height:84px; font-size:28px; border-radius:14px;
+      width:64px; height:64px; font-size:24px; border-radius:14px;
       display:flex; align-items:center; justify-content:center;
     }
-    @media (max-width:480px){
-      .dir-btn{ width:64px; height:64px; font-size:24px; }
-      #target span{ width:26px; height:26px; font-size:13px; }
-    }
+    @media (min-width:460px){ .dir-btn{ width:72px; height:72px; font-size:26px; } }
+    @media (min-width:640px){ .dir-btn{ width:80px; height:80px; font-size:28px; } }
 
-    /* Leaderboard table polish */
+    /* Leaderboard */
     #lbBody tr{ border-top:1px solid #eef2f7; }
     #lbBody td{ padding:.5rem .75rem; }
   </style>
@@ -149,7 +146,7 @@
           <div id="bestBox" class="text-center font-bold rounded-lg bg-[var(--cell)] text-white p-2">Beste tyd: <b>--:--</b></div>
         </div>
 
-        <p id="authNote" class="hidden mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2 controls" style="max-width:320px;">
+        <p id="authNote" class="hidden mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2 controls">
           Meld aan om jou tyd op die leiertafel te stoor.
         </p>
       </section>
@@ -176,6 +173,8 @@
   <footer class="bg-[var(--brand-dark)] text-white text-center py-6 mt-auto">
     <div class="max-w-5xl mx-auto px-4 text-sm opacity-90">&copy; 2025 Kriptiek. Alle regte voorbehou.</div>
   </footer>
+
+  <!-- SCRIPT -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
@@ -224,7 +223,7 @@
     const qs = new URLSearchParams(location.search);
     const explicitId = qs.get('gameId');
 
-    // ---- Gameplay constants (Lexispeed parity) ----
+    // ---- Gameplay constants ----
     const H = 10, W = 8;                   // fixed 8×10
     const COLORS = ['#2196f3','#f44336','#4caf50','#ffc107','#9c27b0','#003366','#009688'];
     const CONS   = 'BCDFGHJKLMNPQRSTVWXZ';
@@ -248,13 +247,21 @@
 
     // ---- Pixel-perfect grid sizing (prevents fuzzy grid lines) ----
     function resizeGrid(){
-      const wrap = gridEl.parentElement;       // card inner div
-      const avail = Math.min(320, Math.floor(wrap.clientWidth)); // clamp to 320
-      const quantW = Math.max(240, Math.floor(avail/8)*8);       // multiple of 8, min 240
+      const wrap = gridEl.parentElement;                       // card inner
+      const avail = Math.min(320, Math.floor(wrap.clientWidth));
+      const quantW = Math.max(240, Math.floor(avail/8)*8);     // multiple of 8, min 240
       const cell   = Math.floor(quantW/8);
       const quantH = cell * 10;
+
       gridEl.style.width  = quantW + 'px';
       gridEl.style.height = quantH + 'px';
+
+      // publish to CSS for sibling sizing
+      document.documentElement.style.setProperty('--gridW', quantW + 'px');
+
+      // slightly larger glyphs for clarity (≈ half the cell, clamped)
+      const glyph = Math.max(15, Math.min(28, Math.round(cell * 0.50)));
+      document.documentElement.style.setProperty('--cell-font', glyph + 'px');
     }
     window.addEventListener('resize', resizeGrid);
 
@@ -373,7 +380,7 @@
     function checkFail(){ if(nxt && collide(nxt)) end(false); }
 
     // ---- Timer & control ----
-    function setTime(v){ t=v; timeText.textContent=fmt(t); }
+    function setTime(v){ t=v; timeText.textContent=fmt(v); }
     function start(){
       ended=false; over.style.display='none'; setTime(0);
       grid=Array.from({length:H},()=>Array(W).fill(null));
@@ -456,7 +463,7 @@
       targetEl.innerHTML='';
       TARGET.split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
 
-      // Fixed-width mechanics (8×10)
+      // Fixed 8×10 board
       grid = Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
 
