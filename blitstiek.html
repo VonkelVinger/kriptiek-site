@@ -19,7 +19,7 @@
     html,body{height:100%}
     body{font-family:'Montserrat',system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#f9fafb;color:#1f2937}
 
-    /* HEADER — Dilemma-like simple block logo */
+    /* HEADER — simple block logo to echo Dilemma */
     header { background:#fff; box-shadow:0 2px 4px rgba(0,0,0,.08); padding:1rem; text-align:center; position:relative; }
     .logo-container { display:flex; justify-content:center; align-items:center; margin-bottom:10px; }
     .logo-container .letter-box { width:40px; height:40px; margin:2px; display:flex; justify-content:center; align-items:center; background:#374151; color:#fff; font-size:1.2rem; font-weight:700; border-radius:4px; }
@@ -28,7 +28,7 @@
     /* Cards */
     .card{ background:#fff; border:1px solid #e5e7eb; border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
 
-    /* Headline strip like Dilemma’s clue line */
+    /* Headline like Dilemma’s clue line */
     .headline { text-align:center; font-size:1.125rem; font-weight:700; color:#374151; margin:16px 0 8px; }
 
     /* Target chips */
@@ -55,11 +55,17 @@
     .cell.f{ display:grid; place-items:center; color:#fff; font-weight:800; font-size:var(--cell-font); text-shadow:0 1px 1px rgba(0,0,0,.35); }
     .cell.pop{ transform:scale(1.15); opacity:0; }
 
-    /* Overlay */
-    #over{ position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.6); z-index:40; }
-    #over .cardx{ background:#900C3F; color:#fff; padding:18px; border-radius:14px; width:92%; max-width:380px; text-align:center; }
+    /* Overlay + modal (match Dilemma) */
+    #over{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.55); z-index:50; }
+    .modal{ background:#fff; border-radius:16px; box-shadow:0 20px 50px rgba(0,0,0,.2); width:min(92%,520px); padding:18px; text-align:center; border:1px solid #e5e7eb; }
+    .modal h3{ font-weight:700; color:#111827; }
+    .modal p{ color:#374151; }
+    .modal .actions{ display:flex; gap:.75rem; justify-content:center; margin-top:12px; }
+    .btn{ background:#1e3a8a; color:#fff; font-weight:700; padding:10px 16px; border-radius:10px; }
+    .btn.gray{ background:#6b7280 }
+    .btn:disabled{ opacity:.6; cursor:not-allowed; }
 
-    /* Controls — flush edges */
+    /* Controls */
     .controls { width:100%; max-width:calc(var(--gridW) - 2px); margin:8px auto 0; }
     .arrow-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:.5rem; }
     .dir-btn{
@@ -71,11 +77,9 @@
     @media (min-width:460px){ .dir-btn{ min-width:64px; min-height:64px; font-size:26px; } }
     @media (min-width:640px){ .dir-btn{ min-width:72px; min-height:72px; font-size:28px; } }
 
-    .btn{ background:#1e3a8a; color:#fff; font-weight:700; padding:10px 14px; border-radius:12px; }
-    .btn.gray{ background:#6b7280 }
     .pill{ background:#0c4a3e; color:#fff; font-weight:700; padding:6px 10px; border-radius:8px; text-align:center; }
 
-    /* Leaderboard list (name + time only) */
+    /* Leaderboard list */
     #leaderboardList li{ padding:.35rem .5rem; border-radius:.375rem; }
     #leaderboardList li:nth-child(odd){ background:#f3f4f6; }
     #leaderboardList li:first-child{ background:#d1fae5; font-weight:700; }
@@ -114,7 +118,27 @@
       <section class="card p-4">
         <div class="relative">
           <div id="grid"></div>
-          <div id="over"><div class="cardx" id="overCard"></div></div>
+
+          <!-- Success modal (hidden) -->
+          <div id="over">
+            <div class="modal">
+              <p id="winMsg" class="mb-3 text-base"></p>
+              <div class="actions">
+                <button id="modalShareBtn" type="button" class="btn">DEEL</button>
+                <button id="modalCloseBtn" type="button" class="btn gray">SLUIT</button>
+              </div>
+
+              <!-- share dropdown (appears under DEEL) -->
+              <div id="shareMenu" class="hidden share-menu-local mx-auto mt-2">
+                <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
+                <div class="space-y-1">
+                  <button id="mWhatsApp" type="button">WhatsApp</button>
+                  <button id="mCopy" type="button">Kopieer skakel</button>
+                  <button id="mSystem" type="button">Stelsel-deel</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Arrows -->
@@ -126,21 +150,10 @@
           </div>
         </div>
 
-        <!-- Actions + DEEL (Dilemma-style) -->
-        <div class="controls mt-3 flex items-center justify-center gap-2 relative">
+        <!-- Actions -->
+        <div class="controls mt-3 flex items-center justify-center gap-2">
           <button id="btnStart" class="btn">BEGIN</button>
           <button id="btnPause" class="btn gray">POUSE</button>
-
-          <!-- Hidden until completed, then shown -->
-          <button id="persistentShareBtn" type="button" class="btn hidden">DEEL</button>
-          <div id="shareMenuPersistent" class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden share-menu-local">
-            <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
-            <div class="space-y-1">
-              <button id="pWhatsApp" type="button">WhatsApp</button>
-              <button id="pCopy" type="button">Kopieer skakel</button>
-              <button id="pSystem" type="button">Stelsel-deel</button>
-            </div>
-          </div>
         </div>
 
         <!-- Timers -->
@@ -232,7 +245,11 @@
     const targetEl   = document.getElementById('target');
     const gridEl     = document.getElementById('grid');
     const over       = document.getElementById('over');
-    const overCard   = document.getElementById('overCard');
+    const winMsg     = document.getElementById('winMsg');
+    const modalShareBtn = document.getElementById('modalShareBtn');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+    const shareMenu  = document.getElementById('shareMenu');
+
     const lbList     = document.getElementById('leaderboardList');
     const timeText   = document.querySelector('#timeBox b');
     const bestText   = document.querySelector('#bestBox b');
@@ -244,11 +261,9 @@
     const btnStart= document.getElementById('btnStart');
     const btnPause= document.getElementById('btnPause');
 
-    const shareBtn = document.getElementById('persistentShareBtn');
-    const shareMenu = document.getElementById('shareMenuPersistent');
-    const pWA = document.getElementById('pWhatsApp');
-    const pCopy = document.getElementById('pCopy');
-    const pSys = document.getElementById('pSystem');
+    const mWA   = document.getElementById('mWhatsApp');
+    const mCopy = document.getElementById('mCopy');
+    const mSys  = document.getElementById('mSystem');
 
     /* ---- Helpers ---- */
     const pad = n => String(n).padStart(2,'0');
@@ -433,12 +448,12 @@
         }
       }
     }
-    function checkFail(){ if(nxt && collide(nxt)) end(false); }
+    function checkFail(){ /* geen misluk-tevraag in Blitstiek */ }
 
     /* ---- Timer & control ---- */
     function setTime(v){ t=v; timeText.textContent=fmt(v); }
     function start(){
-      ended=false; over.style.display='none'; setTime(0);
+      ended=false; over.style.display='none'; shareMenu.classList.add('hidden'); setTime(0);
       grid=Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
       cur=createBlock(); nxt=createBlock(); drawBlock(cur);
@@ -449,33 +464,28 @@
     }
     function togglePause(){ if(ended) return; paused=!paused; btnPause.textContent = paused ? 'HERVAT' : 'POUSE'; }
 
-    /* ---- Share (Dilemma-style persistent button) ---- */
+    /* ---- Share (modal-based, Dilemma-style) ---- */
     function shareText(){
-      const url = new URL(location.href); url.searchParams.set('gameId', GAME_ID);
+      const url = new URL(location.href); if (GAME_ID) url.searchParams.set('gameId', GAME_ID);
       const time = fmt(t);
       return `Ek het ${TARGET} in ${time} op BLITSTIEK voltooi! Probeer hier: ${url.toString()}`;
     }
-    function wireShareDropdown(triggerBtn, menuEl){
-      triggerBtn.addEventListener('click', (e) => {
-        e.preventDefault(); e.stopPropagation();
-        document.querySelectorAll('.share-menu-local').forEach(m => { if(m!==menuEl) m.classList.add('hidden'); });
-        menuEl.classList.toggle('hidden');
-      });
-      document.addEventListener('click', (e) => {
-        if (!menuEl.contains(e.target) && e.target !== triggerBtn) menuEl.classList.add('hidden');
-      });
-      window.addEventListener('scroll', () => menuEl.classList.add('hidden'));
-      window.addEventListener('resize', () => menuEl.classList.add('hidden'));
+    function toggleShareMenu(){
+      shareMenu.classList.toggle('hidden');
     }
     function openWhatsApp(text){
       const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
       const w = window.open(url,'_blank','noopener,noreferrer');
       if(!w && navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>alert("Skakel gekopieer!")); }
     }
-    wireShareDropdown(shareBtn, shareMenu);
-    pWA.onclick = () => { openWhatsApp(shareText()); shareMenu.classList.add('hidden'); };
-    pCopy.onclick = async () => { try{ await navigator.clipboard.writeText(shareText()); alert('Skakel gekopieer!'); }catch{} shareMenu.classList.add('hidden'); };
-    pSys.onclick = async () => { try{ if(navigator.share) await navigator.share({ text:shareText() }); else openWhatsApp(shareText()); }catch{} shareMenu.classList.add('hidden'); };
+    modalShareBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleShareMenu(); });
+    document.addEventListener('click', (e)=>{ if(!shareMenu.contains(e.target) && e.target!==modalShareBtn) shareMenu.classList.add('hidden'); });
+    window.addEventListener('scroll', ()=>shareMenu.classList.add('hidden'));
+    window.addEventListener('resize', ()=>shareMenu.classList.add('hidden'));
+
+    mWA.onclick   = () => { openWhatsApp(shareText()); shareMenu.classList.add('hidden'); };
+    mCopy.onclick = async () => { try{ await navigator.clipboard.writeText(shareText()); alert('Skakel gekopieer!'); }catch{} shareMenu.classList.add('hidden'); };
+    mSys.onclick  = async () => { try{ if(navigator.share) await navigator.share({ text:shareText() }); else openWhatsApp(shareText()); }catch{} shareMenu.classList.add('hidden'); };
 
     /* ---- Overlay + leaderboard submit ---- */
     async function submitTimeToBoard(){
@@ -487,21 +497,19 @@
         },{ merge:true });
       }catch(e){ console.warn(e); }
     }
+
     function end(win){
       ended=true; clearInterval(tInt); clearInterval(gInt);
-      if(win){
-        submitTimeToBoard();
-        shareBtn.classList.remove('hidden');
-        overCard.innerHTML=`<div class="mb-2">Puik! Jou tyd: <b>${fmt(t)}</b> vir <b>${TARGET}</b>.</div>
-          <button id="closeBtn" class="px-4 py-2 rounded-xl bg-gray-700 text-white font-bold">SLUIT</button>`;
-        over.style.display='flex';
-        document.getElementById('closeBtn').addEventListener('click', ()=> over.style.display='none');
-      } else {
-        overCard.innerHTML=`<div class="mb-2 text-lg font-bold">GAME OVER</div>
-          <button id="closeBtn2" class="px-4 py-2 rounded-xl bg-gray-700 text-white font-bold">SLUIT</button>`;
-        over.style.display='flex';
-        document.getElementById('closeBtn2').addEventListener('click', ()=> over.style.display='none');
-      }
+      if(!win) return; // no fail modal in Blitstiek
+
+      submitTimeToBoard();
+
+      // Message to match Dilemma pattern (time-based)
+      winMsg.innerHTML = `Veels geluk, <strong>${currentUserName}</strong>, jy het die woord in <strong>${fmt(t)}</strong> voltooi!`;
+
+      over.style.display='flex';
+
+      modalCloseBtn.onclick = ()=>{ over.style.display='none'; };
     }
 
     /* ---- LIVE Leaderboard (name + time only, top 10) ---- */
@@ -557,7 +565,6 @@
       if(!GAME_ID){
         targetEl.innerHTML = `<span>—</span>`;
         drawGrid();
-        shareBtn.classList.add('hidden');
         lbList.innerHTML = `<li class="text-red-600">Geen spel beskikbaar nie.</li>`;
         return;
       }
@@ -565,7 +572,6 @@
       if(!snap.exists()){
         targetEl.innerHTML = `<span>—</span>`;
         drawGrid();
-        shareBtn.classList.add('hidden');
         lbList.innerHTML = `<li class="text-red-600">Kon nie spel laai nie.</li>`;
         return;
       }
