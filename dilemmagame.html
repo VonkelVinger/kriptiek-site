@@ -62,7 +62,7 @@
     }
     .cell.pop{ transform:scale(1.15); opacity:0; }
 
-    /* Overlay (keep simple; share moved to persistent button below) */
+    /* Overlay */
     #over{ position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.6); z-index:40; }
     #over .cardx{ background:#900C3F; color:#fff; padding:18px; border-radius:14px; width:92%; max-width:380px; text-align:center; }
 
@@ -92,7 +92,7 @@
     /* Time badges like Dilemma’s chips */
     .pill{ background:#0c4a3e; color:#fff; font-weight:700; padding:6px 10px; border-radius:8px; text-align:center; }
 
-    /* Leaderboard (match Dilemma—simple list) */
+    /* Leaderboard (Dilemma-style list) */
     #leaderboardList li{ padding:.35rem .5rem; border-radius:.375rem; }
     #leaderboardList li:nth-child(odd){ background:#f3f4f6; }
     #leaderboardList li:first-child{ background:#d1fae5; font-weight:700; }
@@ -108,7 +108,7 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-  <!-- HEADER (no Kriptiek tiles on the left; Dilemma-style title instead) -->
+  <!-- HEADER -->
   <header>
     <div class="logo-container">
       <div class="letter-box">B</div><div class="letter-box">L</div>
@@ -119,7 +119,6 @@
     </div>
     <p class="welcome">Welkom terug, <span id="playerName" class="font-semibold text-green-700"></span>!</p>
 
-    <!-- optional sign-out at top-right -->
     <button id="btnSignOut" class="absolute right-4 top-4 text-sm px-3 py-1.5 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800 hidden">Meld af</button>
   </header>
 
@@ -173,6 +172,16 @@
         </p>
       </section>
 
+      <!-- RULES placeholder (styled like Dilemma’s help box) -->
+      <section class="mt-4 bg-white rounded shadow p-4">
+        <h2 class="text-xl font-bold mb-2">HOE OM BLITSTIEK TE SPEEL</h2>
+        <p class="text-gray-700 leading-relaxed">
+          Hier kom die reëls vir Blitstiek (Lexispeed-meganika). Kopieer dit gerus vanaf
+          <a href="https://www.playleximax.com" class="underline" target="_blank" rel="noopener">playleximax.com</a>
+          en plak dit hier. Hierdie boks is net ’n **plekhouer** en volg dieselfde styl as Dilemma se verduidelikings-afdeling.
+        </p>
+      </section>
+
       <!-- LEADERBOARD (Dilemma-style list) -->
       <section class="card mt-6 p-4">
         <div class="flex items-center justify-between mb-2">
@@ -201,7 +210,7 @@
     import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
     import {
       getFirestore, serverTimestamp, doc, getDoc, setDoc,
-      collection, query, orderBy, limit, getDocs
+      collection, query, orderBy, limit, getDocs, onSnapshot, where
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
     /* ---- Firebase ---- */
@@ -263,7 +272,7 @@
     let cur=null, nxt=null;
     let paused=false, ended=false, moving=false;
     let t=0, tInt=null, gInt=null;
-    let bestTime=null;
+    let lbUnsub=null;
 
     /* ---- Auth ---- */
     onAuthStateChanged(auth, (u)=>{
@@ -280,7 +289,7 @@
     });
     btnSignOut.addEventListener('click', async ()=>{ await signOut(auth); try{localStorage.clear();sessionStorage.clear();}catch{} location.reload(); });
 
-    /* ---- Pixel-perfect grid sizing (fix line thickness at zoom) ---- */
+    /* ---- Pixel-perfect grid sizing ---- */
     function resizeGrid(){
       const wrap = gridEl.parentElement;
       const avail = Math.min(320, Math.floor(wrap.clientWidth));
@@ -294,7 +303,6 @@
       gridEl.style.height = quantH + 'px';
       document.documentElement.style.setProperty('--gridW', quantW + 'px');
 
-      // glyph ≈ 0.5 of cell
       const glyph = Math.max(15, Math.min(28, Math.round(cell * 0.50)));
       document.documentElement.style.setProperty('--cell-font', glyph + 'px');
     }
@@ -462,13 +470,11 @@
         await setDoc(doc(db,'blitstiekGames',GAME_ID,'leaderboard',user.uid),{
           userName:name, time:Number(t), timestamp:serverTimestamp()
         },{ merge:true });
-        await loadLeaderboard();
       }catch(e){ console.warn(e); }
     }
     function end(win){
       ended=true; clearInterval(tInt); clearInterval(gInt);
       if(win){
-        // Save and expose DEEL button like Dilemma
         submitTimeToBoard();
         shareBtn.classList.remove('hidden');
         overCard.innerHTML=`<div class="mb-2">Puik! Jou tyd: <b>${fmt(t)}</b> vir <b>${TARGET}</b>.</div>
@@ -483,48 +489,91 @@
       }
     }
 
-    /* ---- Leaderboard (Dilemma-style list) ---- */
-    async function loadLeaderboard(){
-      if(!GAME_ID){ lbList.innerHTML='<li>Laai...</li>'; return; }
+    /* ---- LIVE Leaderboard (name + time only) ---- */
+    function startLiveLeaderboard(){
+      if(lbUnsub) { lbUnsub(); lbUnsub=null; }
       const qy=query(collection(db,'blitstiekGames',GAME_ID,'leaderboard'), orderBy('time','asc'), limit(10));
-      const res=await getDocs(qy);
-      lbList.innerHTML='';
-      let r=1, first=null;
-      if(res.empty){
-        lbList.innerHTML = `<li class="bg-green-100 font-medium">Jy kan eerste op die leierbord wees!</li>`;
-        bestText.textContent='--:--';
-        return;
-      }
-      res.forEach(d=>{
-        const v=d.data()||{};
-        if(r===1){ first=v.time; bestText.textContent=fmt(first); }
-        const li=document.createElement('li');
-        li.innerHTML = `<strong>${v.userName||'Onbekend'}</strong>: ${fmt(Number(v.time))}`;
-        lbList.appendChild(li);
-        r++;
+      lbUnsub = onSnapshot(qy, (snap)=>{
+        lbList.innerHTML='';
+        if(snap.empty){
+          bestText.textContent='--:--';
+          lbList.innerHTML = `<li class="bg-green-100 font-medium">Jy kan eerste op die leierbord wees!</li>`;
+          return;
+        }
+        let idx=0;
+        snap.forEach(docSnap=>{
+          const v = docSnap.data()||{};
+          if(idx===0) bestText.textContent = fmt(Number(v.time));
+          const li=document.createElement('li');
+          li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>: ${fmt(Number(v.time))}`;
+          lbList.appendChild(li);
+          idx++;
+        });
+      }, (err) => {
+        console.warn('Leaderboard stream error:', err);
+        lbList.innerHTML = `<li class="text-red-600">Kon nie leierbord laai nie.</li>`;
       });
+    }
+
+    /* ---- Dynamic resolver (gameId -> today -> latest active -> latest created) ---- */
+    async function resolveGameId(){
+      if (explicitId) return explicitId;
+
+      const todayId = `Game${todayISO()}`;
+      try {
+        const todaySnap = await getDoc(doc(db,'blitstiekGames',todayId));
+        if (todaySnap.exists()) return todayId;
+      } catch {}
+
+      try {
+        const gamesRef = collection(db,'blitstiekGames');
+        // latest active
+        let q = query(gamesRef, where('status','==','active'), orderBy('createdAt','desc'), limit(1));
+        let qs = await getDocs(q);
+        if (!qs.empty) return qs.docs[0].id;
+
+        // fallback: simply latest created
+        q = query(gamesRef, orderBy('createdAt','desc'), limit(1));
+        qs = await getDocs(q);
+        if (!qs.empty) return qs.docs[0].id;
+      } catch {}
+
+      return null;
     }
 
     /* ---- Load game (word + board) ---- */
     async function loadGame(){
-      GAME_ID = explicitId || `Game${todayISO()}`;
+      GAME_ID = await resolveGameId();
+
+      if(!GAME_ID){
+        targetEl.innerHTML = `<span>—</span>`;
+        drawGrid();
+        shareBtn.classList.add('hidden');
+        lbList.innerHTML = `<li class="text-red-600">Geen spel beskikbaar nie.</li>`;
+        return;
+      }
 
       const snap = await getDoc(doc(db,'blitstiekGames',GAME_ID));
       if(!snap.exists()){
         targetEl.innerHTML = `<span>—</span>`;
-        drawGrid(); shareBtn.classList.add('hidden');
+        drawGrid();
+        shareBtn.classList.add('hidden');
+        lbList.innerHTML = `<li class="text-red-600">Kon nie spel laai nie.</li>`;
         return;
       }
+
       const data=snap.data();
       TARGET=(data.word||'').toUpperCase();
 
       // target chips
-      targetEl.innerHTML=''; TARGET.split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
+      targetEl.innerHTML='';
+      TARGET.split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
 
       grid = Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
 
-      await loadLeaderboard();
+      // kick off live leaderboard
+      startLiveLeaderboard();
     }
 
     /* ---- Controls ---- */
