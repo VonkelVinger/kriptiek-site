@@ -175,6 +175,35 @@
         </p>
       </section>
 
+      <!-- HOE OM TE SPEEL (Afrikaans, no emojis) -->
+      <section class="mt-4 bg-white rounded shadow p-4">
+        <h2 class="text-xl font-bold mb-2">HOE OM TE SPEEL</h2>
+
+        <ol class="space-y-3 text-gray-700 leading-relaxed">
+          <li>
+            <p class="font-semibold">1. Doel</p>
+            <p>Probeer om die <strong>teikenwoord</strong> boaan so vinnig as moontlik te vorm deur die vallende blokke, elkeen met 'n lukraakte letter en kleur, links en regs te skuif voordat hulle onder land. Die teikenwoord moet in <strong>dieselfde horisontale ry</strong> gevorm word, sonder gapings of verkeerde letters. Laat val onnodige letters eenkant, of gebruik die blokreëls onder om hulle te laat verdwyn. Daar is <strong>elke dag ’n nuwe woord</strong>, wat soms minder maar nooit meer as 8 letters sal hê nie.</p>
+          </li>
+          <li>
+            <p class="font-semibold">2. Kontroles</p>
+            <p><strong>Fisieke toetsbord:</strong> Gebruik die pyltjies op jou toetsbord om die blokke links en regs te skuif, en die spasiebalk om die blok dadelik tot onder te laat val.</p>
+            <p><strong>Raakskerm:</strong> Gebruik die pyltjies op die skerm om die blokke links en regs te skuif, en die af-pyltjie om die blok dadelik tot onder te laat val.</p>
+          </li>
+          <li>
+            <p class="font-semibold">3. Wat gebeur wanneer blokke aan mekaar raak?</p>
+            <ul class="list-disc pl-6">
+              <li><strong>Dieselfde letter:</strong> As twee blokke met dieselfde LETTER langs of op mekaar tot stilstand kom, verdwyn albei.</li>
+              <li><strong>Dieselfde kleur:</strong> As twee blokke met dieselfde KLEUR langs of op mekaar tot stilstand kom, verdwyn albei.</li>
+              <li><strong>MAAR:</strong> 'n Blok met 'n letter wat in die teikenwoord is, verdwyn nooit nie.</li>
+            </ul>
+          </li>
+          <li>
+            <p class="font-semibold">4. Leierbord</p>
+            <p>As jou tyd vinnig genoeg is, verskyn jou naam op die <strong>leierbord</strong>. Gebruik <strong>DEEL</strong> om jou vriende uit te daag en jou tyd te wys.</p>
+          </li>
+        </ol>
+      </section>
+
       <!-- Leaderboard -->
       <section class="card mt-6 p-4">
         <div class="flex items-center justify-between mb-2">
@@ -474,7 +503,7 @@
       if(!TARGET) return;
       for(let y=0;y<H;y++) for(let x=0;x<=W-TARGET.length;x++){
         let ok=true;
-        for(let i=0;i<TARGET.length;i++){
+        for(let i=0;i	TARGET.length;i++){
           const g=grid[y][x+i]; if(!g||g.letter!==TARGET[i]){ ok=false; break; }
         }
         if(ok){
