@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="af">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BLITSTIEK Argief – Kriptiek</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Montserrat', sans-serif; background:#f3f4f6; }
+    .logo-container{position:relative;display:flex;justify-content:center;align-items:center;width:fit-content;margin:1rem auto;padding:1rem;border-radius:1rem;background:#fff}
+    .crossword-grid{display:grid;grid-template-columns:repeat(8,minmax(40px,1fr));gap:4px;position:relative;z-index:10}
+    .letter-box{width:50px;height:50px;display:flex;justify-content:center;align-items:center;background:#374151;color:#fff;font-weight:700;font-size:1.2rem;border:2px solid #1f2937;border-radius:.375rem;text-transform:uppercase}
+    .flipped-k{transform:scaleX(-1)}
+    .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.5rem}
+    .day-cell{background:#fff;border:1px solid #e5e7eb;border-radius:.5rem;min-height:70px;padding:.5rem;display:flex;flex-direction:column}
+    .day-num{font-size:.85rem;color:#6b7280}
+    .avail{border-color:#10b981;box-shadow:inset 0 0 0 2px #10b981}
+    .today{outline:3px solid #f59e0b}
+    .day-link{margin-top:auto}
+  </style>
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+      authDomain: "kriptiek-c9ea2.firebaseapp.com",
+      projectId: "kriptiek-c9ea2",
+      storageBucket: "kriptiek-c9ea2.appspot.com",
+      messagingSenderId: "620450620939",
+      appId: "1:620450620939:web:e93a18ac23b53b33db890e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    function fmtYYYYMMDD(d, tz='Africa/Johannesburg'){
+      const p = new Intl.DateTimeFormat('af-ZA',{ timeZone:tz, year:'numeric', month:'2-digit', day:'2-digit'})
+        .formatToParts(d).reduce((a,x)=> (a[x.type]=x.value,a),{});
+      return `${p.year}-${p.month}-${p.day}`;
+    }
+    function firstOfMonth(y,m){ return new Date(y, m, 1); }
+    function daysInMonth(y,m){ return new Date(y, m+1, 0).getDate(); }
+    function isSameDate(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+
+    async function docExistsForDate(ymd) {
+      // Prefer GameYYYY-MM-DD in blitstiekGames
+      const ref1 = doc(db, 'blitstiekGames', `Game${ymd}`);
+      const s1 = await getDoc(ref1);
+      if (s1.exists()) return `Game${ymd}`;
+      // Fallback: plain date id
+      const ref2 = doc(db, 'blitstiekGames', ymd);
+      const s2 = await getDoc(ref2);
+      return s2.exists() ? ymd : null;
+    }
+
+    async function buildCalendar(container, y, m){
+      container.innerHTML = '';
+      const head = document.getElementById('monthLabel');
+      const monthName = new Intl.DateTimeFormat('af-ZA', { month:'long', year:'numeric' }).format(new Date(y,m,1));
+      head.textContent = monthName[0].toUpperCase() + monthName.slice(1);
+
+      // Weekday headers (Ma–So)
+      const weekdayRow = document.createElement('div');
+      weekdayRow.className = 'calendar-grid mb-2';
+      ['Ma','Di','Wo','Do','Vr','Sa','So'].forEach(w=>{
+        const el = document.createElement('div');
+        el.className = 'text-center text-xs uppercase tracking-wide text-gray-500';
+        el.textContent = w;
+        weekdayRow.appendChild(el);
+      });
+      container.appendChild(weekdayRow);
+
+      const grid = document.createElement('div');
+      grid.className = 'calendar-grid bg-transparent';
+
+      const first = firstOfMonth(y,m);
+      const startIdx = (first.getDay()+6)%7; // Monday=0
+      const total = daysInMonth(y,m);
+      const today = new Date();
+
+      // leading blanks
+      for (let i=0;i<startIdx;i++){
+        const blank = document.createElement('div');
+        grid.appendChild(blank);
+      }
+
+      for (let d=1; d<=total; d++){
+        const cell = document.createElement('div');
+        cell.className = 'day-cell';
+
+        const theDate = new Date(y,m,d);
+        const ymd = fmtYYYYMMDD(theDate);
+
+        const num = document.createElement('div');
+        num.className = 'day-num';
+        num.textContent = d;
+        cell.appendChild(num);
+
+        // mark "today"
+        if (isSameDate(theDate, today)) {
+          cell.classList.add('today');
+        }
+
+        // lazy check availability, then add link
+        (async ()=>{
+          const id = await docExistsForDate(ymd);
+          if (id){
+            cell.classList.add('avail');
+            const a = document.createElement('a');
+            a.href = `/blitstiek.html?gameId=${encodeURIComponent(id)}`;
+            a.className = 'day-link mt-2 text-sm text-blue-700 underline';
+            a.textContent = 'Speel';
+            cell.appendChild(a);
+          }
+        })();
+
+        grid.appendChild(cell);
+      }
+
+      container.appendChild(grid);
+
+      // Controls BELOW the calendar (to match your updated Dilemma archive)
+      const controls = document.getElementById('calControls');
+      controls.innerHTML = '';
+      const prev = document.createElement('button');
+      prev.className = 'px-3 py-2 bg-gray-200 rounded hover:bg-gray-300';
+      prev.textContent = 'Vorige maand';
+      prev.onclick = ()=> navigateMonth(-1);
+
+      const next = document.createElement('button');
+      next.className = 'px-3 py-2 bg-gray-200 rounded hover:bg-gray-300';
+      next.textContent = 'Volgende maand';
+      next.onclick = ()=> navigateMonth(1);
+
+      controls.appendChild(prev);
+      controls.appendChild(next);
+    }
+
+    let curY = (new Date()).getFullYear();
+    let curM = (new Date()).getMonth();
+
+    async function navigateMonth(delta){
+      curM += delta;
+      if (curM < 0) { curM = 11; curY -= 1; }
+      if (curM > 11){ curM = 0;  curY += 1; }
+      const mount = document.getElementById('calMount');
+      await buildCalendar(mount, curY, curM);
+    }
+
+    document.addEventListener('DOMContentLoaded', async ()=>{
+      const mount = document.getElementById('calMount');
+      await buildCalendar(mount, curY, curM);
+    });
+  </script>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <header class="bg-white shadow p-4">
+    <div class="logo-container">
+      <div class="crossword-grid">
+        <div class="letter-box flipped-k">K</div>
+        <div class="letter-box flipped-k">R</div>
+        <div class="letter-box">I</div>
+        <div class="letter-box flipped-k">P</div>
+        <div class="letter-box">T</div>
+        <div class="letter-box">I</div>
+        <div class="letter-box flipped-k">E</div>
+        <div class="letter-box">K</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow p-6 max-w-4xl mx-auto">
+    <h1 class="text-2xl font-bold text-center text-[#1e3a8a] mb-2">BLITSTIEK Argief</h1>
+
+    <!-- Colour key (matches your updated style: Vandag in orange) -->
+    <div class="flex justify-center gap-6 text-sm mb-4">
+      <div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded ring-2 ring-[#f59e0b]"></span> Vandag</div>
+      <div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-white border border-gray-300"></span> Geen spel</div>
+      <div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-white border-2 border-emerald-500"></span> Speelbaar</div>
+    </div>
+
+    <!-- Month label -->
+    <div class="text-center font-semibold mb-3" id="monthLabel"> </div>
+
+    <!-- Calendar -->
+    <div id="calMount" class="mb-4"></div>
+
+    <!-- Controls BELOW the calendar -->
+    <div id="calControls" class="flex justify-center gap-4 mt-2"></div>
+  </main>
+
+  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
+    &copy; 2025 Kriptiek. Alle regte voorbehou. |
+    <a href="/index.html" class="underline">Tuis</a> |
+    <a href="/profile.html" class="underline">My profiel</a> |
+    <a href="/forum.html" class="underline">Gesels saam</a>
+  </footer>
+</body>
+</html>
