@@ -12,10 +12,10 @@
   <style>
     :root{
       --brand:#1e3a8a;
-      --cell:#004d40;
+      --cell-bg:#004d40;   /* background colour for cells & chips */
       --gridW:320px;       /* updated by JS */
       --cell-font:16px;    /* updated by JS */
-      --cell:32px;         /* per-cell size for gradients, updated by JS */
+      --cellSize:32px;     /* per-cell size for gradients, updated by JS */
       --line:1px;          /* line width in CSS px, updated by JS = 1/devicePixelRatio */
     }
     html,body{height:100%}
@@ -35,7 +35,7 @@
 
     /* Target chips */
     #targetWrap{ width:100%; max-width:var(--gridW); margin:0 auto 8px; display:flex; justify-content:center; }
-    #target{ display:inline-flex; gap:1px; background:var(--cell); color:#fff; padding:2px; border-radius:6px; }
+    #target{ display:inline-flex; gap:1px; background:var(--cell-bg); color:#fff; padding:2px; border-radius:6px; }
     #target span{ width:30px; height:30px; display:grid; place-items:center; font-weight:800; border:1px solid rgba(255,255,255,.12); }
 
     /* GRID — crisp lines via single device-pixel overlay */
@@ -62,20 +62,20 @@
         /* vertical lines */
         repeating-linear-gradient(
           to right,
-          transparent 0 calc(var(--cell) - var(--line)),
-          rgba(255,255,255,.18) 0 var(--cell)
+          transparent 0 calc(var(--cellSize) - var(--line)),
+          rgba(255,255,255,.18) 0 var(--cellSize)
         ),
         /* horizontal lines */
         repeating-linear-gradient(
           to bottom,
-          transparent 0 calc(var(--cell) - var(--line)),
-          rgba(255,255,255,.18) 0 var(--cell)
+          transparent 0 calc(var(--cellSize) - var(--line)),
+          rgba(255,255,255,.18) 0 var(--cellSize)
         );
       background-position: 0 0, 0 0;
       background-repeat: repeat;
     }
 
-    .cell{ position:relative; background:var(--cell); transition:transform .15s ease-out, opacity .15s ease-out; }
+    .cell{ position:relative; background:var(--cell-bg); transition:transform .15s ease-out, opacity .15s ease-out; }
     .cell::after{ content:none; } /* remove inconsistent per-cell borders */
     .cell.f{ display:grid; place-items:center; color:#fff; font-weight:800; font-size:var(--cell-font); text-shadow:0 1px 1px rgba(0,0,0,.35); }
     .cell.pop{ transform:scale(1.15); opacity:0; }
@@ -129,7 +129,7 @@
       <div class="letter-box">I</div><div class="letter-box">E</div>
       <div class="letter-box">K</div>
     </div>
-    <p class="welcome">Welkom terug, <span id="playerName" class="font-semibold text-green-700"></span>!</p>
+    <p class="welcome">Welkom terug, <span id="playerName" class="font-semibold text-green-700">Speler</span>!</p>
   </header>
 
   <main class="flex-1">
@@ -288,7 +288,6 @@
     const btnPause= document.getElementById('btnPause');
 
     const mWA   = document.getElementById('mWhatsApp');
-    the_copy:
     const mCopy = document.getElementById('mCopy');
     const mSys  = document.getElementById('mSystem');
 
@@ -370,7 +369,7 @@
       const quantH  = cellCss * 10;
 
       // Variables for grid overlay
-      document.documentElement.style.setProperty('--cell', `${cellCss}px`);
+      document.documentElement.style.setProperty('--cellSize', `${cellCss}px`);
 
       // 1 device pixel line width in CSS px
       const lineCss = 1 / dpr;
@@ -406,7 +405,7 @@
       if(!b) return;
       const c=gridEl.querySelector(`.cell[data-x="${b.x}"][data-y="${b.y}"]`);
       if(!c) return;
-      c.className='cell'; c.style.background='var(--cell)'; c.textContent='';
+      c.className='cell'; c.style.background='var(--cell-bg)'; c.textContent='';
     }
 
     /* ---- Core mechanics ---- */
@@ -478,7 +477,7 @@
       }
       for(let y=0;y<H;y++) for(let x=0;x<W;x++){
         const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
-        c.className='cell'; c.style.background='var(--cell)'; c.textContent='';
+        c.className='cell'; c.style.background='var(--cell-bg)'; c.textContent='';
         if(grid[y][x]) drawBlock({...grid[y][x],x,y});
       }
     }
