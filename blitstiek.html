@@ -553,49 +553,60 @@
     mSys.onclick  = async () => { try{ if(navigator.share) await navigator.share({ text:shareText() }); else openWhatsApp(shareText()); }catch{} shareMenu.classList.add('hidden'); };
 
     /* ---- Overlay + leaderboard submit (Option B + cap 10) ---- */
-    async function submitTimeToBoard(){
-      if(!user) return;
-      try{
-        const name    = currentUserName.slice(0,24);
-        const newTime = Number(t);
+   async function submitTimeToBoard(){
+  if(!user) return;
 
-        // Collections/refs
-        const runsCol = collection(db,'blitstiekGames', GAME_ID, 'runs');                 // all attempts (multi per user)
-        const bestRef = doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid);       // per-user best
+  const name    = currentUserName.slice(0,24);
+  const newTime = Number(t);
 
-        // 1) Append this attempt (auto-ID)
-        await setDoc(doc(runsCol), {
-          uid: user.uid,
-          userName: name,
-          time: newTime,
-          timestamp: serverTimestamp()
-        });
+  const runsCol = collection(db,'blitstiekGames', GAME_ID, 'runs');           // all attempts
+  const bestRef = doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid); // per-user best
 
-        // 2) Trim attempts to the newest 10 for this user
-        const qy = query(
-          runsCol,
-          where('uid','==', user.uid),
-          orderBy('timestamp','desc'),
-          limit(50) // fetch more than 10; we'll delete beyond the top 10
-        );
-        const snap = await getDocs(qy);
-        const toDelete = snap.docs.slice(10); // keep 0..9
-        await Promise.all(toDelete.map(d => deleteDoc(d.ref)));
-
-        // 3) Maintain "best" time per user for the leaderboard
-        const bestSnap = await getDoc(bestRef);
-        if(!bestSnap.exists() || typeof bestSnap.data().time !== 'number' || newTime < bestSnap.data().time){
-          await setDoc(bestRef, {
-            userName: name,
-            time: newTime,
-            timestamp: serverTimestamp()
-          }, { merge:true });
-        }
-      }catch(e){
-        console.warn('submitTimeToBoard error:', e);
-      }
+  // 1) Update "best" first (so trimming cannot block it)
+  try {
+    const bestSnap = await getDoc(bestRef);
+    const prev = bestSnap.exists() ? Number(bestSnap.data().time) : null;
+    if (prev == null || !Number.isFinite(prev) || newTime < prev){
+      await setDoc(bestRef, {
+        userName: name,
+        time: newTime,
+        timestamp: serverTimestamp()
+      }, { merge:true });
     }
+  } catch (e) {
+    console.warn('BEST_UPDATE_FAILED', e);
+    // we still continue to log the run
+  }
 
+  // 2) Append this attempt
+  try {
+    await setDoc(doc(runsCol), {
+      uid: user.uid,
+      userName: name,
+      time: newTime,
+      timestamp: serverTimestamp()
+    });
+  } catch (e) {
+    console.warn('RUN_APPEND_FAILED', e);
+  }
+
+  // 3) Trim to newest 10 (don’t block best if index is missing)
+  try {
+    // This query may require a composite index: uid + timestamp desc
+    const qy = query(
+      runsCol,
+      where('uid','==', user.uid),
+      orderBy('timestamp','desc'),
+      limit(50)
+    );
+    const snap = await getDocs(qy);
+    const toDelete = snap.docs.slice(10); // keep 10 newest
+    await Promise.all(toDelete.map(d => deleteDoc(d.ref)));
+  } catch (e) {
+    console.warn('RUNS_TRIM_FAILED (likely missing index)', e);
+    // ok to skip; does not affect the leaderboard best
+  }
+}
     function end(win){
       ended=true; clearInterval(tInt); clearInterval(gInt);
       if(!win) return; // no fail modal in Blitstiek
