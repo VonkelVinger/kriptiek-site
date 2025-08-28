@@ -13,8 +13,10 @@
     :root{
       --brand:#1e3a8a;
       --cell:#004d40;
-      --gridW:320px;
-      --cell-font:16px;
+      --gridW:320px;       /* updated by JS */
+      --cell-font:16px;    /* updated by JS */
+      --cell:32px;         /* per-cell size for gradients, updated by JS */
+      --line:1px;          /* line width in CSS px, updated by JS = 1/devicePixelRatio */
     }
     html,body{height:100%}
     body{font-family:'Montserrat',system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#f9fafb;color:#1f2937}
@@ -36,22 +38,45 @@
     #target{ display:inline-flex; gap:1px; background:var(--cell); color:#fff; padding:2px; border-radius:6px; }
     #target span{ width:30px; height:30px; display:grid; place-items:center; font-weight:800; border:1px solid rgba(255,255,255,.12); }
 
-    /* GRID — crisp lines + snapping */
+    /* GRID — crisp lines via single device-pixel overlay */
     #grid{
+      position:relative;
       display:grid;
       grid-template-columns:repeat(8,1fr);
       grid-template-rows:repeat(10,1fr);
-      gap:1px;                              /* visible lines */
+      gap:0;                              /* lines are drawn by ::before overlay */
       background:#fff;
-      border:1px solid #0c4a3e;
+      border:var(--line) solid #0c4a3e;   /* 1 device-pixel border */
       border-radius:8px;
       overflow:hidden;
       width:var(--gridW);
       height:400px;
       margin:10px auto 8px;
     }
+    #grid::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:
+        /* vertical lines */
+        repeating-linear-gradient(
+          to right,
+          transparent 0 calc(var(--cell) - var(--line)),
+          rgba(255,255,255,.18) 0 var(--cell)
+        ),
+        /* horizontal lines */
+        repeating-linear-gradient(
+          to bottom,
+          transparent 0 calc(var(--cell) - var(--line)),
+          rgba(255,255,255,.18) 0 var(--cell)
+        );
+      background-position: 0 0, 0 0;
+      background-repeat: repeat;
+    }
+
     .cell{ position:relative; background:var(--cell); transition:transform .15s ease-out, opacity .15s ease-out; }
-    .cell::after{ content:''; position:absolute; inset:0; border:1px solid rgba(255,255,255,.10); pointer-events:none; }
+    .cell::after{ content:none; } /* remove inconsistent per-cell borders */
     .cell.f{ display:grid; place-items:center; color:#fff; font-weight:800; font-size:var(--cell-font); text-shadow:0 1px 1px rgba(0,0,0,.35); }
     .cell.pop{ transform:scale(1.15); opacity:0; }
 
@@ -217,6 +242,7 @@
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
+
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
@@ -262,6 +288,7 @@
     const btnPause= document.getElementById('btnPause');
 
     const mWA   = document.getElementById('mWhatsApp');
+    the_copy:
     const mCopy = document.getElementById('mCopy');
     const mSys  = document.getElementById('mSystem');
 
@@ -322,18 +349,40 @@
     /* ---- Pixel-perfect grid sizing ---- */
     function resizeGrid(){
       const wrap = gridEl.parentElement;
-      const avail = Math.min(320, Math.floor(wrap.clientWidth));
-      const dpr = Math.max(1, window.devicePixelRatio || 1);
-      const snap = v => Math.floor((v*dpr)/8)/dpr*8;  // snap to multiple of 8 device pixels
-      const quantW = Math.max(240, snap(avail));
-      const cell   = Math.floor(quantW/8);
-      const quantH = cell * 10;
 
+      // Available CSS pixels, clamp to 320 like before
+      const availCss = Math.min(320, Math.floor(wrap.clientWidth));
+
+      // Device pixel ratio (e.g. 1, 1.25, 1.5, 2 …)
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+
+      // Conversion helpers
+      const toDp   = vCss => Math.round(vCss * dpr);  // css px -> device px (rounded)
+      const toCss  = vDp  => vDp / dpr;               // device px -> css px
+      const snapDp = vDp  => Math.floor(vDp / 8) * 8; // multiple of 8 device px
+
+      const availDp   = toDp(availCss);
+      const snappedDp = Math.max(toDp(240), snapDp(availDp)); // min width ~240 css px, snapped
+      const quantW    = toCss(snappedDp);
+
+      // Integer cell size from snapped width
+      const cellCss = Math.floor(quantW / 8);
+      const quantH  = cellCss * 10;
+
+      // Variables for grid overlay
+      document.documentElement.style.setProperty('--cell', `${cellCss}px`);
+
+      // 1 device pixel line width in CSS px
+      const lineCss = 1 / dpr;
+      document.documentElement.style.setProperty('--line', `${lineCss}px`);
+
+      // Existing variables you already use
       gridEl.style.width  = quantW + 'px';
       gridEl.style.height = quantH + 'px';
       document.documentElement.style.setProperty('--gridW', quantW + 'px');
 
-      const glyph = Math.max(15, Math.min(28, Math.round(cell * 0.50)));
+      // Scale letter glyph size relative to cell
+      const glyph = Math.max(15, Math.min(28, Math.round(cellCss * 0.50)));
       document.documentElement.style.setProperty('--cell-font', glyph + 'px');
     }
     window.addEventListener('resize', resizeGrid);
