@@ -178,7 +178,7 @@
         </p>
       </section>
 
-      <!-- HOE OM TE SPEEL (Afrikaans, no emojis) -->
+      <!-- HOE OM TE SPEEL -->
       <section class="mt-4 bg-white rounded shadow p-4">
         <h2 class="text-xl font-bold mb-2">HOE OM TE SPEEL</h2>
 
@@ -189,20 +189,20 @@
           </li>
           <li>
             <p class="font-semibold">2. Kontroles</p>
-            <p><strong>Fisieke toetsbord:</strong> Gebruik die pyltjies op jou toetsbord om die blokke links en regs te skuif, en die spasiebalk om die blok dadelik tot onder te laat val.</p>
-            <p><strong>Raakskerm:</strong> Gebruik die pyltjies op die skerm om die blokke links en regs te skuif, en die af-pyltjie om die blok dadelik tot onder te laat val.</p>
+            <p><strong>Fisieke toetsbord:</strong> Gebruik die pyltjies …</p>
+            <p><strong>Raakskerm:</strong> Gebruik die pyltjies …</p>
           </li>
           <li>
             <p class="font-semibold">3. Wat gebeur wanneer blokke aan mekaar raak?</p>
             <ul class="list-disc pl-6">
-              <li><strong>Dieselfde letter:</strong> As twee blokke met dieselfde LETTER langs of op mekaar tot stilstand kom, verdwyn albei.</li>
-              <li><strong>Dieselfde kleur:</strong> As twee blokke met dieselfde KLEUR langs of op mekaar tot stilstand kom, verdwyn albei.</li>
-              <li><strong>MAAR:</strong> 'n Blok met 'n letter wat in die teikenwoord is, verdwyn nooit nie.</li>
+              <li><strong>Dieselfde letter:</strong> …</li>
+              <li><strong>Dieselfde kleur:</strong> …</li>
+              <li><strong>MAAR:</strong> ’n Blok met ’n letter wat in die teikenwoord is, verdwyn nooit nie.</li>
             </ul>
           </li>
           <li>
             <p class="font-semibold">4. Leierbord</p>
-            <p>As jou tyd vinnig genoeg is, verskyn jou naam op die <strong>leierbord</strong>. Gebruik <strong>DEEL</strong> om jou vriende uit te daag en jou tyd te wys.</p>
+            <p>Die top <strong>10 vinnigste tye</strong> verskyn hieronder — dieselfde speler kan meer as een plek inneem.</p>
           </li>
         </ol>
       </section>
@@ -552,64 +552,74 @@
     mCopy.onclick = async () => { try{ await navigator.clipboard.writeText(shareText()); alert('Skakel gekopieer!'); }catch{} shareMenu.classList.add('hidden'); };
     mSys.onclick  = async () => { try{ if(navigator.share) await navigator.share({ text:shareText() }); else openWhatsApp(shareText()); }catch{} shareMenu.classList.add('hidden'); };
 
-    /* ---- Overlay + leaderboard submit (Option B + cap 10) ---- */
-   async function submitTimeToBoard(){
-  if(!user) return;
+    /* ---- Overlay + submissions (write board allowing duplicates) ---- */
+    async function submitTimeToBoard(){
+      if(!user) return;
 
-  const name    = currentUserName.slice(0,24);
-  const newTime = Number(t);
+      const name    = currentUserName.slice(0,24);
+      const newTime = Number(t);
 
-  const runsCol = collection(db,'blitstiekGames', GAME_ID, 'runs');           // all attempts
-  const bestRef = doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid); // per-user best
+      const runsCol  = collection(db,'blitstiekGames', GAME_ID, 'runs');            // all attempts (per-user trimmed newest 10)
+      const bestRef  = doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid);  // per-user best (kept for profile/sticky share)
+      const boardCol = collection(db,'blitstiekGames', GAME_ID, 'board');           // global board (allows many rows per user)
 
-  // 1) Update "best" first (so trimming cannot block it)
-  try {
-    const bestSnap = await getDoc(bestRef);
-    const prev = bestSnap.exists() ? Number(bestSnap.data().time) : null;
-    if (prev == null || !Number.isFinite(prev) || newTime < prev){
-      await setDoc(bestRef, {
-        userName: name,
-        time: newTime,
-        timestamp: serverTimestamp()
-      }, { merge:true });
+      // 1) Maintain per-user "best" (unchanged behavior)
+      try{
+        const bestSnap = await getDoc(bestRef);
+        const prev = bestSnap.exists() ? Number(bestSnap.data().time) : null;
+        if (prev == null || !Number.isFinite(prev) || newTime < prev){
+          await setDoc(bestRef, {
+            userName: name,
+            time: newTime,
+            timestamp: serverTimestamp()
+          }, { merge:true });
+        }
+      }catch(e){ console.warn('BEST_UPDATE_FAILED', e); }
+
+      // 2) Append this attempt to per-user runs (keep newest 10 per user)
+      try{
+        await setDoc(doc(runsCol), {
+          uid: user.uid,
+          userName: name,
+          time: newTime,
+          timestamp: serverTimestamp()
+        });
+        // trim newest >10 per user
+        try{
+          const qy = query(
+            runsCol,
+            where('uid','==', user.uid),
+            orderBy('timestamp','desc'),
+            limit(50)
+          );
+          const snap = await getDocs(qy);
+          const toDelete = snap.docs.slice(10);
+          await Promise.all(toDelete.map(d => deleteDoc(d.ref)));
+        }catch(e){ console.warn('RUNS_TRIM_FAILED', e); }
+      }catch(e){ console.warn('RUN_APPEND_FAILED', e); }
+
+      // 3) Append to GLOBAL board (duplicates allowed), then keep only 10 fastest overall
+      try{
+        await setDoc(doc(boardCol), {
+          uid: user.uid,
+          userName: name,
+          time: newTime,
+          timestamp: serverTimestamp()
+        });
+
+        // prune slower-than-top-10 (keep top 10 by time asc)
+        try{
+          const topSnap = await getDocs(query(boardCol, orderBy('time','asc'), limit(100)));
+          const docs = topSnap.docs;
+          const toDelete = docs.slice(10); // keep first 10 (fastest)
+          await Promise.all(toDelete.map(d => deleteDoc(d.ref)));
+        }catch(e){ console.warn('BOARD_PRUNE_FAILED', e); }
+      }catch(e){ console.warn('BOARD_APPEND_FAILED', e); }
     }
-  } catch (e) {
-    console.warn('BEST_UPDATE_FAILED', e);
-    // we still continue to log the run
-  }
 
-  // 2) Append this attempt
-  try {
-    await setDoc(doc(runsCol), {
-      uid: user.uid,
-      userName: name,
-      time: newTime,
-      timestamp: serverTimestamp()
-    });
-  } catch (e) {
-    console.warn('RUN_APPEND_FAILED', e);
-  }
-
-  // 3) Trim to newest 10 (don’t block best if index is missing)
-  try {
-    // This query may require a composite index: uid + timestamp desc
-    const qy = query(
-      runsCol,
-      where('uid','==', user.uid),
-      orderBy('timestamp','desc'),
-      limit(50)
-    );
-    const snap = await getDocs(qy);
-    const toDelete = snap.docs.slice(10); // keep 10 newest
-    await Promise.all(toDelete.map(d => deleteDoc(d.ref)));
-  } catch (e) {
-    console.warn('RUNS_TRIM_FAILED (likely missing index)', e);
-    // ok to skip; does not affect the leaderboard best
-  }
-}
     function end(win){
       ended=true; clearInterval(tInt); clearInterval(gInt);
-      if(!win) return; // no fail modal in Blitstiek
+      if(!win) return;
 
       submitTimeToBoard();
       enableStickyShare({ time: t, target: TARGET });
@@ -619,10 +629,10 @@
       modalCloseBtn.onclick = ()=>{ over.style.display='none'; };
     }
 
-    /* ---- LIVE Leaderboard (name + time only, top 10) ---- */
+    /* ---- LIVE Leaderboard: read GLOBAL board (top 10, duplicates allowed) ---- */
     function startLiveLeaderboard(){
       if(lbUnsub) { lbUnsub(); lbUnsub=null; }
-      const qy=query(collection(db,'blitstiekGames',GAME_ID,'leaderboard'), orderBy('time','asc'), limit(10));
+      const qy=query(collection(db,'blitstiekGames',GAME_ID,'board'), orderBy('time','asc'), limit(10));
       lbUnsub = onSnapshot(qy, (snap)=>{
         lbList.innerHTML='';
         if(snap.empty){
@@ -645,7 +655,7 @@
       });
     }
 
-    /* ---- Dynamic resolver (gameId -> today -> latest active -> latest created) ---- */
+    /* ---- Dynamic resolver ---- */
     async function resolveGameId(){
       if (explicitId) return explicitId;
       const todayId = `Game${todayISO()}`;
@@ -686,7 +696,7 @@
       const data=snap.data();
       TARGET=(data.word||'').toUpperCase();
 
-      // target chips (fallback if blank)
+      // target chips
       targetEl.innerHTML='';
       (TARGET || '—').split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
 
@@ -705,7 +715,7 @@
         }catch{}
       }
 
-      // live leaderboard
+      // live leaderboard (from GLOBAL board)
       startLiveLeaderboard();
     }
 
