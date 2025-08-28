@@ -53,28 +53,29 @@
       height:400px;
       margin:10px auto 8px;
     }
-    #grid::before{
-      content:'';
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-      background:
-        /* vertical lines */
-        repeating-linear-gradient(
-          to right,
-          transparent 0 calc(var(--cellSize) - var(--line)),
-          rgba(255,255,255,.18) 0 var(--cellSize)
-        ),
-        /* horizontal lines */
-        repeating-linear-gradient(
-          to bottom,
-          transparent 0 calc(var(--cellSize) - var(--line)),
-          rgba(255,255,255,.18) 0 var(--cellSize)
-        );
-      background-position: 0 0, 0 0;
-      background-repeat: repeat;
-    }
-
+    /* Gridline overlay ABOVE the cells */
+#grid::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:5; /* <-- key: draw above .cell backgrounds */
+  background:
+    /* vertical lines */
+    repeating-linear-gradient(
+      to right,
+      transparent 0 calc(var(--cellSize) - var(--line)),
+      rgba(255,255,255,.28) 0 var(--cellSize)   /* was .18 */
+    ),
+    /* horizontal lines */
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0 calc(var(--cellSize) - var(--line)),
+      rgba(255,255,255,.28) 0 var(--cellSize)   /* was .18 */
+    );
+  background-position: 0 0, 0 0;
+  background-repeat: repeat;
+}
     .cell{ position:relative; background:var(--cell-bg); transition:transform .15s ease-out, opacity .15s ease-out; }
     .cell::after{ content:none; } /* remove inconsistent per-cell borders */
     .cell.f{ display:grid; place-items:center; color:#fff; font-weight:800; font-size:var(--cell-font); text-shadow:0 1px 1px rgba(0,0,0,.35); }
