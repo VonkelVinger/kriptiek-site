@@ -1,123 +1,713 @@
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
+<!DOCTYPE html>
+<html lang="af">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+  <title>BLITSTIEK – Kriptiek</title>
 
-    // --- helpers ---
-    function signedIn() { return request.auth != null; }
-    function isSelf(uid) { return signedIn() && request.auth.uid == uid; }
-    function isAdmin() {
-      return signedIn() &&
-             (request.auth.uid == "jI7f0Wk4MqfPq7p69vjl8OlJUvS2" || request.auth.token.admin == true);
+  <!-- Tailwind + font -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root{
+      --brand:#1e3a8a;
+      --cell-bg:#004d40;   /* cell & chip colour */
+      --gridW:320px;       /* updated by JS */
+      --cell-font:16px;    /* updated by JS */
+      --cellSize:32px;     /* per-cell size for gradients, updated by JS */
+      --line:1px;          /* 1 device pixel in CSS px (set in JS) */
+    }
+    html,body{height:100%}
+    body{font-family:'Montserrat',system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#f9fafb;color:#1f2937}
+
+    /* HEADER */
+    header{background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.08);padding:1rem;text-align:center;position:relative;}
+    .logo-container{display:flex;justify-content:center;align-items:center;margin-bottom:10px;}
+    .logo-container .letter-box{width:40px;height:40px;margin:2px;display:flex;justify-content:center;align-items:center;background:#374151;color:#fff;font-size:1.2rem;font-weight:700;border-radius:6px;}
+    .welcome{font-size:.9rem;color:#6b7280}
+
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+    .headline{text-align:center;font-size:1.125rem;font-weight:700;color:#374151;margin:16px 0 8px;}
+
+    /* Target chips */
+    #targetWrap{width:100%;max-width:var(--gridW);margin:0 auto 8px;display:flex;justify-content:center;}
+    #target{display:inline-flex;gap:1px;background:var(--cell-bg);color:#fff;padding:2px;border-radius:6px;min-height:34px;align-items:center;}
+    #target span{width:30px;height:30px;display:grid;place-items:center;font-weight:800;border:1px solid rgba(255,255,255,.12);}
+
+    /* GRID */
+    #grid{
+      position:relative; display:grid;
+      grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(10,1fr);
+      background:#fff; border:var(--line) solid #0c4a3e; border-radius:8px; overflow:hidden;
+      width:var(--gridW); height:400px; margin:10px auto 8px;
+    }
+    #grid::after{
+      content:''; position:absolute; inset:0; pointer-events:none; z-index:5;
+      background:
+        repeating-linear-gradient(to right, transparent 0 calc(var(--cellSize) - var(--line)), rgba(255,255,255,.28) 0 var(--cellSize)),
+        repeating-linear-gradient(to bottom, transparent 0 calc(var(--cellSize) - var(--line)), rgba(255,255,255,.28) 0 var(--cellSize));
+    }
+    .cell{position:relative;background:var(--cell-bg);transition:transform .15s ease-out,opacity .15s ease-out;}
+    .cell.f{display:grid;place-items:center;color:#fff;font-weight:800;font-size:var(--cell-font);text-shadow:0 1px 1px rgba(0,0,0,.35);}
+    .cell.pop{transform:scale(1.15);opacity:0;}
+
+    /* Modal */
+    #over{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:50;}
+    .modal{background:#fff;border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.2);width:min(92%,520px);padding:18px;text-align:center;border:1px solid #e5e7eb;}
+    .btn{background:#1e3a8a;color:#fff;font-weight:700;padding:10px 16px;border-radius:10px;}
+    .btn.gray{background:#6b7280}
+    .btn:disabled{opacity:.6;cursor:not-allowed;}
+
+    /* Controls */
+    .controls{width:100%;max-width:calc(var(--gridW) - 2px);margin:8px auto 0;}
+    .arrow-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;}
+    .dir-btn{width:100%;aspect-ratio:1/1;min-width:56px;min-height:56px;display:flex;align-items:center;justify-content:center;background:#053a6b;color:#fff;border-radius:14px;font-weight:800;font-size:24px;}
+    @media (min-width:460px){.dir-btn{min-width:64px;min-height:64px;font-size:26px}}
+    @media (min-width:640px){.dir-btn{min-width:72px;min-height:72px;font-size:28px}}
+
+    .pill{background:#0c4a3e;color:#fff;font-weight:700;padding:6px 10px;border-radius:8px;text-align:center;}
+    #leaderboardList li{padding:.35rem .5rem;border-radius:.375rem;}
+    #leaderboardList li:nth-child(odd){background:#f3f4f6;}
+    #leaderboardList li:first-child{background:#d1fae5;font-weight:700;}
+
+    /* Share dropdown */
+    .share-menu-local{background:#fff;border:1px solid #e5e7eb;box-shadow:0 8px 24px rgba(0,0,0,.12);border-radius:.5rem;width:240px;padding:.5rem;z-index:3000;}
+    .share-menu-local button{width:100%;text-align:left;padding:.5rem .75rem;border-radius:.375rem;font-weight:600;}
+    .share-menu-local button:hover{background:#f3f4f6;}
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo-container" aria-label="BLITSTIEK">
+      <div class="letter-box">B</div><div class="letter-box">L</div>
+      <div class="letter-box">I</div><div class="letter-box">T</div>
+      <div class="letter-box">S</div><div class="letter-box">T</div>
+      <div class="letter-box">I</div><div class="letter-box">E</div>
+      <div class="letter-box">K</div>
+    </div>
+    <p class="welcome">Welkom terug, <span id="playerName" class="font-semibold text-green-700">Speler</span>!</p>
+  </header>
+
+  <main class="flex-1">
+    <div class="max-w-3xl mx-auto px-4 py-4">
+
+      <div class="headline">TEIKENWOORD:</div>
+      <div id="targetWrap"><div id="target"><span>—</span></div></div>
+
+      <!-- GAME card -->
+      <section class="card p-4">
+        <div class="relative">
+          <div id="grid"></div>
+
+          <!-- Success modal -->
+          <div id="over">
+            <div class="modal">
+              <p id="winMsg" class="mb-3 text-base"></p>
+              <div class="actions" style="display:flex;gap:.75rem;justify-content:center;margin-top:12px;">
+                <button id="modalShareBtn" type="button" class="btn">DEEL</button>
+                <button id="modalCloseBtn" type="button" class="btn gray">SLUIT</button>
+              </div>
+
+              <!-- share dropdown -->
+              <div id="shareMenu" class="hidden share-menu-local mx-auto mt-2">
+                <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
+                <div class="space-y-1">
+                  <button id="mWhatsApp" type="button">WhatsApp</button>
+                  <button id="mCopy" type="button">Kopieer skakel</button>
+                  <button id="mSystem" type="button">Stelsel-deel</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Arrows -->
+        <div class="controls mt-3">
+          <div class="arrow-row">
+            <button id="btnLeft"  class="dir-btn" aria-label="Links">◀</button>
+            <button id="btnDown"  class="dir-btn" aria-label="Laat val">▼</button>
+            <button id="btnRight" class="dir-btn" aria-label="Regs">▶</button>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="controls mt-3 flex items-center justify-center gap-2">
+          <button id="btnStart" class="btn">BEGIN</button>
+          <button id="btnPause" class="btn gray">POUSE</button>
+
+          <!-- Sticky share + its dropdown -->
+          <div class="relative">
+            <button id="stickyShareBtn" class="btn hidden">DEEL</button>
+            <div id="stickyShareMenu" class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
+              <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
+              <div class="space-y-1">
+                <button id="sWhatsApp" type="button">WhatsApp</button>
+                <button id="sCopy" type="button">Kopieer skakel</button>
+                <button id="sSystem" type="button">Stelsel-deel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timers -->
+        <div class="controls grid grid-cols-2 gap-2 mt-3">
+          <div id="timeBox" class="pill">Jou tyd: <b>00:00</b></div>
+          <div id="bestBox" class="pill">Beste tyd: <b>--:--</b></div>
+        </div>
+
+        <p id="authNote" class="hidden mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2 controls">
+          Meld aan om jou tyd op die leierbord te stoor.
+        </p>
+      </section>
+
+      <!-- HOE OM TE SPEEL -->
+      <section class="mt-4 bg-white rounded shadow p-4">
+        <h2 class="text-xl font-bold mb-2">HOE OM TE SPEEL</h2>
+        <ol class="space-y-3 text-gray-700 leading-relaxed">
+          <li>
+            <p class="font-semibold">1. Doel</p>
+            <p>Probeer om die <strong>teikenwoord</strong> so vinnig as moontlik te vorm. Nuwe woord elke dag.</p>
+          </li>
+          <li>
+            <p class="font-semibold">2. Kontroles</p>
+            <p><strong>Toetsbord:</strong> Pyle links/regs; <strong>spasie</strong> laat val.</p>
+            <p><strong>Raakskerm:</strong> Gebruik die pyltjies.</p>
+          </li>
+          <li>
+            <p class="font-semibold">3. Leierbord</p>
+            <p>Die <strong>10 vinnigste tye</strong> verskyn hieronder. Dieselfde speler kan verskeie plekke inneem.</p>
+          </li>
+        </ol>
+      </section>
+
+      <!-- LEADERBOARD -->
+      <section class="card mt-6 p-4">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-xl font-bold">Vandag se bestes:</h2>
+        </div>
+        <ul id="leaderboardList" class="text-gray-700 text-left"><li>Laai...</li></ul>
+      </section>
+    </div>
+  </main>
+
+  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
+    &copy; 2025 Kriptiek. Alle regte voorbehou. |
+    <a href="/index.html" class="underline">Tuis</a> |
+    <a href="/profile.html" class="underline">My profiel</a> |
+    <a href="/forum.html" class="underline">Gesels saam</a> |
+    <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
+    <a href="/terms.html" class="underline">Voorwaardes</a> |
+    <a href="/faq.html" class="underline">Gereelde vrae</a> |
+    <a href="/about.html" class="underline">Oor Kriptiek</a> |
+    <a href="/contact.html" class="underline">Kontak ons</a>
+  </footer>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
+    import {
+      getFirestore, serverTimestamp, doc, getDoc, setDoc,
+      collection, query, orderBy, limit, getDocs, onSnapshot, where
+    } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
+
+    /* ---- Firebase ---- */
+    const firebaseConfig = {
+      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+      authDomain: "kriptiek-c9ea2.firebaseapp.com",
+      projectId: "kriptiek-c9ea2",
+      storageBucket: "kriptiek-c9ea2.appspot.com",
+      messagingSenderId: "620450620939",
+      appId: "1:620450620939:web:e93a18ac23b53b33db890e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    /* ---- DOM ---- */
+    const playerNameEl = document.getElementById('playerName');
+    const targetEl   = document.getElementById('target');
+    const gridEl     = document.getElementById('grid');
+    const over       = document.getElementById('over');
+    const winMsg     = document.getElementById('winMsg');
+    const modalShareBtn = document.getElementById('modalShareBtn');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+    const shareMenu  = document.getElementById('shareMenu');
+
+    const lbList     = document.getElementById('leaderboardList');
+    const timeText   = document.querySelector('#timeBox b');
+    const bestText   = document.querySelector('#bestBox b');
+    const authNote   = document.getElementById('authNote');
+
+    const btnLeft = document.getElementById('btnLeft');
+    const btnRight= document.getElementById('btnRight');
+    const btnDown = document.getElementById('btnDown');
+    const btnStart= document.getElementById('btnStart');
+    const btnPause= document.getElementById('btnPause');
+
+    const stickyShareBtn   = document.getElementById('stickyShareBtn');
+    const stickyShareMenu  = document.getElementById('stickyShareMenu');
+    const sWA   = document.getElementById('sWhatsApp');
+    const sCopy = document.getElementById('sCopy');
+    const sSys  = document.getElementById('sSystem');
+
+    const mWA   = document.getElementById('mWhatsApp');
+    const mCopy = document.getElementById('mCopy');
+    const mSys  = document.getElementById('mSystem');
+
+    /* ---- Helpers ---- */
+    const pad = n => String(n).padStart(2,'0');
+    const fmt = s => s==null ? '--:--' : `${pad(Math.floor(s/60))}:${pad(s%60)}`;
+    const todayISO = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+    const qs = new URLSearchParams(location.search);
+    const explicitId = qs.get('gameId');
+
+    const shareKey = gid => `blitstiekShare:${gid}`;
+    let stickyPayload = null;
+
+    function shareTextFrom(dataOverride){
+      const url = new URL(location.href);
+      if (GAME_ID) url.searchParams.set('gameId', GAME_ID);
+      const timeStr = fmt((dataOverride?.time ?? t));
+      const word    = dataOverride?.target || TARGET || '—';
+      return `Ek het ${word} in ${timeStr} op BLITSTIEK voltooi! Probeer hier: ${url.toString()}`;
+    }
+    function toggleStickyShareMenu(){ stickyShareMenu.classList.toggle('hidden'); }
+    function openWhatsApp(text){
+      const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+      const w = window.open(url,'_blank','noopener,noreferrer');
+      if(!w && navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>alert("Skakel gekopieer!")); }
     }
 
-    // --- admins ---
-    match /admins/{uid} {
-      allow read: if signedIn();
-      allow write: if false;
+    function enableStickyShare(payload){
+      stickyPayload = { time: Number(payload?.time ?? t), target: TARGET };
+      stickyShareBtn.classList.remove('hidden');
+      stickyShareBtn.onclick = (e)=>{ e.stopPropagation(); toggleStickyShareMenu(); };
+      try{
+        localStorage.setItem(shareKey(GAME_ID), JSON.stringify({ ...stickyPayload, at: Date.now() }));
+      }catch{}
+    }
+    function maybeEnableStickyShareFromStorage(){
+      try{
+        const raw = localStorage.getItem(shareKey(GAME_ID));
+        if(!raw) return;
+        const saved = JSON.parse(raw);
+        if(saved && Number.isFinite(saved.time) && saved.target){
+          stickyPayload = { time:saved.time, target:saved.target };
+          stickyShareBtn.classList.remove('hidden');
+          stickyShareBtn.onclick = (e)=>{ e.stopPropagation(); toggleStickyShareMenu(); };
+        }
+      }catch{}
     }
 
-    // --- games (DILEMMA) ---
-    match /games/{gameId} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
+    /* ---- Mechanics ---- */
+    const H = 10, W = 8;
+    const COLORS = ['#2196f3','#f44336','#4caf50','#ffc107','#9c27b0','#003366','#009688'];
+    const CONS   = 'BCDFGHJKLMNPQRSTVWXZ';
+    const VOWS   = 'AEIOUY';
 
-      match /leaderboard/{uid} {
-        allow read: if true;
-        allow create, update: if isSelf(uid) || isAdmin();
-        allow delete: if false;
+    /* ---- State ---- */
+    let user=null;
+    let currentUserName='Speler';
+    let GAME_ID=null, TARGET='';
+    let grid=Array.from({length:H},()=>Array(W).fill(null));
+    let cur=null, nxt=null;
+    let paused=false, ended=false, moving=false;
+    let t=0, tInt=null, gInt=null;
+    let lbUnsub=null;
+
+    /* ---- Username ---- */
+    async function resolveUserName(u){
+      try{
+        const uref = doc(db,'users',u.uid);
+        const snap = await getDoc(uref);
+        if(snap.exists() && snap.data().userName){
+          return String(snap.data().userName).slice(0,24);
+        }
+      }catch{}
+      if (u.displayName) return String(u.displayName).slice(0,24);
+      if (u.email){
+        const local = u.email.split('@')[0];
+        return local ? local.slice(0,24) : 'Speler';
+      }
+      return 'Speler';
+    }
+
+    /* ---- Auth ---- */
+    onAuthStateChanged(auth, async (u)=>{
+      user=u||null;
+      if(user){
+        currentUserName = await resolveUserName(user);
+        playerNameEl.textContent = currentUserName;
+        authNote.classList.add('hidden');
+        updatePersonalBestBox();  // show your best if signed in
+      } else {
+        currentUserName = 'Speler';
+        playerNameEl.textContent = currentUserName;
+        authNote.classList.remove('hidden');
+        bestText.textContent='--:--';
+      }
+    });
+
+    /* ---- Pixel-perfect grid sizing ---- */
+    function resizeGrid(){
+      const wrap = gridEl.parentElement;
+      const availCss = Math.min(320, Math.floor(wrap.clientWidth));
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      const toDp   = vCss => Math.round(vCss * dpr);
+      const toCss  = vDp  => vDp / dpr;
+      const snapDp = vDp  => Math.floor(vDp / 8) * 8;
+
+      const availDp   = toDp(availCss);
+      const snappedDp = Math.max(toDp(240), snapDp(availDp));
+      const quantW    = toCss(snappedDp);
+
+      const cellCss = Math.floor(quantW / 8);
+      const quantH  = cellCss * 10;
+
+      document.documentElement.style.setProperty('--cellSize', `${cellCss}px`);
+      const lineCss = 1 / dpr;
+      document.documentElement.style.setProperty('--line', `${lineCss}px`);
+
+      gridEl.style.width  = quantW + 'px';
+      gridEl.style.height = quantH + 'px';
+      document.documentElement.style.setProperty('--gridW', quantW + 'px');
+
+      const glyph = Math.max(15, Math.min(28, Math.round(cellCss * 0.50)));
+      document.documentElement.style.setProperty('--cell-font', glyph + 'px');
+    }
+    window.addEventListener('resize', resizeGrid);
+
+    /* ---- Grid rendering ---- */
+    function drawGrid(){
+      gridEl.innerHTML='';
+      for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+        const d=document.createElement('div'); d.className='cell'; d.dataset.x=x; d.dataset.y=y;
+        gridEl.appendChild(d);
+      }
+      resizeGrid();
+    }
+    function drawBlock(b){
+      if(!b||b.x<0||b.x>=W||b.y<0||b.y>=H) return;
+      const c=gridEl.querySelector(`.cell[data-x="${b.x}"][data-y="${b.y}"]`);
+      if(!c) return;
+      c.className='cell f'; c.style.background=b.color; c.textContent=b.letter;
+    }
+    function clearBlock(b){
+      if(!b) return;
+      const c=gridEl.querySelector(`.cell[data-x="${b.x}"][data-y="${b.y}"]`);
+      if(!c) return;
+      c.className='cell'; c.style.background='var(--cell-bg)'; c.textContent='';
+    }
+
+    const partOfTarget = L => TARGET.includes(L);
+    const collide = b => !b || b.x<0||b.x>=W||b.y>=H || (b.y>=0 && grid[b.y][b.x]);
+
+    function createBlock(){
+      const color = COLORS[Math.floor(Math.random()*COLORS.length)];
+      const letter = Math.random()<0.3 ? VOWS[Math.floor(Math.random()*VOWS.length)]
+                                       : CONS[Math.floor(Math.random()*CONS.length)];
+      return { color, letter, x:Math.floor(W/2), y:0 };
+    }
+
+    async function move(dx,dy){
+      if(!cur||paused||ended||moving) return;
+      moving = true;
+      clearBlock(cur);
+      const test = { ...cur, x:cur.x+dx, y:cur.y+dy };
+      if(!collide(test)){ cur=test; drawBlock(cur); }
+      else if(dy>0){ drawBlock(cur); place(); }
+      else{ drawBlock(cur); }
+      moving = false;
+    }
+    function hardDrop(){
+      if(!cur||paused||ended) return;
+      clearBlock(cur);
+      while(cur.y<H-1 && !collide({...cur,y:cur.y+1})) cur.y++;
+      place();
+    }
+
+    async function place(){
+      if(!cur||cur.y<0) return;
+      grid[cur.y][cur.x]={...cur}; drawBlock(cur);
+      await matchAndDrop();
+      await checkWin();
+      cur=nxt; nxt=createBlock();
+      if(cur) drawBlock(cur);
+    }
+
+    async function matchAndDrop(){
+      const del=new Set();
+      for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+        const a=grid[y][x]; if(!a||partOfTarget(a.letter)) continue;
+        for(const [dx,dy] of [[1,0],[0,1],[-1,0],[0,-1]]){
+          const nx=x+dx, ny=y+dy; if(nx<0||nx>=W||ny<0||ny>=H) continue;
+          const b=grid[ny][nx]; if(!b||partOfTarget(b.letter)) continue;
+          if(a.letter===b.letter || a.color===b.color){ del.add(`${x},${y}`); del.add(`${nx},${ny}`); }
+        }
+      }
+      if(!del.size) return;
+
+      await Promise.all(Array.from(del).map(key=>new Promise(res=>{
+        const [x,y]=key.split(',').map(Number);
+        const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+        if(c){ c.classList.add('pop'); setTimeout(()=>{ c.classList.remove('pop'); res(); },150);} else res();
+        grid[y][x]=null;
+      })));
+
+      for(let x=0;x<W;x++){
+        let wY=H-1;
+        for(let y=H-1;y>=0;y--){
+          if(grid[y][x]){
+            if(y!==wY){ grid[wY][x]=grid[y][x]; grid[y][x]=null; }
+            wY--;
+          }
+        }
+      }
+      for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+        const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+        c.className='cell'; c.style.background='var(--cell-bg)'; c.textContent='';
+        if(grid[y][x]) drawBlock({...grid[y][x],x,y});
       }
     }
 
-    // --- users ---
-    match /users/{uid} {
-      allow create: if isSelf(uid);
-      allow read, update: if isSelf(uid) || isAdmin();
-      allow delete: if false;
-    }
-
-    // --- registrations ---
-    match /registrations/{uid} {
-      allow create, update: if isSelf(uid) || isAdmin();
-      allow read: if isSelf(uid) || isAdmin();
-      allow delete: if false;
-    }
-
-    // --- private per-user gameplay ---
-    match /userGames/{uid}/plays/{gameId} {
-      allow read, create, update: if isSelf(uid);
-      allow delete: if false;
-    }
-
-    // --- forum posts & subcollections ---
-    match /forumPosts/{postId} {
-      allow read: if true;
-
-      allow create: if signedIn()
-                    && request.resource.data.authorId == request.auth.uid;
-
-      // full-edit by author
-      allow update, delete: if signedIn()
-                            && resource.data.authorId == request.auth.uid;
-
-      // Safe counter example kept from your version
-      allow update: if signedIn()
-                    && request.resource.data.diff(resource.data).changedKeys().hasOnly(['replyCount'])
-                    && request.resource.data.replyCount is int
-                    && resource.data.replyCount is int
-                    && request.resource.data.replyCount >= resource.data.replyCount
-                    && request.resource.data.replyCount <= resource.data.replyCount + 1;
-
-      match /replies/{replyId} {
-        allow read: if true;
-        allow create: if signedIn()
-                      && request.resource.data.authorId == request.auth.uid;
-        allow update, delete: if signedIn()
-                              && resource.data.authorId == request.auth.uid;
-      }
-
-      match /likes/{uid} {
-        allow read: if true;
-        allow create: if signedIn()
-                      && uid == request.auth.uid
-                      && !exists(/databases/$(database)/documents/forumPosts/$(postId)/likes/$(uid));
-        allow update, delete: if false;
+    async function checkWin(){
+      if(!TARGET) return;
+      for(let y=0;y<H;y++) for(let x=0;x<=W-TARGET.length;x++){
+        let ok=true;
+        for(let i=0;i<TARGET.length;i++){
+          const g=grid[y][x+i];
+          if(!g || g.letter!==TARGET[i]){ ok=false; break; }
+        }
+        if(ok){
+          for(let i=0;i<TARGET.length;i++){
+            const c=gridEl.querySelector(`.cell[data-x="${x+i}"][data-y="${y}"]`);
+            if(c) c.style.transform='scale(1.05)';
+          }
+          setTimeout(()=>end(true), 450);
+          return;
+        }
       }
     }
 
-    // --- words list ---
-    match /words/{wordId} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
+    /* ---- Timer & control ---- */
+    function setTime(v){ t=v; timeText.textContent=fmt(v); }
+    function start(){
+      ended=false; over.style.display='none'; shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden'); setTime(0);
+      grid=Array.from({length:H},()=>Array(W).fill(null));
+      drawGrid();
+      cur=createBlock(); nxt=createBlock(); drawBlock(cur);
+      paused=false; btnPause.textContent='POUSE';
+      clearInterval(tInt); clearInterval(gInt);
+      gInt=setInterval(()=>{ if(!paused && !ended) move(0,1); },1000);
+      tInt=setInterval(()=>{ if(!paused && !ended) setTime(t+1); },1000);
+    }
+    function togglePause(){ if(ended) return; paused=!paused; btnPause.textContent = paused ? 'HERVAT' : 'POUSE'; }
+
+    /* ---- Share ---- */
+    function shareText(){
+      const url = new URL(location.href); if (GAME_ID) url.searchParams.set('gameId', GAME_ID);
+      const time = fmt(t);
+      return `Ek het ${TARGET||'—'} in ${time} op BLITSTIEK voltooi! Probeer hier: ${url.toString()}`;
+    }
+    function toggleShareMenu(){ shareMenu.classList.toggle('hidden'); }
+    modalShareBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleShareMenu(); });
+
+    document.addEventListener('click', (e)=>{
+      if(shareMenu && !shareMenu.contains(e.target) && e.target!==modalShareBtn){ shareMenu.classList.add('hidden'); }
+      if(stickyShareMenu && !stickyShareMenu.contains(e.target) && e.target!==stickyShareBtn){ stickyShareMenu.classList.add('hidden'); }
+    });
+    window.addEventListener('scroll',  ()=>{ shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden'); });
+    window.addEventListener('resize',  ()=>{ shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden'); });
+
+    mWA.onclick   = () => { openWhatsApp(shareText()); shareMenu.classList.add('hidden'); };
+    mCopy.onclick = async () => { try{ await navigator.clipboard.writeText(shareText()); alert('Skakel gekopieer!'); }catch{} shareMenu.classList.add('hidden'); };
+    mSys.onclick  = async () => { try{ if(navigator.share) await navigator.share({ text:shareText() }); else openWhatsApp(shareText()); }catch{} shareMenu.classList.add('hidden'); };
+
+    /* ---- Submissions ---- */
+    async function submitTimeToBoard(){
+      if(!user) return;
+
+      const name    = currentUserName.slice(0,24);
+      const newTime = Number(t);
+
+      const bestRef  = doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid); // per-user best
+      const boardCol = collection(db,'blitstiekGames', GAME_ID, 'board');          // global board (many per user)
+
+      // Maintain per-user "best"
+      try{
+        const bestSnap = await getDoc(bestRef);
+        const prev = bestSnap.exists() ? Number(bestSnap.data().time) : null;
+        if (prev == null || !Number.isFinite(prev) || newTime < prev){
+          await setDoc(bestRef, { uid:user.uid, userName:name, time:newTime, timestamp:serverTimestamp() }, { merge:true });
+        }
+      }catch(e){ console.warn('BEST_UPDATE_FAILED', e); }
+
+      // Append to global board (duplicates allowed)
+      try{
+        await setDoc(doc(boardCol), { uid:user.uid, userName:name, time:newTime, timestamp:serverTimestamp() });
+      }catch(e){ console.warn('BOARD_APPEND_FAILED', e); }
     }
 
-    // --- BLITSTIEK ---
-    match /blitstiekGames/{gameId} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
+    function end(win){
+      ended=true; clearInterval(tInt); clearInterval(gInt);
+      if(!win) return;
 
-      // Per-user best (retained)
-      match /leaderboard/{uid} {
-        allow read: if true;
-        allow create, update: if isSelf(uid) || isAdmin();
-        allow delete: if false;
+      submitTimeToBoard();
+      enableStickyShare({ time: t, target: TARGET });
+
+      winMsg.innerHTML = `Veels geluk, <strong>${currentUserName}</strong>, jy het die woord in <strong>${fmt(t)}</strong> voltooi!`;
+      over.style.display='flex';
+      modalCloseBtn.onclick = ()=>{ over.style.display='none'; };
+      updatePersonalBestBox(); // refresh your best
+    }
+
+    /* ---- Personal best box (your best from board OR leaderboard) ---- */
+    async function updatePersonalBestBox(){
+      if(!user){ bestText.textContent='--:--'; return; }
+      try{
+        // Prefer board (min time for this uid)
+        const qy = query(
+          collection(db,'blitstiekGames', GAME_ID, 'board'),
+          where('uid','==', user.uid),
+          orderBy('time','asc'),
+          limit(1)
+        );
+        const snap = await getDocs(qy);
+        if(!snap.empty){
+          const v = snap.docs[0].data();
+          bestText.textContent = fmt(Number(v.time));
+          return;
+        }
+      }catch(e){ console.warn('PERSONAL_FROM_BOARD_FAILED', e); }
+
+      // Fallback to per-user best doc (if exists)
+      try{
+        const me = await getDoc(doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid));
+        if(me.exists()){
+          const v = me.data();
+          bestText.textContent = fmt(Number(v.time));
+          return;
+        }
+      }catch(e){ console.warn('PERSONAL_FROM_LEGACY_FAILED', e); }
+
+      bestText.textContent='--:--';
+    }
+
+    /* ---- LIVE Leaderboard: top 10 overall (duplicates allowed) ---- */
+    function startLiveLeaderboard(){
+      if(lbUnsub){ lbUnsub(); lbUnsub=null; }
+      const qy = query(collection(db,'blitstiekGames', GAME_ID, 'board'), orderBy('time','asc'), limit(10));
+      lbUnsub = onSnapshot(qy, (snap)=>{
+        lbList.innerHTML='';
+        if(snap.empty){
+          lbList.innerHTML = `<li class="bg-green-100 font-medium">Jy kan eerste op die leierbord wees!</li>`;
+          return;
+        }
+        let rank=1;
+        snap.forEach(docSnap=>{
+          const v = docSnap.data()||{};
+          const li=document.createElement('li');
+          li.innerHTML = `<strong>${rank}.</strong> <strong>${(v.userName||'Onbekend')}</strong>: ${fmt(Number(v.time))}`;
+          lbList.appendChild(li);
+          rank++;
+        });
+      }, (err)=>{
+        console.warn('Leaderboard stream error:', err);
+        lbList.innerHTML = `<li class="text-red-600">Kon nie leierbord laai nie.</li>`;
+      });
+    }
+
+    /* ---- Resolver ---- */
+    async function resolveGameId(){
+      if (explicitId) return explicitId;
+      const todayId = `Game${todayISO()}`;
+      try {
+        const todaySnap = await getDoc(doc(db,'blitstiekGames',todayId));
+        if (todaySnap.exists()) return todayId;
+      } catch {}
+      try {
+        const gamesRef = collection(db,'blitstiekGames');
+        let q = query(gamesRef, orderBy('createdAt','desc'), limit(1));
+        const qs = await getDocs(q);
+        if (!qs.empty) return qs.docs[0].id;
+      } catch {}
+      return null;
+    }
+
+    /* ---- Load game ---- */
+    async function loadGame(){
+      GAME_ID = await resolveGameId();
+
+      if(!GAME_ID){
+        targetEl.innerHTML = `<span>—</span>`;
+        drawGrid();
+        lbList.innerHTML = `<li class="text-red-600">Geen spel beskikbaar nie.</li>`;
+        return;
+      }
+      const snap = await getDoc(doc(db,'blitstiekGames',GAME_ID));
+      if(!snap.exists()){
+        targetEl.innerHTML = `<span>—</span>`;
+        drawGrid();
+        lbList.innerHTML = `<li class="text-red-600">Kon nie spel laai nie.</li>`;
+        return;
       }
 
-      // NEW: Global board (duplicates allowed)
-      match /board/{entryId} {
-        allow read: if true;
-        allow create: if signedIn()
-                      && request.resource.data.uid == request.auth.uid
-                      && request.resource.data.userName is string
-                      && request.resource.data.time is int
-                      && request.resource.data.time >= 0;
-        allow update: if false;
-        allow delete: if isAdmin();
+      const data=snap.data();
+      TARGET=(data.word||'').toUpperCase();
+
+      targetEl.innerHTML='';
+      (TARGET || '—').split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
+
+      grid = Array.from({length:H},()=>Array(W).fill(null));
+      drawGrid();
+
+      // Sticky share restore
+      maybeEnableStickyShareFromStorage();
+      if(user){
+        try{
+          const me = await getDoc(doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid));
+          if(me.exists()){
+            const v = me.data();
+            enableStickyShare({ time: v.time, target: TARGET });
+          }
+        }catch{}
+        updatePersonalBestBox();
       }
+
+      startLiveLeaderboard();
     }
 
-    // --- deny all else ---
-    match /{document=**} {
-      allow read, write: if false;
-    }
-  }
-}
+    /* ---- Controls ---- */
+    btnStart.addEventListener('click', start);
+    btnPause.addEventListener('click', ()=>togglePause());
+    btnLeft.addEventListener('click', ()=>move(-1,0));
+    btnRight.addEventListener('click',()=>move(1,0));
+    btnDown.addEventListener('click', ()=>{ move(0,1); /* or hardDrop(); */ });
+
+    // Sticky share menu actions
+    sWA.onclick   = () => { openWhatsApp(shareTextFrom(stickyPayload)); stickyShareMenu.classList.add('hidden'); };
+    sCopy.onclick = async () => { try{ await navigator.clipboard.writeText(shareTextFrom(stickyPayload)); alert('Skakel gekopieer!'); }catch{} stickyShareMenu.classList.add('hidden'); };
+    sSys.onclick  = async () => {
+      try{
+        if(navigator.share){ await navigator.share({ text: shareTextFrom(stickyPayload) }); }
+        else { openWhatsApp(shareTextFrom(stickyPayload)); }
+      }catch{}
+      stickyShareMenu.classList.add('hidden');
+    };
+
+    document.addEventListener('keydown', (e)=>{
+      if(e.key==='ArrowLeft') move(-1,0);
+      if(e.key==='ArrowRight') move(1,0);
+      if(e.key==='ArrowDown') move(0,1);
+      if(e.key===' ') { e.preventDefault(); /* hardDrop(); */ move(0,1); }
+    });
+
+    /* ---- Init ---- */
+    await loadGame();
+  </script>
+</body>
+</html>
