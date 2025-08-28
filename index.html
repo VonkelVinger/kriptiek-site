@@ -212,6 +212,18 @@
         archiveBtn.textContent = "VORIGE DILEMMAS";
         archiveBtn.className = "bg-[#1e3a8a] text-white px-4 py-2 rounded transition transform hover:scale-105 duration-300";
 
+const playBtn = document.createElement('a');
+        playBtn.id = "blitstoday-link";
+        playBtn.href = "#";
+        playBtn.textContent = "VANDAG SE BLITSTIEK";
+        playBtn.className = "bg-blue-600 text-white px-4 py-2 rounded transition transform hover:scale-105 duration-300";
+
+        const archiveBtn = document.createElement('a');
+        archiveBtn.href = "/blitstiek-argief.html";
+        archiveBtn.textContent = "VORIGE BLITSTIEKS";
+        archiveBtn.className = "bg-[#1e3a8a] text-white px-4 py-2 rounded transition transform hover:scale-105 duration-300";
+
+
         const buttonGroup = document.createElement('div');
         buttonGroup.className = 'flex flex-col sm:flex-row justify-center gap-4';
         buttonGroup.appendChild(playBtn);
@@ -298,4 +310,5 @@
   </script>
 </body>
 </html>
+
 
