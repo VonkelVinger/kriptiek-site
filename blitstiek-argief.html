@@ -2,29 +2,170 @@
 <html lang="af">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BLITSTIEK Argief – Kriptiek</title>
 
+  <!-- Favicon and App Icons -->
+  <link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=3">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png?v=3">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=3">
+  <link rel="manifest" href="/assets/site.webmanifest?v=3">
+
+  <!-- Styles -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
   <style>
-    body { font-family: 'Montserrat', sans-serif; background:#f3f4f6; }
-    .logo-container{position:relative;display:flex;justify-content:center;align-items:center;width:fit-content;margin:1rem auto;padding:1rem;border-radius:1rem;background:#fff}
-    .crossword-grid{display:grid;grid-template-columns:repeat(8,minmax(40px,1fr));gap:4px;position:relative;z-index:10}
-    .letter-box{width:50px;height:50px;display:flex;justify-content:center;align-items:center;background:#374151;color:#fff;font-weight:700;font-size:1.2rem;border:2px solid #1f2937;border-radius:.375rem;text-transform:uppercase}
-    .flipped-k{transform:scaleX(-1)}
-    .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.5rem}
-    .day-cell{background:#fff;border:1px solid #e5e7eb;border-radius:.5rem;min-height:70px;padding:.5rem;display:flex;flex-direction:column}
-    .day-num{font-size:.85rem;color:#6b7280}
-    .avail{border-color:#10b981;box-shadow:inset 0 0 0 2px #10b981}
-    .today{outline:3px solid #f59e0b}
-    .day-link{margin-top:auto}
-  </style>
+    body { font-family: 'Montserrat', sans-serif; background-color: #f8f5f2; }
 
-  <!-- Firebase -->
+    /* Calendar */
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      text-align: center;
+    }
+    .calendar-grid div { padding: 0.5rem; border-radius: 4px; }
+    .calendar-grid a {
+      display: block;
+      padding: 0.5rem;
+      border-radius: 4px;
+      font-weight: bold;
+      text-decoration: none;
+      transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+      box-sizing: border-box;
+      color: #fff;
+    }
+    .calendar-grid a:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .day-header { font-weight: bold; color: #374151; }
+
+    /* Legend swatches */
+    .legend-swatch {
+      width: 20px; height: 20px; border-radius: 0.375rem; display: inline-block; box-sizing: border-box;
+    }
+
+    /* Header/logo (matches index.html) */
+    .logo-container {
+      position: relative; display: flex; justify-content: center; align-items: center;
+      width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
+    }
+    .crossword-grid { display: grid; grid-template-columns: repeat(8, minmax(40px, 1fr)); gap: 4px; position: relative; z-index: 10; }
+    .letter-box {
+      width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
+      background-color: #374151; color: white; font-size: 1.8rem; font-weight: bold; border: 2px solid #1f2937; border-radius: 0.375rem;
+      text-transform: uppercase; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    }
+    .background-crossword {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
+      opacity: 0.5; z-index: 1; pointer-events: none;
+    }
+    .bg-letter {
+      display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none;
+    }
+
+    @media (max-width: 768px) {
+      .letter-box { width: 40px; height: 40px; font-size: 1.5rem; }
+      .crossword-grid { gap: 3px; }
+      .logo-container { padding: 1rem; }
+      .bg-letter { font-size: 1rem; }
+    }
+    @media (max-width: 480px) {
+      .letter-box { width: 35px; height: 35px; font-size: 1.2rem; }
+      .crossword-grid { gap: 2px; }
+      .logo-container { padding: 0.75rem; }
+      .bg-letter { font-size: 0.9rem; }
+    }
+  </style>
+</head>
+<body class="min-h-screen p-4 text-gray-100 bg-[#f8f5f2]">
+
+  <!-- Header/logo from index.html -->
+  <header class="bg-white shadow p-4 mb-6">
+    <div class="logo-container">
+      <div id="backgroundCrossword" class="background-crossword"></div>
+      <div class="crossword-grid">
+        <div class="letter-box" style="transform:scaleX(-1)">K</div>
+        <div class="letter-box" style="transform:scaleX(-1)">R</div>
+        <div class="letter-box">I</div>
+        <div class="letter-box" style="transform:scaleX(-1)">P</div>
+        <div class="letter-box">T</div>
+        <div class="letter-box">I</div>
+        <div class="letter-box" style="transform:scaleX(-1)">E</div>
+        <div class="letter-box">K</div>
+      </div>
+    </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const backgroundCrossword = document.getElementById('backgroundCrossword');
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        function rand() { return letters[Math.floor(Math.random() * letters.length)]; }
+        function drawGrid() {
+          backgroundCrossword.innerHTML = '';
+          const rows = Math.ceil(backgroundCrossword.offsetHeight / 30);
+          const cols = Math.ceil(backgroundCrossword.offsetWidth / 30);
+          const total = (rows * cols) || 300;
+          for (let i = 0; i < total; i++) {
+            const d = document.createElement('div');
+            d.className = 'bg-letter';
+            d.textContent = rand();
+            backgroundCrossword.appendChild(d);
+          }
+        }
+        drawGrid();
+        window.addEventListener('resize', drawGrid);
+      });
+    </script>
+  </header>
+
+  <section class="text-center mb-6">
+    <h1 class="text-3xl font-bold mb-3 text-[#374151]">Blitstiek-argief</h1>
+
+    <!-- Legend: Vandag orange; others unchanged (matches Dilemma) -->
+    <div class="max-w-3xl mx-auto text-sm text-gray-700 flex items-center justify-center gap-6">
+      <span class="inline-flex items-center gap-2">
+        <span class="legend-swatch" style="background-color:#ea580c;"></span>
+        Vandag
+      </span>
+      <span class="inline-flex items-center gap-2">
+        <span class="legend-swatch" style="background-color:#374151;"></span>
+        Gespeel
+      </span>
+      <span class="inline-flex items-center gap-2">
+        <span class="legend-swatch" style="background-color:#166534;"></span>
+        Nog nie gespeel nie
+      </span>
+    </div>
+  </section>
+
+  <main class="max-w-3xl mx-auto">
+    <!-- Calendars render here -->
+    <div id="archiveList" class="space-y-10"></div>
+    <div id="emptyMsg" class="text-center text-gray-500 hidden">Geen vorige speletjies om te wys nie.</div>
+
+    <!-- Month navigation BELOW the calendar (same spot as Dilemma) -->
+    <div id="monthNav" class="flex justify-between mt-6 hidden">
+      <button id="prevMonth" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-[#374151]">← Vorige maand</button>
+      <button id="nextMonth" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-[#374151]">Volgende maand →</button>
+    </div>
+  </main>
+
+  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500 mt-8">
+    &copy; 2025 Kriptiek. Alle regte voorbehou. |
+    <a href="/index.html" class="underline">Tuis</a> |
+    <a href="/profile.html" class="underline">My profiel</a> |
+    <a href="/forum.html" class="underline">Gesels saam</a> |
+    <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
+    <a href="/terms.html" class="underline">Voorwaardes</a> |
+    <a href="/faq.html" class="underline">Gereelde vrae</a> |
+    <a href="/about.html" class="underline">Oor Kriptiek</a> |
+    <a href="/contact.html" class="underline">Kontak ons</a>
+  </footer>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -37,169 +178,208 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
 
-    function fmtYYYYMMDD(d, tz='Africa/Johannesburg'){
-      const p = new Intl.DateTimeFormat('af-ZA',{ timeZone:tz, year:'numeric', month:'2-digit', day:'2-digit'})
-        .formatToParts(d).reduce((a,x)=> (a[x.type]=x.value,a),{});
-      return `${p.year}-${p.month}-${p.day}`;
+    // Colors (identical to Dilemma archive)
+    const ORANGE = "#ea580c"; // today
+    const BLUE   = "#374151"; // played
+    const GREEN  = "#166534"; // not played
+    const BASE   = "block px-2 py-2 rounded font-bold text-white";
+
+    let monthKeys = [];
+    let currentMonthIndex = 0;
+    let grouped = {};
+    let playedIds = new Set();
+
+    // Today's date (SAST) as YYYY-MM-DD
+    function todayKeySAST() {
+      const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Africa/Johannesburg',
+        year: 'numeric', month: '2-digit', day: '2-digit'
+      }).formatToParts(new Date());
+      const y = parts.find(p => p.type === 'year').value;
+      const m = parts.find(p => p.type === 'month').value;
+      const d = parts.find(p => p.type === 'day').value;
+      return `${y}-${m}-${d}`;
     }
-    function firstOfMonth(y,m){ return new Date(y, m, 1); }
-    function daysInMonth(y,m){ return new Date(y, m+1, 0).getDate(); }
-    function isSameDate(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+    const todayKey = todayKeySAST();
 
-    async function docExistsForDate(ymd) {
-      // Prefer GameYYYY-MM-DD in blitstiekGames
-      const ref1 = doc(db, 'blitstiekGames', `Game${ymd}`);
-      const s1 = await getDoc(ref1);
-      if (s1.exists()) return `Game${ymd}`;
-      // Fallback: plain date id
-      const ref2 = doc(db, 'blitstiekGames', ymd);
-      const s2 = await getDoc(ref2);
-      return s2.exists() ? ymd : null;
-    }
+    function renderMonth(monthKey) {
+      const container = document.getElementById("archiveList");
+      container.innerHTML = "";
 
-    async function buildCalendar(container, y, m){
-      container.innerHTML = '';
-      const head = document.getElementById('monthLabel');
-      const monthName = new Intl.DateTimeFormat('af-ZA', { month:'long', year:'numeric' }).format(new Date(y,m,1));
-      head.textContent = monthName[0].toUpperCase() + monthName.slice(1);
+      const [year, month] = monthKey.split("-");
+      const monthName = new Date(`${year}-${month}-01`).toLocaleString("af-ZA", { month: "long", year: "numeric" });
 
-      // Weekday headers (Ma–So)
-      const weekdayRow = document.createElement('div');
-      weekdayRow.className = 'calendar-grid mb-2';
-      ['Ma','Di','Wo','Do','Vr','Sa','So'].forEach(w=>{
-        const el = document.createElement('div');
-        el.className = 'text-center text-xs uppercase tracking-wide text-gray-500';
-        el.textContent = w;
-        weekdayRow.appendChild(el);
+      const section = document.createElement("div");
+
+      const heading = document.createElement("h2");
+      heading.className = "text-2xl font-semibold text-[#374151] mb-4";
+      heading.textContent = monthName;
+      section.appendChild(heading);
+
+      const calendar = document.createElement("div");
+      calendar.className = "calendar-grid";
+
+      // Day headers
+      ["Ma","Di","Wo","Do","Vr","Sa","So"].forEach(d => {
+        const header = document.createElement("div");
+        header.className = "day-header";
+        header.textContent = d;
+        calendar.appendChild(header);
       });
-      container.appendChild(weekdayRow);
 
-      const grid = document.createElement('div');
-      grid.className = 'calendar-grid bg-transparent';
+      // Prepare days
+      const firstDay = new Date(`${year}-${month}-01`);
+      const totalDays = new Date(year, month, 0).getDate();
+      const startDay = (firstDay.getDay() + 6) % 7; // Monday-start
 
-      const first = firstOfMonth(y,m);
-      const startIdx = (first.getDay()+6)%7; // Monday=0
-      const total = daysInMonth(y,m);
-      const today = new Date();
-
-      // leading blanks
-      for (let i=0;i<startIdx;i++){
-        const blank = document.createElement('div');
-        grid.appendChild(blank);
+      // Leading blanks
+      for (let i = 0; i < startDay; i++) {
+        calendar.appendChild(document.createElement("div"));
       }
 
-      for (let d=1; d<=total; d++){
-        const cell = document.createElement('div');
-        cell.className = 'day-cell';
+      // Day cells
+      for (let day = 1; day <= totalDays; day++) {
+        const dateStr = `${year}-${month}-${String(day).padStart(2, "0")}`;
+        const cell = document.createElement("div");
+        const game = (grouped[monthKey] || []).find(g => g.dateKey === dateStr);
 
-        const theDate = new Date(y,m,d);
-        const ymd = fmtYYYYMMDD(theDate);
+        if (game) {
+          const a = document.createElement("a");
+          a.href = `/blitstiek.html?gameId=${game.gameId}`;
+          a.textContent = day;
+          a.className = BASE;
 
-        const num = document.createElement('div');
-        num.className = 'day-num';
-        num.textContent = d;
-        cell.appendChild(num);
+          const isPlayed = playedIds.has(game.gameId);
+          const isToday = dateStr === todayKey;
 
-        // mark "today"
-        if (isSameDate(theDate, today)) {
-          cell.classList.add('today');
+          if (isToday) {
+            a.style.backgroundColor = ORANGE;  // today
+          } else if (isPlayed) {
+            a.style.backgroundColor = BLUE;    // played
+          } else {
+            a.style.backgroundColor = GREEN;   // not played
+          }
+
+          a.setAttribute(
+            "aria-label",
+            isToday
+              ? `Vandag – ${dateStr}`
+              : (isPlayed ? `Gespeel op ${dateStr}` : `Nie gespeel op ${dateStr}`)
+          );
+
+          cell.appendChild(a);
+        } else {
+          const span = document.createElement("span");
+          span.textContent = day;
+          span.className = "text-gray-400";
+          cell.appendChild(span);
         }
 
-        // lazy check availability, then add link
-        (async ()=>{
-          const id = await docExistsForDate(ymd);
-          if (id){
-            cell.classList.add('avail');
-            const a = document.createElement('a');
-            a.href = `/blitstiek.html?gameId=${encodeURIComponent(id)}`;
-            a.className = 'day-link mt-2 text-sm text-blue-700 underline';
-            a.textContent = 'Speel';
-            cell.appendChild(a);
-          }
-        })();
-
-        grid.appendChild(cell);
+        calendar.appendChild(cell);
       }
 
-      container.appendChild(grid);
+      section.appendChild(calendar);
+      container.appendChild(section);
 
-      // Controls BELOW the calendar (to match your updated Dilemma archive)
-      const controls = document.getElementById('calControls');
-      controls.innerHTML = '';
-      const prev = document.createElement('button');
-      prev.className = 'px-3 py-2 bg-gray-200 rounded hover:bg-gray-300';
-      prev.textContent = 'Vorige maand';
-      prev.onclick = ()=> navigateMonth(-1);
-
-      const next = document.createElement('button');
-      next.className = 'px-3 py-2 bg-gray-200 rounded hover:bg-gray-300';
-      next.textContent = 'Volgende maand';
-      next.onclick = ()=> navigateMonth(1);
-
-      controls.appendChild(prev);
-      controls.appendChild(next);
+      updateNavButtons();
     }
 
-    let curY = (new Date()).getFullYear();
-    let curM = (new Date()).getMonth();
-
-    async function navigateMonth(delta){
-      curM += delta;
-      if (curM < 0) { curM = 11; curY -= 1; }
-      if (curM > 11){ curM = 0;  curY += 1; }
-      const mount = document.getElementById('calMount');
-      await buildCalendar(mount, curY, curM);
+    function updateNavButtons() {
+      const prevBtn = document.getElementById("prevMonth");
+      const nextBtn = document.getElementById("nextMonth");
+      prevBtn.disabled = currentMonthIndex === monthKeys.length - 1;
+      nextBtn.disabled = currentMonthIndex === 0;
     }
 
-    document.addEventListener('DOMContentLoaded', async ()=>{
-      const mount = document.getElementById('calMount');
-      await buildCalendar(mount, curY, curM);
-    });
+    async function loadArchive() {
+      // Load all Blitstiek games from /blitstiekGames
+      const gamesCol = collection(db, "blitstiekGames");
+      const snap = await getDocs(gamesCol);
+
+      const entries = [];
+      snap.forEach(docSnap => {
+        const data = docSnap.data();
+        // Accept several metadata variants, else infer from id (strip "Game")
+        const dk = data?.dateKey || data?.date || docSnap.id.replace(/^Game/, "");
+        if (!dk) return;
+        if (dk <= todayKey) entries.push({ dateKey: dk, gameId: docSnap.id });
+      });
+
+      if (!entries.length) {
+        document.getElementById("emptyMsg").classList.remove("hidden");
+      }
+
+      // Group by YYYY-MM
+      grouped = {};
+      entries.forEach(({ dateKey, gameId }) => {
+        const [y, m] = dateKey.split("-");
+        const key = `${y}-${m}`;
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push({ dateKey, gameId });
+      });
+
+      // Month keys sorted desc; within a month sort by day asc
+      monthKeys = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+      monthKeys.forEach(k => grouped[k].sort((a, b) => a.dateKey.localeCompare(b.dateKey)));
+
+      // Get "played" IDs for signed-in user (robust: multiple possible paths + localStorage)
+      await new Promise(resolve => {
+        onAuthStateChanged(auth, async (user) => {
+          playedIds = new Set();
+
+          // LocalStorage fallback (if blitstiek.html sets keys like blitstiekPlayed:GameYYYY-MM-DD)
+          try {
+            for (let i = 0; i < localStorage.length; i++) {
+              const k = localStorage.key(i);
+              if (k && k.startsWith('blitstiekPlayed:')) {
+                playedIds.add(k.replace('blitstiekPlayed:', ''));
+              }
+            }
+          } catch {}
+
+          if (user) {
+            const tryPaths = [
+              `userBlitstiek/${user.uid}/plays`,     // primary (if you add it)
+              `userGames/${user.uid}/blitstiekPlays` // alternate
+            ];
+            for (const p of tryPaths) {
+              try {
+                const s = await getDocs(collection(db, p));
+                s.forEach(doc => playedIds.add(doc.id));
+              } catch {}
+            }
+          }
+          resolve();
+        });
+      });
+
+      // Initial render (most recent month)
+      if (monthKeys.length) {
+        renderMonth(monthKeys[currentMonthIndex]);
+      }
+
+      // Month nav events
+      document.getElementById("prevMonth").addEventListener("click", () => {
+        if (currentMonthIndex < monthKeys.length - 1) {
+          currentMonthIndex++;
+          renderMonth(monthKeys[currentMonthIndex]);
+        }
+      });
+      document.getElementById("nextMonth").addEventListener("click", () => {
+        if (currentMonthIndex > 0) {
+          currentMonthIndex--;
+          renderMonth(monthKeys[currentMonthIndex]);
+        }
+      });
+
+      if (monthKeys.length > 1) {
+        document.getElementById("monthNav").classList.remove("hidden");
+      }
+    }
+
+    loadArchive();
   </script>
-</head>
-<body class="min-h-screen flex flex-col">
-
-  <header class="bg-white shadow p-4">
-    <div class="logo-container">
-      <div class="crossword-grid">
-        <div class="letter-box flipped-k">K</div>
-        <div class="letter-box flipped-k">R</div>
-        <div class="letter-box">I</div>
-        <div class="letter-box flipped-k">P</div>
-        <div class="letter-box">T</div>
-        <div class="letter-box">I</div>
-        <div class="letter-box flipped-k">E</div>
-        <div class="letter-box">K</div>
-      </div>
-    </div>
-  </header>
-
-  <main class="flex-grow p-6 max-w-4xl mx-auto">
-    <h1 class="text-2xl font-bold text-center text-[#1e3a8a] mb-2">BLITSTIEK Argief</h1>
-
-    <!-- Colour key (matches your updated style: Vandag in orange) -->
-    <div class="flex justify-center gap-6 text-sm mb-4">
-      <div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded ring-2 ring-[#f59e0b]"></span> Vandag</div>
-      <div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-white border border-gray-300"></span> Geen spel</div>
-      <div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded bg-white border-2 border-emerald-500"></span> Speelbaar</div>
-    </div>
-
-    <!-- Month label -->
-    <div class="text-center font-semibold mb-3" id="monthLabel"> </div>
-
-    <!-- Calendar -->
-    <div id="calMount" class="mb-4"></div>
-
-    <!-- Controls BELOW the calendar -->
-    <div id="calControls" class="flex justify-center gap-4 mt-2"></div>
-  </main>
-
-  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
-    &copy; 2025 Kriptiek. Alle regte voorbehou. |
-    <a href="/index.html" class="underline">Tuis</a> |
-    <a href="/profile.html" class="underline">My profiel</a> |
-    <a href="/forum.html" class="underline">Gesels saam</a>
-  </footer>
 </body>
 </html>
