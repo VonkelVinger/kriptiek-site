@@ -38,13 +38,13 @@
     #target{ display:inline-flex; gap:1px; background:var(--cell-bg); color:#fff; padding:2px; border-radius:6px; }
     #target span{ width:30px; height:30px; display:grid; place-items:center; font-weight:800; border:1px solid rgba(255,255,255,.12); }
 
-    /* GRID — crisp lines via single device-pixel overlay */
+    /* GRID — crisp lines via single device-pixel overlay ABOVE the cells */
     #grid{
       position:relative;
       display:grid;
       grid-template-columns:repeat(8,1fr);
       grid-template-rows:repeat(10,1fr);
-      gap:0;                              /* lines are drawn by ::before overlay */
+      gap:0;                              /* lines are drawn by ::after overlay */
       background:#fff;
       border:var(--line) solid #0c4a3e;   /* 1 device-pixel border */
       border-radius:8px;
@@ -53,29 +53,29 @@
       height:400px;
       margin:10px auto 8px;
     }
-    /* Gridline overlay ABOVE the cells */
-#grid::after{
-  content:'';
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  z-index:5; /* <-- key: draw above .cell backgrounds */
-  background:
-    /* vertical lines */
-    repeating-linear-gradient(
-      to right,
-      transparent 0 calc(var(--cellSize) - var(--line)),
-      rgba(255,255,255,.28) 0 var(--cellSize)   /* was .18 */
-    ),
-    /* horizontal lines */
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0 calc(var(--cellSize) - var(--line)),
-      rgba(255,255,255,.28) 0 var(--cellSize)   /* was .18 */
-    );
-  background-position: 0 0, 0 0;
-  background-repeat: repeat;
-}
+    #grid::after{
+      content:'';
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      z-index:5; /* draw above .cell backgrounds */
+      background:
+        /* vertical lines */
+        repeating-linear-gradient(
+          to right,
+          transparent 0 calc(var(--cellSize) - var(--line)),
+          rgba(255,255,255,.28) 0 var(--cellSize)
+        ),
+        /* horizontal lines */
+        repeating-linear-gradient(
+          to bottom,
+          transparent 0 calc(var(--cellSize) - var(--line)),
+          rgba(255,255,255,.28) 0 var(--cellSize)
+        );
+      background-position: 0 0, 0 0;
+      background-repeat: repeat;
+    }
+
     .cell{ position:relative; background:var(--cell-bg); transition:transform .15s ease-out, opacity .15s ease-out; }
     .cell::after{ content:none; } /* remove inconsistent per-cell borders */
     .cell.f{ display:grid; place-items:center; color:#fff; font-weight:800; font-size:var(--cell-font); text-shadow:0 1px 1px rgba(0,0,0,.35); }
@@ -180,6 +180,8 @@
         <div class="controls mt-3 flex items-center justify-center gap-2">
           <button id="btnStart" class="btn">BEGIN</button>
           <button id="btnPause" class="btn gray">POUSE</button>
+          <!-- Sticky share button (hidden until a time exists) -->
+          <button id="stickyShareBtn" class="btn hidden">DEEL</button>
         </div>
 
         <!-- Timers -->
@@ -279,6 +281,7 @@
 
     const lbList     = document.getElementById('leaderboardList');
     const timeText   = document.querySelector('#timeBox b');
+    the_best:
     const bestText   = document.querySelector('#bestBox b');
     const authNote   = document.getElementById('authNote');
 
@@ -287,6 +290,8 @@
     const btnDown = document.getElementById('btnDown');
     const btnStart= document.getElementById('btnStart');
     const btnPause= document.getElementById('btnPause');
+
+    const stickyShareBtn = document.getElementById('stickyShareBtn');
 
     const mWA   = document.getElementById('mWhatsApp');
     const mCopy = document.getElementById('mCopy');
@@ -298,6 +303,52 @@
     const todayISO = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
     const qs = new URLSearchParams(location.search);
     const explicitId = qs.get('gameId');
+
+    const shareKey = gid => `blitstiekShare:${gid}`;
+
+    function shareTextFrom(dataOverride){
+      const url = new URL(location.href);
+      if (GAME_ID) url.searchParams.set('gameId', GAME_ID);
+      const timeStr = fmt((dataOverride?.time ?? t));
+      const word    = dataOverride?.target || TARGET || '—';
+      return `Ek het ${word} in ${timeStr} op BLITSTIEK voltooi! Probeer hier: ${url.toString()}`;
+    }
+
+    async function doShare(dataOverride){
+      const text = shareTextFrom(dataOverride);
+      try{
+        if(navigator.share){ await navigator.share({ text }); }
+        else{
+          const wa = `https://wa.me/?text=${encodeURIComponent(text)}`;
+          const w = window.open(wa,'_blank','noopener,noreferrer');
+          if(!w && navigator.clipboard){ await navigator.clipboard.writeText(text); alert('Skakel gekopieer!'); }
+        }
+      }catch{}
+    }
+
+    function enableStickyShare(payload){
+      stickyShareBtn.classList.remove('hidden');
+      stickyShareBtn.onclick = () => doShare(payload);
+      try{
+        localStorage.setItem(shareKey(GAME_ID), JSON.stringify({
+          time: Number(payload?.time ?? t),
+          target: TARGET,
+          at: Date.now()
+        }));
+      }catch{}
+    }
+
+    function maybeEnableStickyShareFromStorage(){
+      try{
+        const raw = localStorage.getItem(shareKey(GAME_ID));
+        if(!raw) return;
+        const saved = JSON.parse(raw);
+        if(saved && Number.isFinite(saved.time) && saved.target){
+          stickyShareBtn.classList.remove('hidden');
+          stickyShareBtn.onclick = () => doShare(saved);
+        }
+      }catch{}
+    }
 
     /* ---- Mechanics constants (Lexispeed) ---- */
     const H = 10, W = 8;
@@ -519,9 +570,7 @@
       const time = fmt(t);
       return `Ek het ${TARGET} in ${time} op BLITSTIEK voltooi! Probeer hier: ${url.toString()}`;
     }
-    function toggleShareMenu(){
-      shareMenu.classList.toggle('hidden');
-    }
+    function toggleShareMenu(){ shareMenu.classList.toggle('hidden'); }
     function openWhatsApp(text){
       const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
       const w = window.open(url,'_blank','noopener,noreferrer');
@@ -552,12 +601,10 @@
       if(!win) return; // no fail modal in Blitstiek
 
       submitTimeToBoard();
+      enableStickyShare({ time: t, target: TARGET });
 
-      // Message to match Dilemma pattern (time-based)
       winMsg.innerHTML = `Veels geluk, <strong>${currentUserName}</strong>, jy het die woord in <strong>${fmt(t)}</strong> voltooi!`;
-
       over.style.display='flex';
-
       modalCloseBtn.onclick = ()=>{ over.style.display='none'; };
     }
 
@@ -635,6 +682,20 @@
       grid = Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
 
+      // Sticky share restore (local)
+      maybeEnableStickyShareFromStorage();
+
+      // Optional Firestore confirmation (if signed in)
+      if(user){
+        try{
+          const my = await getDoc(doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid));
+          if(my.exists()){
+            const v = my.data();
+            enableStickyShare({ time: v.time, target: TARGET });
+          }
+        }catch{}
+      }
+
       // live leaderboard
       startLiveLeaderboard();
     }
@@ -645,6 +706,8 @@
     btnLeft.addEventListener('click', ()=>move(-1,0));
     btnRight.addEventListener('click',()=>move(1,0));
     btnDown.addEventListener('click', ()=>hardDrop());
+    stickyShareBtn.addEventListener('click', ()=>doShare()); // in case enabled without payload
+
     document.addEventListener('keydown', (e)=>{
       if(e.key==='ArrowLeft') move(-1,0);
       if(e.key==='ArrowRight') move(1,0);
