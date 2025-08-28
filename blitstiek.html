@@ -68,7 +68,7 @@
     .cell.pop{transform:scale(1.15);opacity:0;}
 
     /* Modal */
-    #over{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:50;display:none;}
+    #over{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:50;}
     .modal{background:#fff;border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.2);width:min(92%,520px);padding:18px;text-align:center;border:1px solid #e5e7eb;}
     .btn{background:#1e3a8a;color:#fff;font-weight:700;padding:10px 16px;border-radius:10px;}
     .btn.gray{background:#6b7280}
@@ -178,7 +178,7 @@
         </p>
       </section>
 
-      <!-- HOE OM TE SPEEL (Afrikaans, restored full text) -->
+      <!-- HOE OM TE SPEEL (Afrikaans, no emojis) -->
       <section class="mt-4 bg-white rounded shadow p-4">
         <h2 class="text-xl font-bold mb-2">HOE OM TE SPEEL</h2>
 
@@ -233,7 +233,7 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
     import {
-      getFirestore, serverTimestamp, doc, getDoc, setDoc,
+      getFirestore, serverTimestamp, doc, getDoc, setDoc, deleteDoc,
       collection, query, orderBy, limit, getDocs, onSnapshot, where
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
@@ -368,12 +368,10 @@
         currentUserName = await resolveUserName(user);
         playerNameEl.textContent = currentUserName;
         authNote.classList.add('hidden');
-        updatePersonalBestBox();
       } else {
         currentUserName = 'Speler';
         playerNameEl.textContent = currentUserName;
         authNote.classList.remove('hidden');
-        bestText.textContent='--:--';
       }
     });
 
@@ -554,41 +552,61 @@
     mCopy.onclick = async () => { try{ await navigator.clipboard.writeText(shareText()); alert('Skakel gekopieer!'); }catch{} shareMenu.classList.add('hidden'); };
     mSys.onclick  = async () => { try{ if(navigator.share) await navigator.share({ text:shareText() }); else openWhatsApp(shareText()); }catch{} shareMenu.classList.add('hidden'); };
 
-    /* ---- Overlay + submissions (GLOBAL board + per-user best) ---- */
-    async function submitTimeToBoard(){
-      if(!user) return;
+    /* ---- Overlay + leaderboard submit (Option B + cap 10) ---- */
+   async function submitTimeToBoard(){
+  if(!user) return;
 
-      const name    = currentUserName.slice(0,24);
-      const newTime = Number(t);
+  const name    = currentUserName.slice(0,24);
+  const newTime = Number(t);
 
-      const bestRef  = doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid); // per-user best
-      const boardCol = collection(db,'blitstiekGames', GAME_ID, 'board');           // global board (duplicates allowed)
+  const runsCol = collection(db,'blitstiekGames', GAME_ID, 'runs');           // all attempts
+  const bestRef = doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid); // per-user best
 
-      // 1) Maintain per-user "best"
-      try{
-        const bestSnap = await getDoc(bestRef);
-        const prev = bestSnap.exists() ? Number(bestSnap.data().time) : null;
-        if (prev == null || !Number.isFinite(prev) || newTime < prev){
-          await setDoc(bestRef, {
-            uid: user.uid,
-            userName: name,
-            time: newTime,
-            timestamp: serverTimestamp()
-          }, { merge:true });
-        }
-      }catch(e){ console.warn('BEST_UPDATE_FAILED', e); }
-
-      // 2) Append to GLOBAL board (duplicates allowed)
-      try{
-        await setDoc(doc(boardCol), {
-          uid: user.uid,
-          userName: name,
-          time: newTime,
-          timestamp: serverTimestamp()
-        });
-      }catch(e){ console.warn('BOARD_APPEND_FAILED', e); }
+  // 1) Update "best" first (so trimming cannot block it)
+  try {
+    const bestSnap = await getDoc(bestRef);
+    const prev = bestSnap.exists() ? Number(bestSnap.data().time) : null;
+    if (prev == null || !Number.isFinite(prev) || newTime < prev){
+      await setDoc(bestRef, {
+        userName: name,
+        time: newTime,
+        timestamp: serverTimestamp()
+      }, { merge:true });
     }
+  } catch (e) {
+    console.warn('BEST_UPDATE_FAILED', e);
+    // we still continue to log the run
+  }
 
+  // 2) Append this attempt
+  try {
+    await setDoc(doc(runsCol), {
+      uid: user.uid,
+      userName: name,
+      time: newTime,
+      timestamp: serverTimestamp()
+    });
+  } catch (e) {
+    console.warn('RUN_APPEND_FAILED', e);
+  }
+
+  // 3) Trim to newest 10 (don’t block best if index is missing)
+  try {
+    // This query may require a composite index: uid + timestamp desc
+    const qy = query(
+      runsCol,
+      where('uid','==', user.uid),
+      orderBy('timestamp','desc'),
+      limit(50)
+    );
+    const snap = await getDocs(qy);
+    const toDelete = snap.docs.slice(10); // keep 10 newest
+    await Promise.all(toDelete.map(d => deleteDoc(d.ref)));
+  } catch (e) {
+    console.warn('RUNS_TRIM_FAILED (likely missing index)', e);
+    // ok to skip; does not affect the leaderboard best
+  }
+}
     function end(win){
       ended=true; clearInterval(tInt); clearInterval(gInt);
       if(!win) return; // no fail modal in Blitstiek
@@ -601,10 +619,10 @@
       modalCloseBtn.onclick = ()=>{ over.style.display='none'; };
     }
 
-    /* ---- LIVE Leaderboard: read GLOBAL board (top 10, duplicates allowed) ---- */
+    /* ---- LIVE Leaderboard (name + time only, top 10) ---- */
     function startLiveLeaderboard(){
       if(lbUnsub) { lbUnsub(); lbUnsub=null; }
-      const qy=query(collection(db,'blitstiekGames',GAME_ID,'board'), orderBy('time','asc'), limit(10));
+      const qy=query(collection(db,'blitstiekGames',GAME_ID,'leaderboard'), orderBy('time','asc'), limit(10));
       lbUnsub = onSnapshot(qy, (snap)=>{
         lbList.innerHTML='';
         if(snap.empty){
@@ -627,7 +645,7 @@
       });
     }
 
-    /* ---- Dynamic resolver (gameId -> today -> latest) ---- */
+    /* ---- Dynamic resolver (gameId -> today -> latest active -> latest created) ---- */
     async function resolveGameId(){
       if (explicitId) return explicitId;
       const todayId = `Game${todayISO()}`;
@@ -685,7 +703,6 @@
             enableStickyShare({ time: v.time, target: TARGET });
           }
         }catch{}
-        updatePersonalBestBox?.();
       }
 
       // live leaderboard
