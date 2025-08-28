@@ -12,82 +12,111 @@
   <style>
     :root{
       --brand:#1e3a8a;
-      --cell-bg:#004d40;   /* cell & chip colour */
+      --cell-bg:#004d40;   /* background colour for cells & chips */
       --gridW:320px;       /* updated by JS */
       --cell-font:16px;    /* updated by JS */
       --cellSize:32px;     /* per-cell size for gradients, updated by JS */
-      --line:1px;          /* 1 device pixel in CSS px (set in JS) */
+      --line:1px;          /* line width in CSS px, updated by JS = 1/devicePixelRatio */
     }
     html,body{height:100%}
     body{font-family:'Montserrat',system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#f9fafb;color:#1f2937}
 
-    /* HEADER */
-    header{background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.08);padding:1rem;text-align:center;position:relative;}
-    .logo-container{display:flex;justify-content:center;align-items:center;margin-bottom:10px;}
-    .logo-container .letter-box{width:40px;height:40px;margin:2px;display:flex;justify-content:center;align-items:center;background:#374151;color:#fff;font-size:1.2rem;font-weight:700;border-radius:4px;}
-    .welcome{font-size:.9rem;color:#6b7280}
+    /* HEADER — simple block logo to echo Dilemma */
+    header { background:#fff; box-shadow:0 2px 4px rgba(0,0,0,.08); padding:1rem; text-align:center; position:relative; }
+    .logo-container { display:flex; justify-content:center; align-items:center; margin-bottom:10px; }
+    .logo-container .letter-box { width:40px; height:40px; margin:2px; display:flex; justify-content:center; align-items:center; background:#374151; color:#fff; font-size:1.2rem; font-weight:700; border-radius:4px; }
+    .welcome { font-size:.9rem; color:#6b7280 }
 
-    .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
-    .headline{text-align:center;font-size:1.125rem;font-weight:700;color:#374151;margin:16px 0 8px;}
+    /* Cards */
+    .card{ background:#fff; border:1px solid #e5e7eb; border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
+
+    /* Headline like Dilemma’s clue line */
+    .headline { text-align:center; font-size:1.125rem; font-weight:700; color:#374151; margin:16px 0 8px; }
 
     /* Target chips */
-    #targetWrap{width:100%;max-width:var(--gridW);margin:0 auto 8px;display:flex;justify-content:center;}
-    #target{display:inline-flex;gap:1px;background:var(--cell-bg);color:#fff;padding:2px;border-radius:6px;min-height:34px;align-items:center;}
-    #target span{width:30px;height:30px;display:grid;place-items:center;font-weight:800;border:1px solid rgba(255,255,255,.12);}
+    #targetWrap{ width:100%; max-width:var(--gridW); margin:0 auto 8px; display:flex; justify-content:center; }
+    #target{ display:inline-flex; gap:1px; background:var(--cell-bg); color:#fff; padding:2px; border-radius:6px; }
+    #target span{ width:30px; height:30px; display:grid; place-items:center; font-weight:800; border:1px solid rgba(255,255,255,.12); }
 
-    /* GRID — 1-device-px lines drawn ABOVE cells */
+    /* GRID — crisp lines via single device-pixel overlay */
     #grid{
       position:relative;
       display:grid;
       grid-template-columns:repeat(8,1fr);
       grid-template-rows:repeat(10,1fr);
-      gap:0;
+      gap:0;                              /* lines are drawn by ::before overlay */
       background:#fff;
-      border:var(--line) solid #0c4a3e;
+      border:var(--line) solid #0c4a3e;   /* 1 device-pixel border */
       border-radius:8px;
       overflow:hidden;
       width:var(--gridW);
       height:400px;
       margin:10px auto 8px;
     }
-    #grid::after{
-      content:'';
-      position:absolute; inset:0; pointer-events:none; z-index:5;
-      background:
-        repeating-linear-gradient(to right,
-          transparent 0 calc(var(--cellSize) - var(--line)),
-          rgba(255,255,255,.28) 0 var(--cellSize)),
-        repeating-linear-gradient(to bottom,
-          transparent 0 calc(var(--cellSize) - var(--line)),
-          rgba(255,255,255,.28) 0 var(--cellSize));
-      background-position:0 0,0 0; background-repeat:repeat;
-    }
-    .cell{position:relative;background:var(--cell-bg);transition:transform .15s ease-out,opacity .15s ease-out;}
-    .cell::after{content:none;}
-    .cell.f{display:grid;place-items:center;color:#fff;font-weight:800;font-size:var(--cell-font);text-shadow:0 1px 1px rgba(0,0,0,.35);}
-    .cell.pop{transform:scale(1.15);opacity:0;}
+    /* Gridline overlay ABOVE the cells */
+#grid::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:5; /* <-- key: draw above .cell backgrounds */
+  background:
+    /* vertical lines */
+    repeating-linear-gradient(
+      to right,
+      transparent 0 calc(var(--cellSize) - var(--line)),
+      rgba(255,255,255,.28) 0 var(--cellSize)   /* was .18 */
+    ),
+    /* horizontal lines */
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0 calc(var(--cellSize) - var(--line)),
+      rgba(255,255,255,.28) 0 var(--cellSize)   /* was .18 */
+    );
+  background-position: 0 0, 0 0;
+  background-repeat: repeat;
+}
+    .cell{ position:relative; background:var(--cell-bg); transition:transform .15s ease-out, opacity .15s ease-out; }
+    .cell::after{ content:none; } /* remove inconsistent per-cell borders */
+    .cell.f{ display:grid; place-items:center; color:#fff; font-weight:800; font-size:var(--cell-font); text-shadow:0 1px 1px rgba(0,0,0,.35); }
+    .cell.pop{ transform:scale(1.15); opacity:0; }
 
-    /* Modal */
-    #over{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:50;}
-    .modal{background:#fff;border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.2);width:min(92%,520px);padding:18px;text-align:center;border:1px solid #e5e7eb;}
-    .btn{background:#1e3a8a;color:#fff;font-weight:700;padding:10px 16px;border-radius:10px;}
-    .btn.gray{background:#6b7280}
+    /* Overlay + modal (match Dilemma) */
+    #over{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.55); z-index:50; }
+    .modal{ background:#fff; border-radius:16px; box-shadow:0 20px 50px rgba(0,0,0,.2); width:min(92%,520px); padding:18px; text-align:center; border:1px solid #e5e7eb; }
+    .modal h3{ font-weight:700; color:#111827; }
+    .modal p{ color:#374151; }
+    .modal .actions{ display:flex; gap:.75rem; justify-content:center; margin-top:12px; }
+    .btn{ background:#1e3a8a; color:#fff; font-weight:700; padding:10px 16px; border-radius:10px; }
+    .btn.gray{ background:#6b7280 }
+    .btn:disabled{ opacity:.6; cursor:not-allowed; }
 
     /* Controls */
-    .controls{width:100%;max-width:calc(var(--gridW) - 2px);margin:8px auto 0;}
-    .arrow-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;}
-    .dir-btn{width:100%;aspect-ratio:1/1;min-width:56px;min-height:56px;display:flex;align-items:center;justify-content:center;background:#053a6b;color:#fff;border-radius:14px;font-weight:800;font-size:24px;}
-    @media (min-width:460px){.dir-btn{min-width:64px;min-height:64px;font-size:26px}}
-    @media (min-width:640px){.dir-btn{min-width:72px;min-height:72px;font-size:28px}}
+    .controls { width:100%; max-width:calc(var(--gridW) - 2px); margin:8px auto 0; }
+    .arrow-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:.5rem; }
+    .dir-btn{
+      width:100%; aspect-ratio:1/1;
+      min-width:56px; min-height:56px;
+      display:flex; align-items:center; justify-content:center;
+      background:#053a6b; color:#fff; border-radius:14px; font-weight:800; font-size:24px;
+    }
+    @media (min-width:460px){ .dir-btn{ min-width:64px; min-height:64px; font-size:26px; } }
+    @media (min-width:640px){ .dir-btn{ min-width:72px; min-height:72px; font-size:28px; } }
 
-    .pill{background:#0c4a3e;color:#fff;font-weight:700;padding:6px 10px;border-radius:8px;text-align:center;}
-    #leaderboardList li{padding:.35rem .5rem;border-radius:.375rem;}
-    #leaderboardList li:nth-child(odd){background:#f3f4f6;}
-    #leaderboardList li:first-child{background:#d1fae5;font-weight:700;}
+    .pill{ background:#0c4a3e; color:#fff; font-weight:700; padding:6px 10px; border-radius:8px; text-align:center; }
 
-    .share-menu-local{background:#fff;border:1px solid #e5e7eb;box-shadow:0 8px 24px rgba(0,0,0,.12);border-radius:.5rem;width:240px;padding:.5rem;z-index:3000;}
-    .share-menu-local button{width:100%;text-align:left;padding:.5rem .75rem;border-radius:.375rem;font-weight:600;}
-    .share-menu-local button:hover{background:#f3f4f6;}
+    /* Leaderboard list */
+    #leaderboardList li{ padding:.35rem .5rem; border-radius:.375rem; }
+    #leaderboardList li:nth-child(odd){ background:#f3f4f6; }
+    #leaderboardList li:first-child{ background:#d1fae5; font-weight:700; }
+
+    /* Share dropdown — Dilemma-style (no emojis) */
+    .share-menu-local{
+      background:#fff; border:1px solid #e5e7eb; box-shadow:0 8px 24px rgba(0,0,0,.12);
+      border-radius:.5rem; width:240px; padding:.5rem; z-index:3000;
+    }
+    .share-menu-local button{ width:100%; text-align:left; padding:.5rem .75rem; border-radius:.375rem; font-weight:600; }
+    .share-menu-local button:hover{ background:#f3f4f6; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -107,23 +136,25 @@
   <main class="flex-1">
     <div class="max-w-3xl mx-auto px-4 py-4">
 
+      <!-- Headline like Dilemma -->
       <div class="headline">TEIKENWOORD:</div>
-      <div id="targetWrap"><div id="target"><span>—</span></div></div>
+      <div id="targetWrap"><div id="target"></div></div>
 
       <!-- GAME card -->
       <section class="card p-4">
         <div class="relative">
           <div id="grid"></div>
 
-          <!-- Success modal -->
+          <!-- Success modal (hidden) -->
           <div id="over">
             <div class="modal">
               <p id="winMsg" class="mb-3 text-base"></p>
-              <div class="actions" style="display:flex;gap:.75rem;justify-content:center;margin-top:12px;">
+              <div class="actions">
                 <button id="modalShareBtn" type="button" class="btn">DEEL</button>
                 <button id="modalCloseBtn" type="button" class="btn gray">SLUIT</button>
               </div>
 
+              <!-- share dropdown (appears under DEEL) -->
               <div id="shareMenu" class="hidden share-menu-local mx-auto mt-2">
                 <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
                 <div class="space-y-1">
@@ -149,7 +180,6 @@
         <div class="controls mt-3 flex items-center justify-center gap-2">
           <button id="btnStart" class="btn">BEGIN</button>
           <button id="btnPause" class="btn gray">POUSE</button>
-          <button id="stickyShareBtn" class="btn hidden">DEEL</button>
         </div>
 
         <!-- Timers -->
@@ -163,7 +193,36 @@
         </p>
       </section>
 
-      <!-- Leaderboard -->
+      <!-- HOE OM TE SPEEL (Afrikaans, no emojis) -->
+      <section class="mt-4 bg-white rounded shadow p-4">
+        <h2 class="text-xl font-bold mb-2">HOE OM TE SPEEL</h2>
+
+        <ol class="space-y-3 text-gray-700 leading-relaxed">
+          <li>
+            <p class="font-semibold">1. Doel</p>
+            <p>Probeer om die <strong>teikenwoord</strong> boaan so vinnig as moontlik te vorm deur die vallende blokke, elkeen met 'n lukraakte letter en kleur, links en regs te skuif voordat hulle onder land. Die teikenwoord moet in <strong>dieselfde horisontale ry</strong> gevorm word, sonder gapings of verkeerde letters. Laat val onnodige letters eenkant, of gebruik die blokreëls onder om hulle te laat verdwyn. Daar is <strong>elke dag ’n nuwe woord</strong>, wat soms minder maar nooit meer as 8 letters sal hê nie.</p>
+          </li>
+          <li>
+            <p class="font-semibold">2. Kontroles</p>
+            <p><strong>Fisieke toetsbord:</strong> Gebruik die pyltjies op jou toetsbord om die blokke links en regs te skuif, en die spasiebalk om die blok dadelik tot onder te laat val.</p>
+            <p><strong>Raakskerm:</strong> Gebruik die pyltjies op die skerm om die blokke links en regs te skuif, en die af-pyltjie om die blok dadelik tot onder te laat val.</p>
+          </li>
+          <li>
+            <p class="font-semibold">3. Wat gebeur wanneer blokke aan mekaar raak?</p>
+            <ul class="list-disc pl-6">
+              <li><strong>Dieselfde letter:</strong> As twee blokke met dieselfde LETTER langs of op mekaar tot stilstand kom, verdwyn albei.</li>
+              <li><strong>Dieselfde kleur:</strong> As twee blokke met dieselfde KLEUR langs of op mekaar tot stilstand kom, verdwyn albei.</li>
+              <li><strong>MAAR:</strong> 'n Blok met 'n letter wat in die teikenwoord is, verdwyn nooit nie.</li>
+            </ul>
+          </li>
+          <li>
+            <p class="font-semibold">4. Leierbord</p>
+            <p>As jou tyd vinnig genoeg is, verskyn jou naam op die <strong>leierbord</strong>. Gebruik <strong>DEEL</strong> om jou vriende uit te daag en jou tyd te wys.</p>
+          </li>
+        </ol>
+      </section>
+
+      <!-- LEADERBOARD -->
       <section class="card mt-6 p-4">
         <div class="flex items-center justify-between mb-2">
           <h2 class="text-xl font-bold">Vandag se bestes:</h2>
@@ -229,8 +288,6 @@
     const btnStart= document.getElementById('btnStart');
     const btnPause= document.getElementById('btnPause');
 
-    const stickyShareBtn = document.getElementById('stickyShareBtn');
-
     const mWA   = document.getElementById('mWhatsApp');
     const mCopy = document.getElementById('mCopy');
     const mSys  = document.getElementById('mSystem');
@@ -242,49 +299,7 @@
     const qs = new URLSearchParams(location.search);
     const explicitId = qs.get('gameId');
 
-    const shareKey = gid => `blitstiekShare:${gid}`;
-    function shareTextFrom(dataOverride){
-      const url = new URL(location.href);
-      if (GAME_ID) url.searchParams.set('gameId', GAME_ID);
-      const timeStr = fmt((dataOverride?.time ?? t));
-      const word    = dataOverride?.target || TARGET || '—';
-      return `Ek het ${word} in ${timeStr} op BLITSTIEK voltooi! Probeer hier: ${url.toString()}`;
-    }
-    async function doShare(dataOverride){
-      const text = shareTextFrom(dataOverride);
-      try{
-        if(navigator.share){ await navigator.share({ text }); }
-        else{
-          const wa = `https://wa.me/?text=${encodeURIComponent(text)}`;
-          const w = window.open(wa,'_blank','noopener,noreferrer');
-          if(!w && navigator.clipboard){ await navigator.clipboard.writeText(text); alert('Skakel gekopieer!'); }
-        }
-      }catch{}
-    }
-    function enableStickyShare(payload){
-      stickyShareBtn.classList.remove('hidden');
-      stickyShareBtn.onclick = () => doShare(payload);
-      try{
-        localStorage.setItem(shareKey(GAME_ID), JSON.stringify({
-          time: Number(payload?.time ?? t),
-          target: TARGET,
-          at: Date.now()
-        }));
-      }catch{}
-    }
-    function maybeEnableStickyShareFromStorage(){
-      try{
-        const raw = localStorage.getItem(shareKey(GAME_ID));
-        if(!raw) return;
-        const saved = JSON.parse(raw);
-        if(saved && Number.isFinite(saved.time) && saved.target){
-          stickyShareBtn.classList.remove('hidden');
-          stickyShareBtn.onclick = () => doShare(saved);
-        }
-      }catch{}
-    }
-
-    /* ---- Mechanics ---- */
+    /* ---- Mechanics constants (Lexispeed) ---- */
     const H = 10, W = 8;
     const COLORS = ['#2196f3','#f44336','#4caf50','#ffc107','#9c27b0','#003366','#009688'];
     const CONS   = 'BCDFGHJKLMNPQRSTVWXZ';
@@ -300,6 +315,7 @@
     let t=0, tInt=null, gInt=null;
     let lbUnsub=null;
 
+    /* ---- Username (prefer Firestore users/{uid}.userName) ---- */
     async function resolveUserName(u){
       try{
         const uref = doc(db,'users',u.uid);
@@ -316,6 +332,7 @@
       return 'Speler';
     }
 
+    /* ---- Auth ---- */
     onAuthStateChanged(auth, async (u)=>{
       user=u||null;
       if(user){
@@ -332,27 +349,39 @@
     /* ---- Pixel-perfect grid sizing ---- */
     function resizeGrid(){
       const wrap = gridEl.parentElement;
+
+      // Available CSS pixels, clamp to 320 like before
       const availCss = Math.min(320, Math.floor(wrap.clientWidth));
+
+      // Device pixel ratio (e.g. 1, 1.25, 1.5, 2 …)
       const dpr = Math.max(1, window.devicePixelRatio || 1);
-      const toDp   = vCss => Math.round(vCss * dpr);
-      const toCss  = vDp  => vDp / dpr;
-      const snapDp = vDp  => Math.floor(vDp / 8) * 8;
+
+      // Conversion helpers
+      const toDp   = vCss => Math.round(vCss * dpr);  // css px -> device px (rounded)
+      const toCss  = vDp  => vDp / dpr;               // device px -> css px
+      const snapDp = vDp  => Math.floor(vDp / 8) * 8; // multiple of 8 device px
 
       const availDp   = toDp(availCss);
-      const snappedDp = Math.max(toDp(240), snapDp(availDp));
+      const snappedDp = Math.max(toDp(240), snapDp(availDp)); // min width ~240 css px, snapped
       const quantW    = toCss(snappedDp);
 
+      // Integer cell size from snapped width
       const cellCss = Math.floor(quantW / 8);
       const quantH  = cellCss * 10;
 
+      // Variables for grid overlay
       document.documentElement.style.setProperty('--cellSize', `${cellCss}px`);
+
+      // 1 device pixel line width in CSS px
       const lineCss = 1 / dpr;
       document.documentElement.style.setProperty('--line', `${lineCss}px`);
 
+      // Existing variables you already use
       gridEl.style.width  = quantW + 'px';
       gridEl.style.height = quantH + 'px';
       document.documentElement.style.setProperty('--gridW', quantW + 'px');
 
+      // Scale letter glyph size relative to cell
       const glyph = Math.max(15, Math.min(28, Math.round(cellCss * 0.50)));
       document.documentElement.style.setProperty('--cell-font', glyph + 'px');
     }
@@ -380,13 +409,15 @@
       c.className='cell'; c.style.background='var(--cell-bg)'; c.textContent='';
     }
 
+    /* ---- Core mechanics ---- */
     const partOfTarget = L => TARGET.includes(L);
     const collide = b => !b || b.x<0||b.x>=W||b.y>=H || (b.y>=0 && grid[b.y][b.x]);
 
     function createBlock(){
       const color = COLORS[Math.floor(Math.random()*COLORS.length)];
-      const letter = Math.random()<0.3 ? VOWS[Math.floor(Math.random()*VOWS.length)]
-                                       : CONS[Math.floor(Math.random()*CONS.length)];
+      const letter = Math.random()<0.3
+        ? VOWS[Math.floor(Math.random()*VOWS.length)]
+        : CONS[Math.floor(Math.random()*CONS.length)];
       return { color, letter, x:Math.floor(W/2), y:0 };
     }
 
@@ -411,6 +442,7 @@
       if(!cur||cur.y<0) return;
       grid[cur.y][cur.x]={...cur}; drawBlock(cur);
       await matchAndDrop();
+      checkFail();
       await checkWin();
       cur=nxt; nxt=createBlock();
       if(cur) drawBlock(cur);
@@ -452,12 +484,9 @@
     }
 
     async function checkWin(){
-      if(!TARGET) return;
       for(let y=0;y<H;y++) for(let x=0;x<=W-TARGET.length;x++){
         let ok=true;
-        for(let i=0;i<TARGET.length;i++){
-          const g=grid[y][x+i]; if(!g||g.letter!==TARGET[i]){ ok=false; break; }
-        }
+        for(let i=0;i<TARGET.length;i++){ const g=grid[y][x+i]; if(!g||g.letter!==TARGET[i]){ ok=false; break; } }
         if(ok){
           for(let i=0;i<TARGET.length;i++){
             const c=gridEl.querySelector(`.cell[data-x="${x+i}"][data-y="${y}"]`);
@@ -468,7 +497,9 @@
         }
       }
     }
+    function checkFail(){ /* geen misluk-tevraag in Blitstiek */ }
 
+    /* ---- Timer & control ---- */
     function setTime(v){ t=v; timeText.textContent=fmt(v); }
     function start(){
       ended=false; over.style.display='none'; shareMenu.classList.add('hidden'); setTime(0);
@@ -482,12 +513,15 @@
     }
     function togglePause(){ if(ended) return; paused=!paused; btnPause.textContent = paused ? 'HERVAT' : 'POUSE'; }
 
+    /* ---- Share (modal-based, Dilemma-style) ---- */
     function shareText(){
       const url = new URL(location.href); if (GAME_ID) url.searchParams.set('gameId', GAME_ID);
       const time = fmt(t);
-      return `Ek het ${TARGET||'—'} in ${time} op BLITSTIEK voltooi! Probeer hier: ${url.toString()}`;
+      return `Ek het ${TARGET} in ${time} op BLITSTIEK voltooi! Probeer hier: ${url.toString()}`;
     }
-    function toggleShareMenu(){ shareMenu.classList.toggle('hidden'); }
+    function toggleShareMenu(){
+      shareMenu.classList.toggle('hidden');
+    }
     function openWhatsApp(text){
       const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
       const w = window.open(url,'_blank','noopener,noreferrer');
@@ -502,6 +536,7 @@
     mCopy.onclick = async () => { try{ await navigator.clipboard.writeText(shareText()); alert('Skakel gekopieer!'); }catch{} shareMenu.classList.add('hidden'); };
     mSys.onclick  = async () => { try{ if(navigator.share) await navigator.share({ text:shareText() }); else openWhatsApp(shareText()); }catch{} shareMenu.classList.add('hidden'); };
 
+    /* ---- Overlay + leaderboard submit ---- */
     async function submitTimeToBoard(){
       if(!user) return;
       try{
@@ -514,14 +549,19 @@
 
     function end(win){
       ended=true; clearInterval(tInt); clearInterval(gInt);
-      if(!win) return;
+      if(!win) return; // no fail modal in Blitstiek
+
       submitTimeToBoard();
-      enableStickyShare({ time: t, target: TARGET });
+
+      // Message to match Dilemma pattern (time-based)
       winMsg.innerHTML = `Veels geluk, <strong>${currentUserName}</strong>, jy het die woord in <strong>${fmt(t)}</strong> voltooi!`;
+
       over.style.display='flex';
+
       modalCloseBtn.onclick = ()=>{ over.style.display='none'; };
     }
 
+    /* ---- LIVE Leaderboard (name + time only, top 10) ---- */
     function startLiveLeaderboard(){
       if(lbUnsub) { lbUnsub(); lbUnsub=null; }
       const qy=query(collection(db,'blitstiekGames',GAME_ID,'leaderboard'), orderBy('time','asc'), limit(10));
@@ -547,20 +587,27 @@
       });
     }
 
+    /* ---- Dynamic resolver (gameId -> today -> latest active -> latest created) ---- */
     async function resolveGameId(){
       if (explicitId) return explicitId;
       const todayId = `Game${todayISO()}`;
-      try { const snap = await getDoc(doc(db,'blitstiekGames',todayId)); if(snap.exists()) return todayId; } catch {}
+      try {
+        const todaySnap = await getDoc(doc(db,'blitstiekGames',todayId));
+        if (todaySnap.exists()) return todayId;
+      } catch {}
       try {
         const gamesRef = collection(db,'blitstiekGames');
         let q = query(gamesRef, where('status','==','active'), orderBy('createdAt','desc'), limit(1));
-        let qs = await getDocs(q); if (!qs.empty) return qs.docs[0].id;
+        let qs = await getDocs(q);
+        if (!qs.empty) return qs.docs[0].id;
         q = query(gamesRef, orderBy('createdAt','desc'), limit(1));
-        qs = await getDocs(q); if (!qs.empty) return qs.docs[0].id;
+        qs = await getDocs(q);
+        if (!qs.empty) return qs.docs[0].id;
       } catch {}
       return null;
     }
 
+    /* ---- Load game ---- */
     async function loadGame(){
       GAME_ID = await resolveGameId();
 
@@ -581,26 +628,14 @@
       const data=snap.data();
       TARGET=(data.word||'').toUpperCase();
 
-      // target chips (fallback if blank)
+      // target chips
       targetEl.innerHTML='';
-      const word = TARGET || '—';
-      word.split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
+      TARGET.split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
 
       grid = Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
 
-      // Sticky share restore
-      maybeEnableStickyShareFromStorage();
-      if(user){
-        try{
-          const my = await getDoc(doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid));
-          if(my.exists()){
-            const v = my.data();
-            enableStickyShare({ time: v.time, target: TARGET });
-          }
-        }catch{}
-      }
-
+      // live leaderboard
       startLiveLeaderboard();
     }
 
@@ -610,8 +645,6 @@
     btnLeft.addEventListener('click', ()=>move(-1,0));
     btnRight.addEventListener('click',()=>move(1,0));
     btnDown.addEventListener('click', ()=>hardDrop());
-    stickyShareBtn.addEventListener('click', ()=>doShare());
-
     document.addEventListener('keydown', (e)=>{
       if(e.key==='ArrowLeft') move(-1,0);
       if(e.key==='ArrowRight') move(1,0);
