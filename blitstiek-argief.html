@@ -119,9 +119,9 @@
         <!-- Arrows -->
         <div class="controls mt-3">
           <div class="arrow-row">
-            <button id="btnLeft"  class="dir-btn" aria-label="Links">◀</button>
-            <button id="btnDown"  class="dir-btn" aria-label="Laat val">▼</button>
-            <button id="btnRight" class="dir-btn" aria-label="Regs">▶</button>
+            <button id="btnLeft"  class="dir-btn" aria-label="Links" tabindex="-1">◀</button>
+            <button id="btnDown"  class="dir-btn" aria-label="Laat val" tabindex="-1">▼</button>
+            <button id="btnRight" class="dir-btn" aria-label="Regs"  tabindex="-1">▶</button>
           </div>
         </div>
 
@@ -250,6 +250,9 @@
 
     const stickyShareBtn  = document.getElementById('stickyShareBtn');
     const stickyShareMenu = document.getElementById('stickyShareMenu');
+
+    const mWA=document.getElementById('mWhatsApp'), mCopy=document.getElementById('mCopy'), mSys=document.getElementById('mSystem');
+    const sWA=document.getElementById('sWhatsApp'), sCopy=document.getElementById('sCopy'), sSys=document.getElementById('sSystem');
 
     /* ---- Helpers ---- */
     const pad = n => String(n).padStart(2,'0');
@@ -497,7 +500,7 @@
     }
     function togglePause(){ if(ended) return; paused=!paused; btnPause.textContent = paused ? 'HERVAT' : 'POUSE'; }
 
-    /* ---- Overlay + submissions ---- */
+    /* ---- Submit + overlay ---- */
     async function submitTimeToBoard(){
       if(!user) return;
       const name    = currentUserName.slice(0,24);
@@ -506,7 +509,6 @@
       const bestRef  = doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid); // per-user best
       const boardCol = collection(db,'blitstiekGames', GAME_ID, 'board');          // global board (duplicates)
 
-      // per-user best
       try{
         const bestSnap = await getDoc(bestRef);
         const prev = bestSnap.exists() ? Number(bestSnap.data().time) : null;
@@ -515,7 +517,6 @@
         }
       }catch(e){ console.warn('BEST_UPDATE_FAILED', e); }
 
-      // global board (allow many per user)
       try{
         await setDoc(doc(boardCol), { uid:user.uid, userName:name, time:newTime, timestamp:serverTimestamp() });
       }catch(e){ console.warn('BOARD_APPEND_FAILED', e); }
@@ -549,7 +550,7 @@
       bestText.textContent='--:--';
     }
 
-    /* ---- Leaderboard rendering (with fallback so it never sticks on "Laai…") ---- */
+    /* ---- Leaderboard (with fallback) ---- */
     function renderList(rows){
       lbList.innerHTML='';
       if(!rows || rows.length===0){
@@ -574,9 +575,7 @@
     }
 
     function startLiveLeaderboard(){
-      // immediately show a neutral placeholder instead of leaving "Laai..."
       lbList.innerHTML = `<li class="bg-green-50">Geen inskrywings gelaai nog…</li>`;
-
       if(lbUnsub){ lbUnsub(); lbUnsub=null; }
       const qy=query(collection(db,'blitstiekGames',GAME_ID,'board'), orderBy('time','asc'), limit(10));
       lbUnsub = onSnapshot(qy, (snap)=>{
@@ -629,7 +628,6 @@
       const data=snap.data();
       TARGET=(data.word||'').toUpperCase();
 
-      // chips
       targetEl.innerHTML='';
       (TARGET || '—').split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
 
@@ -648,25 +646,30 @@
       startLiveLeaderboard();
     }
 
-    /* ---- Controls ---- */
+    /* ---- Controls (fixed) ---- */
+    function bindDirButton(el, handler){
+      ['touchstart','click'].forEach(ev=>{
+        el.addEventListener(ev, (e)=>{ e.preventDefault(); handler(); }, { passive:false });
+      });
+    }
+    bindDirButton(btnLeft,  ()=>move(-1,0));
+    bindDirButton(btnRight, ()=>move(1,0));
+    bindDirButton(btnDown,  ()=>hardDrop()); // full hard drop on on-screen ▼
+
     btnStart.addEventListener('click', start);
     btnPause.addEventListener('click', ()=>togglePause());
-    btnLeft .addEventListener('click', ()=>move(-1,0));
-    btnRight.addEventListener('click', ()=>move(1,0));
-    btnDown .addEventListener('click', ()=>hardDrop());          // FULL hard drop on on-screen ▼ (per instructions)
 
-    // keyboard
-    document.addEventListener('keydown', (e)=>{
-      if(e.key==='ArrowLeft')  move(-1,0);
-      if(e.key==='ArrowRight') move(1,0);
-      if(e.key==='ArrowDown')  hardDrop();                       // FULL hard drop on Arrow Down (per instructions)
-      if(e.key===' ') { e.preventDefault(); hardDrop(); }        // FULL hard drop on Space
-    });
+    window.addEventListener('keydown', (e)=>{
+      if (over.style.display === 'flex') return;
+      const k = e.key;
+      if (k === 'ArrowLeft' || k === 'a' || k === 'A') { e.preventDefault(); move(-1,0); return; }
+      if (k === 'ArrowRight'|| k === 'd' || k === 'D') { e.preventDefault(); move(1,0);  return; }
+      if (k === 'ArrowDown' || k === 's' || k === 'S' || k === ' ') {
+        e.preventDefault(); hardDrop(); return;
+      }
+    }, { passive:false });
 
     // share menus
-    const mWA=document.getElementById('mWhatsApp'), mCopy=document.getElementById('mCopy'), mSys=document.getElementById('mSystem');
-    const sWA=document.getElementById('sWhatsApp'), sCopy=document.getElementById('sCopy'), sSys=document.getElementById('sSystem');
-    const modalShareBtn=document.getElementById('modalShareBtn'), shareMenu=document.getElementById('shareMenu');
     modalShareBtn.addEventListener('click', (e)=>{ e.stopPropagation(); shareMenu.classList.toggle('hidden'); });
     document.addEventListener('click', (e)=>{
       if(shareMenu && !shareMenu.contains(e.target) && e.target!==modalShareBtn) shareMenu.classList.add('hidden');
