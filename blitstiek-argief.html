@@ -155,7 +155,7 @@
         </p>
       </section>
 
-      <!-- HOE OM TE SPEEL -->
+      <!-- HOE OM TE SPEEL (full, unchanged) -->
       <section class="mt-4 bg-white rounded shadow p-4">
         <h2 class="text-xl font-bold mb-2">HOE OM TE SPEEL</h2>
         <ol class="space-y-3 text-gray-700 leading-relaxed">
@@ -549,10 +549,16 @@
     /* ---- Personal best ---- */
     async function updatePersonalBestBox(){
       if(!user){ bestText.textContent='--:--'; return; }
+      // Prefer runs (has every attempt), then fallback
       try{
-        const qy = query(collection(db,'blitstiekGames', GAME_ID, 'board'), where('uid','==', user.uid), orderBy('time','asc'), limit(1));
-        const snap = await getDocs(qy);
-        if(!snap.empty){ bestText.textContent = fmt(Number(snap.docs[0].data().time)); return; }
+        const q1 = query(collection(db,'blitstiekGames', GAME_ID, 'runs'), where('uid','==', user.uid), orderBy('time','asc'), limit(1));
+        const s1 = await getDocs(q1);
+        if(!s1.empty){ bestText.textContent = fmt(Number(s1.docs[0].data().time)); return; }
+      }catch(e){}
+      try{
+        const q2 = query(collection(db,'blitstiekGames', GAME_ID, 'board'), where('uid','==', user.uid), orderBy('time','asc'), limit(1));
+        const s2 = await getDocs(q2);
+        if(!s2.empty){ bestText.textContent = fmt(Number(s2.docs[0].data().time)); return; }
       }catch(e){}
       try{
         const me = await getDoc(doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid));
@@ -575,41 +581,26 @@
       });
     }
 
-    /* Fallback that reads from runs instead of per-user leaderboard */
-    async function fallbackRunsTop10(){
-      try{
-        const qy = query(collection(db,'blitstiekGames', GAME_ID, 'runs'), orderBy('time','asc'), limit(10));
-        const snap = await getDocs(qy);
-        renderList(snap.docs.map(d=>d.data()||{}));
-      }catch(e){
-        lbList.innerHTML = `<li class="text-red-600">Kon nie leierbord laai nie.</li>`;
-      }
-    }
-
-    /* ---- Live leaderboard: try board first, then switch to runs ---- */
+    /* ---- Live leaderboard: ALWAYS stream from runs (all attempts) ---- */
     function startLiveLeaderboard(){
       lbList.innerHTML = `<li class="bg-green-50">Geen inskrywings gelaai nog…</li>`;
       if(lbUnsub){ lbUnsub(); lbUnsub=null; }
 
-      const boardQ = query(collection(db,'blitstiekGames',GAME_ID,'board'), orderBy('time','asc'), limit(10));
-      lbUnsub = onSnapshot(boardQ, (snap)=>{
-        const rows = snap.docs.map(d=>d.data()||{});
-        if (rows.length >= 1) {
-          renderList(rows);
-        } else {
-          // Switch to runs for this session
-          if(lbUnsub){ lbUnsub(); lbUnsub=null; }
-          const runsQ = query(collection(db,'blitstiekGames',GAME_ID,'runs'), orderBy('time','asc'), limit(10));
-          lbUnsub = onSnapshot(runsQ, (snap2)=>{
-            renderList(snap2.docs.map(d=>d.data()||{}));
-          }, (err2)=>{
-            console.warn('Leaderboard runs stream error:', err2);
-            fallbackRunsTop10();
-          });
-        }
+      const runsQ = query(collection(db,'blitstiekGames',GAME_ID,'runs'), orderBy('time','asc'), limit(10));
+      lbUnsub = onSnapshot(runsQ, (snap)=>{
+        renderList(snap.docs.map(d=>d.data()||{}));
       }, (err)=>{
-        console.warn('Leaderboard board stream error:', err);
-        fallbackRunsTop10();
+        console.warn('Leaderboard runs stream error:', err);
+        // final fallback: use board
+        (async()=>{
+          try{
+            const qy = query(collection(db,'blitstiekGames', GAME_ID, 'board'), orderBy('time','asc'), limit(10));
+            const s = await getDocs(qy);
+            renderList(s.docs.map(d=>d.data()||{}));
+          }catch(e){
+            lbList.innerHTML = `<li class="text-red-600">Kon nie leierbord laai nie.</li>`;
+          }
+        })();
       });
     }
 
@@ -685,7 +676,7 @@
     btnStart.addEventListener('click', start);
     btnPause.addEventListener('click', ()=>togglePause());
 
-    // Keyboard (works across browsers)
+    // Keyboard
     const handleKey = (e) => {
       if (over.style.display === 'flex') return;
       const k = e.key;
