@@ -209,7 +209,7 @@
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
     import {
       getFirestore, serverTimestamp, doc, getDoc, setDoc,
-      collection, query, orderBy, limit, getDocs, onSnapshot, where
+      collection, query, orderBy, limit, getDocs, onSnapshot, where, deleteDoc
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
     /* ---- Firebase ---- */
@@ -505,9 +505,11 @@
       const name    = currentUserName.slice(0,24);
       const newTime = Number(t);
 
-      const bestRef  = doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid); // per-user best
-      const boardCol = collection(db,'blitstiekGames', GAME_ID, 'board');          // global board (duplicates)
+      const bestRef  = doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid); // per-user best (single doc)
+      const boardCol = collection(db,'blitstiekGames', GAME_ID, 'board');          // global feed (many docs)
+      const runsCol  = collection(db,'blitstiekGames', GAME_ID, 'runs');           // per-user history (capped to 10)
 
+      // 1) Update single best
       try{
         const bestSnap = await getDoc(bestRef);
         const prev = bestSnap.exists() ? Number(bestSnap.data().time) : null;
@@ -516,9 +518,21 @@
         }
       }catch(e){ console.warn('BEST_UPDATE_FAILED', e); }
 
+      // 2) Append to global board (always)
       try{
         await setDoc(doc(boardCol), { uid:user.uid, userName:name, time:newTime, timestamp:serverTimestamp() });
       }catch(e){ console.warn('BOARD_APPEND_FAILED', e); }
+
+      // 3) Append to per-user history and keep only latest 10
+      try{
+        // add new run
+        await setDoc(doc(runsCol), { uid:user.uid, userName:name, time:newTime, timestamp:serverTimestamp() });
+        // fetch all this user's runs newest-first
+        const qy = query(runsCol, where('uid','==', user.uid), orderBy('timestamp','desc'));
+        const snap = await getDocs(qy);
+        const extras = snap.docs.slice(10); // keep first 10, drop the rest
+        await Promise.all(extras.map(d => deleteDoc(d.ref)));
+      }catch(e){ console.warn('RUNS_APPEND_OR_TRIM_FAILED', e); }
     }
 
     function end(win){
@@ -658,7 +672,7 @@
     btnStart.addEventListener('click', start);
     btnPause.addEventListener('click', ()=>togglePause());
 
-    // --- Keyboard handler now bound to BOTH window and document (fix) ---
+    // Keyboard: bind to both window and document
     const handleKey = (e) => {
       if (over.style.display === 'flex') return;
       const k = e.key;
