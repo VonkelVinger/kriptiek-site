@@ -307,6 +307,7 @@
     let GAME_ID=null, TARGET='';
     let grid=Array.from({length:H},()=>Array(W).fill(null));
     let cur=null, nxt=null;
+    let paused=false, ended=false, moving=false;
     let t=0, tInt=null, gInt=null;
     let lbUnsubRuns=null, lbUnsubBoard=null;
 
@@ -405,15 +406,18 @@
     }
 
     async function move(dx,dy){
-      if(!cur) return;
+      if(!cur||paused||ended||moving) return;
+      moving = true;
       clearBlock(cur);
       const test = { ...cur, x:cur.x+dx, y:cur.y+dy };
       if(!collide(test)){ cur=test; drawBlock(cur); }
       else if(dy>0){ drawBlock(cur); place(); }
       else{ drawBlock(cur); }
+      moving = false;
     }
+
     function hardDrop(){
-      if(!cur) return;
+      if(!cur||paused||ended) return;
       clearBlock(cur);
       while(cur.y<H-1 && !collide({...cur,y:cur.y+1})) cur.y++;
       place();
@@ -485,26 +489,37 @@
     /* ---- Timer & control ---- */
     function setTime(v){ t=v; timeText.textContent=fmt(v); }
     function start(){
-      over.style.display='none'; setTime(0);
+      ended=false; over.style.display='none'; shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden'); setTime(0);
       grid=Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
       cur=createBlock(); nxt=createBlock(); drawBlock(cur);
-      clearInterval(gInt); clearInterval(tInt);
-      gInt=setInterval(()=>move(0,1),1000);
-      tInt=setInterval(()=>setTime(t+1),1000);
-      btnPause.textContent='POUSE';
+      paused=false; btnPause.textContent='POUSE';
+      clearInterval(tInt); clearInterval(gInt);
+      gInt=setInterval(()=>{ if(!paused && !ended) move(0,1); },1000);
+      tInt=setInterval(()=>{ if(!paused && !ended) setTime(t+1); },1000);
     }
-    function togglePause(){ /* unchanged */ }
+    function togglePause(){ if(ended) return; paused=!paused; btnPause.textContent = paused ? 'HERVAT' : 'POUSE'; }
 
     /* ---- Submit + overlay ---- */
+    function makeAttemptId(uid){
+      try{
+        const rnd = new Uint32Array(2);
+        (crypto||window.crypto).getRandomValues(rnd);
+        return `${uid}_${Date.now()}_${rnd[0].toString(36)}${rnd[1].toString(36)}`;
+      }catch{
+        return `${uid}_${Date.now()}_${Math.random().toString(36).slice(2,10)}`;
+      }
+    }
+
     async function submitTimeToBoard(){
       if(!user) return;
       const name    = currentUserName.slice(0,24);
       const newTime = Math.round(Number(t) || 0);
 
-      const bestRef  = doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid);
-      const boardCol = collection(db,'blitstiekGames', GAME_ID, 'board');
-      const runsCol  = collection(db,'blitstiekGames', GAME_ID, 'runs');
+      const bestRef  = doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid); // per-user best
+      const boardCol = collection(db,'blitstiekGames', GAME_ID, 'board');          // global board
+      const runsCol  = collection(db,'blitstiekGames', GAME_ID, 'runs');           // per-attempt history
+      const attemptId = makeAttemptId(user.uid);
 
       // 1) Update single best
       try{
@@ -517,12 +532,12 @@
 
       // 2) Append to global board
       try{
-        await setDoc(doc(boardCol), { uid:user.uid, userName:name, time:newTime, timestamp:serverTimestamp() });
+        await setDoc(doc(boardCol), { uid:user.uid, userName:name, time:newTime, attemptId, timestamp:serverTimestamp() });
       }catch(e){ console.warn('BOARD_APPEND_FAILED', e); }
 
       // 3) Append to per-user history and keep only latest 10 (per user)
       try{
-        await setDoc(doc(runsCol), { uid:user.uid, userName:name, time:newTime, timestamp:serverTimestamp() });
+        await setDoc(doc(runsCol), { uid:user.uid, userName:name, time:newTime, attemptId, timestamp:serverTimestamp() });
         const qy = query(runsCol, where('uid','==', user.uid), orderBy('timestamp','desc'));
         const snap = await getDocs(qy);
         const extras = snap.docs.slice(10);
@@ -531,7 +546,7 @@
     }
 
     function end(win){
-      clearInterval(tInt); clearInterval(gInt);
+      ended=true; clearInterval(tInt); clearInterval(gInt);
       if(!win) return;
 
       submitTimeToBoard();
@@ -549,17 +564,17 @@
       try{
         const [rSnap, bSnap] = await Promise.all([
           getDocs(query(collection(db,'blitstiekGames', GAME_ID, 'runs'),  where('uid','==', user.uid), orderBy('time','asc'), limit(1))),
-          getDocs(query(collection(db,'blitstiekGames', GAME_ID, 'board'), where('uid','==', user.uid), orderBy('time','asc'), limit(1))),
+          getDocs(query(collection(db,'blitstiekGames', GAME_ID, 'board'), where('uid','==', user.uid), orderBy('time','asc'), limit(1)))
         ]);
-        const times=[];
+        const times = [];
         if(!rSnap.empty) times.push(Number(rSnap.docs[0].data().time));
         if(!bSnap.empty) times.push(Number(bSnap.docs[0].data().time));
         if(times.length){ bestText.textContent = fmt(Math.min(...times)); return; }
-      }catch{}
+      }catch(e){}
       try{
         const me = await getDoc(doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid));
         if(me.exists()){ bestText.textContent = fmt(Number(me.data().time)); return; }
-      }catch{}
+      }catch(e){}
       bestText.textContent='--:--';
     }
 
@@ -577,14 +592,14 @@
       });
     }
 
-    /* ---- Live leaderboard: merge RUNS + BOARD ---- */
+    /* ---- Live leaderboard: merge RUNS + BOARD (top 10 overall) ---- */
     function startLiveLeaderboard(){
       lbList.innerHTML = `<li class="bg-green-50">Geen inskrywings gelaai nog…</li>`;
       if(lbUnsubRuns){ lbUnsubRuns(); lbUnsubRuns=null; }
       if(lbUnsubBoard){ lbUnsubBoard(); lbUnsubBoard=null; }
 
       let runsRows=[], boardRows=[];
-      const keyOf = v => `${v.uid||'x'}|${Number(v.time)||0}|${(v.timestamp && v.timestamp.seconds) ? v.timestamp.seconds : 0}`;
+      const keyOf = v => v?.attemptId || `${v?.uid||'x'}|${Number(v?.time)||0}|${(v?.timestamp && v.timestamp.seconds) ? v.timestamp.seconds : 0}`;
 
       const update = ()=>{
         const map = new Map();
@@ -601,9 +616,9 @@
       const boardQ = query(collection(db,'blitstiekGames',GAME_ID,'board'), orderBy('time','asc'), limit(50));
 
       lbUnsubRuns  = onSnapshot(runsQ,  s=>{ runsRows  = s.docs.map(d=>d.data()||{}); update(); },
-                                     e=>{ console.warn('runs stream error:', e); });
+                                 e=>{ console.warn('runs stream error:', e); });
       lbUnsubBoard = onSnapshot(boardQ, s=>{ boardRows = s.docs.map(d=>d.data()||{}); update(); },
-                                     e=>{ console.warn('board stream error:', e); });
+                                 e=>{ console.warn('board stream error:', e); });
     }
 
     /* ---- Resolver ---- */
@@ -679,7 +694,7 @@
     btnPause.addEventListener('click', ()=>togglePause());
 
     // Keyboard
-    const handleKey = (e) => {
+    window.addEventListener('keydown', (e)=>{
       if (over.style.display === 'flex') return;
       const k = e.key;
       if (k === 'ArrowLeft' || k === 'a' || k === 'A') { e.preventDefault(); move(-1,0); return; }
@@ -687,8 +702,7 @@
       if (k === 'ArrowDown' || k === 's' || k === 'S' || k === ' ') {
         e.preventDefault(); hardDrop(); return;
       }
-    };
-    window.addEventListener('keydown', handleKey, { passive:false });
+    }, { passive:false });
 
     // share menus
     modalShareBtn.addEventListener('click', (e)=>{ e.stopPropagation(); shareMenu.classList.toggle('hidden'); });
