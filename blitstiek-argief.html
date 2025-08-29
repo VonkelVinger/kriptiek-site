@@ -204,7 +204,6 @@
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
-
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
@@ -659,7 +658,8 @@
     btnStart.addEventListener('click', start);
     btnPause.addEventListener('click', ()=>togglePause());
 
-    window.addEventListener('keydown', (e)=>{
+    // --- Keyboard handler now bound to BOTH window and document (fix) ---
+    const handleKey = (e) => {
       if (over.style.display === 'flex') return;
       const k = e.key;
       if (k === 'ArrowLeft' || k === 'a' || k === 'A') { e.preventDefault(); move(-1,0); return; }
@@ -667,7 +667,9 @@
       if (k === 'ArrowDown' || k === 's' || k === 'S' || k === ' ') {
         e.preventDefault(); hardDrop(); return;
       }
-    }, { passive:false });
+    };
+    window.addEventListener('keydown', handleKey, { passive:false });
+    document.addEventListener('keydown', handleKey, { passive:false });
 
     // share menus
     modalShareBtn.addEventListener('click', (e)=>{ e.stopPropagation(); shareMenu.classList.toggle('hidden'); });
