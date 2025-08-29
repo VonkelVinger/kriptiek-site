@@ -155,7 +155,7 @@
         </p>
       </section>
 
-      <!-- HOE OM TE SPEEL (full, unchanged) -->
+      <!-- HOE OM TE SPEEL -->
       <section class="mt-4 bg-white rounded shadow p-4">
         <h2 class="text-xl font-bold mb-2">HOE OM TE SPEEL</h2>
         <ol class="space-y-3 text-gray-700 leading-relaxed">
@@ -505,9 +505,9 @@
       const name    = currentUserName.slice(0,24);
       const newTime = Number(t);
 
-      const bestRef  = doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid); // per-user best (single doc)
-      const boardCol = collection(db,'blitstiekGames', GAME_ID, 'board');          // global feed (many docs)
-      const runsCol  = collection(db,'blitstiekGames', GAME_ID, 'runs');           // per-user history (capped to 10)
+      const bestRef  = doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid); // per-user best
+      const boardCol = collection(db,'blitstiekGames', GAME_ID, 'board');          // global board
+      const runsCol  = collection(db,'blitstiekGames', GAME_ID, 'runs');           // per-user history
 
       // 1) Update single best
       try{
@@ -518,19 +518,17 @@
         }
       }catch(e){ console.warn('BEST_UPDATE_FAILED', e); }
 
-      // 2) Append to global board (always)
+      // 2) Append to global board
       try{
         await setDoc(doc(boardCol), { uid:user.uid, userName:name, time:newTime, timestamp:serverTimestamp() });
       }catch(e){ console.warn('BOARD_APPEND_FAILED', e); }
 
-      // 3) Append to per-user history and keep only latest 10
+      // 3) Append to per-user history and keep only latest 10 (per user)
       try{
-        // add new run
         await setDoc(doc(runsCol), { uid:user.uid, userName:name, time:newTime, timestamp:serverTimestamp() });
-        // fetch all this user's runs newest-first
         const qy = query(runsCol, where('uid','==', user.uid), orderBy('timestamp','desc'));
         const snap = await getDocs(qy);
-        const extras = snap.docs.slice(10); // keep first 10, drop the rest
+        const extras = snap.docs.slice(10);
         await Promise.all(extras.map(d => deleteDoc(d.ref)));
       }catch(e){ console.warn('RUNS_APPEND_OR_TRIM_FAILED', e); }
     }
@@ -563,7 +561,7 @@
       bestText.textContent='--:--';
     }
 
-    /* ---- Leaderboard (with fallback) ---- */
+    /* ---- Leaderboard rendering ---- */
     function renderList(rows){
       lbList.innerHTML='';
       if(!rows || rows.length===0){
@@ -577,9 +575,10 @@
       });
     }
 
-    async function fallbackLegacyTop10(){
+    /* Fallback that reads from runs instead of per-user leaderboard */
+    async function fallbackRunsTop10(){
       try{
-        const qy = query(collection(db,'blitstiekGames', GAME_ID, 'leaderboard'), orderBy('time','asc'), limit(10));
+        const qy = query(collection(db,'blitstiekGames', GAME_ID, 'runs'), orderBy('time','asc'), limit(10));
         const snap = await getDocs(qy);
         renderList(snap.docs.map(d=>d.data()||{}));
       }catch(e){
@@ -587,16 +586,30 @@
       }
     }
 
+    /* ---- Live leaderboard: try board first, then switch to runs ---- */
     function startLiveLeaderboard(){
       lbList.innerHTML = `<li class="bg-green-50">Geen inskrywings gelaai nog…</li>`;
       if(lbUnsub){ lbUnsub(); lbUnsub=null; }
-      const qy=query(collection(db,'blitstiekGames',GAME_ID,'board'), orderBy('time','asc'), limit(10));
-      lbUnsub = onSnapshot(qy, (snap)=>{
-        if (snap.empty){ fallbackLegacyTop10(); return; }
-        renderList(snap.docs.map(d=>d.data()||{}));
+
+      const boardQ = query(collection(db,'blitstiekGames',GAME_ID,'board'), orderBy('time','asc'), limit(10));
+      lbUnsub = onSnapshot(boardQ, (snap)=>{
+        const rows = snap.docs.map(d=>d.data()||{});
+        if (rows.length >= 1) {
+          renderList(rows);
+        } else {
+          // Switch to runs for this session
+          if(lbUnsub){ lbUnsub(); lbUnsub=null; }
+          const runsQ = query(collection(db,'blitstiekGames',GAME_ID,'runs'), orderBy('time','asc'), limit(10));
+          lbUnsub = onSnapshot(runsQ, (snap2)=>{
+            renderList(snap2.docs.map(d=>d.data()||{}));
+          }, (err2)=>{
+            console.warn('Leaderboard runs stream error:', err2);
+            fallbackRunsTop10();
+          });
+        }
       }, (err)=>{
-        console.warn('Leaderboard stream error:', err);
-        fallbackLegacyTop10();
+        console.warn('Leaderboard board stream error:', err);
+        fallbackRunsTop10();
       });
     }
 
@@ -659,7 +672,7 @@
       startLiveLeaderboard();
     }
 
-    /* ---- Controls (fixed) ---- */
+    /* ---- Controls ---- */
     function bindDirButton(el, handler){
       ['touchstart','click'].forEach(ev=>{
         el.addEventListener(ev, (e)=>{ e.preventDefault(); handler(); }, { passive:false });
@@ -667,12 +680,12 @@
     }
     bindDirButton(btnLeft,  ()=>move(-1,0));
     bindDirButton(btnRight, ()=>move(1,0));
-    bindDirButton(btnDown,  ()=>hardDrop()); // full hard drop on on-screen ▼
+    bindDirButton(btnDown,  ()=>hardDrop());
 
     btnStart.addEventListener('click', start);
     btnPause.addEventListener('click', ()=>togglePause());
 
-    // Keyboard: bind to both window and document
+    // Keyboard (works across browsers)
     const handleKey = (e) => {
       if (over.style.display === 'flex') return;
       const k = e.key;
