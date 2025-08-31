@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DILEMMA Argief – Kriptiek</title>
+  <title>BLITSTIEK Argief – Kriptiek</title>
 
   <!-- Favicon and App Icons -->
   <link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
@@ -119,7 +119,7 @@
   </header>
 
   <section class="text-center mb-6">
-    <h1 class="text-3xl font-bold mb-3 text-[#374151]">Dilemma-argief</h1>
+    <h1 class="text-3xl font-bold mb-3 text-[#374151]">Blitstiek-argief</h1>
 
     <!-- Legend: Vandag now orange; others unchanged -->
     <div class="max-w-3xl mx-auto text-sm text-gray-700 flex items-center justify-center gap-6">
@@ -215,7 +215,7 @@
 
       const heading = document.createElement("h2");
       heading.className = "text-2xl font-semibold text-[#374151] mb-4";
-heading.textContent = monthName;
+      heading.textContent = monthName;
       section.appendChild(heading);
 
       const calendar = document.createElement("div");
@@ -247,7 +247,7 @@ heading.textContent = monthName;
 
         if (game) {
           const a = document.createElement("a");
-          a.href = `/dilemmagame.html?gameId=${game.gameId}`;
+          a.href = `/blitstiek.html?gameId=${game.gameId}`;
           a.textContent = day;
           a.className = BASE;
 
