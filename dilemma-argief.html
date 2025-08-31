@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BLITSTIEK Argief – Kriptiek</title>
+  <title>DILEMMA Argief – Kriptiek</title>
 
   <!-- Favicon and App Icons -->
   <link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
@@ -80,7 +80,7 @@
 </head>
 <body class="min-h-screen p-4 text-gray-100 bg-[#f8f5f2]">
 
-  <!-- Header/logo from index.html -->
+  <!-- Header/logo -->
   <header class="bg-white shadow p-4 mb-6">
     <div class="logo-container">
       <div id="backgroundCrossword" class="background-crossword"></div>
@@ -119,9 +119,9 @@
   </header>
 
   <section class="text-center mb-6">
-    <h1 class="text-3xl font-bold mb-3 text-[#374151]">Blitstiek-argief</h1>
+    <h1 class="text-3xl font-bold mb-3 text-[#374151]">Dilemma-argief</h1>
 
-    <!-- Legend: Vandag now orange; others unchanged -->
+    <!-- Legend -->
     <div class="max-w-3xl mx-auto text-sm text-gray-700 flex items-center justify-center gap-6">
       <span class="inline-flex items-center gap-2">
         <span class="legend-swatch" style="background-color:#ea580c;"></span>
@@ -139,11 +139,10 @@
   </section>
 
   <main class="max-w-3xl mx-auto">
-    <!-- Calendars render here -->
     <div id="archiveList" class="space-y-10"></div>
     <div id="emptyMsg" class="text-center text-gray-500 hidden">Geen vorige speletjies om te wys nie.</div>
 
-    <!-- Month navigation moved BELOW the calendar -->
+    <!-- Month navigation BELOW -->
     <div id="monthNav" class="flex justify-between mt-6 hidden">
       <button id="prevMonth" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-[#374151]">← Vorige maand</button>
       <button id="nextMonth" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-[#374151]">Volgende maand →</button>
@@ -180,10 +179,9 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    // Colors
-    const ORANGE = "#ea580c"; // today
-    const BLUE   = "#374151"; // played
-    const GREEN  = "#166534"; // not played
+    const ORANGE = "#ea580c";
+    const BLUE   = "#374151";
+    const GREEN  = "#166534";
     const BASE   = "block px-2 py-2 rounded font-bold text-white";
 
     let monthKeys = [];
@@ -191,16 +189,12 @@
     let grouped = {};
     let playedIds = new Set();
 
-    // Today's date (SAST) as YYYY-MM-DD
     function todayKeySAST() {
       const parts = new Intl.DateTimeFormat('en-CA', {
         timeZone: 'Africa/Johannesburg',
         year: 'numeric', month: '2-digit', day: '2-digit'
       }).formatToParts(new Date());
-      const y = parts.find(p => p.type === 'year').value;
-      const m = parts.find(p => p.type === 'month').value;
-      const d = parts.find(p => p.type === 'day').value;
-      return `${y}-${m}-${d}`;
+      return `${parts.find(p => p.type==='year').value}-${parts.find(p => p.type==='month').value}-${parts.find(p => p.type==='day').value}`;
     }
     const todayKey = todayKeySAST();
 
@@ -212,7 +206,6 @@
       const monthName = new Date(`${year}-${month}-01`).toLocaleString("af-ZA", { month: "long", year: "numeric" });
 
       const section = document.createElement("div");
-
       const heading = document.createElement("h2");
       heading.className = "text-2xl font-semibold text-[#374151] mb-4";
       heading.textContent = monthName;
@@ -221,7 +214,6 @@
       const calendar = document.createElement("div");
       calendar.className = "calendar-grid";
 
-      // Day headers
       ["Ma","Di","Wo","Do","Vr","Sa","So"].forEach(d => {
         const header = document.createElement("div");
         header.className = "day-header";
@@ -229,46 +221,30 @@
         calendar.appendChild(header);
       });
 
-      // Prepare days
       const firstDay = new Date(`${year}-${month}-01`);
       const totalDays = new Date(year, month, 0).getDate();
-      const startDay = (firstDay.getDay() + 6) % 7; // Monday-start
+      const startDay = (firstDay.getDay() + 6) % 7;
 
-      // Leading blanks
-      for (let i = 0; i < startDay; i++) {
-        calendar.appendChild(document.createElement("div"));
-      }
+      for (let i=0; i<startDay; i++) calendar.appendChild(document.createElement("div"));
 
-      // Day cells
-      for (let day = 1; day <= totalDays; day++) {
-        const dateStr = `${year}-${month}-${String(day).padStart(2, "0")}`;
+      for (let day=1; day<=totalDays; day++) {
+        const dateStr = `${year}-${month}-${String(day).padStart(2,"0")}`;
         const cell = document.createElement("div");
-        const game = (grouped[monthKey] || []).find(g => g.dateKey === dateStr);
+        const game = (grouped[monthKey]||[]).find(g => g.dateKey === dateStr);
 
         if (game) {
           const a = document.createElement("a");
-          a.href = `/blitstiek.html?gameId=${game.gameId}`;
+          a.href = `/dilemmagame.html?gameId=${game.gameId}`;
           a.textContent = day;
           a.className = BASE;
-
           const isPlayed = playedIds.has(game.gameId);
           const isToday = dateStr === todayKey;
 
-          if (isToday) {
-            a.style.backgroundColor = ORANGE;  // today
-          } else if (isPlayed) {
-            a.style.backgroundColor = BLUE;    // played
-          } else {
-            a.style.backgroundColor = GREEN;   // not played
-          }
+          if (isToday) a.style.backgroundColor = ORANGE;
+          else if (isPlayed) a.style.backgroundColor = BLUE;
+          else a.style.backgroundColor = GREEN;
 
-          a.setAttribute(
-            "aria-label",
-            isToday
-              ? `Vandag – ${dateStr}`
-              : (isPlayed ? `Gespeel op ${dateStr}` : `Nie gespeel op ${dateStr}`)
-          );
-
+          a.setAttribute("aria-label", isToday ? `Vandag – ${dateStr}` : (isPlayed ? `Gespeel op ${dateStr}` : `Nie gespeel op ${dateStr}`));
           cell.appendChild(a);
         } else {
           const span = document.createElement("span");
@@ -276,25 +252,20 @@
           span.className = "text-gray-400";
           cell.appendChild(span);
         }
-
         calendar.appendChild(cell);
       }
 
       section.appendChild(calendar);
       container.appendChild(section);
-
       updateNavButtons();
     }
 
     function updateNavButtons() {
-      const prevBtn = document.getElementById("prevMonth");
-      const nextBtn = document.getElementById("nextMonth");
-      prevBtn.disabled = currentMonthIndex === monthKeys.length - 1;
-      nextBtn.disabled = currentMonthIndex === 0;
+      document.getElementById("prevMonth").disabled = currentMonthIndex === monthKeys.length - 1;
+      document.getElementById("nextMonth").disabled = currentMonthIndex === 0;
     }
 
     async function loadArchive() {
-      // Load all games (handles old + new doc formats), then filter client-side
       const gamesCol = collection(db, "games");
       const snap = await getDocs(gamesCol);
 
@@ -306,61 +277,42 @@
         if (dk <= todayKey) entries.push({ dateKey: dk, gameId: docSnap.id });
       });
 
-      if (!entries.length) {
-        document.getElementById("emptyMsg").classList.remove("hidden");
-      }
+      if (!entries.length) document.getElementById("emptyMsg").classList.remove("hidden");
 
-      // Group by YYYY-MM
       grouped = {};
-      entries.forEach(({ dateKey, gameId }) => {
-        const [y, m] = dateKey.split("-");
+      entries.forEach(({dateKey,gameId}) => {
+        const [y,m] = dateKey.split("-");
         const key = `${y}-${m}`;
-        if (!grouped[key]) grouped[key] = [];
+        if (!grouped[key]) grouped[key]=[];
         grouped[key].push({ dateKey, gameId });
       });
 
-      // Month keys sorted desc; within a month sort by day asc
-      monthKeys = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
-      monthKeys.forEach(k => grouped[k].sort((a, b) => a.dateKey.localeCompare(b.dateKey)));
+      monthKeys = Object.keys(grouped).sort((a,b)=>b.localeCompare(a));
+      monthKeys.forEach(k=>grouped[k].sort((a,b)=>a.dateKey.localeCompare(b.dateKey)));
 
-      // Get played gameIds for signed-in user
       await new Promise(resolve => {
         onAuthStateChanged(auth, async (user) => {
           playedIds = new Set();
           if (user) {
             try {
               const playsSnap = await getDocs(collection(db, `userGames/${user.uid}/plays`));
-              playsSnap.forEach(p => playedIds.add(p.id));
-            } catch (e) {
-              console.warn("Kon nie gespeelde speletjies laai nie:", e);
-            }
+              playsSnap.forEach(p=>playedIds.add(p.id));
+            } catch(e) { console.warn("Kon nie gespeelde speletjies laai nie:", e); }
           }
           resolve();
         });
       });
 
-      // Initial render (most recent month)
-      if (monthKeys.length) {
-        renderMonth(monthKeys[currentMonthIndex]);
-      }
+      if (monthKeys.length) renderMonth(monthKeys[currentMonthIndex]);
 
-      // Month nav events
       document.getElementById("prevMonth").addEventListener("click", () => {
-        if (currentMonthIndex < monthKeys.length - 1) {
-          currentMonthIndex++;
-          renderMonth(monthKeys[currentMonthIndex]);
-        }
+        if (currentMonthIndex < monthKeys.length-1) { currentMonthIndex++; renderMonth(monthKeys[currentMonthIndex]); }
       });
       document.getElementById("nextMonth").addEventListener("click", () => {
-        if (currentMonthIndex > 0) {
-          currentMonthIndex--;
-          renderMonth(monthKeys[currentMonthIndex]);
-        }
+        if (currentMonthIndex > 0) { currentMonthIndex--; renderMonth(monthKeys[currentMonthIndex]); }
       });
 
-      if (monthKeys.length > 1) {
-        document.getElementById("monthNav").classList.remove("hidden");
-      }
+      if (monthKeys.length > 1) document.getElementById("monthNav").classList.remove("hidden");
     }
 
     loadArchive();
