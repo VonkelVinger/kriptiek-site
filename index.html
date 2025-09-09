@@ -258,15 +258,10 @@
       } else {
         // Signed-in: show greeting ABOVE the hero link; hide the long intro paragraph
         message.innerHTML = `
-  <div class="text-center">
-    <div>
-
-      Welkom terug, <strong>${playerName}</strong>.
- 
-</div>
-    <a href="/contact.html" class="mt-1 block text-sm underline font-bold text-[#1e3a8a]">
-      Kontak ons as jy enige probleme ervaar.
-    </a>
+  <div class="text-center mt-4">
+    <div class="font-bold">
+      WELKOM TERUG, <strong>${playerName.toUpperCase()}</strong>.
+    </div>
   </div>
 `;
         //if (introPara) introPara.classList.add('hidden');      // hide redundant intro
@@ -447,6 +442,7 @@
   </script>
 </body>
 </html>
+
 
 
 
