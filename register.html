@@ -88,7 +88,10 @@
   <main class="flex-grow flex items-center justify-center p-4">
     <div class="bg-white shadow-lg rounded-xl p-6 w-full max-w-md">
       <h2 class="text-2xl font-bold text-center mb-2 text-[#1e3a8a]">Registreer</h2>
-      <p class="text-center text-gray-600 mb-6">Skep ’n rekening om te kan speel en jou statistiek onder My profiel by te hou.</p>
+      <p class="text-center text-gray-600 mb-6">
+        Skep ’n rekening om te kan speel en jou statistiek onder
+        <strong>My profiel</strong> by te hou.
+      </p>
 
       <div id="alertBox" class="hidden mb-4 rounded-lg border px-3 py-2 text-sm"></div>
 
@@ -98,15 +101,40 @@
           <input type="text" id="userName" required maxlength="40" minlength="2"
                  class="mt-1 block w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]" />
         </label>
+
         <label class="block">
           <span class="text-gray-700 font-semibold">E-posadres</span>
           <input type="email" id="email" required
                  class="mt-1 block w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]" />
         </label>
+
         <label class="block">
           <span class="text-gray-700 font-semibold">Wagwoord</span>
-          <input type="password" id="password" required
-                 class="mt-1 block w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]" />
+          <!-- wrapper for toggle -->
+          <div class="relative">
+            <input type="password" id="password" required minlength="6"
+                   class="mt-1 block w-full border border-gray-300 rounded p-2 pr-10 focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]" />
+            <!-- show/hide toggle -->
+            <button type="button" id="togglePw"
+                    class="absolute inset-y-0 right-0 mt-1 mr-2 flex items-center px-1 text-gray-500 hover:text-gray-700"
+                    aria-label="Wys/Steen wagwoord" aria-pressed="false">
+              <!-- eye (open) -->
+              <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12s-3.75 6.75-9.75 6.75S2.25 12 2.25 12z" />
+                <circle cx="12" cy="12" r="3.25" stroke="currentColor" stroke-width="1.5" />
+              </svg>
+              <!-- eye off (closed) -->
+              <svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M3 3l18 18M10.584 10.584a3.25 3.25 0 004.582 4.582M6.343 6.343C4.173 7.86 2.726 10 2.25 12c0 0 3.75 6.75 9.75 6.75 1.528 0 2.946-.32 4.223-.87M12.75 5.25c3.6.3 6.48 2.64 8.25 5.25-.3.45-.66.99-1.11 1.56" />
+              </svg>
+            </button>
+          </div>
+          <p class="mt-1 text-xs text-gray-500">
+            <strong>Wenke:</strong> Jou wagwoord moet <strong>minstens 6 karakters</strong> wees (Firebase se minimum).
+            Vir beter sekuriteit gebruik ’n mengsel van letters, syfers en leestekens.
+          </p>
         </label>
 
         <button id="registerBtn" type="submit"
@@ -172,6 +200,19 @@
     });
     function acceptCookies() { localStorage.setItem('cookieConsent', 'accepted'); document.getElementById('cookie-banner').style.display = 'none'; }
     function declineCookies() { localStorage.setItem('cookieConsent', 'declined'); document.getElementById('cookie-banner').style.display = 'none'; }
+
+    // Password show/hide toggle
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('#togglePw')) {
+        const pw = document.getElementById('password');
+        const eyeOpen = document.getElementById('eyeOpen');
+        const eyeClosed = document.getElementById('eyeClosed');
+        const isHidden = pw.type === 'password';
+        pw.type = isHidden ? 'text' : 'password';
+        eyeOpen.classList.toggle('hidden', !isHidden);
+        eyeClosed.classList.toggle('hidden', isHidden);
+      }
+    });
   </script>
 
   <!-- Registration logic -->
@@ -232,7 +273,15 @@
       const userName = el("userName").value.trim();
       const email = el("email").value.trim();
       const password = el("password").value;
-      if (userName.length < 2) { showAlert("Jou naam moet minstens 2 karakters wees."); el("registerBtn").disabled = false; return; }
+
+      if (userName.length < 2) {
+        showAlert("Jou naam moet minstens 2 karakters wees.");
+        el("registerBtn").disabled = false; return;
+      }
+      if (password.length < 6) {
+        showAlert("Jou wagwoord is te kort. Dit moet minstens 6 karakters wees.");
+        el("registerBtn").disabled = false; return;
+      }
 
       try {
         // Create account (auto signed-in)
