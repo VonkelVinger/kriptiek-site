@@ -70,22 +70,18 @@
       width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
       isolation: isolate; /* ensure pseudo ring sits behind content */
     }
-    /* #1 – subtle animated conic ring around the logo */
     .logo-container::before{
       content:"";
       position:absolute; inset:-2px; border-radius:1rem;
       background:conic-gradient(from 180deg at 50% 50%, #1e3a8a, #334155, #1e3a8a);
       animation:spin 14s linear infinite;
       z-index:0;
-      /* carve out the middle so it looks like a ring */
       padding:2px;
       mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
       -webkit-mask-composite: xor; mask-composite: exclude;
     }
     @keyframes spin{ to{ transform:rotate(1turn); } }
-    @media (prefers-reduced-motion: reduce){
-      .logo-container::before{ animation:none; }
-    }
+    @media (prefers-reduced-motion: reduce){ .logo-container::before{ animation:none; } }
 
     .crossword-grid { display: grid; grid-template-columns: repeat(8, minmax(40px, 1fr)); gap: 4px; position: relative; z-index: 10; }
     .letter-box {
@@ -98,18 +94,9 @@
     .background-crossword {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid;
       grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
-      opacity: 0.5; z-index: 1; pointer-events: none;
-      /* #3 – calm float animation */
-      animation: bgFloat 30s linear infinite;
+      opacity: 0.5; z-index: 1; pointer-events: none; animation: bgFloat 30s linear infinite;
     }
-    @keyframes bgFloat{
-      0%{ transform:translateY(0); }
-      50%{ transform:translateY(-12px); }
-      100%{ transform:translateY(0); }
-    }
-    @media (prefers-reduced-motion: reduce){
-      .background-crossword{ animation:none; }
-    }
+    @keyframes bgFloat{ 0%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } 100%{ transform:translateY(0); } }
 
     .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
 
@@ -120,7 +107,6 @@
     .dark-blue-text { color: #1e3a8a; font-weight: bold; }
     .message-text { max-width: 400px; margin: 0 auto; text-align: center; }
 
-    /* #5 – one-time gentle pulse for primary CTAs */
     @keyframes gentlePulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.03); } }
     .btn-pulse{ animation:gentlePulse 1.6s ease-in-out 2; }
   </style>
@@ -144,7 +130,7 @@
   </header>
 
   <main class="flex-grow py-10 sm:py-12 md:py-16 px-6 text-center relative">
-    <!-- #8 – soft radial spotlight behind hero area -->
+    <!-- soft radial spotlight behind hero area -->
     <div class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(80%_50%_at_50%_0%,rgba(30,58,138,.08),transparent_60%)]"></div>
 
     <p class="text-3xl font-bold dark-blue-text mb-4">WELKOM BY KRIPTIEK</p>
@@ -170,7 +156,6 @@
       </a>
     </section>
   </main>
-
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
     &copy; 2025 Kriptiek. Alle regte voorbehou. |
     <a href="/profile.html" class="underline">My profiel</a> |
@@ -221,14 +206,20 @@
       const dilemmaButtons = document.getElementById('dilemma-buttons');
       const blitstiekButtons = document.getElementById('blitstiek-buttons');
 
+      // Clear mounts
       buttonContainer.innerHTML = '';
       dilemmaButtons.innerHTML = '';
       blitstiekButtons.innerHTML = '';
 
+      // Prepare the dynamic message container
       const message = document.createElement('div');
       message.className = 'text-center text-black font-semibold mb-6';
-      main.insertBefore(message, buttonContainer);
 
+      // Elements we may show/hide or position around
+      const introPara = document.querySelector('.message-text');
+      const heroContact = document.getElementById('contactHeroLink');
+
+      // Build shared buttons
       const registerBtn = document.createElement('a');
       registerBtn.href = "/register.html?new=1";
       registerBtn.textContent = "Registreer";
@@ -248,32 +239,31 @@
       const playerName = storedName || fallbackName;
 
       if (!isRegistered) {
-        message.innerHTML = "Jy moet registreer of aanmeld voordat jy kan speel.";
+        // Guests: keep intro + link; put prompt near the buttons
+        if (introPara) introPara.classList.remove('hidden');
+        message.textContent = "Jy moet registreer of aanmeld voordat jy kan speel.";
+        main.insertBefore(message, buttonContainer);
+
         const buttonGroup = document.createElement('div');
         buttonGroup.className = 'flex gap-4 justify-center';
         buttonGroup.appendChild(registerBtn);
         buttonGroup.appendChild(loginBtn);
 
-        // #6 — wrap in a light card
+        // Wrap in a light card
         const card = document.createElement('div');
         card.className = 'mx-auto max-w-xl rounded-2xl bg-white/70 backdrop-blur shadow-sm ring-1 ring-gray-200 p-4';
         card.appendChild(buttonGroup);
         dilemmaButtons.appendChild(card);
+
       } else {
-        // Show the special greeting for registered/signed-in users
+        // Signed-in: show greeting ABOVE the hero link; hide the long intro paragraph
         message.innerHTML = `
-          <div class="text-center">
-            <span class="bg-yellow-300 px-2 py-1 rounded">
-              Welkom terug by Kriptiek.com, <strong>${playerName}</strong>.
-            </span>
-            <div class="mt-1 text-sm text-gray-700">
-              Kontak ons as jy enige probleme ervaar.
-            </div>
-          </div>
+          <span class="bg-yellow-300 px-2 py-1 rounded">
+            Welkom terug by Kriptiek.com, <strong>${playerName}</strong>.
+          </span>
         `;
-        // Hide the hero contact link to avoid duplication
-        const heroContact = document.getElementById('contactHeroLink');
-        if (heroContact) heroContact.classList.add('hidden');
+        if (introPara) introPara.classList.add('hidden');      // hide redundant intro
+        if (heroContact) main.insertBefore(message, heroContact); // greeting above link
 
         /* --- DILEMMA buttons --- */
         const playBtn = document.createElement('a');
@@ -296,7 +286,6 @@
         dGroup.appendChild(playBtn);
         dGroup.appendChild(archiveBtn);
 
-        // #6 — wrap in a light card
         const dCard = document.createElement('div');
         dCard.className = 'mx-auto max-w-xl rounded-2xl bg-white/70 backdrop-blur shadow-sm ring-1 ring-gray-200 p-4';
         dCard.appendChild(dGroup);
@@ -323,15 +312,13 @@
         bGroup.appendChild(blitTodayBtn);
         bGroup.appendChild(blitArchiveBtn);
 
-        // #6 — wrap in a light card
         const bCard = document.createElement('div');
         bCard.className = 'mx-auto max-w-xl rounded-2xl bg-white/70 backdrop-blur shadow-sm ring-1 ring-gray-200 p-4 mt-4';
         bCard.appendChild(bGroup);
         blitstiekButtons.appendChild(bCard);
-
-        /* --- Logout button removed --- */
       }
 
+      // Cookie consent
       const cookieConsent = localStorage.getItem('cookieConsent');
       if (!cookieConsent) {
         document.getElementById('cookie-banner').classList.remove('hidden');
@@ -341,7 +328,6 @@
     function acceptCookies() { localStorage.setItem('cookieConsent', 'accepted'); document.getElementById('cookie-banner').style.display = 'none'; }
     function declineCookies() { localStorage.setItem('cookieConsent', 'declined'); document.getElementById('cookie-banner').style.display = 'none'; }
   </script>
-
   <!-- ZA-safe "today" resolver for DILEMMA -->
   <script type="module">
     import { getFirestore, collection, query, where, limit, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
@@ -393,16 +379,13 @@
         const gameId = await resolveTodayGameId();
         if (gameId) {
           playBtn.href = `/dilemmagame.html?gameId=${encodeURIComponent(gameId)}`;
-          // #5 – pulse the CTA twice to draw gentle attention
           playBtn.classList.add('btn-pulse');
         } else {
           playBtn.removeAttribute('href');
           playBtn.textContent = 'Geen leidraad beskikbaar nie';
           playBtn.classList.add('bg-gray-400', 'cursor-not-allowed', 'pointer-events-none');
         }
-      } catch (_) {
-        // leave as-is on unexpected errors
-      }
+      } catch (_) {}
     });
   </script>
 
@@ -446,7 +429,6 @@
         const gameId = await resolveTodayBlitstiekId();
         if (gameId) {
           btn.href = `/blitstiek.html?gameId=${encodeURIComponent(gameId)}`;
-          // #5 – pulse the CTA
           btn.classList.add('btn-pulse');
         } else {
           btn.removeAttribute('href');
