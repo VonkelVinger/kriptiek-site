@@ -258,10 +258,15 @@
       } else {
         // Signed-in: show greeting ABOVE the hero link; hide the long intro paragraph
         message.innerHTML = `
-          <span class="bg-yellow-300 px-2 py-1 rounded">
-            Welkom terug by Kriptiek.com, <strong>${playerName}</strong>.
-          </span>
-        `;
+  <div class="text-center">
+    <div>
+      Welkom terug, <strong>${playerName}</strong>.
+    </div>
+    <a href="/contact.html" class="mt-1 block text-sm underline font-bold text-[#1e3a8a]">
+      Kontak ons as jy enige probleme ervaar.
+    </a>
+  </div>
+`;
         //if (introPara) introPara.classList.add('hidden');      // hide redundant intro
         if (heroContact) main.insertBefore(message, heroContact); // greeting above link
 
@@ -440,4 +445,5 @@
   </script>
 </body>
 </html>
+
 
