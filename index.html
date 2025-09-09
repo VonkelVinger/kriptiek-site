@@ -43,7 +43,7 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    // Global logout helper
+    // Global logout helper (kept, but no button shown)
     window.kriptiekLogout = async function () {
       try { await signOut(auth); } finally {
         try { localStorage.clear(); sessionStorage.clear(); } catch {}
@@ -109,12 +109,6 @@
     </div>
   </header>
 
-  <section class="text-center mt-4">
-    <a href="/forum.html" class="gesels-saam-wrapper block mx-auto w-fit">
-      <img src="/assets/gesels-saam.png" alt="Gesels saam" class="gesels-saam-logo" />
-    </a>
-  </section>
-
   <main class="flex-grow p-6 text-center">
     <p class="text-3xl font-bold dark-blue-text mb-4">WELKOM BY KRIPTIEK</p>
     <p class="message-text">
@@ -130,6 +124,12 @@
 
     <!-- BLITSTIEK buttons mount -->
     <div id="blitstiek-buttons" class="flex flex-col items-center gap-4 mt-4"></div>
+    <!-- GESELS SAAM moved to below the four game buttons -->
+    <section class="text-center mt-6">
+      <a href="/forum.html" class="gesels-saam-wrapper block mx-auto w-fit">
+        <img src="/assets/gesels-saam.png" alt="Gesels saam" class="gesels-saam-logo" />
+      </a>
+    </section>
   </main>
 
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
@@ -244,12 +244,7 @@
         bGroup.appendChild(blitArchiveBtn);
         blitstiekButtons.appendChild(bGroup);
 
-        /* --- Logout button (keep position; style to match) --- */
-        const logoutBtn = document.createElement('button');
-        logoutBtn.textContent = "MELD AF";
-        logoutBtn.className = "mt-4 inline-block px-4 py-2 rounded bg-gray-800 text-white transition transform hover:scale-105 duration-300";
-        logoutBtn.onclick = window.kriptiekLogout;
-        main.appendChild(logoutBtn);
+        /* --- Logout removed per request --- */
       }
 
       const cookieConsent = localStorage.getItem('cookieConsent');
@@ -374,5 +369,3 @@
   </script>
 </body>
 </html>
-
-
