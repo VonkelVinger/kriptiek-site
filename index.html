@@ -107,21 +107,13 @@
     </div>
   </header>
   <main class="flex-grow p-6 text-center">
-    <!-- WELCOME — moved to first item below header -->
+    <!-- WELCOME — first item below header -->
     <section id="welcome" class="max-w-3xl mx-auto">
       <p class="text-3xl font-bold dark-blue-text mb-2">WELKOM BY KRIPTIEK</p>
       <p class="message-text text-slate-700">
         Tuiste van <strong>DILEMMA en BLITSTIEK</strong> en binnekort nog woordraaisels en speletjies.
       </p>
     </section>
-
-    <!-- Bold Forum button — below the Welcome block -->
-    <div class="mt-4">
-      <a href="/forum.html"
-         class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-800 text-white font-semibold shadow hover:bg-slate-700 transition">
-        Gesels saam
-      </a>
-    </div>
 
     <!-- GAME HUB — centered; future games can stack in extra rows -->
     <section id="game-hub" class="mt-8">
@@ -131,6 +123,14 @@
         </div>
       </div>
     </section>
+
+    <!-- Bold Forum button — moved BELOW the game buttons -->
+    <div class="mt-6">
+      <a href="/forum.html"
+         class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-800 text-white font-semibold shadow hover:bg-slate-700 transition">
+        Gesels saam
+      </a>
+    </div>
   </main>
 
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
@@ -198,7 +198,7 @@
           playLabel: 'Vandag se BLITSTIEK',
           archiveLabel: 'Vorige BLITSTIEKS'
         }
-        // Add future games here, e.g.:
+        // Add future games here:
         // { key:'kopknoop', title:'KOPKNOOP', tagline:'...', todayAnchorId:'kopknoop-today-link', archiveUrl:'/kopknoop-argief.html', playLabel:'Vandag se KOPKNOOP', archiveLabel:'Vorige KOPKNOPE' }
       ];
 
@@ -225,7 +225,9 @@
               <div class="flex flex-wrap gap-3">
                 <a href="/register.html?new=1" class="px-4 py-2 rounded-2xl bg-[#1e3a8a] text-white font-semibold hover:opacity-95">Registreer</a>
                 <a href="/login.html?new=1" class="px-4 py-2 rounded-2xl border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50">Meld aan</a>
-                <a href="${g.archiveUrl}" class="px-4 py-2 rounded-2xl border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50">${g.archiveLabel || 'Argief'}</a>
+                <a href="${g.archiveUrl}" class="px-4 py-2 rounded-2xl border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50">
+                  ${g.archiveLabel || 'Argief'}
+                </a>
               </div>
               <p class="text-xs text-slate-500 mt-2">Geen anonieme spel nie.</p>
             </div>
@@ -359,4 +361,3 @@
   </script>
 </body>
 </html>
-
