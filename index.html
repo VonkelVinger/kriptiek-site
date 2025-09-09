@@ -239,10 +239,23 @@
       const playerName = storedName || fallbackName;
 
       if (!isRegistered) {
-        // Guests: keep intro + link; put prompt near the buttons
-        if (introPara) introPara.classList.remove('hidden');
-        message.textContent = "Jy moet registreer of aanmeld voordat jy kan speel.";
-        main.insertBefore(message, buttonContainer);
+  // Guests: keep intro + link; put prompt near the buttons
+  if (introPara) introPara.classList.remove('hidden');
+
+  message.innerHTML = `
+    <div class="text-center">
+      <div class="font-semibold">
+        Jy moet registreer of aanmeld voordat jy kan speel.
+      </div>
+      <div class="mt-4">
+        <a href="/contact.html" class="underline font-bold text-[#1e3a8a]">
+          Kontak ons as jy enige probleme ervaar.
+        </a>
+      </div>
+    </div>
+  `;
+
+  main.insertBefore(message, buttonContainer);
 
         const buttonGroup = document.createElement('div');
         buttonGroup.className = 'flex gap-4 justify-center';
@@ -442,6 +455,7 @@
   </script>
 </body>
 </html>
+
 
 
 
