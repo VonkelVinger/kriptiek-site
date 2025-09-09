@@ -238,9 +238,12 @@
       const fallbackName = storedEmail ? storedEmail.split('@')[0] : 'gebruiker';
       const playerName = storedName || fallbackName;
 
-      if (!isRegistered) {
-  // Guests: keep intro + link; put prompt near the buttons
+     if (!isRegistered) {
+  // Guests: keep intro; show message + single contact link under it
   if (introPara) introPara.classList.remove('hidden');
+
+  // Hide the hero contact link to avoid a duplicate
+  if (heroContact) heroContact.classList.add('hidden');
 
   message.innerHTML = `
     <div class="text-center">
@@ -256,6 +259,7 @@
   `;
 
   main.insertBefore(message, buttonContainer);
+
 
         const buttonGroup = document.createElement('div');
         buttonGroup.className = 'flex gap-4 justify-center';
