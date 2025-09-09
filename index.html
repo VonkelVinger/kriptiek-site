@@ -15,139 +15,191 @@
   <!-- Social Share Image -->
   <meta property="og:image" content="https://www.kriptiek.com/assets/share-logo.png?v=1" />
   <meta name="twitter:image" content="https://www.kriptiek.com/assets/share-logo.png?v=1" />
+  <meta property="og:title" content="Kriptiek – Tuiste van DILEMMA" />
+  <meta property="og:description" content="Speel DILEMMA aanlyn" />
+  <meta property="og:url" content="https://www.kriptiek.com/" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="image" content="https://www.kriptiek.com/assets/share-logo.png?v=1" />
 
-  <!-- Tailwind and Fonts -->
+  <!-- Styles -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
 
-  <style>
-    body { font-family:'Montserrat', sans-serif; background:#f9fafb; color:#1f2937; }
-    .letter-box { width:40px; height:40px; display:flex; justify-content:center; align-items:center;
-      background:#1e3a8a; color:white; font-weight:bold; border-radius:0.375rem; margin:2px; }
-    .flipped-k { transform: scaleX(-1); }
-    header { background:white; box-shadow:0 2px 4px rgba(0,0,0,0.1); padding:1rem; }
-    #backgroundCrossword { position:absolute; top:0; left:0; width:100%; height:100%; display:grid;
-      grid-template-columns:repeat(auto-fill, minmax(30px, 1fr));
-      grid-template-rows:repeat(auto-fill, minmax(30px, 1fr));
-      opacity:0.25; pointer-events:none; }
-    .bg-letter-box { display:flex; justify-content:center; align-items:center;
-      font-size:1rem; font-weight:bold; color:#6b7280; border:1px solid #9ca3af; }
-  </style>
-</head>
-<body class="flex flex-col min-h-screen relative">
-  <!-- Background crossword -->
-  <div id="backgroundCrossword"></div>
+  <!-- Firebase boot + global logout -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
-  <header class="flex flex-col items-center relative z-10">
-    <!-- Logo -->
-    <div class="flex">
-      <div class="letter-box flipped-k">K</div>
-      <div class="letter-box">R</div>
-      <div class="letter-box">I</div>
-      <div class="letter-box">P</div>
-      <div class="letter-box">T</div>
-      <div class="letter-box">I</div>
-      <div class="letter-box">E</div>
-      <div class="letter-box">K</div>
-    </div>
-
-    <!-- Dynamic Greeting -->
-    <div id="welcomeMessage" class="mt-2 text-center"></div>
-  </header>
-
-  <main class="flex-1 flex flex-col items-center justify-center p-6 space-y-6 relative z-10">
-    <!-- Game Buttons -->
-    <div class="grid grid-cols-2 gap-4">
-      <a href="dilemmagame.html" class="px-6 py-3 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 transition">DILEMMA</a>
-      <a href="lexiblits.html" class="px-6 py-3 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 transition">LEXIBLITS</a>
-      <a href="kopknoop.html" class="px-6 py-3 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 transition">KOPKNOOP</a>
-      <a href="blitstiek.html" class="px-6 py-3 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 transition">BLITSTIEK</a>
-    </div>
-
-    <!-- Forum Button -->
-    <div>
-      <a href="forum.html" class="mt-6 inline-block px-6 py-3 bg-yellow-500 text-white rounded-xl shadow hover:bg-yellow-600 transition">
-        GESELS SAAM
-      </a>
-    </div>
-    <!-- Archive Links -->
-    <div class="mt-8 text-center">
-      <h2 class="font-bold text-lg mb-2">Vorige speletjies</h2>
-      <div class="flex flex-wrap justify-center gap-2">
-        <a href="dilemma-argief.html" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition">DILEMMA Argief</a>
-        <a href="blitstiek-argief.html" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition">BLITSTIEK Argief</a>
-      </div>
-    </div>
-  </main>
-
-  <footer class="bg-gray-100 text-center text-sm py-4 border-t relative z-10">
-    &copy; 2025 Kriptiek. Alle regte voorbehou.
-  </footer>
-
-  <!-- Cookie Banner -->
-  <div id="cookieBanner" class="fixed bottom-0 inset-x-0 bg-gray-800 text-white p-4 flex justify-between items-center z-50 hidden">
-    <span>Ons gebruik koekies om jou ervaring te verbeter. Deur voort te gaan stem jy in.</span>
-    <button id="acceptCookies" class="ml-4 px-3 py-1 bg-green-600 rounded hover:bg-green-700">Aanvaar</button>
-  </div>
-
-  <!-- Firebase App (replace config with your project’s config) -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-
-  <script>
-    // Firebase init
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT.firebaseapp.com",
-      projectId: "YOUR_PROJECT",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+      authDomain: "kriptiek-c9ea2.firebaseapp.com",
+      projectId: "kriptiek-c9ea2",
+      storageBucket: "kriptiek-c9ea2.appspot.com",
+      messagingSenderId: "620450620939",
+      appId: "1:620450620939:web:e93a18ac23b53b33db890e"
     };
-    firebase.initializeApp(firebaseConfig);
 
-    // Greeting logic
-    firebase.auth().onAuthStateChanged(user => {
-      const welcomeEl = document.getElementById("welcomeMessage");
-      if (user) {
-        const name = user.displayName || "gebruiker";
-        welcomeEl.innerHTML = `
-          <div class="text-center">
-            <span class="bg-yellow-300 px-2 py-1 rounded">
-              Welkom terug by Kriptiek.com, <strong>${name}</strong>.
-            </span>
-            <div class="mt-1 text-sm text-gray-700">
-              Kontak ons as jy enige probleme ervaar.
-            </div>
-          </div>
-        `;
-      } else {
-        welcomeEl.innerHTML = `
-          <div class="flex space-x-4 mt-2">
-            <a href="register.html" class="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">Registreer</a>
-            <a href="login.html" class="px-4 py-2 bg-gray-600 text-white rounded-lg shadow hover:bg-gray-700 transition">Meld aan</a>
-          </div>
-        `;
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Global logout helper (kept; no visible button)
+    window.kriptiekLogout = async function () {
+      try { await signOut(auth); } finally {
+        try { localStorage.clear(); sessionStorage.clear(); } catch {}
+        setTimeout(() => { window.location.href = "/index.html"; }, 120);
       }
-    });
-    // Cookie consent
+    };
+
     document.addEventListener('DOMContentLoaded', () => {
-      const banner = document.getElementById('cookieBanner');
-      const acceptBtn = document.getElementById('acceptCookies');
-      if (!localStorage.getItem('cookiesAccepted')) {
-        banner.classList.remove('hidden');
-      }
-      acceptBtn.addEventListener('click', () => {
-        localStorage.setItem('cookiesAccepted', 'true');
-        banner.classList.add('hidden');
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          localStorage.setItem('userRegistered', 'true');
+          localStorage.setItem('userId', user.uid);
+          localStorage.setItem('userEmail', user.email || "");
+          if (user.displayName) localStorage.setItem('userName', user.displayName);
+        }
       });
     });
+  </script>
 
-    // Background crossword
+  <style>
+    body { font-family: 'Montserrat', sans-serif; }
+    .logo-container {
+      position: relative; display: flex; justify-content: center; align-items: center;
+      width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
+      isolation: isolate; /* ensure pseudo ring sits behind content */
+    }
+    /* #1 – subtle animated conic ring around the logo */
+    .logo-container::before{
+      content:"";
+      position:absolute; inset:-2px; border-radius:1rem;
+      background:conic-gradient(from 180deg at 50% 50%, #1e3a8a, #334155, #1e3a8a);
+      animation:spin 14s linear infinite;
+      z-index:0;
+      /* carve out the middle so it looks like a ring */
+      padding:2px;
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+    }
+    @keyframes spin{ to{ transform:rotate(1turn); } }
+    @media (prefers-reduced-motion: reduce){
+      .logo-container::before{ animation:none; }
+    }
+
+    .crossword-grid { display: grid; grid-template-columns: repeat(8, minmax(40px, 1fr)); gap: 4px; position: relative; z-index: 10; }
+    .letter-box {
+      width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
+      background-color: #374151; color: white; font-size: 1.8rem; font-weight: bold; border: 2px solid #1f2937; border-radius: 0.375rem;
+      text-transform: uppercase; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    }
+    .flipped-k { transform: scaleX(-1); }
+
+    .background-crossword {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
+      opacity: 0.5; z-index: 1; pointer-events: none;
+      /* #3 – calm float animation */
+      animation: bgFloat 30s linear infinite;
+    }
+    @keyframes bgFloat{
+      0%{ transform:translateY(0); }
+      50%{ transform:translateY(-12px); }
+      100%{ transform:translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce){
+      .background-crossword{ animation:none; }
+    }
+
+    .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
+
+    .gesels-saam-wrapper { display: inline-block; margin: 0 auto 2rem auto; transition: transform 0.3s ease; }
+    .gesels-saam-logo { width: 160px; height: auto; border-radius: 0.5rem; box-shadow: 6px 6px 14px rgba(0, 0, 0, 0.35); transition: transform 0.3s ease, box-shadow 0.3s ease; }
+    .gesels-saam-wrapper:hover .gesels-saam-logo { transform: scale(1.05); box-shadow: 8px 8px 20px rgba(0, 0, 0, 0.4); }
+
+    .dark-blue-text { color: #1e3a8a; font-weight: bold; }
+    .message-text { max-width: 400px; margin: 0 auto; text-align: center; }
+
+    /* #5 – one-time gentle pulse for primary CTAs */
+    @keyframes gentlePulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.03); } }
+    .btn-pulse{ animation:gentlePulse 1.6s ease-in-out 2; }
+  </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex flex-col">
+  <header class="bg-white shadow p-4">
+    <div class="logo-container">
+      <div id="backgroundCrossword" class="background-crossword"></div>
+      <div class="crossword-grid">
+        <div class="letter-box flipped-k">K</div>
+        <div class="letter-box flipped-k">R</div>
+        <div class="letter-box">I</div>
+        <div class="letter-box flipped-k">P</div>
+        <div class="letter-box">T</div>
+        <div class="letter-box">I</div>
+        <div class="letter-box flipped-k">E</div>
+        <div class="letter-box">K</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow py-10 sm:py-12 md:py-16 px-6 text-center relative">
+    <!-- #8 – soft radial spotlight behind hero area -->
+    <div class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(80%_50%_at_50%_0%,rgba(30,58,138,.08),transparent_60%)]"></div>
+
+    <p class="text-3xl font-bold dark-blue-text mb-4">WELKOM BY KRIPTIEK</p>
+    <p class="message-text">
+      Kriptiek.com is die tuiste van DILEMMA en BLITSTIEK en binnekort ook ander Afrikaanse raaisels en woordspeletjies.
+      Dis gratis, maar jy moet geregistreer en aangemeld wees.
+    </p>
+    <a id="contactHeroLink" href="/contact.html" class="underline font-bold text-[#1e3a8a]">Kontak ons as jy enige probleme ervaar.</a>
+
+    <!-- (kept but unused spacer; no extra bottom margin now) -->
+    <div class="flex flex-wrap justify-center gap-4"></div>
+
+    <!-- DILEMMA buttons mount -->
+    <div id="dilemma-buttons" class="flex flex-col items-center gap-4 my-6"></div>
+
+    <!-- BLITSTIEK buttons mount -->
+    <div id="blitstiek-buttons" class="flex flex-col items-center gap-4 my-6"></div>
+
+    <!-- GESELS SAAM below the four game buttons -->
+    <section class="text-center mt-10">
+      <a href="/forum.html" class="gesels-saam-wrapper block mx-auto w-fit">
+        <img src="/assets/gesels-saam.png" alt="Gesels saam" class="gesels-saam-logo" />
+      </a>
+    </section>
+  </main>
+
+  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
+    &copy; 2025 Kriptiek. Alle regte voorbehou. |
+    <a href="/profile.html" class="underline">My profiel</a> |
+    <a href="/forum.html" class="underline">Gesels saam</a> |
+    <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
+    <a href="/terms.html" class="underline">Voorwaardes</a> |
+    <a href="/faq.html" class="underline">Gereelde vrae</a> |
+    <a href="/about.html" class="underline">Oor Kriptiek</a> |
+    <a href="/contact.html" class="underline">Kontak ons</a>
+  </footer>
+
+  <div id="cookie-banner" class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-300 shadow-md p-4 text-sm text-gray-800 text-center z-50 hidden">
+    <p class="mb-2">
+      Ons gebruik koekies om jou ervaring te verbeter en die webwerf beter te laat werk.
+      Lees meer in ons <a href="/privacy.html" class="underline text-blue-700 font-medium">Privaatheidsbeleid</a>.
+    </p>
+    <div class="flex justify-center gap-4">
+      <button onclick="acceptCookies()" class="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition">Ja, ek aanvaar dit so</button>
+      <button onclick="declineCookies()" class="bg-gray-300 text-gray-800 px-4 py-1 rounded hover:bg-gray-400 transition">Nee dankie</button>
+    </div>
+  </div>
+
+  <!-- Keep this non-module script so cookie functions remain global -->
+  <script>
     document.addEventListener('DOMContentLoaded', function () {
       const backgroundCrossword = document.getElementById('backgroundCrossword');
       const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      function getRandomLetter() {
-        return letters[Math.floor(Math.random() * letters.length)];
-      }
+
+      function getRandomLetter() { return letters[Math.floor(Math.random() * letters.length)]; }
       function generateBackgroundGrid() {
         backgroundCrossword.innerHTML = '';
         const numRows = Math.ceil(backgroundCrossword.offsetHeight / 30);
@@ -162,6 +214,246 @@
       }
       generateBackgroundGrid();
       window.addEventListener('resize', generateBackgroundGrid);
+
+      const isRegistered = localStorage.getItem('userRegistered') === 'true';
+      const main = document.querySelector('main');
+      const buttonContainer = document.querySelector('.flex.flex-wrap.justify-center.gap-4');
+      const dilemmaButtons = document.getElementById('dilemma-buttons');
+      const blitstiekButtons = document.getElementById('blitstiek-buttons');
+
+      buttonContainer.innerHTML = '';
+      dilemmaButtons.innerHTML = '';
+      blitstiekButtons.innerHTML = '';
+
+      const message = document.createElement('div');
+      message.className = 'text-center text-black font-semibold mb-6';
+      main.insertBefore(message, buttonContainer);
+
+      const registerBtn = document.createElement('a');
+      registerBtn.href = "/register.html?new=1";
+      registerBtn.textContent = "Registreer";
+      registerBtn.className = "bg-blue-600 text-white px-4 py-2 rounded transition hover:bg-blue-700 " +
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-600";
+
+      const loginBtn = document.createElement('a');
+      loginBtn.href = "/login.html?new=1";
+      loginBtn.textContent = "Meld aan";
+      loginBtn.className = "bg-gray-600 text-white px-4 py-2 rounded transition hover:bg-gray-700 " +
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-600";
+
+      // pull name for greeting (prefer stored name, else email prefix, else 'gebruiker')
+      const storedName = (localStorage.getItem('userName') || '').trim();
+      const storedEmail = (localStorage.getItem('userEmail') || '').trim();
+      const fallbackName = storedEmail ? storedEmail.split('@')[0] : 'gebruiker';
+      const playerName = storedName || fallbackName;
+
+      if (!isRegistered) {
+        message.innerHTML = "Jy moet registreer of aanmeld voordat jy kan speel.";
+        const buttonGroup = document.createElement('div');
+        buttonGroup.className = 'flex gap-4 justify-center';
+        buttonGroup.appendChild(registerBtn);
+        buttonGroup.appendChild(loginBtn);
+
+        // #6 — wrap in a light card
+        const card = document.createElement('div');
+        card.className = 'mx-auto max-w-xl rounded-2xl bg-white/70 backdrop-blur shadow-sm ring-1 ring-gray-200 p-4';
+        card.appendChild(buttonGroup);
+        dilemmaButtons.appendChild(card);
+      } else {
+        // Show the special greeting for registered/signed-in users
+        message.innerHTML = `
+          <div class="text-center">
+            <span class="bg-yellow-300 px-2 py-1 rounded">
+              Welkom terug by Kriptiek.com, <strong>${playerName}</strong>.
+            </span>
+            <div class="mt-1 text-sm text-gray-700">
+              Kontak ons as jy enige probleme ervaar.
+            </div>
+          </div>
+        `;
+        // Hide the hero contact link to avoid duplication
+        const heroContact = document.getElementById('contactHeroLink');
+        if (heroContact) heroContact.classList.add('hidden');
+
+        /* --- DILEMMA buttons --- */
+        const playBtn = document.createElement('a');
+        playBtn.id = "today-link";
+        playBtn.href = "#";
+        playBtn.textContent = "VANDAG SE DILEMMA";
+        playBtn.className = "bg-blue-600 text-white px-4 py-2 rounded transition transform hover:scale-105 duration-300 " +
+          "shadow-md hover:shadow-lg ring-1 ring-blue-700/20 " +
+          "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-600";
+
+        const archiveBtn = document.createElement('a');
+        archiveBtn.href = "/dilemma-argief.html";
+        archiveBtn.textContent = "VORIGE DILEMMAS";
+        archiveBtn.className = "bg-[#1e3a8a] text-white px-4 py-2 rounded transition transform hover:scale-105 duration-300 " +
+          "shadow-md hover:shadow-lg ring-1 ring-blue-900/20 " +
+          "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-600";
+
+        const dGroup = document.createElement('div');
+        dGroup.className = 'flex flex-col sm:flex-row justify-center gap-4';
+        dGroup.appendChild(playBtn);
+        dGroup.appendChild(archiveBtn);
+
+        // #6 — wrap in a light card
+        const dCard = document.createElement('div');
+        dCard.className = 'mx-auto max-w-xl rounded-2xl bg-white/70 backdrop-blur shadow-sm ring-1 ring-gray-200 p-4';
+        dCard.appendChild(dGroup);
+        dilemmaButtons.appendChild(dCard);
+
+        /* --- BLITSTIEK buttons --- */
+        const blitTodayBtn = document.createElement('a');
+        blitTodayBtn.id = "blitstiek-today-link";
+        blitTodayBtn.href = "#";
+        blitTodayBtn.textContent = "VANDAG SE BLITSTIEK";
+        blitTodayBtn.className = "bg-blue-600 text-white px-4 py-2 rounded transition transform hover:scale-105 duration-300 " +
+          "shadow-md hover:shadow-lg ring-1 ring-blue-700/20 " +
+          "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-600";
+
+        const blitArchiveBtn = document.createElement('a');
+        blitArchiveBtn.href = "/blitstiek-argief.html";
+        blitArchiveBtn.textContent = "VORIGE BLITSTIEKS";
+        blitArchiveBtn.className = "bg-[#1e3a8a] text-white px-4 py-2 rounded transition transform hover:scale-105 duration-300 " +
+          "shadow-md hover:shadow-lg ring-1 ring-blue-900/20 " +
+          "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-600";
+
+        const bGroup = document.createElement('div');
+        bGroup.className = 'flex flex-col sm:flex-row justify-center gap-4';
+        bGroup.appendChild(blitTodayBtn);
+        bGroup.appendChild(blitArchiveBtn);
+
+        // #6 — wrap in a light card
+        const bCard = document.createElement('div');
+        bCard.className = 'mx-auto max-w-xl rounded-2xl bg-white/70 backdrop-blur shadow-sm ring-1 ring-gray-200 p-4 mt-4';
+        bCard.appendChild(bGroup);
+        blitstiekButtons.appendChild(bCard);
+
+        /* --- Logout button removed --- */
+      }
+
+      const cookieConsent = localStorage.getItem('cookieConsent');
+      if (!cookieConsent) {
+        document.getElementById('cookie-banner').classList.remove('hidden');
+      }
+    });
+
+    function acceptCookies() { localStorage.setItem('cookieConsent', 'accepted'); document.getElementById('cookie-banner').style.display = 'none'; }
+    function declineCookies() { localStorage.setItem('cookieConsent', 'declined'); document.getElementById('cookie-banner').style.display = 'none'; }
+  </script>
+
+  <!-- ZA-safe "today" resolver for DILEMMA -->
+  <script type="module">
+    import { getFirestore, collection, query, where, limit, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+    const db = getFirestore();
+
+    // YYYY-MM-DD in Africa/Johannesburg
+    function todayZA() {
+      const now = new Date();
+      const p = new Intl.DateTimeFormat('af-ZA', {
+        timeZone: 'Africa/Johannesburg',
+        year: 'numeric', month: '2-digit', day: '2-digit'
+      }).formatToParts(now).reduce((a, x) => (a[x.type] = x.value, a), {});
+      return `${p.year}-${p.month}-${p.day}`;
+    }
+
+    async function resolveTodayGameId() {
+      const d = todayZA();
+
+      // 1) Preferred: a 'date' field on /games docs
+      try {
+        const q = query(collection(db, 'games'), where('date', '==', d), limit(1));
+        const snap = await getDocs(q);
+        if (!snap.empty) return snap.docs[0].id;
+      } catch (_) {}
+
+      // 2) Fallback: doc id "GameYYYY-MM-DD"
+      try {
+        const ref1 = doc(db, 'games', `Game${d}`);
+        const got1 = await getDoc(ref1);
+        if (got1.exists()) return got1.id;
+      } catch (_) {}
+
+      // 3) Fallback: doc id "YYYY-MM-DD"
+      try {
+        const ref2 = doc(db, 'games', d);
+        const got2 = await getDoc(ref2);
+        if (got2.exists()) return got2.id;
+      } catch (_) {}
+
+      return null;
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const playBtn = document.getElementById('today-link');
+      if (!playBtn) return;
+
+      try {
+        const gameId = await resolveTodayGameId();
+        if (gameId) {
+          playBtn.href = `/dilemmagame.html?gameId=${encodeURIComponent(gameId)}`;
+          // #5 – pulse the CTA twice to draw gentle attention
+          playBtn.classList.add('btn-pulse');
+        } else {
+          playBtn.removeAttribute('href');
+          playBtn.textContent = 'Geen leidraad beskikbaar nie';
+          playBtn.classList.add('bg-gray-400', 'cursor-not-allowed', 'pointer-events-none');
+        }
+      } catch (_) {
+        // leave as-is on unexpected errors
+      }
+    });
+  </script>
+
+  <!-- ZA-safe "today" resolver for BLITSTIEK -->
+  <script type="module">
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    const db = getFirestore();
+
+    function todayZA() {
+      const now = new Date();
+      const p = new Intl.DateTimeFormat('af-ZA', {
+        timeZone: 'Africa/Johannesburg', year: 'numeric', month: '2-digit', day: '2-digit'
+      }).formatToParts(now).reduce((a, x) => (a[x.type] = x.value, a), {});
+      return `${p.year}-${p.month}-${p.day}`;
+    }
+
+    async function resolveTodayBlitstiekId() {
+      const d = todayZA();
+
+      // Prefer doc id "GameYYYY-MM-DD" in /blitstiekGames
+      try {
+        const ref1 = doc(db, 'blitstiekGames', `Game${d}`);
+        const got1 = await getDoc(ref1);
+        if (got1.exists()) return got1.id;
+      } catch (_) {}
+
+      // Fallback: plain "YYYY-MM-DD"
+      try {
+        const ref2 = doc(db, 'blitstiekGames', d);
+        const got2 = await getDoc(ref2);
+        if (got2.exists()) return got2.id;
+      } catch (_) {}
+
+      return null;
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const btn = document.getElementById('blitstiek-today-link');
+      if (!btn) return;
+      try {
+        const gameId = await resolveTodayBlitstiekId();
+        if (gameId) {
+          btn.href = `/blitstiek.html?gameId=${encodeURIComponent(gameId)}`;
+          // #5 – pulse the CTA
+          btn.classList.add('btn-pulse');
+        } else {
+          btn.removeAttribute('href');
+          btn.textContent = 'Geen Blitstiek beskikbaar vir vandag nie';
+          btn.classList.add('bg-gray-400','cursor-not-allowed','pointer-events-none');
+        }
+      } catch (_) {}
     });
   </script>
 </body>
