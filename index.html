@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kriptiek</title>
+  <title>Kriptiek – Afrikaanse woordraaisels (DILEMMA, BLITSTIEK)</title>
 
   <!-- Favicon and App Icons -->
   <link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
@@ -15,8 +15,8 @@
   <!-- Social Share Image -->
   <meta property="og:image" content="https://www.kriptiek.com/assets/share-logo.png?v=1" />
   <meta name="twitter:image" content="https://www.kriptiek.com/assets/share-logo.png?v=1" />
-  <meta property="og:title" content="Kriptiek – Tuiste van DILEMMA" />
-  <meta property="og:description" content="Speel DILEMMA aanlyn" />
+  <meta property="og:title" content="Kriptiek – Afrikaanse woordraaisels (DILEMMA, BLITSTIEK)" />
+  <meta property="og:description" content="Registreer gratis om DILEMMA en BLITSTIEK te speel." />
   <meta property="og:url" content="https://www.kriptiek.com/" />
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
@@ -58,6 +58,8 @@
           localStorage.setItem('userId', user.uid);
           localStorage.setItem('userEmail', user.email || "");
           if (user.displayName) localStorage.setItem('userName', user.displayName);
+        } else {
+          localStorage.removeItem('userRegistered');
         }
       });
     });
@@ -83,12 +85,8 @@
     }
     .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
 
-    .gesels-saam-wrapper { display: inline-block; margin: 0 auto 2rem auto; transition: transform 0.3s ease; }
-    .gesels-saam-logo { width: 160px; height: auto; border-radius: 0.5rem; box-shadow: 6px 6px 14px rgba(0, 0, 0, 0.35); transition: transform 0.3s ease, box-shadow 0.3s ease; }
-    .gesels-saam-wrapper:hover .gesels-saam-logo { transform: scale(1.05); box-shadow: 8px 8px 20px rgba(0, 0, 0, 0.4); }
-
     .dark-blue-text { color: #1e3a8a; font-weight: bold; }
-    .message-text { max-width: 400px; margin: 0 auto; text-align: center; }
+    .message-text { max-width: 640px; margin: 0.5rem auto 0; text-align: center; }
   </style>
 </head>
 
@@ -108,27 +106,31 @@
       </div>
     </div>
   </header>
+  <!-- GAME HUB (replaces standalone flipped-K Gesels Saam image) -->
+  <section id="game-hub" class="mt-4">
+    <div class="max-w-5xl mx-auto px-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Cards are injected by JS using the config below -->
+    </div>
 
-  <section class="text-center mt-4">
-    <a href="/forum.html" class="gesels-saam-wrapper block mx-auto w-fit">
-      <img src="/assets/gesels-saam.png" alt="Gesels saam" class="gesels-saam-logo" />
-    </a>
+    <!-- Keep Forum visible but secondary to games -->
+    <div class="mt-4 text-center text-sm">
+      <a href="/forum.html" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50">
+        Gesels saam
+      </a>
+    </div>
   </section>
 
   <main class="flex-grow p-6 text-center">
-    <p class="text-3xl font-bold dark-blue-text mb-4">WELKOM BY KRIPTIEK</p>
-    <p class="message-text">
-      Kriptiek.com is die tuiste van DILEMMA en binnekort ook ander Afrikaanse raaisels en woordspeletjies.
-      Kies onder watter DILEMMA of BLITSTIEK jy wil speel, kliek bo op GESELS SAAM,
-      <a href="/subscribe.html" class="underline font-bold text-[#1e3a8a]">of lees meer oor ons planne vorentoe.</a>
+    <p class="text-3xl font-bold dark-blue-text mb-2">WELKOM BY KRIPTIEK</p>
+    <p class="message-text text-slate-700">
+      Gratis Afrikaanse woordraaisels. <strong>Registreer gratis</strong> om DILEMMA en BLITSTIEK te speel,
+      jou vordering te stoor en op die leaderboard te verskyn.
+      <a href="/subscribe.html" class="underline font-bold text-[#1e3a8a]">Lees meer oor ons planne.</a>
     </p>
 
+    <!-- (Legacy mounts kept but unused to avoid layout shifts) -->
     <div class="flex flex-wrap justify-center gap-4 mb-8"></div>
-
-    <!-- DILEMMA buttons mount -->
     <div id="dilemma-buttons" class="flex flex-col items-center gap-4 mt-4"></div>
-
-    <!-- BLITSTIEK buttons mount -->
     <div id="blitstiek-buttons" class="flex flex-col items-center gap-4 mt-4"></div>
   </main>
 
@@ -143,6 +145,7 @@
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
 
+  <!-- Cookie banner -->
   <div id="cookie-banner" class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-300 shadow-md p-4 text-sm text-gray-800 text-center z-50 hidden">
     <p class="mb-2">
       Ons gebruik koekies om jou ervaring te verbeter en die webwerf beter te laat werk.
@@ -153,15 +156,15 @@
       <button onclick="declineCookies()" class="bg-gray-300 text-gray-800 px-4 py-1 rounded hover:bg-gray-400 transition">Nee dankie</button>
     </div>
   </div>
-
   <!-- Keep this non-module script so cookie functions remain global -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
+      // --- HEADER BG crossword ---
       const backgroundCrossword = document.getElementById('backgroundCrossword');
       const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-
       function getRandomLetter() { return letters[Math.floor(Math.random() * letters.length)]; }
       function generateBackgroundGrid() {
+        if (!backgroundCrossword) return;
         backgroundCrossword.innerHTML = '';
         const numRows = Math.ceil(backgroundCrossword.offsetHeight / 30);
         const numCols = Math.ceil(backgroundCrossword.offsetWidth / 30);
@@ -176,92 +179,92 @@
       generateBackgroundGrid();
       window.addEventListener('resize', generateBackgroundGrid);
 
+      // --- GAME HUB (data-driven; safe for Firestore rules) ---
+      const GAMES = [
+        {
+          key: 'dilemma',
+          title: 'DILEMMA',
+          tagline: 'Daaglikse woordraadsel',
+          todayAnchorId: 'today-link',
+          archiveUrl: '/dilemma-argief.html',
+          playLabel: 'Vandag se DILEMMA'
+        },
+        {
+          key: 'blitstiek',
+          title: 'BLITSTIEK',
+          tagline: 'Speel teen die tyd',
+          todayAnchorId: 'blitstiek-today-link',
+          archiveUrl: '/blitstiek-argief.html',
+          playLabel: 'Vandag se BLITSTIEK'
+        }
+        // Add future games here, e.g.:
+        // { key:'kopknoop', title:'KOPKNOOP', tagline:'...', todayAnchorId:'kopknoop-today-link', archiveUrl:'/kopknoop-argief.html', playLabel:'Vandag se KOPKNOOP' }
+      ];
+
       const isRegistered = localStorage.getItem('userRegistered') === 'true';
+
+      // Build cards
+      const hubGrid = document.querySelector('#game-hub > .max-w-5xl > .grid, #game-hub > .grid');
+      if (hubGrid) {
+        hubGrid.innerHTML = '';
+        GAMES.forEach(g => {
+          const card = document.createElement('article');
+          card.className = 'rounded-2xl bg-white shadow p-5 border border-slate-200';
+
+          card.innerHTML = `
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-12 h-12 rounded-xl bg-slate-800 text-white font-bold flex items-center justify-center" aria-hidden="true">K</div>
+              <div>
+                <h3 class="text-lg font-bold">${g.title}</h3>
+                <p class="text-sm text-slate-600">${g.tagline}</p>
+              </div>
+            </div>
+
+            <div class="signed-out ${isRegistered ? 'hidden' : ''}">
+              <p class="text-slate-700 mb-3">Registreer gratis om te speel.</p>
+              <div class="flex flex-wrap gap-3">
+                <a href="/register.html?new=1" class="px-4 py-2 rounded-2xl bg-[#1e3a8a] text-white font-semibold hover:opacity-95">Registreer</a>
+                <a href="/login.html?new=1" class="px-4 py-2 rounded-2xl border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50">Meld aan</a>
+                <a href="${g.archiveUrl}" class="px-4 py-2 rounded-2xl border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50">Argief</a>
+              </div>
+              <p class="text-xs text-slate-500 mt-2">Geen anonieme spel nie.</p>
+            </div>
+
+            <div class="signed-in ${isRegistered ? '' : 'hidden'}">
+              <div class="flex flex-wrap gap-3">
+                <a id="${g.todayAnchorId}" href="#" class="px-4 py-2 rounded-2xl bg-[#1e3a8a] text-white font-semibold hover:opacity-95">
+                  ${g.playLabel}
+                </a>
+                <a href="${g.archiveUrl}" class="px-4 py-2 rounded-2xl border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50">
+                  Argief
+                </a>
+              </div>
+            </div>
+          `;
+          hubGrid.appendChild(card);
+        });
+      }
+
+      // Legacy injection cleanup: do not add duplicate signed-out CTAs elsewhere
       const main = document.querySelector('main');
       const buttonContainer = document.querySelector('.flex.flex-wrap.justify-center.gap-4.mb-8');
       const dilemmaButtons = document.getElementById('dilemma-buttons');
       const blitstiekButtons = document.getElementById('blitstiek-buttons');
+      if (buttonContainer) buttonContainer.innerHTML = '';
+      if (dilemmaButtons) dilemmaButtons.innerHTML = '';
+      if (blitstiekButtons) blitstiekButtons.innerHTML = '';
 
-      buttonContainer.innerHTML = '';
-      dilemmaButtons.innerHTML = '';
-      blitstiekButtons.innerHTML = '';
-
-      const message = document.createElement('div');
-      message.className = 'text-center text-black font-semibold mb-6';
-      main.insertBefore(message, buttonContainer);
-
-      const registerBtn = document.createElement('a');
-      registerBtn.href = "/register.html?new=1";
-      registerBtn.textContent = "Registreer";
-      registerBtn.className = "bg-blue-600 text-white px-4 py-2 rounded transition hover:bg-blue-700";
-
-      const loginBtn = document.createElement('a');
-      loginBtn.href = "/login.html?new=1";
-      loginBtn.textContent = "Meld aan";
-      loginBtn.className = "bg-gray-600 text-white px-4 py-2 rounded transition hover:bg-gray-700";
-
-      if (!isRegistered) {
-        message.innerHTML = "Jy moet registreer of aanmeld voordat jy kan speel.";
-        const buttonGroup = document.createElement('div');
-        buttonGroup.className = 'flex gap-4 justify-center';
-        buttonGroup.appendChild(registerBtn);
-        buttonGroup.appendChild(loginBtn);
-        dilemmaButtons.appendChild(buttonGroup);
-      } else {
-        /* --- DILEMMA buttons --- */
-        const playBtn = document.createElement('a');
-        playBtn.id = "today-link";
-        playBtn.href = "#";
-        playBtn.textContent = "VANDAG SE DILEMMA";
-        playBtn.className = "bg-blue-600 text-white px-4 py-2 rounded transition transform hover:scale-105 duration-300";
-
-        const archiveBtn = document.createElement('a');
-        archiveBtn.href = "/dilemma-argief.html";
-        archiveBtn.textContent = "VORIGE DILEMMAS";
-        archiveBtn.className = "bg-[#1e3a8a] text-white px-4 py-2 rounded transition transform hover:scale-105 duration-300";
-
-        const dGroup = document.createElement('div');
-        dGroup.className = 'flex flex-col sm:flex-row justify-center gap-4';
-        dGroup.appendChild(playBtn);
-        dGroup.appendChild(archiveBtn);
-        dilemmaButtons.appendChild(dGroup);
-
-        /* --- BLITSTIEK buttons --- */
-        const blitTodayBtn = document.createElement('a');
-        blitTodayBtn.id = "blitstiek-today-link";
-        blitTodayBtn.href = "#";
-        blitTodayBtn.textContent = "VANDAG SE BLITSTIEK";
-        blitTodayBtn.className = "bg-blue-600 text-white px-4 py-2 rounded transition transform hover:scale-105 duration-300";
-
-        const blitArchiveBtn = document.createElement('a');
-        blitArchiveBtn.href = "/blitstiek-argief.html";
-        blitArchiveBtn.textContent = "VORIGE BLITSTIEKS";
-        blitArchiveBtn.className = "bg-[#1e3a8a] text-white px-4 py-2 rounded transition transform hover:scale-105 duration-300";
-
-        const bGroup = document.createElement('div');
-        bGroup.className = 'flex flex-col sm:flex-row justify-center gap-4';
-        bGroup.appendChild(blitTodayBtn);
-        bGroup.appendChild(blitArchiveBtn);
-        blitstiekButtons.appendChild(bGroup);
-
-        /* --- Logout button (keep position; style to match) --- */
-        const logoutBtn = document.createElement('button');
-        logoutBtn.textContent = "MELD AF";
-        logoutBtn.className = "mt-4 inline-block px-4 py-2 rounded bg-gray-800 text-white transition transform hover:scale-105 duration-300";
-        logoutBtn.onclick = window.kriptiekLogout;
-        main.appendChild(logoutBtn);
-      }
-
+      // Cookie banner
       const cookieConsent = localStorage.getItem('cookieConsent');
       if (!cookieConsent) {
-        document.getElementById('cookie-banner').classList.remove('hidden');
+        const cb = document.getElementById('cookie-banner');
+        if (cb) cb.classList.remove('hidden');
       }
     });
 
-    function acceptCookies() { localStorage.setItem('cookieConsent', 'accepted'); document.getElementById('cookie-banner').style.display = 'none'; }
-    function declineCookies() { localStorage.setItem('cookieConsent', 'declined'); document.getElementById('cookie-banner').style.display = 'none'; }
+    function acceptCookies() { localStorage.setItem('cookieConsent', 'accepted'); const cb = document.getElementById('cookie-banner'); if (cb) cb.style.display = 'none'; }
+    function declineCookies() { localStorage.setItem('cookieConsent', 'declined'); const cb = document.getElementById('cookie-banner'); if (cb) cb.style.display = 'none'; }
   </script>
-
   <!-- ZA-safe "today" resolver for DILEMMA -->
   <script type="module">
     import { getFirestore, collection, query, where, limit, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
