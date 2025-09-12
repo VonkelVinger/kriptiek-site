@@ -5,6 +5,20 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
   <title>BLITSTIEK – Kriptiek</title>
 
+  <!-- Open Graph / Twitter (for link previews e.g. WhatsApp, FB, X) -->
+  <link rel="canonical" href="https://www.kriptiek.com/blitstiek.html" />
+  <meta property="og:title" content="BLITSTIEK – Kriptiek" />
+  <meta property="og:description" content="Kom speel vandag se BLITSTIEK op Kriptiek." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.kriptiek.com/blitstiek.html" />
+  <!-- Use a 600×600+ image for reliable previews -->
+  <meta property="og:image" content="https://www.kriptiek.com/assets/BLITSTIEK_12SEP.png" />
+  <meta property="og:image:alt" content="BLITSTIEK knoppie (groen)" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="BLITSTIEK – Kriptiek" />
+  <meta name="twitter:description" content="Kom speel vandag se BLITSTIEK op Kriptiek." />
+  <meta name="twitter:image" content="https://www.kriptiek.com/assets/BLITSTIEK_12SEP.png" />
+
   <!-- Tailwind + font -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
@@ -335,6 +349,9 @@
     const shareKey = gid => `blitstiekShare:${gid}`;
     let stickyPayload = null;
 
+    /* Absolute site URL for share (dev falls back to prod) */
+    const SITE_ORIGIN = location.hostname.endsWith('kriptiek.com') ? location.origin : 'https://www.kriptiek.com';
+
     /* NEW: guest gate utils */
     let guestGateBypassOnce = false;   // allow play once after choosing N-R
 
@@ -350,18 +367,20 @@
     gateRegBtn  .addEventListener('click', goRegister);
     gateRegLink .addEventListener('click', (e)=>{ e.preventDefault(); goRegister(); });
 
+    function buildShareUrl(gameId){
+      const url = new URL('/blitstiek.html', SITE_ORIGIN);
+      if (gameId) url.searchParams.set('gameId', gameId);
+      return url.toString();
+    }
+
     function shareTextLinkOnly(gid){
-      const url = new URL(location.href);
-      if (gid) url.searchParams.set('gameId', gid);
-      return `Kom speel vandag se BLITSTIEK op Kriptiek: ${url.toString()}`;
+      return `Kom speel vandag se BLITSTIEK op Kriptiek: ${buildShareUrl(gid)}`;
     }
 
     function shareTextWithTime(dataOverride){
-      const url = new URL(location.href);
-      if (GAME_ID) url.searchParams.set('gameId', GAME_ID);
       const timeStr = fmt((dataOverride?.time ?? t));
       const word    = dataOverride?.target || TARGET || '—';
-      return `Ek het ${word} in ${timeStr} op BLITSTIEK voltooi! Probeer hier: ${url.toString()}`;
+      return `Ek het ${word} in ${timeStr} op BLITSTIEK voltooi! Probeer hier: ${buildShareUrl(GAME_ID)}`;
     }
 
     /* ---- Mechanics (unchanged engine) ---- */
@@ -520,7 +539,7 @@
       if(!del.size) return;
 
       await Promise.all(Array.from(del).map(key=>new Promise(res=>{
-        const [x,y]=key.split(',').map(Number);
+        const [x,y]=key split(',').map(Number);
         const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
         if(c){ c.classList.add('pop'); setTimeout(()=>{ c.classList.remove('pop'); res(); },150);} else res();
         grid[y][x]=null;
@@ -600,10 +619,10 @@
     window.addEventListener('scroll',  ()=>{ shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden'); });
     window.addEventListener('resize',  ()=>{ shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden'); });
 
-    // System share helper (tries to attach green tile image)
+    // System share helper (tries to attach green tile image on mobile)
     async function trySystemShare(text){
       try{
-        const res = await fetch('/assets/BLITSTIEK_12SEP.png');
+        const res = await fetch(`${SITE_ORIGIN}/assets/BLITSTIEK_12SEP.png`);
         const blob = await res.blob();
         const files = [new File([blob],'BLITSTIEK.png',{type:blob.type})];
         if(navigator.canShare && navigator.canShare({files})){
