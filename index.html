@@ -131,10 +131,10 @@
     <!-- soft radial spotlight behind hero area -->
     <div class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(80%_50%_at_50%_0%,rgba(30,58,138,.08),transparent_60%)]"></div>
 
-    <p class="text-3xl font-bold dark-blue-text mb-4">WELKOM BY KRIPTIEK</p>
-    <p class="message-text">
-      Kriptiek.com is die tuiste van DILEMMA en BLITSTIEK en binnekort ook ander Afrikaanse raaisels en woordspeletjies.
-      Dis gratis, maar jy moet geregistreer en aangemeld wees.
+    <p id="heroHeading" class="text-3xl font-bold dark-blue-text mb-4">
+  WELKOM BY KRIPTIEK
+</p>
+      Kriptiek.com is die tuiste van DILEMMA en BLITSTIEK en binnekort ook ander Afrikaanse raaisels en woordspeletjies. Kies onder wat jy wil doen.
     </p>
     <a id="contactHeroLink" href="/contact.html" class="underline font-bold text-[#1e3a8a]">Kontak ons as jy enige probleme ervaar.</a>
 
@@ -227,75 +227,76 @@
       if (!cookieConsent) document.getElementById('cookie-banner').classList.remove('hidden');
 
       function showGuestView() {
-        if (introPara) introPara.classList.remove('hidden');
-        if (heroContact) heroContact.classList.remove('hidden');
+  const heroHeading = document.getElementById('heroHeading');
+  if (heroHeading) heroHeading.textContent = 'WELKOM BY KRIPTIEK';
 
-        const message = document.createElement('div');
-        message.className = 'text-center text-black font-semibold mb-6';
-        message.innerHTML = `
-          <div>Jy moet registreer of aanmeld voordat jy kan speel.</div>
-          <div class="mt-4">
-            <a href="/contact.html" class="underline font-bold text-[#1e3a8a]">
-              Kontak ons as jy enige probleme ervaar.
-            </a>
-          </div>
-        `;
-        main.insertBefore(message, dilemmaButtons);
+  if (introPara) introPara.classList.remove('hidden');
+  if (heroContact) heroContact.classList.remove('hidden');
 
-        const registerBtn = document.createElement('a');
-        registerBtn.href = "/register.html?new=1";
-        registerBtn.textContent = "Registreer";
-        registerBtn.className = "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700";
+  const message = document.createElement('div');
+  message.className = 'text-center text-black font-semibold mb-6';
+  message.innerHTML = `
+    <div>Jy moet registreer of aanmeld voordat jy kan speel.</div>
+    <div class="mt-4">
+      <a href="/contact.html" class="underline font-bold text-[#1e3a8a]">
+        Kontak ons as jy enige probleme ervaar.
+      </a>
+    </div>
+  `;
+  main.insertBefore(message, dilemmaButtons);
 
-        const loginBtn = document.createElement('a');
-        loginBtn.href = "/login.html?new=1";
-        loginBtn.textContent = "Meld aan";
-        loginBtn.className = "bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700";
+  const registerBtn = document.createElement('a');
+  registerBtn.href = "/register.html?new=1";
+  registerBtn.textContent = "Registreer";
+  registerBtn.className = "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700";
 
-        const buttonGroup = document.createElement('div');
-        buttonGroup.className = 'flex gap-4 justify-center';
-        buttonGroup.appendChild(registerBtn);
-        buttonGroup.appendChild(loginBtn);
+  const loginBtn = document.createElement('a');
+  loginBtn.href = "/login.html?new=1";
+  loginBtn.textContent = "Meld aan";
+  loginBtn.className = "bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700";
 
-        const card = document.createElement('div');
-        card.className = 'mx-auto max-w-xl rounded-2xl bg-white/70 backdrop-blur shadow-sm ring-1 ring-gray-200 p-4';
-        card.appendChild(buttonGroup);
-        dilemmaButtons.appendChild(card);
+  const buttonGroup = document.createElement('div');
+  buttonGroup.className = 'flex gap-4 justify-center';
+  buttonGroup.appendChild(registerBtn);
+  buttonGroup.appendChild(loginBtn);
 
-        // keep old Gesels image visible for guests
-        if (geselsFallback) geselsFallback.classList.remove('hidden');
-      }
+  const card = document.createElement('div');
+  card.className = 'mx-auto max-w-xl rounded-2xl bg-white/70 backdrop-blur shadow-sm ring-1 ring-gray-200 p-4';
+  card.appendChild(buttonGroup);
+  dilemmaButtons.appendChild(card);
 
-      function showSignedInView() {
-        // greeting
-        const storedName = (localStorage.getItem('userName') || '').trim();
-        const storedEmail = (localStorage.getItem('userEmail') || '').trim();
-        const fallbackName = storedEmail ? storedEmail.split('@')[0] : 'gebruiker';
-        const playerName = storedName || fallbackName;
+  if (geselsFallback) geselsFallback.classList.remove('hidden');
+}
 
-        const message = document.createElement('div');
-        message.className = 'text-center mt-4 font-bold';
-        message.innerHTML = `WELKOM TERUG, <strong>${playerName.toUpperCase()}</strong>.`;
-        if (heroContact) main.insertBefore(message, heroContact);
+function showSignedInView() {
+  const heroHeading = document.getElementById('heroHeading');
 
-        // build tile grid
-        const grid = document.createElement('div');
-        grid.className = 'grid grid-cols-2 gap-6 justify-items-center';
+  // name resolution
+  const storedName = (localStorage.getItem('userName') || '').trim();
+  const storedEmail = (localStorage.getItem('userEmail') || '').trim();
+  const fallbackName = storedEmail ? storedEmail.split('@')[0] : 'gebruiker';
+  const playerName = storedName || fallbackName;
 
-        // today tiles (IDs preserved for resolvers)
-        grid.appendChild(tile('#', '/assets/DILEMMA_12SEP.png', 'Dilemma', 'today-link'));
-        grid.appendChild(tile('/dilemma-argief.html', '/assets/D_ARGIEF_12SEP.png', 'Dilemma Argief'));
-        grid.appendChild(tile('#', '/assets/BLITSTIEK_12SEP.png', 'Blitstiek', 'blitstiek-today-link'));
-        grid.appendChild(tile('/blitstiek-argief.html', '/assets/B_ARGIEF_12SEP.png', 'Blitstiek Argief'));
-        grid.appendChild(tile('/profile.html', '/assets/K_MY_PROFIEL_12SEP.png', 'My Profiel'));
-        grid.appendChild(tile('/forum.html', '/assets/K_GESELS_12SEP.png', 'Gesels'));
+  // ✅ Change blue heading; no separate black greeting injected
+  if (heroHeading) {
+    heroHeading.innerHTML = `WELKOM TERUG, <strong>${playerName.toUpperCase()}</strong>`;
+  }
 
-        tilesGrid.appendChild(grid);
+  // Build tile grid exactly as before
+  const grid = document.createElement('div');
+  grid.className = 'grid grid-cols-2 gap-6 justify-items-center';
 
-        // hide old single Gesels image to avoid duplication
-        if (geselsFallback) geselsFallback.classList.add('hidden');
-      }
+  grid.appendChild(tile('#', '/assets/DILEMMA_12SEP.png', 'Dilemma', 'today-link'));
+  grid.appendChild(tile('/dilemma-argief.html', '/assets/D_ARGIEF_12SEP.png', 'Dilemma Argief'));
+  grid.appendChild(tile('#', '/assets/BLITSTIEK_12SEP.png', 'Blitstiek', 'blitstiek-today-link'));
+  grid.appendChild(tile('/blitstiek-argief.html', '/assets/B_ARGIEF_12SEP.png', 'Blitstiek Argief'));
+  grid.appendChild(tile('/profile.html', '/assets/K_MY_PROFIEL_12SEP.png', 'My Profiel'));
+  grid.appendChild(tile('/forum.html', '/assets/K_GESELS_12SEP.png', 'Gesels'));
 
+  tilesGrid.appendChild(grid);
+
+  if (geselsFallback) geselsFallback.classList.add('hidden');
+}
       if (localStorage.getItem('userRegistered') === 'true') {
         showSignedInView();
       } else {
@@ -414,3 +415,4 @@
   </script>
 </body>
 </html>
+
