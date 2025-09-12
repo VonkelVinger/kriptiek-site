@@ -70,7 +70,21 @@
   </script>
 
   <style>
-    body { font-family: 'Montserrat', sans-serif; }
+    /* Guest welcome card */
+.message-text.guest-card{
+  max-width: 660px;          /* a little wider than before */
+  text-align: left;          
+  line-height: 1.5;
+  margin: 0.25rem auto 0;    /* small top margin, centered block */
+  padding: 12px 16px;
+  background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.82));
+  border-radius: 12px;
+  border: 1px solid rgba(15,23,42,.08);   /* faint slate border */
+  box-shadow: 0 8px 18px rgba(0,0,0,.08); /* soft card shadow */
+  color: #0f172a;                          /* slate-900 */
+}
+
+body { font-family: 'Montserrat', sans-serif; }
     /* Logo banner */
     .logo-container {
       position: relative; display: flex; justify-content: center; align-items: center;
@@ -246,10 +260,15 @@
   if (introPara) {
     introPara.innerHTML =
       'Kriptiek.com is die tuiste van DILEMMA, BLITSTIEK en binnekort ook ander Afrikaanse raaisels en woordspeletjies. Jy kan dadelik speel sonder om te registreer, maar dan sal jou naam nie op die leierborde kan verskyn nie en jou speel-statistiek sal ook nie bygehou word nie. Jy sal ook net andere se kommentaar op ons forumblad kan lees en nie self kommentaar kan lewer nie. Die goeie nuus: Registrasie is gratis en vinnig, klik net op die skakel onder.';
-  }
+ introPara.classList.add('guest-card'); 
+ }
 
   // Keep only the single contact link (the one already in the hero)
-  if (heroContact) heroContact.classList.remove('hidden');
+  if (heroContact) {
+    heroContact.classList.remove('hidden');
+    heroContact.style.display = 'inline-block';
+    heroContact.style.marginTop = '8px';               // ← subtle spacing
+  }
 
   // Hide the old mounts since we’re using the tile grid for guests now
   if (dilemmaButtons) dilemmaButtons.classList.add('hidden');
@@ -424,6 +443,7 @@
   </script>
 </body>
 </html>
+
 
 
 
