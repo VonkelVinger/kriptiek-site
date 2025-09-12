@@ -11,7 +11,6 @@
   <meta property="og:description" content="Kom speel vandag se BLITSTIEK op Kriptiek." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://www.kriptiek.com/blitstiek.html" />
-  <!-- Use a 600×600+ image for reliable previews -->
   <meta property="og:image" content="https://www.kriptiek.com/assets/BLITSTIEK_12SEP.png" />
   <meta property="og:image:alt" content="BLITSTIEK knoppie (groen)" />
   <meta name="twitter:card" content="summary_large_image" />
@@ -539,7 +538,7 @@
       if(!del.size) return;
 
       await Promise.all(Array.from(del).map(key=>new Promise(res=>{
-        const [x,y]=key split(',').map(Number);
+        const [x,y]=key.split(',').map(Number);   /* <-- FIXED */
         const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
         if(c){ c.classList.add('pop'); setTimeout(()=>{ c.classList.remove('pop'); res(); },150);} else res();
         grid[y][x]=null;
