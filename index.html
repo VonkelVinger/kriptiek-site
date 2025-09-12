@@ -238,51 +238,40 @@
       if (!cookieConsent) document.getElementById('cookie-banner').classList.remove('hidden');
 
       function showGuestView() {
-        const heroHeading = document.getElementById('heroHeading');
-        if (heroHeading) heroHeading.textContent = 'WELKOM BY KRIPTIEK';
+  // Heading stays: WELKOM BY KRIPTIEK
+  const heroHeading = document.getElementById('heroHeading');
+  if (heroHeading) heroHeading.textContent = 'WELKOM BY KRIPTIEK';
 
-        if (introPara) introPara.classList.remove('hidden');
-        if (heroContact) heroContact.classList.remove('hidden');
+  // Update the intro paragraph text per your copy (and remove "Kies onder...")
+  if (introPara) {
+    introPara.innerHTML =
+      'Jy kan DILEMMA OF BLITSTIEK speel sonder om te registreer, maar dan sal jou naam nie op die leierborde kan verskyn nie en jou speel-statistiek sal ook nie bygehou word nie. Registrasie is gratis en vinnig.';
+  }
 
-        const message = document.createElement('div');
-        message.className = 'text-center text-black font-semibold mb-6';
-        message.innerHTML = `
-          <div>Jy moet registreer of aanmeld voordat jy kan speel.</div>
-          <div class="mt-4">
-            <a href="/contact.html" class="underline font-bold text-[#1e3a8a]">
-              Kontak ons as jy enige probleme ervaar.
-            </a>
-          </div>
-        `;
-        main.insertBefore(message, dilemmaButtons);
+  // Keep only the single contact link (the one already in the hero)
+  if (heroContact) heroContact.classList.remove('hidden');
 
-        // ensure mounts are visible for the guest card
-        if (dilemmaButtons) dilemmaButtons.classList.remove('hidden');
-        if (blitstiekButtons) blitstiekButtons.classList.remove('hidden');
+  // Hide the old mounts since we’re using the tile grid for guests now
+  if (dilemmaButtons) dilemmaButtons.classList.add('hidden');
+  if (blitstiekButtons) blitstiekButtons.classList.add('hidden');
 
-        const registerBtn = document.createElement('a');
-        registerBtn.href = "/register.html?new=1";
-        registerBtn.textContent = "Registreer";
-        registerBtn.className = "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700";
+  // Build the 2×2 tile grid for guests
+  const grid = document.createElement('div');
+  grid.className = 'grid grid-cols-2 gap-6 justify-items-center';
 
-        const loginBtn = document.createElement('a');
-        loginBtn.href = "/login.html?new=1";
-        loginBtn.textContent = "Meld aan";
-        loginBtn.className = "bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700";
+  // Top row: blue K tiles for register/login
+  grid.appendChild(tile('/register.html?new=1', '/assets/K_REGISTREER_12SEP.png', 'Registreer'));
+  grid.appendChild(tile('/login.html?new=1', '/assets/K_MELD_AAN_12SEP.png', 'Meld aan'));
 
-        const buttonGroup = document.createElement('div');
-        buttonGroup.className = 'flex gap-4 justify-center';
-        buttonGroup.appendChild(registerBtn);
-        buttonGroup.appendChild(loginBtn);
+  // Bottom row: Dilemma + Blitstiek (IDs used by daily resolvers below)
+  grid.appendChild(tile('#', '/assets/DILEMMA_12SEP.png', 'Dilemma', 'today-link'));
+  grid.appendChild(tile('#', '/assets/BLITSTIEK_12SEP.png', 'Blitstiek', 'blitstiek-today-link'));
 
-        const card = document.createElement('div');
-        card.className = 'mx-auto max-w-xl rounded-2xl bg-white/70 backdrop-blur shadow-sm ring-1 ring-gray-200 p-4';
-        card.appendChild(buttonGroup);
-        dilemmaButtons.appendChild(card);
+  tilesGrid.appendChild(grid);
 
-        if (geselsFallback) geselsFallback.classList.remove('hidden');
-      }
-
+  // Hide the old single Gesels image (avoid duplication)
+  if (geselsFallback) geselsFallback.classList.add('hidden');
+}
       function showSignedInView() {
         // hide the empty button mounts to remove the gap you saw
         if (dilemmaButtons) dilemmaButtons.classList.add('hidden');
@@ -435,5 +424,6 @@
   </script>
 </body>
 </html>
+
 
 
