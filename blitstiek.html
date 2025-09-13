@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
   <title>BLITSTIEK – Kriptiek</title>
 
-  <!-- Open Graph / Twitter (for link previews e.g. WhatsApp, FB, X) -->
+  <!-- Open Graph / Twitter -->
   <link rel="canonical" href="https://www.kriptiek.com/blitstiek.html" />
   <meta property="og:title" content="BLITSTIEK – Kriptiek" />
   <meta property="og:description" content="Kom speel vandag se BLITSTIEK op Kriptiek." />
@@ -28,8 +28,8 @@
       --cell-bg:#004d40;   /* cell & chip colour */
       --gridW:320px;       /* updated by JS */
       --cell-font:16px;    /* updated by JS */
-      --cellSize:32px;     /* per-cell size for gradients, updated by JS */
-      --line:1px;          /* 1 device pixel in CSS px (set in JS) */
+      --cellSize:32px;     /* updated by JS */
+      --line:1px;          /* 1 device pixel (set in JS) */
     }
     html,body{height:100%}
     body{font-family:'Montserrat',system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#f9fafb;color:#1f2937}
@@ -48,7 +48,7 @@
     #target{display:inline-flex;gap:1px;background:var(--cell-bg);color:#fff;padding:2px;border-radius:6px;min-height:34px;align-items:center;}
     #target span{width:30px;height:30px;display:grid;place-items:center;font-weight:800;border:1px solid rgba(255,255,255,.12);}
 
-    /* GRID — 1-device-px lines drawn ABOVE cells */
+    /* GRID */
     #grid{
       position:relative;
       display:grid;
@@ -72,14 +72,12 @@
         repeating-linear-gradient(to bottom,
           transparent 0 calc(var(--cellSize) - var(--line)),
           rgba(255,255,255,.28) 0 var(--cellSize));
-      background-position:0 0,0 0; background-repeat:repeat;
     }
     .cell{position:relative;background:var(--cell-bg);transition:transform .15s ease-out,opacity .15s ease-out;}
-    .cell::after{content:none;}
     .cell.f{display:grid;place-items:center;color:#fff;font-weight:800;font-size:var(--cell-font);text-shadow:0 1px 1px rgba(0,0,0,.35);}
     .cell.pop{transform:scale(1.15);opacity:0;}
 
-    /* Modal (existing win modal) */
+    /* Modal */
     #over{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:50;}
     .modal{background:#fff;border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.2);width:min(92%,520px);padding:18px;text-align:center;border:1px solid #e5e7eb;}
     .btn{background:#1e3a8a;color:#fff;font-weight:700;padding:10px 16px;border-radius:10px;}
@@ -87,7 +85,7 @@
     .btn:disabled{opacity:.6;cursor:not-allowed;}
 
     /* Controls */
-    .controls{width:100%;max-width:calc(var(--gridW) - 2px);margin:8px auto 0;}
+    .controls{width:100%;max-width:calc(var(--gridW));margin:8px auto 0;}
     .arrow-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;}
     .dir-btn{width:100%;aspect-ratio:1/1;min-width:56px;min-height:56px;display:flex;align-items:center;justify-content:center;background:#053a6b;color:#fff;border-radius:14px;font-weight:800;font-size:24px;}
     @media (min-width:460px){.dir-btn{min-width:64px;min-height:64px;font-size:26px}}
@@ -98,66 +96,45 @@
     #leaderboardList li:nth-child(odd){background:#f3f4f6;}
     #leaderboardList li:first-child{background:#d1fae5;font-weight:700;}
 
-    /* Share dropdown — Dilemma-style */
+    /* Share dropdown */
     .share-menu-local{background:#fff;border:1px solid #e5e7eb;box-shadow:0 8px 24px rgba(0,0,0,.12);border-radius:.5rem;width:240px;padding:.5rem;z-index:3000;}
     .share-menu-local button{width:100%;text-align:left;padding:.5rem .75rem;border-radius:.375rem;font-weight:600;}
     .share-menu-local button:hover{background:#f3f4f6;}
 
     /* --- ACTION BAR (4-up) --- */
-.action-grid{
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:.5rem;
-  justify-items:center;
-  align-items:center;
-}
-
-/* Buttons/links: shrinkwrap to the image, no shadow/background */
-.action-grid a,
-.action-grid button{
-  display:inline-grid;
-  place-items:center;
-  width:120px; height:120px;      /* wrapper = image size */
-  padding:0; margin:0;
-  background:transparent !important;
-  border:0; border-radius:0;
-  line-height:0;
-  appearance:none; -webkit-appearance:none;
-  box-shadow:none;                /* shadow moves to IMG */
-}
-
-/* Square PNG, keeps proportions, carries the shadow */
-.btn-img{
-  width:100%; height:100%;
-  display:block;
-  border-radius:0;
-  object-fit:contain;
-  box-shadow:0 6px 15px rgba(0,0,0,.25);
-}
-.btn-img:hover{transform:translateY(-1px);filter:brightness(1.02)}
-.btn-img:active{transform:translateY(0);filter:brightness(.98)}
-
-@media (max-width:420px){
-  .action-grid a,
-  .action-grid button{ width:100px; height:100px; }
-}
-
-    /* Square tiles (no rounding; preserve PNG proportions) */
-    .btn-img{
-      width:120px; height:120px;
-      display:block;
-      border-radius:0;
-      object-fit:contain;
-      box-shadow:none;                    /* shadow on wrapper, not image */
+    .action-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:.5rem;
+      justify-items:center;
+      align-items:center;
     }
-
-    /* Optional hover/active micro-effects */
+    /* Wrapper scales with column; stays square; capped at 120px */
+    .action-grid a,
+    .action-grid button{
+      display:grid;
+      place-items:center;
+      width:100%;
+      aspect-ratio:1/1;
+      max-width:120px;
+      padding:0; margin:0;
+      background:transparent !important;
+      border:0; border-radius:0;
+      line-height:0;
+      appearance:none; -webkit-appearance:none;
+      box-shadow:none;
+      cursor:pointer;
+    }
+    /* Square PNG fills wrapper; no distortion; carries shadow */
+    .btn-img{
+      width:100%; height:100%;
+      display:block;
+      object-fit:contain;
+      border-radius:0;
+      box-shadow:0 6px 15px rgba(0,0,0,.25);
+    }
     .btn-img:hover{transform:translateY(-1px);filter:brightness(1.02)}
     .btn-img:active{transform:translateY(0);filter:brightness(.98)}
-
-    @media (max-width:420px){
-      .btn-img{width:100px;height:100px}
-    }
 
     /* N-R gate */
     #nrGate{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:60;}
@@ -188,7 +165,7 @@
         <div class="relative">
           <div id="grid"></div>
 
-          <!-- Success modal (same for R & N-R; share options appear under DEEL) -->
+          <!-- Success modal -->
           <div id="over">
             <div class="modal">
               <p id="winMsg" class="mb-3 text-base"></p>
@@ -196,7 +173,6 @@
                 <button id="modalShareBtn" type="button" class="btn">DEEL</button>
                 <button id="modalCloseBtn" type="button" class="btn gray">SLUIT</button>
               </div>
-
               <div id="shareMenu" class="hidden share-menu-local mx-auto mt-2">
                 <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
                 <div class="space-y-1">
@@ -258,7 +234,7 @@
           <div id="bestBox" class="pill">Beste tyd: <b>--:--</b></div>
         </div>
 
-        <!-- ACTION BARS: four smaller buttons (only one set visible) -->
+        <!-- ACTION BARS -->
         <div class="controls mt-3" id="actionBars">
           <!-- Guests (N-R) -->
           <div id="barNR" class="action-grid">
@@ -297,7 +273,6 @@
       <!-- HOE OM TE SPEEL -->
       <section class="mt-4 bg-white rounded shadow p-4">
         <h2 class="text-xl font-bold mb-2">HOE OM TE SPEEL</h2>
-
         <ol class="space-y-3 text-gray-700 leading-relaxed">
           <li>
             <p class="font-semibold">1. Doel</p>
@@ -399,7 +374,7 @@
     const mCopy = document.getElementById('mCopy');
     const mSys  = document.getElementById('mSystem');
 
-    /* NEW: action bars + N-R gate elements */
+    /* Action bars + N-R gate */
     const barNR       = document.getElementById('barNR');
     const barR        = document.getElementById('barR');
     const nrGate      = document.getElementById('nrGate');
@@ -440,7 +415,7 @@
       return url.toString();
     }
 
-    /* LINK-ONLY (used for modal+sticky and for yellow tile before completion) */
+    /* LINK-ONLY (modal + sticky; and yellow tile before completion) */
     function shareTextLinkOnly(gid){
       return `Kom speel vandag se BLITSTIEK op Kriptiek: ${buildShareUrl(gid)}`;
     }
@@ -647,6 +622,7 @@
         }
       }
     }
+    function checkFail(){}
 
     /* ---- Timer & control ---- */
     function setTime(v){ t=v; timeText.textContent=fmt(v); }
@@ -669,10 +645,11 @@
     });
 
     /* ---- Share (modal & sticky = link-only) ---- */
-    function shareTextFrom(){ return shareTextLinkOnly(GAME_ID); } // unified for R & N-R
+    function shareTextFrom(){ return shareTextLinkOnly(GAME_ID); }
     function toggleShareMenu(){ shareMenu.classList.toggle('hidden'); }
     modalShareBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleShareMenu(); });
 
+    // Hide menus when clicking outside / scrolling / resizing
     document.addEventListener('click', (e)=>{
       if(shareMenu && !shareMenu.contains(e.target) && e.target!==modalShareBtn){ shareMenu.classList.add('hidden'); }
       if(stickyShareMenu && !stickyShareMenu.contains(e.target) && e.target!==stickyShareBtn){ stickyShareMenu.classList.add('hidden'); }
@@ -680,7 +657,7 @@
     window.addEventListener('scroll',  ()=>{ shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden'); });
     window.addEventListener('resize',  ()=>{ shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden'); });
 
-    // System share helper (tries to attach tile image on mobile)
+    // System share helper (tries to attach green tile image on mobile)
     async function trySystemShare(text){
       try{
         const res = await fetch(`${SITE_ORIGIN}/assets/BLITSTIEK_12SEP.png`);
@@ -708,12 +685,11 @@
     /* ---- Leaderboard submit ---- */
     async function submitTimeToBoard(){
       if(!user) return;
-
       const name    = currentUserName.slice(0,24);
       const newTime = Number(t);
 
-      const runsCol = collection(db,'blitstiekGames', GAME_ID, 'runs');           // all attempts
-      const bestRef = doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid); // per-user best
+      const runsCol = collection(db,'blitstiekGames', GAME_ID, 'runs');
+      const bestRef = doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid);
 
       try {
         const bestSnap = await getDoc(bestRef);
@@ -751,7 +727,7 @@
       submitTimeToBoard();
       enableStickyShare({ time: t, target: TARGET });
 
-      // Modal message (matches your approved copy but bolds parts in the UI)
+      // UI message (bold in modal only)
       winMsg.innerHTML = `Veels geluk, <strong>${currentUserName}</strong>, jy het <strong>${TARGET}</strong> in <strong>${fmt(t)}</strong> voltooi!`;
       over.style.display='flex';
       modalCloseBtn.onclick = ()=>{ over.style.display='none'; };
