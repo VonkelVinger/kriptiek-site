@@ -104,25 +104,43 @@
     .share-menu-local button:hover{background:#f3f4f6;}
 
     /* --- ACTION BAR (4-up) --- */
-    .action-grid{
-      display:grid;
-      grid-template-columns:repeat(4,minmax(0,1fr));
-      gap:.5rem;
-      align-items:center;
-      justify-items:center;
-    }
+.action-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:.5rem;
+  justify-items:center;
+  align-items:center;
+}
 
-    /* Reset anchors & buttons so only the square PNG shows; wrapper carries the shadow */
-    .action-grid a,
-    .action-grid button{
-      display:block;
-      padding:0; margin:0;
-      background:transparent !important;
-      border:0; border-radius:0;
-      line-height:0;
-      appearance:none; -webkit-appearance:none;
-      box-shadow:0 6px 15px rgba(0,0,0,.25);
-    }
+/* Buttons/links: shrinkwrap to the image, no shadow/background */
+.action-grid a,
+.action-grid button{
+  display:inline-grid;
+  place-items:center;
+  width:120px; height:120px;      /* wrapper = image size */
+  padding:0; margin:0;
+  background:transparent !important;
+  border:0; border-radius:0;
+  line-height:0;
+  appearance:none; -webkit-appearance:none;
+  box-shadow:none;                /* shadow moves to IMG */
+}
+
+/* Square PNG, keeps proportions, carries the shadow */
+.btn-img{
+  width:100%; height:100%;
+  display:block;
+  border-radius:0;
+  object-fit:contain;
+  box-shadow:0 6px 15px rgba(0,0,0,.25);
+}
+.btn-img:hover{transform:translateY(-1px);filter:brightness(1.02)}
+.btn-img:active{transform:translateY(0);filter:brightness(.98)}
+
+@media (max-width:420px){
+  .action-grid a,
+  .action-grid button{ width:100px; height:100px; }
+}
 
     /* Square tiles (no rounding; preserve PNG proportions) */
     .btn-img{
