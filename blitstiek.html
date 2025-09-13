@@ -104,9 +104,18 @@
     .share-menu-local button:hover{background:#f3f4f6;}
 
     /* Tiles */
-    .btn-img{border-radius:12px;box-shadow:0 6px 15px rgba(0,0,0,.25)}
-    .btn-img:hover{transform:translateY(-1px);filter:brightness(1.02)}
-    .btn-img:active{transform:translateY(0);filter:brightness(.98)}
+   /* Square tiles, no extra rounding/cropping */
+.btn-img{
+  width:120px;
+  height:120px;
+  display:block;          /* removes inline-gap that can look like extra padding */
+  border-radius:0;        /* keep corners square */
+  object-fit:contain;     /* preserve the PNG exactly */
+  box-shadow:0 6px 15px rgba(0,0,0,.25);
+}
+@media (max-width:420px){
+  .btn-img{ width:100px; height:100px; }
+}
     /* NEW: 4-up action bar */
     .action-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.5rem;align-items:center;justify-items:center}
     .btn-img{width:120px;height:120px}
