@@ -103,45 +103,43 @@
     .share-menu-local button{width:100%;text-align:left;padding:.5rem .75rem;border-radius:.375rem;font-weight:600;}
     .share-menu-local button:hover{background:#f3f4f6;}
 
- /* --- ACTION BAR (4-up) --- */
-.action-grid{
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:.5rem;
-  align-items:center;
-  justify-items:center;
-}
+    /* --- ACTION BAR (4-up) --- */
+    .action-grid{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:.5rem;
+      align-items:center;
+      justify-items:center;
+    }
 
-/* Reset anchors & buttons so only the square PNG shows */
-.action-grid a,
-.action-grid button{
-  display:block;
-  padding:0;
-  margin:0;
-  background:transparent;
-  border:0;
-  line-height:0;
-  appearance:none;
-  -webkit-appearance:none;
-}
+    /* Reset anchors & buttons so only the square PNG shows; wrapper carries the shadow */
+    .action-grid a,
+    .action-grid button{
+      display:block;
+      padding:0; margin:0;
+      background:transparent !important;
+      border:0; border-radius:0;
+      line-height:0;
+      appearance:none; -webkit-appearance:none;
+      box-shadow:0 6px 15px rgba(0,0,0,.25);
+    }
 
-/* Square tiles (no rounding; preserve PNG proportions) */
-.btn-img{
-  width:120px;
-  height:120px;
-  display:block;           /* kill inline whitespace */
-  border-radius:0;         /* keep corners square */
-  object-fit:contain;      /* never stretch the art */
-  box-shadow:0 6px 15px rgba(0,0,0,.25);
-}
+    /* Square tiles (no rounding; preserve PNG proportions) */
+    .btn-img{
+      width:120px; height:120px;
+      display:block;
+      border-radius:0;
+      object-fit:contain;
+      box-shadow:none;                    /* shadow on wrapper, not image */
+    }
 
-/* Optional hover/active micro-effects (keep if you like) */
-.btn-img:hover{transform:translateY(-1px);filter:brightness(1.02)}
-.btn-img:active{transform:translateY(0);filter:brightness(.98)}
+    /* Optional hover/active micro-effects */
+    .btn-img:hover{transform:translateY(-1px);filter:brightness(1.02)}
+    .btn-img:active{transform:translateY(0);filter:brightness(.98)}
 
-@media (max-width:420px){
-  .btn-img{width:100px;height:100px}
-}
+    @media (max-width:420px){
+      .btn-img{width:100px;height:100px}
+    }
 
     /* N-R gate */
     #nrGate{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:60;}
@@ -171,7 +169,8 @@
       <section class="card p-4">
         <div class="relative">
           <div id="grid"></div>
-          <!-- Success modal -->
+
+          <!-- Success modal (same for R & N-R; share options appear under DEEL) -->
           <div id="over">
             <div class="modal">
               <p id="winMsg" class="mb-3 text-base"></p>
@@ -180,7 +179,6 @@
                 <button id="modalCloseBtn" type="button" class="btn gray">SLUIT</button>
               </div>
 
-              <!-- share dropdown (appears under DEEL) -->
               <div id="shareMenu" class="hidden share-menu-local mx-auto mt-2">
                 <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
                 <div class="space-y-1">
@@ -207,7 +205,6 @@
               </div>
             </div>
           </div>
-          <!-- /N-R gate -->
         </div>
 
         <!-- Arrows -->
@@ -219,12 +216,11 @@
           </div>
         </div>
 
-        <!-- Actions -->
+        <!-- Start/Pause + Sticky share -->
         <div class="controls mt-3 flex items-center justify-center gap-2">
           <button id="btnStart" class="btn">BEGIN</button>
           <button id="btnPause" class="btn gray">POUSE</button>
 
-          <!-- Sticky share + dropdown (link-only) -->
           <div class="relative">
             <button id="stickyShareBtn" class="btn hidden">DEEL</button>
             <div id="stickyShareMenu" class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
@@ -254,7 +250,7 @@
             <a href="/forum.html" title="Gesels saam">
               <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
             </a>
-<a href="/blitstiek-argief.html" title="Blitstiek-argief">
+            <a href="/blitstiek-argief.html" title="Blitstiek-argief">
               <img class="btn-img" src="/assets/B_ARGIEF_12SEP.png" alt="B Argief" width="120" height="120">
             </a>
             <button type="button" class="share-tile" title="Deel">
@@ -270,7 +266,7 @@
             <a href="/forum.html" title="Gesels saam">
               <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
             </a>
-<a href="/blitstiek-argief.html" title="Blitstiek-argief">
+            <a href="/blitstiek-argief.html" title="Blitstiek-argief">
               <img class="btn-img" src="/assets/B_ARGIEF_12SEP.png" alt="B Argief" width="120" height="120">
             </a>
             <button type="button" class="share-tile" title="Deel">
@@ -330,6 +326,7 @@
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
+
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
@@ -736,7 +733,7 @@
       submitTimeToBoard();
       enableStickyShare({ time: t, target: TARGET });
 
-      // ✅ include target word in the modal text
+      // Modal message (matches your approved copy but bolds parts in the UI)
       winMsg.innerHTML = `Veels geluk, <strong>${currentUserName}</strong>, jy het <strong>${TARGET}</strong> in <strong>${fmt(t)}</strong> voltooi!`;
       over.style.display='flex';
       modalCloseBtn.onclick = ()=>{ over.style.display='none'; };
@@ -744,7 +741,7 @@
       if(!user) showNRGate();
     }
 
-    /* ---- LIVE Leaderboard (per-user best; UI shows top 10 best times) ---- */
+    /* ---- LIVE Leaderboard ---- */
     function startLiveLeaderboard(){
       if(lbUnsub) { lbUnsub(); lbUnsub=null; }
       const qy=query(collection(db,'blitstiekGames',GAME_ID,'leaderboard'), orderBy('time','asc'), limit(10));
