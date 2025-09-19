@@ -96,9 +96,15 @@
     #leaderboardList li:nth-child(odd){background:#f3f4f6;}
     #leaderboardList li:first-child{background:#d1fae5;font-weight:700;}
 
-    /* Share dropdown */
-    .share-menu-local{background:#fff;border:1px solid #e5e7eb;box-shadow:0 8px 24px rgba(0,0,0,.12);border-radius:.5rem;width:240px;padding:.5rem;z-index:3000;}
-    .share-menu-local button{width:100%;text-align:left;padding:.5rem .75rem;border-radius:.375rem;font-weight:600;}
+    /* Share dropdown (match Dilemma) */
+    .share-menu-local{
+      background:#fff;border:1px solid #e5e7eb;box-shadow:0 8px 24px rgba(0,0,0,.12);
+      border-radius:.5rem;width:240px;padding:.5rem;z-index:3000;line-height:1.25;
+    }
+    .share-menu-local button{
+      width:100%;text-align:left;padding:.5rem .75rem;border-radius:.375rem;font-weight:600;
+      line-height:1.25rem;display:flex;align-items:center;gap:.5rem;white-space:nowrap;
+    }
     .share-menu-local button:hover{background:#f3f4f6;}
 
     /* --- ACTION BAR (base = 4-up) --- */
@@ -112,9 +118,9 @@
     /* 3-up override for bars with three tiles */
     .cols-3{ grid-template-columns:repeat(3,1fr); }
 
-    /* Wrapper scales with column; stays square; capped at 120px */
-    .action-grid a,
-    .action-grid button{
+    /* Scope to direct children so dropdowns aren’t affected */
+    .action-grid > a,
+    .action-grid > button{
       display:grid;
       place-items:center;
       width:100%;
@@ -123,7 +129,7 @@
       padding:0; margin:0;
       background:transparent !important;
       border:0; border-radius:0;
-      line-height:0;
+      line-height:0;           /* keep tiles tight; won’t leak into menus now */
       appearance:none; -webkit-appearance:none;
       box-shadow:none;
       cursor:pointer;
@@ -247,24 +253,44 @@
             <a href="/forum.html" title="Gesels saam">
               <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
             </a>
-            <!-- Removed the Blitstiek-argief tile for N-R -->
-            <button type="button" class="share-tile" title="Deel">
-              <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
-            </button>
+            <!-- DEEL tile with dropdown (matches Dilemma) -->
+            <div class="relative share-tile-wrap">
+              <button type="button" class="share-tile" title="Deel">
+                <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
+              </button>
+              <div class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
+                <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
+                <div class="space-y-1">
+                  <button class="wa" type="button">WhatsApp</button>
+                  <button class="copy" type="button">Kopieer skakel</button>
+                  <button class="sys" type="button">Stelsel-deel</button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Registered (R) -->
           <div id="barR" class="action-grid cols-3 hidden">
-            <!-- Removed the My Profiel tile for R -->
             <a href="/forum.html" title="Gesels saam">
               <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
             </a>
             <a href="/blitstiek-argief.html" title="Blitstiek-argief">
               <img class="btn-img" src="/assets/B_ARGIEF_12SEP.png" alt="B Argief" width="120" height="120">
             </a>
-            <button type="button" class="share-tile" title="Deel">
-              <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
-            </button>
+            <!-- DEEL tile with dropdown (matches Dilemma) -->
+            <div class="relative share-tile-wrap">
+              <button type="button" class="share-tile" title="Deel">
+                <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
+              </button>
+              <div class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
+                <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
+                <div class="space-y-1">
+                  <button class="wa" type="button">WhatsApp</button>
+                  <button class="copy" type="button">Kopieer skakel</button>
+                  <button class="sys" type="button">Stelsel-deel</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -422,6 +448,7 @@
     /* EXACT success wording for yellow tile after finishing */
     function buildWinShareText(payload){
       const tt   = Number(payload?.time);
+      theNameFix: {};
       const name = currentUserName || 'Speler';
       const word = payload?.target || TARGET || '—';
       return `Veels geluk, ${name}, jy het ${word} in ${fmt(tt)} voltooi!`;
@@ -643,8 +670,12 @@
       guestGateBypassOnce=false; start();
     });
 
-    /* ---- Share (modal & sticky = link-only) ---- */
+    /* ---- Share (modal & sticky & tile) ---- */
     function shareTextFrom(){ return shareTextLinkOnly(GAME_ID); }
+    function tileShareText(){
+      const hasResult = stickyPayload && Number.isFinite(Number(stickyPayload.time));
+      return hasResult ? buildWinShareText(stickyPayload) : shareTextLinkOnly(GAME_ID);
+    }
     function toggleShareMenu(){ shareMenu.classList.toggle('hidden'); }
     modalShareBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleShareMenu(); });
 
@@ -652,9 +683,13 @@
     document.addEventListener('click', (e)=>{
       if(shareMenu && !shareMenu.contains(e.target) && e.target!==modalShareBtn){ shareMenu.classList.add('hidden'); }
       if(stickyShareMenu && !stickyShareMenu.contains(e.target) && e.target!==stickyShareBtn){ stickyShareMenu.classList.add('hidden'); }
+      // close any tile menus under the action bars
+      document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>{
+        if(!m.contains(e.target)) m.classList.add('hidden');
+      });
     });
-    window.addEventListener('scroll',  ()=>{ shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden'); });
-    window.addEventListener('resize',  ()=>{ shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden'); });
+    window.addEventListener('scroll',  ()=>{ shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden'); document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>m.classList.add('hidden')); });
+    window.addEventListener('resize',  ()=>{ shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden'); document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>m.classList.add('hidden')); });
 
     // System share helper (tries to attach green tile image on mobile)
     async function trySystemShare(text){
@@ -874,19 +909,29 @@
       }catch{}
     }
 
-    /* ---- Yellow tile share (both bars) ---- */
-    function onTileShareClick(){
-      const hasResult = stickyPayload && Number.isFinite(Number(stickyPayload.time));
-      const text = hasResult ? buildWinShareText(stickyPayload) : shareTextLinkOnly(GAME_ID);
+    /* ---- Yellow tile share dropdowns (both bars) ---- */
+    function wireShareTile(wrapper){
+      const btn  = wrapper.querySelector('.share-tile');
+      const menu = wrapper.querySelector('.share-menu-local');
+      const wa   = menu.querySelector('button.wa');
+      const cp   = menu.querySelector('button.copy');
+      const sys  = menu.querySelector('button.sys');
 
-      trySystemShare(text).then(ok=>{
-        if(!ok){
-          navigator.clipboard?.writeText(text).then(()=>alert('Skakel gekopieer!'))
-          .catch(()=>openWhatsApp(text));
-        }
+      btn.addEventListener('click', (e)=>{
+        e.preventDefault(); e.stopPropagation();
+        document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>{ if(m!==menu) m.classList.add('hidden'); });
+        menu.classList.toggle('hidden');
       });
+
+      const txt = () => tileShareText();
+      wa.onclick = () => { openWhatsApp(txt()); menu.classList.add('hidden'); };
+      cp.onclick = async () => { try{ await navigator.clipboard.writeText(txt()); alert('Skakel gekopieer!'); }catch{} menu.classList.add('hidden'); };
+      sys.onclick = async () => { const ok = await trySystemShare(txt()); if(!ok) openWhatsApp(txt()); menu.classList.add('hidden'); };
     }
-    document.querySelectorAll('.share-tile').forEach(el=>el.addEventListener('click', onTileShareClick));
+    function initTileShareDropdowns(){
+      document.querySelectorAll('.share-tile-wrap').forEach(wireShareTile);
+    }
+    initTileShareDropdowns();
 
     /* ---- Init ---- */
     await loadGame();
