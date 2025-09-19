@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="af">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <title>Kriptiek – Slimstiek</title>
+
+  <!-- Favicon / OG (use your saved tile) -->
+  <link rel="icon" type="image/png" href="/assets/S_SLIMSTIEK_12SEP.png" />
+  <meta property="og:title" content="Slimstiek • Kriptiek" />
+  <meta property="og:image" content="/assets/S_SLIMSTIEK_12SEP.png" />
+  <meta name="theme-color" content="#0f766e" />
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    :root{
+      --teal-700:#0f766e;
+      --teal-900:#134e4a;
+      --purple-600:#7c3aed;
+      --purple-800:#5b21b6;
+      --ink:#0b1220;
+      --muted:#64748b;
+
+      --tile-radius:18px;
+      --btn-radius:14px;
+      --shadow:0 18px 40px rgba(0,0,0,.16);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:#f7f9fb; color:#0b1220;
+      font-family:Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      display:flex; flex-direction:column; align-items:center;
+    }
+
+    .page{
+      width:100%; max-width:960px; padding:16px 16px 40px;
+      display:flex; flex-direction:column; gap:16px;
+    }
+
+    /* Header strip */
+    .k-header{
+      display:flex; align-items:center; gap:12px;
+    }
+    .k-header img{
+      width:44px; height:44px; border-radius:12px; box-shadow:0 6px 14px rgba(0,0,0,.12);
+    }
+    .k-title{
+      display:flex; flex-direction:column; line-height:1.1;
+    }
+    .k-title b{font-size:22px}
+    .k-title small{color:var(--muted); font-weight:600}
+
+    /* Layout: left game, right meta */
+    .layout{
+      display:grid; grid-template-columns: 1fr 320px; gap:18px;
+    }
+    @media (max-width: 900px){
+      .layout{ grid-template-columns: 1fr; }
+    }
+
+    /* Card shell */
+    .card{
+      background:#ffffff; border:1px solid #e5e7eb; border-radius:16px; box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .pad{ padding:14px; }
+
+    /* Target + grid */
+    #target{
+      display:flex; align-items:center; justify-content:center; gap:6px;
+      padding:10px 12px; border-radius:14px;
+      background:linear-gradient(135deg, var(--teal-700), var(--teal-900));
+      color:#fff; font-weight:800; letter-spacing:1px; font-size:14px;
+    }
+    #target-word{
+      display:inline-flex; gap:4px; margin-left:8px;
+      background:rgba(255,255,255,.12); padding:4px 6px; border-radius:10px;
+    }
+    .tch{ width:26px; height:26px; display:grid; place-items:center; border-radius:6px;
+      background:rgba(0,0,0,.15); font-size:14px; }
+
+    #grid{
+      width:100%; aspect-ratio:8/10;
+      display:grid; grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(10,1fr);
+      gap:2px; border-radius:16px; overflow:hidden;
+      border:1px solid #0f766e22; background:#0e3a38;
+      margin-top:10px;
+    }
+    .cell{
+      background:#0f5d58; position:relative; color:#fff; font-weight:800; display:grid; place-items:center;
+      border:1px solid rgba(255,255,255,.06);
+      transition:transform .13s ease, opacity .13s ease;
+      font-size:16px;
+    }
+    .cell.filled{background:#0f766e}
+    .pop{ transform:scale(1.2); opacity:0 }
+
+    /* Controls */
+    .controls{ display:flex; flex-direction:column; gap:10px; margin-top:10px }
+    .row{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px }
+    .row-2{ display:grid; grid-template-columns: 1fr 1fr; gap:10px }
+    .btn{
+      border:0; border-radius:var(--btn-radius);
+      padding:12px 14px; font-weight:800; letter-spacing:.6px; cursor:pointer;
+      text-transform:uppercase; color:#fff;
+      background:linear-gradient(135deg, var(--teal-700), var(--teal-900));
+      box-shadow:0 10px 18px rgba(15,118,110,.25);
+    }
+    .btn:active{ transform:translateY(1px) }
+    .btn.sec{ background:linear-gradient(135deg, #1f2937, #0f172a) }
+    .btn.purp{ background:linear-gradient(135deg, var(--purple-600), var(--purple-800)) }
+
+    .pill{
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      padding:10px; border-radius:12px; background:#0b3b3833; color:#0b1220; font-weight:700;
+    }
+    .pill b{ color:#0f766e }
+
+    /* Scoreboard */
+    .scorebar{ display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-top:6px }
+    .stat{
+      background:#f1f5f9; border:1px solid #e2e8f0; border-radius:12px; padding:10px;
+      display:flex; flex-direction:column; align-items:center; gap:2px; text-align:center;
+    }
+    .stat small{ color:var(--muted); font-weight:700 }
+    .stat b{ font-size:18px }
+
+    /* Sidebar: rules + leaderboard */
+    .h2{ font-size:14px; font-weight:800; letter-spacing:1px; color:#0f766e; margin-bottom:8px }
+    .rules{ font-size:14px; color:#0f172a; line-height:1.45 }
+    .rules li{ margin:6px 0 }
+
+    table.board{ width:100%; border-collapse:collapse; overflow:hidden; border-radius:12px; border:1px solid #e2e8f0 }
+    .board caption{
+      background:linear-gradient(135deg, var(--teal-700), var(--teal-900)); color:#fff;
+      font-weight:800; letter-spacing:1px; padding:10px; text-transform:uppercase;
+    }
+    .board th{ background:#0f766e; color:#fff; font-size:12px; text-transform:uppercase; padding:8px }
+    .board td{ padding:10px; border-top:1px solid #e2e8f0; font-weight:700 }
+    .board tr:nth-child(odd){ background:#f8fafc }
+
+    /* Overlay */
+    .overlay{
+      position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+      background:rgba(2,6,23,.65); z-index:1000;
+    }
+    .modal{
+      background:#0b1220; color:#fff; width:min(520px, 92vw);
+      border-radius:16px; box-shadow:var(--shadow); padding:18px; text-align:center;
+    }
+    .modal h3{ margin:0 0 8px; font-size:18px }
+    .modal p{ margin:0 0 12px; color:#dbeafe }
+    .modal input{
+      width:100%; padding:12px; border-radius:10px; border:2px solid #134e4a; background:#062a28; color:#fff;
+      font-weight:700;
+    }
+    .modal .actions{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px }
+    .modal .full{ grid-column:1/-1 }
+
+    footer{
+      margin-top:22px; text-align:center; color:#64748b; font-size:13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="k-header">
+      <img src="/assets/S_SLIMSTIEK_12SEP.png" alt="Slimstiek" />
+      <div class="k-title">
+        <b>Slimstiek</b>
+        <small>’n Kriptiek woordbou-speletjie – punte, nie tyd</small>
+      </div>
+    </div>
+
+    <div class="layout">
+      <!-- LEFT: Game area -->
+      <div class="card pad">
+        <div id="target">
+          TEIKENWOORD:
+          <span id="target-word"></span>
+        </div>
+
+        <div id="grid" aria-label="speletjie rooster"></div>
+
+        <div class="scorebar">
+          <div class="stat"><small>Punte</small><b id="score">0</b></div>
+          <div class="stat"><small>Kombinasie</small><b id="combo">x1</b></div>
+          <div class="stat"><small>Tyd</small><b id="elapsed">00:00</b></div>
+        </div>
+
+        <div class="controls">
+          <div class="row">
+            <button id="btn-left"  class="btn" aria-label="links">◀</button>
+            <button id="btn-down"  class="btn" aria-label="af">▼</button>
+            <button id="btn-right" class="btn" aria-label="regs">▶</button>
+          </div>
+          <div class="row-2">
+            <button id="btn-start" class="btn purp">Begin</button>
+            <button id="btn-pause" class="btn sec">Pouse</button>
+          </div>
+          <div class="row-2">
+            <button id="btn-share" class="btn">Deel</button>
+            <button id="btn-profile" class="btn sec">Voeg by My Profiel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Rules + Leaderboard -->
+      <aside class="card pad">
+        <div class="h2">Reëls & Punte</div>
+        <ul class="rules">
+          <li>Bou die teikenwoord horisontaal op die rooster.</li>
+          <li>Jy verdien <b>basis-punte</b> wat <b>afneem met tyd</b>:</li>
+          <li style="list-style:none;margin-left:8px">
+            <code>Basis = 1200 − (18 × sekondes)</code> (min 0)
+          </li>
+          <li>Elke <b>kettingverwydering</b> (kleur/letter-paar wat bars) gee <b>+15</b> en lig jou <b>kombinasie</b>.</li>
+          <li>Voltooi die woord om ’n <b>afwerkingsbonus</b> te kry:
+            <code>250 × kombinasie</code> (afgerond).</li>
+          <li>Bou <b>té vinnig</b> → min kombinasie = laer totaal. <b>Talm te lank</b> → rooster vol = verloor.</li>
+        </ul>
+
+        <table class="board" id="board">
+          <caption>SLIMSTIEK LEIERBORD</caption>
+          <thead><tr><th>#</th><th>Naam</th><th>Punte</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </aside>
+    </div>
+
+    <footer>© Kriptiek – Slimstiek</footer>
+  </div>
+  <script type="module">
+    /*****************************************
+     * Simple daily loader (plug your backend)
+     *****************************************/
+    // If you already expose the daily word elsewhere, just swap this out.
+    async function loadDaily() {
+      // 1) prefer ?word= for testing
+      const q = new URLSearchParams(location.search);
+      const w = (q.get('word') || '').toUpperCase().replace(/[^A-Z]/g,'');
+      if (w && w.length >= 4 && w.length <= 8) return { id: new Date().toISOString().slice(0,10), word: w };
+
+      // 2) fallback: hard demo list (replace with Firestore call if you want)
+      const sample = ["KRIPTIEK","DILEMMA","BLIT","TAAL","WOORD","AFRIKA"];
+      const idx = Math.floor((Date.now() / 86400000)) % sample.length;
+      return { id: new Date().toISOString().slice(0,10), word: sample[idx] };
+    }
+
+    /*******************
+     * DOM references
+     *******************/
+    const gridEl = document.getElementById('grid');
+    const targetWrap = document.getElementById('target-word');
+    const scoreEl = document.getElementById('score');
+    const comboEl = document.getElementById('combo');
+    const timeEl = document.getElementById('elapsed');
+
+    const btnLeft  = document.getElementById('btn-left');
+    const btnRight = document.getElementById('btn-right');
+    const btnDown  = document.getElementById('btn-down');
+    const btnStart = document.getElementById('btn-start');
+    const btnPause = document.getElementById('btn-pause');
+    const btnShare = document.getElementById('btn-share');
+    const btnProfile = document.getElementById('btn-profile');
+
+    /*******************
+     * Game constants
+     *******************/
+    const W = 8, H = 10;
+    const COLORS = ['#0ea5e9','#f97316','#22c55e','#f59e0b','#a855f7','#0e7490','#7dd3fc'];
+    const LETTERS = 'BCDFGHJKLMNPQRSTVWXZ';
+    const VOWELS = 'AEIOUY';
+
+    let TARGET = '';   // set by daily load
+    let GAME_ID = '';  // daily id
+
+    // State
+    let grid = [];
+    let cur = null, next = null;
+    let timer = null, tick = null;
+    let seconds = 0, paused = false, over = false;
+    // Scoring
+    let score = 0;
+    let combo = 1;
+
+    function fmtTime(s){
+      const m = Math.floor(s/60), r = s%60;
+      return `${String(m).padStart(2,'0')}:${String(r).padStart(2,'0')}`;
+    }
+
+    function buildTargetUI(){
+      targetWrap.innerHTML = '';
+      TARGET.split('').forEach(ch=>{
+        const d = document.createElement('span');
+        d.className='tch'; d.textContent = ch;
+        targetWrap.appendChild(d);
+      });
+    }
+
+    function initGrid(){
+      gridEl.innerHTML = '';
+      grid = Array.from({length:H},()=>Array.from({length:W},()=>null));
+
+      for(let y=0;y<H;y++){
+        for(let x=0;x<W;x++){
+          const c = document.createElement('div');
+          c.className='cell'; c.dataset.x=x; c.dataset.y=y;
+          gridEl.appendChild(c);
+        }
+      }
+    }
+
+    function createBlock(){
+      const color = COLORS[Math.floor(Math.random()*COLORS.length)];
+      const letter = (Math.random() < 0.3)
+        ? VOWELS[Math.floor(Math.random()*VOWELS.length)]
+        : LETTERS[Math.floor(Math.random()*LETTERS.length)];
+      return { x:Math.floor(W/2), y:0, color, letter };
+    }
+
+    function drawBlock(b){
+      if(!b || b.x<0||b.x>=W||b.y<0||b.y>=H) return;
+      const cell = gridEl.querySelector(`.cell[data-x="${b.x}"][data-y="${b.y}"]`);
+      if(cell){ cell.classList.add('filled'); cell.style.background=b.color; cell.textContent=b.letter; }
+    }
+    function clearBlock(b){
+      if(!b || b.x<0||b.x>=W||b.y<0||b.y>=H) return;
+      const cell = gridEl.querySelector(`.cell[data-x="${b.x}"][data-y="${b.y}"]`);
+      if(cell){ cell.className='cell'; cell.style.background=''; cell.textContent=''; }
+    }
+    function collides(b){
+      if(!b) return true;
+      if(b.x<0||b.x>=W||b.y>=H) return true;
+      if(b.y>=0 && grid[b.y][b.x]) return true;
+      return false;
+    }
+
+    async function move(dx, dy){
+      if(!cur || paused || over) return;
+      clearBlock(cur);
+      const t = {...cur, x:cur.x+dx, y:cur.y+dy};
+      if(!collides(t)){ cur = t; drawBlock(cur); }
+      else if(dy>0){ // landed
+        drawBlock(cur);
+        place();
+      } else {
+        drawBlock(cur);
+      }
+    }
+    function hardDrop(){
+      if(!cur || paused || over) return;
+      clearBlock(cur);
+      while(cur.y<H-1 && !collides({...cur,y:cur.y+1})) cur.y++;
+      place();
+    }
+
+    async function place(){
+      if(!cur || cur.y<0) return;
+      grid[cur.y][cur.x] = {...cur};
+      drawBlock(cur);
+      await checkMatches();   // pop pairs
+      await checkWin();       // did we form target row?
+      cur = next; next = createBlock(); drawBlock(cur);
+      if(collides(next)){ end(false); }
+    }
+
+    function isInTarget(letter){ return TARGET.includes(letter); }
+
+    async function checkMatches(){
+      const toPop = new Set();
+      for(let y=0;y<H;y++){
+        for(let x=0;x<W;x++){
+          const cell = grid[y][x]; if(!cell || isInTarget(cell.letter)) continue;
+          const dirs = [[1,0],[0,1],[-1,0],[0,-1]];
+          for(const [dx,dy] of dirs){
+            const nx=x+dx, ny=y+dy;
+            if(nx>=0&&nx<W&&ny>=0&&ny<H){
+              const n=grid[ny][nx];
+              if(n && !isInTarget(n.letter)){
+                if(cell.letter===n.letter || cell.color===n.color){
+                  toPop.add(`${x},${y}`); toPop.add(`${nx},${ny}`);
+                }
+              }
+            }
+          }
+        }
+      }
+      if(toPop.size){
+        // score for chain clears
+        const popped = toPop.size;
+        const add = 15 * Math.ceil(popped/2);
+        score += add * combo;
+        bumpCombo();
+
+        await Promise.all(Array.from(toPop).map(pos => new Promise(res=>{
+          const [x,y]=pos.split(',').map(Number);
+          const el = gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+          if(el){ el.classList.add('pop'); setTimeout(()=>{ grid[y][x]=null; clearBlock({x,y}); res(); },130); }
+          else res();
+        })));
+        gravity();
+        updateHUD();
+      }
+    }
+
+    function gravity(){
+      for(let x=0;x<W;x++){
+        let write=H-1;
+        for(let y=H-1;y>=0;y--){
+          if(grid[y][x]){
+            if(y!==write){
+              grid[write][x]=grid[y][x]; grid[y][x]=null;
+              clearBlock({x,y}); drawBlock({...grid[write][x],x,y:write});
+            }
+            write--;
+          }
+        }
+      }
+    }
+
+    async function checkWin(){
+      for(let y=0;y<H;y++){
+        for(let x=0;x<=W-TARGET.length;x++){
+          let word='', ok=true, cells=[];
+          for(let i=0;i<TARGET.length;i++){
+            if(!grid[y][x+i]){ ok=false; break; }
+            word += grid[y][x+i].letter; cells.push([x+i,y]);
+          }
+          if(ok && word===TARGET){
+            // Completion bonus based on combo
+            score += Math.round(250 * combo);
+            updateHUD();
+
+            // little highlight
+            cells.forEach(([cx,cy])=>{
+              const el = gridEl.querySelector(`.cell[data-x="${cx}"][data-y="${cy}"]`);
+              if(el) el.style.transform='scale(1.1)';
+            });
+            await new Promise(r=>setTimeout(r,420));
+            end(true);
+            return;
+          }
+        }
+      }
+    }
+
+    function bumpCombo(){ combo = Math.min(9, combo+0.25); }
+    function resetCombo(){ combo = 1; }
+
+    /*******************
+     * Timer & scoring
+     *******************/
+    function baseScore() {
+      // decays by time: 1200 - 18 * seconds (min 0)
+      return Math.max(0, 1200 - 18 * seconds);
+    }
+    function updateHUD(){
+      scoreEl.textContent = String(score + baseScore());
+      comboEl.textContent = 'x' + (Number.isInteger(combo) ? combo : combo.toFixed(2)).replace(/\.00$/,'');
+      timeEl.textContent = fmtTime(seconds);
+    }
+
+    function startLoops(){
+      seconds = 0; paused=false; over=false; resetCombo();
+      if(tick) clearInterval(tick);
+      tick = setInterval(()=>{ if(!paused && !over) seconds++; updateHUD(); }, 1000);
+      if(timer) clearInterval(timer);
+      timer = setInterval(()=>{ if(!paused && !over) move(0,1); }, 1000);
+    }
+    function stopLoops(){ if(tick) clearInterval(tick); if(timer) clearInterval(timer); }
+
+    /*******************
+     * Overlay helpers
+     *******************/
+    function askNameAndShare(finalScore){
+      const wrap = document.createElement('div'); wrap.className='overlay';
+      wrap.innerHTML = `
+        <div class="modal">
+          <h3>Mooi! Jou telling vir <b>${TARGET}</b> is <b>${finalScore}</b></h3>
+          <p>Vul jou naam in vir die leierbord of deel dit met jou vriende.</p>
+          <input id="nameIn" placeholder="Jou naam" maxlength="24"/>
+          <div class="actions">
+            <button id="m-submit" class="btn purp">Dien In</button>
+            <button id="m-share" class="btn">Deel</button>
+            <button id="m-close" class="btn sec full">Sluit</button>
+          </div>
+        </div>`;
+      document.body.appendChild(wrap);
+      const onClose = ()=>wrap.remove();
+
+      wrap.querySelector('#m-close').onclick = onClose;
+      wrap.querySelector('#m-share').onclick = ()=>{
+        shareResult(finalScore);
+      };
+      wrap.querySelector('#m-submit').onclick = async ()=>{
+        const name = (wrap.querySelector('#nameIn').value || 'Anoniem').slice(0,24);
+        try{
+          await addLeaderboard(GAME_ID, name, finalScore);
+          onClose();
+        }catch(e){ console.warn(e); }
+      };
+    }
+
+    /*******************
+     * Buttons & input
+     *******************/
+    btnLeft.onclick  = ()=>move(-1,0);
+    btnRight.onclick = ()=>move(1,0);
+    btnDown.onclick  = ()=>hardDrop();
+    btnPause.onclick = ()=>{
+      if(over) return;
+      paused = !paused; btnPause.textContent = paused ? 'Hervat' : 'Pouse';
+    };
+    btnStart.onclick = ()=>startGame();
+
+    document.addEventListener('keydown', e=>{
+      if(e.key==='ArrowLeft') move(-1,0);
+      if(e.key==='ArrowRight') move(1,0);
+      if(e.key==='ArrowDown') move(0,1);
+      if(e.key===' ') { e.preventDefault(); hardDrop(); }
+    });
+
+    btnShare.onclick = ()=>{
+      const final = score + baseScore();
+      shareResult(final);
+    };
+
+    btnProfile.onclick = ()=>{
+      // Hook into your existing profile system
+      try{
+        // Call your site’s function if available:
+        if(window.kriptiek && typeof window.kriptiek.addToProfile==='function'){
+          window.kriptiek.addToProfile({
+            app: 'Slimstiek',
+            day: GAME_ID,
+            word: TARGET,
+            score: score + baseScore()
+          });
+        }
+        alert('Bygevoeg by My Profiel ✅');
+      }catch(e){ console.warn(e); }
+    };
+
+    function shareResult(finalScore){
+      const msg = `Ek het ${TARGET} in Slimstiek voltooi vir ${finalScore} punte — kan jy my klop?`;
+      const url = location.href.split('?')[0];
+      const text = `${msg} ${url}`;
+      if(navigator.share){
+        navigator.share({ text, url }).catch(()=>copy(text));
+      }else{
+        copy(text);
+      }
+      function copy(t){
+        navigator.clipboard.writeText(t).then(()=>{
+          btnShare.textContent='Gekopieer!'; setTimeout(()=>btnShare.textContent='Deel',1600);
+        },()=>alert('Kon nie kopieer nie'));
+      }
+    }
+
+    /*******************
+     * Game start / end
+     *******************/
+    function startGame(){
+      // reset
+      stopLoops(); seconds=0; score=0; resetCombo(); over=false; paused=false;
+      btnPause.textContent='Pouse';
+      initGrid();
+      cur = createBlock(); next = createBlock(); drawBlock(cur);
+      updateHUD();
+      startLoops();
+    }
+
+    function end(win){
+      over=true; stopLoops();
+      const final = score + baseScore();
+      if(win){
+        askNameAndShare(final);
+      }else{
+        const wrap = document.createElement('div'); wrap.className='overlay';
+        wrap.innerHTML = `
+        <div class="modal">
+          <h3>Speletjie Verby</h3>
+          <p>Die rooster is vol. Jou telling: <b>${final}</b></p>
+          <div class="actions">
+            <button id="r1" class="btn purp full">Probeer Weer</button>
+          </div>
+        </div>`;
+        document.body.appendChild(wrap);
+        wrap.querySelector('#r1').onclick = ()=>{ wrap.remove(); startGame(); };
+      }
+    }
+    /*******************
+     * Leaderboard (simple REST placeholder)
+     * Replace with your Firestore calls if desired.
+     *******************/
+    const boardEl = document.querySelector('#board tbody');
+
+    async function addLeaderboard(day, name, points){
+      // Replace with Firestore:
+      // await addDoc(collection(db,'slimstiek_daily', day, 'leaderboard'), { name, points, ts: Date.now() })
+      // For now keep in-memory (session) to let you demo immediately:
+      const key = 'slimstiek_demo_' + day;
+      const rows = JSON.parse(localStorage.getItem(key) || '[]');
+      rows.push({name, points, ts: Date.now()});
+      rows.sort((a,b)=> b.points - a.points);
+      localStorage.setItem(key, JSON.stringify(rows.slice(0,50)));
+      renderBoard(rows);
+    }
+
+    function renderBoard(list){
+      boardEl.innerHTML='';
+      let rank=1;
+      list.slice(0,10).forEach(row=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${rank++}</td><td>${row.name}</td><td>${row.points}</td>`;
+        boardEl.appendChild(tr);
+      });
+    }
+
+    async function loadBoard(day){
+      const key = 'slimstiek_demo_' + day;
+      const rows = JSON.parse(localStorage.getItem(key) || '[]');
+      renderBoard(rows);
+    }
+
+    /*******************
+     * Boot
+     *******************/
+    (async function boot(){
+      const daily = await loadDaily();
+      GAME_ID = daily.id;
+      TARGET = daily.word.toUpperCase();
+      buildTargetUI();
+      initGrid();
+      loadBoard(GAME_ID);
+    })();
+  </script>
+</body>
+</html>
