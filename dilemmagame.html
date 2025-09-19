@@ -55,8 +55,12 @@
     .share-menu-local{
       background:#fff; border:1px solid #e5e7eb; box-shadow:0 8px 24px rgba(0,0,0,.12);
       border-radius:.5rem; width:240px; padding:.5rem; z-index:3000;
+      line-height:1.25; /* normal leading inside the menu */
     }
-    .share-menu-local button{ width:100%; text-align:left; padding:.5rem .75rem; border-radius:.375rem; font-weight:600; }
+    .share-menu-local button{
+      width:100%; text-align:left; padding:.5rem .75rem; border-radius:.375rem; font-weight:600;
+      line-height:1.25rem; display:flex; align-items:center; gap:.5rem; white-space:nowrap;
+    }
     .share-menu-local button:hover{ background:#f3f4f6; }
 
     /* ---- Action bars (match Blitstiek look) ---- */
@@ -73,7 +77,8 @@
       grid-template-columns:repeat(2,1fr);
       max-width:248px;                   /* 2×120px + 1×8px */
     }
-    .action-grid a, .action-grid button{
+    /* Scope zero line-height to the TILE controls only (not dropdown menus) */
+    .action-grid > a, .action-grid > button{
       display:grid;
       place-items:center;
       width:100%;
@@ -82,7 +87,7 @@
       background:transparent;
       border:0;
       padding:0;
-      line-height:0;
+      line-height:0;                     /* prevents extra space inside PNG tiles */
       cursor:pointer;
     }
     .btn-img{
