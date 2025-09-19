@@ -59,15 +59,19 @@
     .share-menu-local button{ width:100%; text-align:left; padding:.5rem .75rem; border-radius:.375rem; font-weight:600; }
     .share-menu-local button:hover{ background:#f3f4f6; }
 
-    /* ---- Action bar (match Blitstiek) ---- */
+    /* ---- Action bars (match Blitstiek look) ---- */
     .action-grid{
       display:grid;
       grid-template-columns:repeat(3,1fr);
-      gap:.5rem;
+      gap:.5rem;                         /* 8px gap like Blitstiek */
       justify-items:center;
       align-items:center;
-      max-width:640px;
+      max-width:376px;                   /* 3×120px tiles + 2×8px gaps */
       margin:0 auto;
+    }
+    .action-grid.two{
+      grid-template-columns:repeat(2,1fr);
+      max-width:248px;                   /* 2×120px + 1×8px */
     }
     .action-grid a, .action-grid button{
       display:grid;
@@ -278,11 +282,15 @@ playerNameEl.textContent = displayName;
 function renderAuthRequired() {
   const clue = document.getElementById("clue");
   clue.textContent = "Jy moet aangemeld wees om te speel.";
-  // Replace links + old blue button with two side-by-side buttons
+  // Replace old links/blue button with two tile buttons
   keyboard.innerHTML = `
-    <div class="flex items-center justify-center mt-2 gap-3">
-      <a href="/login.html" class="inline-block bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-4 py-2 rounded">Meld aan</a>
-      <a href="/register.html" class="inline-block bg-gray-600 hover:bg-gray-700 text-white text-sm font-bold px-4 py-2 rounded">Registreer</a>
+    <div class="action-grid two mt-2">
+      <a href="/login.html" title="Meld aan">
+        <img class="btn-img" src="/assets/K_MELD_AAN_12SEP.png" alt="Meld aan" width="120" height="120">
+      </a>
+      <a href="/register.html" title="Registreer">
+        <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="120" height="120">
+      </a>
     </div>`;
   // Hide the R action bar if present
   const barR = document.getElementById('barR');
@@ -605,7 +613,6 @@ async function loadLeaderboard() {
       if (srVal == null) needSR.push(d.id);
     });
 
-    // fill missing successRate values client-side if allowed
     if (needSR.length) {
       try {
         const results = await Promise.allSettled(
@@ -631,7 +638,6 @@ async function loadLeaderboard() {
       return;
     }
 
-    // order: fewest guesses first, then earliest timestamp
     entries.sort((a, b) => (a.guesses - b.guesses) || (a.when - b.when));
     entries.forEach((e, idx) => {
       const li = document.createElement("li");
@@ -772,7 +778,7 @@ function checkGuessWithFlip(guess) {
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     renderAuthRequired();
-    await loadLeaderboard(); // still show public board
+    await loadLeaderboard(); // public board still visible
     return;
   }
 
@@ -794,7 +800,7 @@ onAuthStateChanged(auth, async (user) => {
   createKeyboard();
   restoreLocalProgress();
 
-  // Show the action bar for signed-in users
+  // Show action bar for signed-in users
   const barR = document.getElementById('barR');
   if (barR) barR.classList.remove('hidden');
 
@@ -805,7 +811,7 @@ onAuthStateChanged(auth, async (user) => {
   wireShareDropdown(tileShareBtn, pMenu);
   bindMenuActions(pMenu, { waBtn: pWA, copyBtn: pCopy, sysBtn: pSys });
 
-  // If previously completed, show summary + ensure leaderboard row
+  // Completed before? show summary + ensure leaderboard row
   const lsDone = localStorage.getItem(doneKey) === "true";
   let fsDone = false;
   try {
