@@ -147,10 +147,15 @@
           return showErr(`Die woord “${wordUpper}” is reeds gebruik. Kies ’n ander teikenwoord.`);
         }
 
+        // ✅ Always prepend/append around the clue that you type
+        // Count only letters (ignore hyphens etc.)
+        const wordLen = wordUpper.replace(/[^A-ZÁÉÍÓÚÄËÏÖÜÂÊÎÔÛŸ]/g, '').length;
+        const fullClue = `VANDAG SE MISLEIDRAAD: ${clueRaw} (${wordLen} letters)`;
+
         const payload = {
-          clue: clueRaw,
-          leidraad: clueRaw,          // back-compat
-          word: wordUpper,            // UPPERCASE
+          clue: fullClue,
+          leidraad: fullClue,          // back-compat
+          word: wordUpper,             // UPPERCASE
           status: 'published',
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
@@ -237,6 +242,10 @@
         <label class="block">
           <span class="font-semibold">Leidraad</span>
           <textarea id="clue" rows="3" class="mt-1 w-full border rounded px-3 py-2" placeholder="Skryf hier die leidraad…"></textarea>
+          <p class="text-xs text-gray-500 mt-1">
+            Let wel: Wanneer jy stoor, word dit outomaties gestoor as
+            <em>“VANDAG SE MISLEIDRAAD: [jou teks] (X letters)”</em>.
+          </p>
         </label>
 
         <div class="flex gap-3">
