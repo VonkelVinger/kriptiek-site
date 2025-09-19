@@ -58,6 +58,37 @@
     }
     .share-menu-local button{ width:100%; text-align:left; padding:.5rem .75rem; border-radius:.375rem; font-weight:600; }
     .share-menu-local button:hover{ background:#f3f4f6; }
+
+    /* ---- Action bar (match Blitstiek) ---- */
+    .action-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:.5rem;
+      justify-items:center;
+      align-items:center;
+      max-width:640px;
+      margin:0 auto;
+    }
+    .action-grid a, .action-grid button{
+      display:grid;
+      place-items:center;
+      width:100%;
+      aspect-ratio:1/1;
+      max-width:120px;
+      background:transparent;
+      border:0;
+      padding:0;
+      line-height:0;
+      cursor:pointer;
+    }
+    .btn-img{
+      width:100%; height:100%;
+      object-fit:contain;
+      box-shadow:0 6px 15px rgba(0,0,0,.25);
+      display:block;
+    }
+    .btn-img:hover{ transform:translateY(-1px); filter:brightness(1.02); }
+    .btn-img:active{ transform:translateY(0); filter:brightness(.98); }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -79,33 +110,34 @@
   <!-- Status line -->
   <p id="statusLine" class="text-center font-bold text-[#1e3a8a] mb-4" style="display:none;"></p>
 
-  <!-- ACTION ROW -->
-  <div class="mb-6 flex items-center justify-center">
-    <div class="relative flex items-center gap-3 sm:gap-4">
-      <button id="persistentShareBtn" type="button"
-              class="hidden bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-4 py-2 rounded">
-        DEEL
-      </button>
-
-      <a href="/forum.html" id="chatButton"
-         class="inline-block bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-4 py-2 rounded">
-        GESELS SAAM
+  <!-- R ACTION BAR (shown only when signed in) -->
+  <div id="barR" class="mt-4 hidden">
+    <div class="action-grid">
+      <a href="/forum.html" title="Gesels saam">
+        <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
       </a>
-
-      <!-- Local dropdown for bottom DEEL -->
-      <div id="shareMenuPersistent" class="absolute left-0 top-full mt-2 hidden share-menu-local">
-        <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
-        <div class="space-y-1">
-          <button id="pWhatsApp" type="button">📲 WhatsApp</button>
-          <button id="pCopy" type="button">📋 Kopieer skakel</button>
-          <button id="pSystem" type="button">🖥️ Stelsel-deel</button>
+      <a href="/dilemma-argief.html" title="Dilemma-argief">
+        <img class="btn-img" src="/assets/B_ARGIEF_12SEP.png" alt="Argief" width="120" height="120">
+      </a>
+      <div class="relative">
+        <button id="tileShareBtn" type="button" title="Deel">
+          <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
+        </button>
+        <!-- Share dropdown anchored to yellow tile -->
+        <div id="shareMenuPersistent" class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
+          <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
+          <div class="space-y-1">
+            <button id="pWhatsApp" type="button">📲 WhatsApp</button>
+            <button id="pCopy" type="button">📋 Kopieer skakel</button>
+            <button id="pSystem" type="button">🖥️ Stelsel-deel</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- HOW TO PLAY -->
-  <div class="mt-2 bg-white rounded shadow p-4">
+  <div class="mt-6 bg-white rounded shadow p-4">
     <h2 class="text-xl font-bold mb-2">HOE OM DILEMMA TE SPEEL</h2>
     <p class="text-gray-700 leading-relaxed mb-2">
       Jy het ses kanse om die woord te raai.<br>
@@ -202,10 +234,11 @@ const closeBtn = document.getElementById("closeModalBtn");
 const leaderboardList = document.getElementById("leaderboardList");
 const playerNameEl = document.getElementById("playerName");
 const statusLine = document.getElementById("statusLine");
-const persistentShareBtn = document.getElementById("persistentShareBtn");
 
+/* persistent (yellow tile) share menu + controls */
 const pMenu = document.getElementById("shareMenuPersistent");
 const mMenu = document.getElementById("shareMenuModal");
+const tileShareBtn = document.getElementById("tileShareBtn");
 const pWA = document.getElementById("pWhatsApp");
 const pCopy = document.getElementById("pCopy");
 const pSys = document.getElementById("pSystem");
@@ -245,11 +278,15 @@ playerNameEl.textContent = displayName;
 function renderAuthRequired() {
   const clue = document.getElementById("clue");
   clue.textContent = "Jy moet aangemeld wees om te speel.";
+  // Replace links + old blue button with two side-by-side buttons
   keyboard.innerHTML = `
-    <div class="text-center mt-2">
-      <a href="/login.html" class="underline font-bold text-[#1e3a8a] mr-4">Meld aan</a>
-      <a href="/register.html" class="underline">Registreer</a>
+    <div class="flex items-center justify-center mt-2 gap-3">
+      <a href="/login.html" class="inline-block bg-[#1e3a8a] hover:bg-[#1b3170] text-white text-sm font-bold px-4 py-2 rounded">Meld aan</a>
+      <a href="/register.html" class="inline-block bg-gray-600 hover:bg-gray-700 text-white text-sm font-bold px-4 py-2 rounded">Registreer</a>
     </div>`;
+  // Hide the R action bar if present
+  const barR = document.getElementById('barR');
+  if (barR) barR.classList.add('hidden');
 }
 
 /* ---- Helpers ---- */
@@ -628,6 +665,7 @@ function openWhatsApp(text){
 }
 
 function wireShareDropdown(triggerBtn, menuEl){
+  if (!triggerBtn) return;
   triggerBtn.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -667,7 +705,6 @@ async function gameCompleted(guessCount) {
   modal.style.display = "flex";
 
   lastSummary = { didWin:true, guesses:guessCount };
-  persistentShareBtn.classList.remove("hidden");
 
   // persist + leaderboard
   saveLocalProgress(true);
@@ -690,7 +727,6 @@ async function gameFailed() {
   modal.style.display = "flex";
 
   lastSummary = { didWin:false, guesses:null };
-  persistentShareBtn.classList.remove("hidden");
 
   // persist + leaderboard
   saveLocalProgress(true);
@@ -758,14 +794,18 @@ onAuthStateChanged(auth, async (user) => {
   createKeyboard();
   restoreLocalProgress();
 
+  // Show the action bar for signed-in users
+  const barR = document.getElementById('barR');
+  if (barR) barR.classList.remove('hidden');
+
   // Wire the two share menus
   const shareBtnModal = document.getElementById("modalShareBtn");
   wireShareDropdown(shareBtnModal, mMenu);
   bindMenuActions(mMenu, { waBtn: mWA, copyBtn: mCopy, sysBtn: mSys });
-  wireShareDropdown(persistentShareBtn, pMenu);
+  wireShareDropdown(tileShareBtn, pMenu);
   bindMenuActions(pMenu, { waBtn: pWA, copyBtn: pCopy, sysBtn: pSys });
 
-  // If previously completed, show summary + ensure leaderboard row + keep DEEL exposed
+  // If previously completed, show summary + ensure leaderboard row
   const lsDone = localStorage.getItem(doneKey) === "true";
   let fsDone = false;
   try {
@@ -791,7 +831,6 @@ onAuthStateChanged(auth, async (user) => {
         ? `Jy het hierdie Dilemma in ${s.guesses} ${(s.guesses===1?'raaiskoot':'raaiskote')} opgelos`
         : `Jy kon nie hierdie Dilemma oplos nie`;
       statusLine.style.display = "block";
-      persistentShareBtn.classList.remove("hidden");
       await ensureLeaderboardRow(s);
     } else {
       statusLine.textContent = `Hierdie Dilemma is reeds voltooi`;
