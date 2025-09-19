@@ -1,643 +1,363 @@
 <!DOCTYPE html>
 <html lang="af">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
   <title>Kriptiek – Slimstiek</title>
-
-  <!-- Favicon / OG (use your saved tile) -->
-  <link rel="icon" type="image/png" href="/assets/S_SLIMSTIEK_12SEP.png" />
-  <meta property="og:title" content="Slimstiek • Kriptiek" />
-  <meta property="og:image" content="/assets/S_SLIMSTIEK_12SEP.png" />
-  <meta name="theme-color" content="#0f766e" />
-
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet" />
-
+  <link rel="icon" href="/assets/S_SLIMSTIEK_12SEP.png">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
   <style>
     :root{
-      --teal-700:#0f766e;
-      --teal-900:#134e4a;
-      --purple-600:#7c3aed;
-      --purple-800:#5b21b6;
+      /* Kriptiek family look */
+      --bg:#ffffff;
       --ink:#0b1220;
-      --muted:#64748b;
+      --muted:#667085;
 
-      --tile-radius:18px;
-      --btn-radius:14px;
-      --shadow:0 18px 40px rgba(0,0,0,.16);
+      /* Slimstiek palette */
+      --teal-700:#0f766e;
+      --teal-800:#0d5e58;
+      --teal-900:#134e4a;
+      --purp-700:#7c3aed;
+
+      /* Shared primitives (match Dilemma/Blitstiek) */
+      --corner:18px;
+      --shadow:0 16px 32px rgba(0,0,0,.14);
+      --band-h:34px;
+      --btn-radius:8px;
     }
 
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
-      margin:0; background:#f7f9fb; color:#0b1220;
-      font-family:Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      margin:0; background:#f5f7fb; color:var(--ink);
+      font-family:Montserrat,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       display:flex; flex-direction:column; align-items:center;
     }
 
-    .page{
-      width:100%; max-width:960px; padding:16px 16px 40px;
-      display:flex; flex-direction:column; gap:16px;
-    }
+    /* page frame (same margins/gaps as Blitstiek) */
+    .wrap{width:100%; max-width:960px; padding:18px 16px 36px}
 
-    /* Header strip */
-    .k-header{
-      display:flex; align-items:center; gap:12px;
-    }
-    .k-header img{
-      width:44px; height:44px; border-radius:12px; box-shadow:0 6px 14px rgba(0,0,0,.12);
-    }
-    .k-title{
-      display:flex; flex-direction:column; line-height:1.1;
-    }
-    .k-title b{font-size:22px}
-    .k-title small{color:var(--muted); font-weight:600}
+    /* header row with tile + title */
+    .hdr{display:flex; align-items:center; gap:10px; margin-bottom:10px}
+    .hdr img{width:44px; height:44px; border-radius:12px; box-shadow:0 6px 14px rgba(0,0,0,.12)}
+    .hdr b{font-size:22px; line-height:1}
+    .hdr small{display:block; color:var(--muted); font-weight:600}
 
-    /* Layout: left game, right meta */
-    .layout{
-      display:grid; grid-template-columns: 1fr 320px; gap:18px;
-    }
-    @media (max-width: 900px){
-      .layout{ grid-template-columns: 1fr; }
-    }
+    /* 2-column layout that collapses on mobile */
+    .cols{display:grid; grid-template-columns:1fr 320px; gap:14px}
+    @media (max-width:900px){ .cols{grid-template-columns:1fr} }
 
-    /* Card shell */
-    .card{
-      background:#ffffff; border:1px solid #e5e7eb; border-radius:16px; box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-    .pad{ padding:14px; }
+    /* game card */
+    .card{background:#fff; border:1px solid #e5e7eb; border-radius:var(--corner); box-shadow:var(--shadow)}
+    .pad{padding:12px}
 
-    /* Target + grid */
-    #target{
-      display:flex; align-items:center; justify-content:center; gap:6px;
-      padding:10px 12px; border-radius:14px;
-      background:linear-gradient(135deg, var(--teal-700), var(--teal-900));
-      color:#fff; font-weight:800; letter-spacing:1px; font-size:14px;
+    /* target header pill */
+    .target{
+      display:flex; align-items:center; gap:8px;
+      background:linear-gradient(160deg,var(--teal-700),var(--teal-900));
+      color:#fff; font-weight:800; letter-spacing:.6px; font-size:13px;
+      padding:8px 10px; border-radius:10px; margin-bottom:8px;
     }
-    #target-word{
-      display:inline-flex; gap:4px; margin-left:8px;
-      background:rgba(255,255,255,.12); padding:4px 6px; border-radius:10px;
-    }
-    .tch{ width:26px; height:26px; display:grid; place-items:center; border-radius:6px;
-      background:rgba(0,0,0,.15); font-size:14px; }
+    .tword{display:inline-flex; gap:2px; align-items:center; background:rgba(255,255,255,.14); padding:3px 6px; border-radius:8px}
+    .tch{min-width:22px; height:22px; display:grid; place-items:center; background:rgba(0,0,0,.18); border-radius:6px}
 
+    /* grid box (same feel as D/B grid) */
+    .board{
+      border:1px solid #0f766e33; border-radius:14px; overflow:hidden; background:#0e3a38;
+    }
     #grid{
-      width:100%; aspect-ratio:8/10;
-      display:grid; grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(10,1fr);
-      gap:2px; border-radius:16px; overflow:hidden;
-      border:1px solid #0f766e22; background:#0e3a38;
-      margin-top:10px;
+      width:100%; aspect-ratio:8/10; display:grid;
+      grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(10,1fr);
+      gap:1px; background:#0e3a38;
     }
     .cell{
-      background:#0f5d58; position:relative; color:#fff; font-weight:800; display:grid; place-items:center;
-      border:1px solid rgba(255,255,255,.06);
-      transition:transform .13s ease, opacity .13s ease;
-      font-size:16px;
+      background:#0f5d58; color:#fff; font-weight:800; display:grid; place-items:center;
+      border:1px solid rgba(255,255,255,.06); font-size:16px;
+      transition:transform .12s ease, opacity .12s ease;
     }
-    .cell.filled{background:#0f766e}
-    .pop{ transform:scale(1.2); opacity:0 }
+    .cell.filled{ background:#0f766e }
+    .cell.pop{ transform:scale(1.2); opacity:0 }
 
-    /* Controls */
-    .controls{ display:flex; flex-direction:column; gap:10px; margin-top:10px }
-    .row{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px }
-    .row-2{ display:grid; grid-template-columns: 1fr 1fr; gap:10px }
+    /* bottom stat band (same as family) */
+    .band{
+      height:var(--band-h); display:flex; align-items:center; justify-content:space-between;
+      padding:0 10px; background:linear-gradient(0deg,rgba(0,0,0,.28),rgba(0,0,0,.18));
+      color:#fff; font-weight:800; letter-spacing:.6px; text-transform:uppercase;
+    }
+    .band span{display:inline-flex; align-items:center; gap:6px}
+    .pill{background:rgba(255,255,255,.12); padding:3px 8px; border-radius:8px}
+
+    /* controls (match Blitstiek/Dilemma buttons) */
+    .controls{display:flex; flex-direction:column; gap:8px; margin-top:8px}
+    .row{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+    .row-2{display:grid; grid-template-columns:1fr 1fr; gap:8px}
     .btn{
-      border:0; border-radius:var(--btn-radius);
-      padding:12px 14px; font-weight:800; letter-spacing:.6px; cursor:pointer;
-      text-transform:uppercase; color:#fff;
-      background:linear-gradient(135deg, var(--teal-700), var(--teal-900));
-      box-shadow:0 10px 18px rgba(15,118,110,.25);
+      border:0; border-radius:var(--btn-radius); padding:10px 12px; cursor:pointer;
+      text-transform:uppercase; font-weight:800; letter-spacing:.6px; color:#fff;
+      background:#003366; /* same dark button tone as family */
     }
-    .btn:active{ transform:translateY(1px) }
-    .btn.sec{ background:linear-gradient(135deg, #1f2937, #0f172a) }
-    .btn.purp{ background:linear-gradient(135deg, var(--purple-600), var(--purple-800)) }
+    .btn:active{transform:translateY(1px)}
+    .btn.teal{ background:linear-gradient(160deg,var(--teal-700),var(--teal-900)) }
+    .btn.purp{ background:linear-gradient(160deg,var(--purp-700),#5b21b6) }
 
-    .pill{
-      display:flex; align-items:center; justify-content:center; gap:8px;
-      padding:10px; border-radius:12px; background:#0b3b3833; color:#0b1220; font-weight:700;
-    }
-    .pill b{ color:#0f766e }
+    /* sidebar: rules + leaderboard (same table chrome) */
+    .h2{font-size:12px; font-weight:800; letter-spacing:1px; color:var(--teal-700); text-transform:uppercase; margin:2px 0 10px}
+    .rules{font-size:14px; line-height:1.45; color:#0f172a; margin:0 0 10px; padding-left:18px}
+    .rules code{background:#f3f4f6; padding:2px 6px; border-radius:6px}
 
-    /* Scoreboard */
-    .scorebar{ display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-top:6px }
-    .stat{
-      background:#f1f5f9; border:1px solid #e2e8f0; border-radius:12px; padding:10px;
-      display:flex; flex-direction:column; align-items:center; gap:2px; text-align:center;
-    }
-    .stat small{ color:var(--muted); font-weight:700 }
-    .stat b{ font-size:18px }
+    table.lb{width:100%; border-collapse:collapse; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden}
+    .lb caption{background:#003366; color:#fff; font-weight:800; letter-spacing:1px; padding:8px; text-transform:uppercase}
+    .lb thead{background:var(--teal-700); color:#fff; font-size:12px}
+    .lb th,.lb td{padding:8px 10px}
+    .lb tbody tr:nth-child(odd){background:#f8fafc}
+    .lb tbody tr:first-child{background:#ffd700; color:#000; font-weight:800}
 
-    /* Sidebar: rules + leaderboard */
-    .h2{ font-size:14px; font-weight:800; letter-spacing:1px; color:#0f766e; margin-bottom:8px }
-    .rules{ font-size:14px; color:#0f172a; line-height:1.45 }
-    .rules li{ margin:6px 0 }
-
-    table.board{ width:100%; border-collapse:collapse; overflow:hidden; border-radius:12px; border:1px solid #e2e8f0 }
-    .board caption{
-      background:linear-gradient(135deg, var(--teal-700), var(--teal-900)); color:#fff;
-      font-weight:800; letter-spacing:1px; padding:10px; text-transform:uppercase;
-    }
-    .board th{ background:#0f766e; color:#fff; font-size:12px; text-transform:uppercase; padding:8px }
-    .board td{ padding:10px; border-top:1px solid #e2e8f0; font-weight:700 }
-    .board tr:nth-child(odd){ background:#f8fafc }
-
-    /* Overlay */
-    .overlay{
-      position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
-      background:rgba(2,6,23,.65); z-index:1000;
-    }
-    .modal{
-      background:#0b1220; color:#fff; width:min(520px, 92vw);
-      border-radius:16px; box-shadow:var(--shadow); padding:18px; text-align:center;
-    }
-    .modal h3{ margin:0 0 8px; font-size:18px }
-    .modal p{ margin:0 0 12px; color:#dbeafe }
-    .modal input{
-      width:100%; padding:12px; border-radius:10px; border:2px solid #134e4a; background:#062a28; color:#fff;
-      font-weight:700;
-    }
-    .modal .actions{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px }
-    .modal .full{ grid-column:1/-1 }
-
-    footer{
-      margin-top:22px; text-align:center; color:#64748b; font-size:13px;
-    }
+    /* overlay for result */
+    .overlay{position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; z-index:1000}
+    .modal{background:#0b1220; color:#fff; width:min(520px,92vw); border-radius:12px; box-shadow:var(--shadow); padding:14px}
+    .modal h3{margin:0 0 6px}
+    .modal p{margin:0 0 10px; color:#dbeafe}
+    .modal input{width:100%; padding:10px; border-radius:8px; border:2px solid var(--teal-900); background:#062a28; color:#fff; font-weight:700}
+    .modal .grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px}
+    .modal .full{grid-column:1/-1}
   </style>
 </head>
 <body>
-  <div class="page">
-    <div class="k-header">
-      <img src="/assets/S_SLIMSTIEK_12SEP.png" alt="Slimstiek" />
-      <div class="k-title">
+  <div class="wrap">
+    <!-- header -->
+    <div class="hdr">
+      <img src="/assets/S_SLIMSTIEK_12SEP.png" alt="Slimstiek">
+      <div>
         <b>Slimstiek</b>
         <small>’n Kriptiek woordbou-speletjie – punte, nie tyd</small>
       </div>
     </div>
 
-    <div class="layout">
-      <!-- LEFT: Game area -->
-      <div class="card pad">
-        <div id="target">
-          TEIKENWOORD:
-          <span id="target-word"></span>
-        </div>
-
-        <div id="grid" aria-label="speletjie rooster"></div>
-
-        <div class="scorebar">
-          <div class="stat"><small>Punte</small><b id="score">0</b></div>
-          <div class="stat"><small>Kombinasie</small><b id="combo">x1</b></div>
-          <div class="stat"><small>Tyd</small><b id="elapsed">00:00</b></div>
-        </div>
-
-        <div class="controls">
-          <div class="row">
-            <button id="btn-left"  class="btn" aria-label="links">◀</button>
-            <button id="btn-down"  class="btn" aria-label="af">▼</button>
-            <button id="btn-right" class="btn" aria-label="regs">▶</button>
+    <div class="cols">
+      <!-- left: game -->
+      <div class="card">
+        <div class="pad">
+          <div class="target">
+            TEIKENWOORD:
+            <span id="target-word" class="tword"></span>
           </div>
-          <div class="row-2">
-            <button id="btn-start" class="btn purp">Begin</button>
-            <button id="btn-pause" class="btn sec">Pouse</button>
+
+          <div class="board">
+            <div id="grid"></div>
+            <div class="band">
+              <span>Punte <span id="score" class="pill">0</span></span>
+              <span>Kombinasie <span id="combo" class="pill">x1</span></span>
+              <span>Tyd <span id="elapsed" class="pill">00:00</span></span>
+            </div>
           </div>
-          <div class="row-2">
-            <button id="btn-share" class="btn">Deel</button>
-            <button id="btn-profile" class="btn sec">Voeg by My Profiel</button>
+
+          <div class="controls">
+            <div class="row">
+              <button id="left" class="btn teal">◀</button>
+              <button id="down" class="btn teal">▼</button>
+              <button id="right" class="btn teal">▶</button>
+            </div>
+            <div class="row-2">
+              <button id="start" class="btn purp">Begin</button>
+              <button id="pause" class="btn">Pouse</button>
+            </div>
+            <div class="row-2">
+              <button id="share" class="btn teal">Deel</button>
+              <button id="profile" class="btn">Voeg by My Profiel</button>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- RIGHT: Rules + Leaderboard -->
+      <!-- right: rules + leaderboard -->
       <aside class="card pad">
         <div class="h2">Reëls & Punte</div>
         <ul class="rules">
           <li>Bou die teikenwoord horisontaal op die rooster.</li>
-          <li>Jy verdien <b>basis-punte</b> wat <b>afneem met tyd</b>:</li>
-          <li style="list-style:none;margin-left:8px">
+          <li>Jy verdien <b>basis-punte</b> wat <b>afneem met tyd</b>:
             <code>Basis = 1200 − (18 × sekondes)</code> (min 0)
           </li>
-          <li>Elke <b>kettingverwydering</b> (kleur/letter-paar wat bars) gee <b>+15</b> en lig jou <b>kombinasie</b>.</li>
-          <li>Voltooi die woord om ’n <b>afwerkingsbonus</b> te kry:
-            <code>250 × kombinasie</code> (afgerond).</li>
-          <li>Bou <b>té vinnig</b> → min kombinasie = laer totaal. <b>Talm te lank</b> → rooster vol = verloor.</li>
+          <li>Elke kettingverwydering (kleur/letter-paar wat bars) gee <b>+15</b> en lig jou <b>kombinasie</b>.</li>
+          <li>Voltooi die woord vir ’n <b>afwerkingsbonus</b>:
+            <code>250 × kombinasie</code>.
+          </li>
+          <li>Bou te vinnig → lae kombinasie. Talm te lank → rooster vol → verloor.</li>
         </ul>
 
-        <table class="board" id="board">
+        <table class="lb" id="lb">
           <caption>SLIMSTIEK LEIERBORD</caption>
           <thead><tr><th>#</th><th>Naam</th><th>Punte</th></tr></thead>
           <tbody></tbody>
         </table>
       </aside>
     </div>
-
-    <footer>© Kriptiek – Slimstiek</footer>
   </div>
-  <script type="module">
-    /*****************************************
-     * Simple daily loader (plug your backend)
-     *****************************************/
-    // If you already expose the daily word elsewhere, just swap this out.
-    async function loadDaily() {
-      // 1) prefer ?word= for testing
-      const q = new URLSearchParams(location.search);
-      const w = (q.get('word') || '').toUpperCase().replace(/[^A-Z]/g,'');
-      if (w && w.length >= 4 && w.length <= 8) return { id: new Date().toISOString().slice(0,10), word: w };
 
-      // 2) fallback: hard demo list (replace with Firestore call if you want)
-      const sample = ["KRIPTIEK","DILEMMA","BLIT","TAAL","WOORD","AFRIKA"];
-      const idx = Math.floor((Date.now() / 86400000)) % sample.length;
-      return { id: new Date().toISOString().slice(0,10), word: sample[idx] };
-    }
+  <!-- GAME SCRIPT (keeps your family mechanics; points scoring) -->
+  <script>
+    const W=8,H=10, COLORS=['#0ea5e9','#f97316','#22c55e','#f59e0b','#a855f7','#0e7490','#7dd3fc'],
+          LETTERS='BCDFGHJKLMNPQRSTVWXZ', VOWELS='AEIOUY';
 
-    /*******************
-     * DOM references
-     *******************/
-    const gridEl = document.getElementById('grid');
-    const targetWrap = document.getElementById('target-word');
-    const scoreEl = document.getElementById('score');
-    const comboEl = document.getElementById('combo');
-    const timeEl = document.getElementById('elapsed');
+    const gridEl=document.getElementById('grid'), targetEl=document.getElementById('target-word'),
+          scoreEl=document.getElementById('score'), comboEl=document.getElementById('combo'), timeEl=document.getElementById('elapsed');
 
-    const btnLeft  = document.getElementById('btn-left');
-    const btnRight = document.getElementById('btn-right');
-    const btnDown  = document.getElementById('btn-down');
-    const btnStart = document.getElementById('btn-start');
-    const btnPause = document.getElementById('btn-pause');
-    const btnShare = document.getElementById('btn-share');
-    const btnProfile = document.getElementById('btn-profile');
+    let TARGET='WOORD', GAME_ID='', grid=[], cur=null, next=null, seconds=0, paused=false, over=false, tTick=null, tFall=null;
+    let score=0, combo=1;
 
-    /*******************
-     * Game constants
-     *******************/
-    const W = 8, H = 10;
-    const COLORS = ['#0ea5e9','#f97316','#22c55e','#f59e0b','#a855f7','#0e7490','#7dd3fc'];
-    const LETTERS = 'BCDFGHJKLMNPQRSTVWXZ';
-    const VOWELS = 'AEIOUY';
-
-    let TARGET = '';   // set by daily load
-    let GAME_ID = '';  // daily id
-
-    // State
-    let grid = [];
-    let cur = null, next = null;
-    let timer = null, tick = null;
-    let seconds = 0, paused = false, over = false;
-    // Scoring
-    let score = 0;
-    let combo = 1;
-
-    function fmtTime(s){
-      const m = Math.floor(s/60), r = s%60;
-      return `${String(m).padStart(2,'0')}:${String(r).padStart(2,'0')}`;
-    }
-
-    function buildTargetUI(){
-      targetWrap.innerHTML = '';
-      TARGET.split('').forEach(ch=>{
-        const d = document.createElement('span');
-        d.className='tch'; d.textContent = ch;
-        targetWrap.appendChild(d);
-      });
-    }
-
+    // UI init
+    function tch(s){ const e=document.createElement('span'); e.className='tch'; e.textContent=s; return e; }
+    function buildTarget(){ targetEl.innerHTML=''; TARGET.split('').forEach(c=>targetEl.appendChild(tch(c))); }
     function initGrid(){
-      gridEl.innerHTML = '';
-      grid = Array.from({length:H},()=>Array.from({length:W},()=>null));
-
-      for(let y=0;y<H;y++){
-        for(let x=0;x<W;x++){
-          const c = document.createElement('div');
-          c.className='cell'; c.dataset.x=x; c.dataset.y=y;
-          gridEl.appendChild(c);
-        }
+      gridEl.innerHTML=''; grid=Array.from({length:H},()=>Array(W).fill(null));
+      for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+        const c=document.createElement('div'); c.className='cell'; c.dataset.x=x; c.dataset.y=y; gridEl.appendChild(c);
       }
     }
+    function fmt(s){ const m=Math.floor(s/60), r=String(s%60).padStart(2,'0'); return String(m).padStart(2,'0')+':'+r; }
+    function base(){ return Math.max(0, 1200 - 18*seconds); }
+    function hud(){ scoreEl.textContent=String(score+base()); comboEl.textContent='x'+(Number.isInteger(combo)?combo:combo.toFixed(2)).replace(/\.00$/,''); timeEl.textContent=fmt(seconds); }
 
-    function createBlock(){
-      const color = COLORS[Math.floor(Math.random()*COLORS.length)];
-      const letter = (Math.random() < 0.3)
-        ? VOWELS[Math.floor(Math.random()*VOWELS.length)]
-        : LETTERS[Math.floor(Math.random()*LETTERS.length)];
-      return { x:Math.floor(W/2), y:0, color, letter };
-    }
+    // pieces
+    const create=()=>({x:Math.floor(W/2),y:0,color:COLORS[Math.random()*COLORS.length|0],letter:(Math.random()<.3?VOWELS:LETTERS)[Math.random()*VOWELS.length|0]});
+    function draw(b){ if(!b||b.x<0||b.x>=W||b.y<0||b.y>=H) return; const e=q(b.x,b.y); e.classList.add('filled'); e.style.background=b.color; e.textContent=b.letter; }
+    function clear(b){ if(!b||b.x<0||b.x>=W||b.y<0||b.y>=H) return; const e=q(b.x,b.y); e.className='cell'; e.style.background=''; e.textContent=''; }
+    const q=(x,y)=>gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+    function hit(b){ return !b || b.x<0||b.x>=W || b.y>=H || (b.y>=0 && grid[b.y][b.x]); }
 
-    function drawBlock(b){
-      if(!b || b.x<0||b.x>=W||b.y<0||b.y>=H) return;
-      const cell = gridEl.querySelector(`.cell[data-x="${b.x}"][data-y="${b.y}"]`);
-      if(cell){ cell.classList.add('filled'); cell.style.background=b.color; cell.textContent=b.letter; }
+    async function move(dx,dy){
+      if(!cur||paused||over) return;
+      clear(cur); const t={...cur,x:cur.x+dx,y:cur.y+dy};
+      if(!hit(t)){ cur=t; draw(cur); }
+      else if(dy>0){ draw(cur); place(); } else draw(cur);
     }
-    function clearBlock(b){
-      if(!b || b.x<0||b.x>=W||b.y<0||b.y>=H) return;
-      const cell = gridEl.querySelector(`.cell[data-x="${b.x}"][data-y="${b.y}"]`);
-      if(cell){ cell.className='cell'; cell.style.background=''; cell.textContent=''; }
-    }
-    function collides(b){
-      if(!b) return true;
-      if(b.x<0||b.x>=W||b.y>=H) return true;
-      if(b.y>=0 && grid[b.y][b.x]) return true;
-      return false;
-    }
-
-    async function move(dx, dy){
-      if(!cur || paused || over) return;
-      clearBlock(cur);
-      const t = {...cur, x:cur.x+dx, y:cur.y+dy};
-      if(!collides(t)){ cur = t; drawBlock(cur); }
-      else if(dy>0){ // landed
-        drawBlock(cur);
-        place();
-      } else {
-        drawBlock(cur);
-      }
-    }
-    function hardDrop(){
-      if(!cur || paused || over) return;
-      clearBlock(cur);
-      while(cur.y<H-1 && !collides({...cur,y:cur.y+1})) cur.y++;
-      place();
-    }
+    function drop(){ if(!cur||paused||over) return; clear(cur); while(cur.y<H-1 && !hit({...cur,y:cur.y+1})) cur.y++; place(); }
 
     async function place(){
-      if(!cur || cur.y<0) return;
-      grid[cur.y][cur.x] = {...cur};
-      drawBlock(cur);
-      await checkMatches();   // pop pairs
-      await checkWin();       // did we form target row?
-      cur = next; next = createBlock(); drawBlock(cur);
-      if(collides(next)){ end(false); }
+      if(!cur||cur.y<0) return;
+      grid[cur.y][cur.x]={...cur}; draw(cur);
+      await matches(); await win();
+      cur=next; next=create(); draw(cur);
+      if(hit(next)) end(false);
     }
 
-    function isInTarget(letter){ return TARGET.includes(letter); }
+    function inTarget(ch){ return TARGET.includes(ch); }
 
-    async function checkMatches(){
-      const toPop = new Set();
-      for(let y=0;y<H;y++){
-        for(let x=0;x<W;x++){
-          const cell = grid[y][x]; if(!cell || isInTarget(cell.letter)) continue;
-          const dirs = [[1,0],[0,1],[-1,0],[0,-1]];
-          for(const [dx,dy] of dirs){
-            const nx=x+dx, ny=y+dy;
-            if(nx>=0&&nx<W&&ny>=0&&ny<H){
-              const n=grid[ny][nx];
-              if(n && !isInTarget(n.letter)){
-                if(cell.letter===n.letter || cell.color===n.color){
-                  toPop.add(`${x},${y}`); toPop.add(`${nx},${ny}`);
-                }
-              }
-            }
-          }
+    async function matches(){
+      const kill=new Set();
+      for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+        const c=grid[y][x]; if(!c || inTarget(c.letter)) continue;
+        for(const [dx,dy] of [[1,0],[0,1],[-1,0],[0,-1]]){ const nx=x+dx, ny=y+dy;
+          if(nx>=0&&nx<W&&ny>=0&&ny<H){ const n=grid[ny][nx]; if(n && !inTarget(n.letter) && (n.letter===c.letter||n.color===c.color)){ kill.add(`${x},${y}`); kill.add(`${nx},${ny}`); } }
         }
       }
-      if(toPop.size){
-        // score for chain clears
-        const popped = toPop.size;
-        const add = 15 * Math.ceil(popped/2);
-        score += add * combo;
-        bumpCombo();
+      if(!kill.size) return;
+      const popped=kill.size, add=15*Math.ceil(popped/2); score+=add*combo; combo=Math.min(9, combo+.25);
+      await Promise.all([...kill].map(p=>new Promise(r=>{ const [x,y]=p.split(',').map(Number), e=q(x,y); if(e){ e.classList.add('pop'); setTimeout(()=>{grid[y][x]=null; clear({x,y}); r();},120);} else r(); })));
+      // gravity
+      for(let x=0;x<W;x++){ let w=H-1; for(let y=H-1;y>=0;y--) if(grid[y][x]){ if(y!==w){ grid[w][x]=grid[y][x]; grid[y][x]=null; clear({x,y}); draw({...grid[w][x],x,y:w}); } w--; } }
+      hud();
+    }
 
-        await Promise.all(Array.from(toPop).map(pos => new Promise(res=>{
-          const [x,y]=pos.split(',').map(Number);
-          const el = gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
-          if(el){ el.classList.add('pop'); setTimeout(()=>{ grid[y][x]=null; clearBlock({x,y}); res(); },130); }
-          else res();
-        })));
-        gravity();
-        updateHUD();
+    async function win(){
+      for(let y=0;y<H;y++) for(let x=0;x<=W-TARGET.length;x++){
+        let ok=true; for(let i=0;i<TARGET.length;i++) if(!grid[y][x+i]||grid[y][x+i].letter!==TARGET[i]){ ok=false; break; }
+        if(ok){ score+=Math.round(250*combo); hud(); [...Array(TARGET.length)].forEach((_,i)=>{ const e=q(x+i,y); if(e) e.style.transform='scale(1.1)'; }); await new Promise(r=>setTimeout(r,400)); end(true); return; }
       }
     }
 
-    function gravity(){
-      for(let x=0;x<W;x++){
-        let write=H-1;
-        for(let y=H-1;y>=0;y--){
-          if(grid[y][x]){
-            if(y!==write){
-              grid[write][x]=grid[y][x]; grid[y][x]=null;
-              clearBlock({x,y}); drawBlock({...grid[write][x],x,y:write});
-            }
-            write--;
-          }
-        }
+    function start(){
+      stop(); seconds=0; score=0; combo=1; over=false; paused=false;
+      initGrid(); cur=create(); next=create(); draw(cur); hud();
+      tTick=setInterval(()=>{ if(!paused&&!over){ seconds++; hud(); } },1000);
+      tFall=setInterval(()=>{ if(!paused&&!over) move(0,1); },1000);
+    }
+    function stop(){ if(tTick) clearInterval(tTick); if(tFall) clearInterval(tFall); }
+
+    function end(win){
+      over=true; stop();
+      const final=score+base();
+      if(win){
+        showWin(final);
+      }else{
+        showMsg('Speletjie verby', `Die rooster is vol. Jou telling: <b>${final}</b>`, [{label:'Probeer weer', cls:'purp full', cb:()=>{ closeOverlay(); start(); }}]);
       }
     }
 
-    async function checkWin(){
-      for(let y=0;y<H;y++){
-        for(let x=0;x<=W-TARGET.length;x++){
-          let word='', ok=true, cells=[];
-          for(let i=0;i<TARGET.length;i++){
-            if(!grid[y][x+i]){ ok=false; break; }
-            word += grid[y][x+i].letter; cells.push([x+i,y]);
-          }
-          if(ok && word===TARGET){
-            // Completion bonus based on combo
-            score += Math.round(250 * combo);
-            updateHUD();
-
-            // little highlight
-            cells.forEach(([cx,cy])=>{
-              const el = gridEl.querySelector(`.cell[data-x="${cx}"][data-y="${cy}"]`);
-              if(el) el.style.transform='scale(1.1)';
-            });
-            await new Promise(r=>setTimeout(r,420));
-            end(true);
-            return;
-          }
-        }
-      }
-    }
-
-    function bumpCombo(){ combo = Math.min(9, combo+0.25); }
-    function resetCombo(){ combo = 1; }
-
-    /*******************
-     * Timer & scoring
-     *******************/
-    function baseScore() {
-      // decays by time: 1200 - 18 * seconds (min 0)
-      return Math.max(0, 1200 - 18 * seconds);
-    }
-    function updateHUD(){
-      scoreEl.textContent = String(score + baseScore());
-      comboEl.textContent = 'x' + (Number.isInteger(combo) ? combo : combo.toFixed(2)).replace(/\.00$/,'');
-      timeEl.textContent = fmtTime(seconds);
-    }
-
-    function startLoops(){
-      seconds = 0; paused=false; over=false; resetCombo();
-      if(tick) clearInterval(tick);
-      tick = setInterval(()=>{ if(!paused && !over) seconds++; updateHUD(); }, 1000);
-      if(timer) clearInterval(timer);
-      timer = setInterval(()=>{ if(!paused && !over) move(0,1); }, 1000);
-    }
-    function stopLoops(){ if(tick) clearInterval(tick); if(timer) clearInterval(timer); }
-
-    /*******************
-     * Overlay helpers
-     *******************/
-    function askNameAndShare(finalScore){
-      const wrap = document.createElement('div'); wrap.className='overlay';
-      wrap.innerHTML = `
-        <div class="modal">
-          <h3>Mooi! Jou telling vir <b>${TARGET}</b> is <b>${finalScore}</b></h3>
-          <p>Vul jou naam in vir die leierbord of deel dit met jou vriende.</p>
-          <input id="nameIn" placeholder="Jou naam" maxlength="24"/>
-          <div class="actions">
-            <button id="m-submit" class="btn purp">Dien In</button>
-            <button id="m-share" class="btn">Deel</button>
-            <button id="m-close" class="btn sec full">Sluit</button>
-          </div>
+    function showWin(final){
+      const html=`
+        <h3>Mooi! Jou telling vir <b>${TARGET}</b> is <b>${final}</b></h3>
+        <p>Vul jou naam vir die leierbord of deel dit.</p>
+        <input id="nameIn" placeholder="Jou naam" maxlength="24">
+        <div class="grid">
+          <button id="submit" class="btn purp">Dien in</button>
+          <button id="share2" class="btn teal">Deel</button>
+          <button id="again" class="btn full">Speel weer</button>
         </div>`;
-      document.body.appendChild(wrap);
-      const onClose = ()=>wrap.remove();
-
-      wrap.querySelector('#m-close').onclick = onClose;
-      wrap.querySelector('#m-share').onclick = ()=>{
-        shareResult(finalScore);
-      };
-      wrap.querySelector('#m-submit').onclick = async ()=>{
-        const name = (wrap.querySelector('#nameIn').value || 'Anoniem').slice(0,24);
-        try{
-          await addLeaderboard(GAME_ID, name, finalScore);
-          onClose();
-        }catch(e){ console.warn(e); }
+      const o=openOverlay(html);
+      o.querySelector('#again').onclick=()=>{ closeOverlay(); start(); };
+      o.querySelector('#share2').onclick=()=>share(final);
+      o.querySelector('#submit').onclick=async ()=>{
+        const name=(o.querySelector('#nameIn').value||'Anoniem').slice(0,24);
+        await addLB(GAME_ID,name,final);
+        closeOverlay();
       };
     }
 
-    /*******************
-     * Buttons & input
-     *******************/
-    btnLeft.onclick  = ()=>move(-1,0);
-    btnRight.onclick = ()=>move(1,0);
-    btnDown.onclick  = ()=>hardDrop();
-    btnPause.onclick = ()=>{
-      if(over) return;
-      paused = !paused; btnPause.textContent = paused ? 'Hervat' : 'Pouse';
-    };
-    btnStart.onclick = ()=>startGame();
+    /* overlay helpers */
+    function openOverlay(inner){ const w=document.createElement('div'); w.className='overlay'; w.innerHTML=`<div class="modal">${inner}</div>`; document.body.appendChild(w); return w.querySelector('.modal'); }
+    function closeOverlay(){ const o=document.querySelector('.overlay'); if(o) o.remove(); }
+    function showMsg(title,msg,actions=[]){ const body=`<h3>${title}</h3><p>${msg}</p><div class="grid">${actions.map((a,i)=>`<button class="btn ${a.cls||''}" id="act${i}">${a.label}</button>`).join('')}</div>`; const m=openOverlay(body); actions.forEach((a,i)=> m.querySelector('#act'+i).onclick=a.cb ); }
 
-    document.addEventListener('keydown', e=>{
+    /* controls */
+    document.getElementById('start').onclick=start;
+    document.getElementById('pause').onclick=()=>{ if(over) return; paused=!paused; document.getElementById('pause').textContent=paused?'Hervat':'Pouse'; };
+    document.getElementById('left').onclick=()=>move(-1,0);
+    document.getElementById('right').onclick=()=>move(1,0);
+    document.getElementById('down').onclick=drop;
+
+    document.addEventListener('keydown',e=>{
       if(e.key==='ArrowLeft') move(-1,0);
       if(e.key==='ArrowRight') move(1,0);
       if(e.key==='ArrowDown') move(0,1);
-      if(e.key===' ') { e.preventDefault(); hardDrop(); }
+      if(e.key===' ') { e.preventDefault(); drop(); }
     });
 
-    btnShare.onclick = ()=>{
-      const final = score + baseScore();
-      shareResult(final);
-    };
-
-    btnProfile.onclick = ()=>{
-      // Hook into your existing profile system
+    document.getElementById('share').onclick=()=>share(score+base());
+    document.getElementById('profile').onclick=()=>{
       try{
-        // Call your site’s function if available:
         if(window.kriptiek && typeof window.kriptiek.addToProfile==='function'){
-          window.kriptiek.addToProfile({
-            app: 'Slimstiek',
-            day: GAME_ID,
-            word: TARGET,
-            score: score + baseScore()
-          });
+          window.kriptiek.addToProfile({ app:'Slimstiek', day:GAME_ID, word:TARGET, score:score+base() });
         }
         alert('Bygevoeg by My Profiel ✅');
-      }catch(e){ console.warn(e); }
+      }catch(e){}
     };
 
-    function shareResult(finalScore){
-      const msg = `Ek het ${TARGET} in Slimstiek voltooi vir ${finalScore} punte — kan jy my klop?`;
-      const url = location.href.split('?')[0];
-      const text = `${msg} ${url}`;
-      if(navigator.share){
-        navigator.share({ text, url }).catch(()=>copy(text));
-      }else{
-        copy(text);
-      }
-      function copy(t){
-        navigator.clipboard.writeText(t).then(()=>{
-          btnShare.textContent='Gekopieer!'; setTimeout(()=>btnShare.textContent='Deel',1600);
-        },()=>alert('Kon nie kopieer nie'));
-      }
+    function share(final){
+      const msg=`Ek het ${TARGET} in Slimstiek voltooi vir ${final} punte — kan jy my klop?`;
+      const url=location.href.split('?')[0];
+      const text=`${msg} ${url}`;
+      if(navigator.share){ navigator.share({text,url}).catch(()=>navigator.clipboard.writeText(text)); }
+      else navigator.clipboard.writeText(text);
     }
 
-    /*******************
-     * Game start / end
-     *******************/
-    function startGame(){
-      // reset
-      stopLoops(); seconds=0; score=0; resetCombo(); over=false; paused=false;
-      btnPause.textContent='Pouse';
-      initGrid();
-      cur = createBlock(); next = createBlock(); drawBlock(cur);
-      updateHUD();
-      startLoops();
+    /* lightweight leaderboard (localStorage demo; swap to your Firestore later) */
+    const lbBody=document.querySelector('#lb tbody');
+    async function addLB(day,name,points){
+      const key='slimstiek_'+day, rows=JSON.parse(localStorage.getItem(key)||'[]');
+      rows.push({name,points,ts:Date.now()});
+      rows.sort((a,b)=>b.points-a.points);
+      localStorage.setItem(key,JSON.stringify(rows.slice(0,50)));
+      renderLB(rows);
     }
+    function renderLB(list){ lbBody.innerHTML=''; let r=1; list.slice(0,10).forEach(x=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${r++}</td><td>${x.name}</td><td>${x.points}</td>`; lbBody.appendChild(tr); }); }
+    function loadLB(day){ const key='slimstiek_'+day, rows=JSON.parse(localStorage.getItem(key)||'[]'); renderLB(rows); }
 
-    function end(win){
-      over=true; stopLoops();
-      const final = score + baseScore();
-      if(win){
-        askNameAndShare(final);
-      }else{
-        const wrap = document.createElement('div'); wrap.className='overlay';
-        wrap.innerHTML = `
-        <div class="modal">
-          <h3>Speletjie Verby</h3>
-          <p>Die rooster is vol. Jou telling: <b>${final}</b></p>
-          <div class="actions">
-            <button id="r1" class="btn purp full">Probeer Weer</button>
-          </div>
-        </div>`;
-        document.body.appendChild(wrap);
-        wrap.querySelector('#r1').onclick = ()=>{ wrap.remove(); startGame(); };
-      }
-    }
-    /*******************
-     * Leaderboard (simple REST placeholder)
-     * Replace with your Firestore calls if desired.
-     *******************/
-    const boardEl = document.querySelector('#board tbody');
-
-    async function addLeaderboard(day, name, points){
-      // Replace with Firestore:
-      // await addDoc(collection(db,'slimstiek_daily', day, 'leaderboard'), { name, points, ts: Date.now() })
-      // For now keep in-memory (session) to let you demo immediately:
-      const key = 'slimstiek_demo_' + day;
-      const rows = JSON.parse(localStorage.getItem(key) || '[]');
-      rows.push({name, points, ts: Date.now()});
-      rows.sort((a,b)=> b.points - a.points);
-      localStorage.setItem(key, JSON.stringify(rows.slice(0,50)));
-      renderBoard(rows);
-    }
-
-    function renderBoard(list){
-      boardEl.innerHTML='';
-      let rank=1;
-      list.slice(0,10).forEach(row=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${rank++}</td><td>${row.name}</td><td>${row.points}</td>`;
-        boardEl.appendChild(tr);
-      });
-    }
-
-    async function loadBoard(day){
-      const key = 'slimstiek_demo_' + day;
-      const rows = JSON.parse(localStorage.getItem(key) || '[]');
-      renderBoard(rows);
-    }
-
-    /*******************
-     * Boot
-     *******************/
-    (async function boot(){
-      const daily = await loadDaily();
-      GAME_ID = daily.id;
-      TARGET = daily.word.toUpperCase();
-      buildTargetUI();
-      initGrid();
-      loadBoard(GAME_ID);
+    /* boot: load daily target (replace with your backend when ready) */
+    (function boot(){
+      const q=new URLSearchParams(location.search);
+      const w=(q.get('word')||'WOORD').toUpperCase().replace(/[^A-Z]/g,'');
+      TARGET=(w||'WOORD'); GAME_ID=new Date().toISOString().slice(0,10);
+      buildTarget(); initGrid(); loadLB(GAME_ID);
     })();
   </script>
 </body>
