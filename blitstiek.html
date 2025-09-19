@@ -101,7 +101,7 @@
     .share-menu-local button{width:100%;text-align:left;padding:.5rem .75rem;border-radius:.375rem;font-weight:600;}
     .share-menu-local button:hover{background:#f3f4f6;}
 
-    /* --- ACTION BAR (4-up) --- */
+    /* --- ACTION BAR (base = 4-up) --- */
     .action-grid{
       display:grid;
       grid-template-columns:repeat(4,1fr);
@@ -109,6 +109,9 @@
       justify-items:center;
       align-items:center;
     }
+    /* 3-up override for bars with three tiles */
+    .cols-3{ grid-template-columns:repeat(3,1fr); }
+
     /* Wrapper scales with column; stays square; capped at 120px */
     .action-grid a,
     .action-grid button{
@@ -237,26 +240,22 @@
         <!-- ACTION BARS -->
         <div class="controls mt-3" id="actionBars">
           <!-- Guests (N-R) -->
-          <div id="barNR" class="action-grid">
+          <div id="barNR" class="action-grid cols-3">
             <a href="/register.html" title="Registreer">
               <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="120" height="120">
             </a>
             <a href="/forum.html" title="Gesels saam">
               <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
             </a>
-            <a href="/blitstiek-argief.html" title="Blitstiek-argief">
-              <img class="btn-img" src="/assets/B_ARGIEF_12SEP.png" alt="B Argief" width="120" height="120">
-            </a>
+            <!-- Removed the Blitstiek-argief tile for N-R -->
             <button type="button" class="share-tile" title="Deel">
               <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
             </button>
           </div>
 
           <!-- Registered (R) -->
-          <div id="barR" class="action-grid hidden">
-            <a href="/profile.html" title="My profiel">
-              <img class="btn-img" src="/assets/K_MY_PROFIEL_12SEP.png" alt="My Profiel" width="120" height="120">
-            </a>
+          <div id="barR" class="action-grid cols-3 hidden">
+            <!-- Removed the My Profiel tile for R -->
             <a href="/forum.html" title="Gesels saam">
               <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
             </a>
