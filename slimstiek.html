@@ -25,7 +25,7 @@
   <style>
     :root{
       --brand:#1e3a8a;
-      --cell-bg:#004d40;
+      --cell-bg:#004d40;   /* hou dieselfde gevoel as Blitstiek */
       --gridW:320px;
       --cell-font:16px;
       --cellSize:32px;
@@ -50,15 +50,28 @@
 
     /* GRID */
     #grid{
-      position:relative; display:grid; grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(10,1fr);
-      gap:0; background:#fff; border:var(--line) solid #0c4a3e; border-radius:8px; overflow:hidden;
-      width:var(--gridW); height:400px; margin:10px auto 8px;
+      position:relative;
+      display:grid;
+      grid-template-columns:repeat(8,1fr);
+      grid-template-rows:repeat(10,1fr);
+      gap:0;
+      background:#fff;
+      border:var(--line) solid #0c4a3e;
+      border-radius:8px;
+      overflow:hidden;
+      width:var(--gridW);
+      height:400px;
+      margin:10px auto 8px;
     }
     #grid::after{
       content:''; position:absolute; inset:0; pointer-events:none; z-index:5;
       background:
-        repeating-linear-gradient(to right, transparent 0 calc(var(--cellSize) - var(--line)), rgba(255,255,255,.28) 0 var(--cellSize)),
-        repeating-linear-gradient(to bottom, transparent 0 calc(var(--cellSize) - var(--line)), rgba(255,255,255,.28) 0 var(--cellSize));
+        repeating-linear-gradient(to right,
+          transparent 0 calc(var(--cellSize) - var(--line)),
+          rgba(255,255,255,.28) 0 var(--cellSize)),
+        repeating-linear-gradient(to bottom,
+          transparent 0 calc(var(--cellSize) - var(--line)),
+          rgba(255,255,255,.28) 0 var(--cellSize));
     }
     .cell{position:relative;background:var(--cell-bg);transition:transform .15s ease-out,opacity .15s ease-out;}
     .cell.f{display:grid;place-items:center;color:#fff;font-weight:800;font-size:var(--cell-font);text-shadow:0 1px 1px rgba(0,0,0,.35);}
@@ -83,7 +96,7 @@
     #leaderboardList li:nth-child(odd){background:#f3f4f6;}
     #leaderboardList li:first-child{background:#d1fae5;font-weight:700;}
 
-    /* Share dropdown */
+    /* Share dropdown (tile + modal) */
     .share-menu-local{
       background:#fff;border:1px solid #e5e7eb;box-shadow:0 8px 24px rgba(0,0,0,.12);
       border-radius:.5rem;width:240px;padding:.5rem;z-index:3000;line-height:1.25;
@@ -180,27 +193,14 @@
           </div>
         </div>
 
-        <!-- Start/Pause + Sticky share -->
+        <!-- Start/Pause (top DEEL removed) -->
         <div class="controls mt-3 flex items-center justify-center gap-2">
           <button id="btnStart" class="btn">BEGIN</button>
           <button id="btnPause" class="btn gray">POUSE</button>
-
-          <div class="relative">
-            <button id="stickyShareBtn" class="btn hidden">DEEL</button>
-            <div id="stickyShareMenu" class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
-              <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
-              <div class="space-y-1">
-                <button id="sWhatsApp" type="button">WhatsApp</button>
-                <button id="sCopy" type="button">Kopieer skakel</button>
-                <button id="sSystem" type="button">Stelsel-deel</button>
-              </div>
-            </div>
-          </div>
         </div>
 
-        <!-- Timers + Score pills -->
-        <div class="controls grid grid-cols-3 gap-2 mt-3">
-          <div id="timeBox" class="pill">Jou tyd: <b>00:00</b></div>
+        <!-- Score pills (time removed) -->
+        <div class="controls grid grid-cols-2 gap-2 mt-3">
           <div id="bestBox" class="pill">Beste telling: <b>—</b></div>
           <div id="scoreBox" class="pill">Jou telling: <b>0</b></div>
         </div>
@@ -215,6 +215,7 @@
             <a href="/forum.html" title="Gesels saam">
               <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
             </a>
+            <!-- Yellow DEEL tile -->
             <div class="relative share-tile-wrap">
               <button type="button" class="share-tile" title="Deel">
                 <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
@@ -238,6 +239,7 @@
             <a href="/slimstiek-argief.html" title="Slimstiek-argief">
               <img class="btn-img" src="/assets/S_ARGIEF_12SEP.png" alt="S Argief" width="120" height="120">
             </a>
+            <!-- Yellow DEEL tile -->
             <div class="relative share-tile-wrap">
               <button type="button" class="share-tile" title="Deel">
                 <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
@@ -341,7 +343,6 @@
     const shareMenu  = document.getElementById('shareMenu');
 
     const lbList     = document.getElementById('leaderboardList');
-    const timeText   = document.querySelector('#timeBox b');
     const bestText   = document.querySelector('#bestBox b');
     const scoreText  = document.querySelector('#scoreBox b');
 
@@ -350,12 +351,6 @@
     const btnDown = document.getElementById('btnDown');
     const btnStart= document.getElementById('btnStart');
     const btnPause= document.getElementById('btnPause');
-
-    const stickyShareBtn   = document.getElementById('stickyShareBtn');
-    const stickyShareMenu  = document.getElementById('stickyShareMenu');
-    const sWA   = document.getElementById('sWhatsApp');
-    const sCopy = document.getElementById('sCopy');
-    const sSys  = document.getElementById('sSystem');
 
     const mWA   = document.getElementById('mWhatsApp');
     const mCopy = document.getElementById('mCopy');
@@ -370,8 +365,7 @@
 
     /* ---- Helpers ---- */
     const SITE_ORIGIN = location.hostname.endsWith('kriptiek.com') ? location.origin : 'https://www.kriptiek.com';
-    const pad = n => String(n).padStart(2,'0');
-    const fmt = s => s==null ? '--:--' : `${pad(Math.floor(s/60))}:${pad(s%60)}`;
+    const qs = new URLSearchParams(location.search);
 
     function todayKeySAST(){
       const parts = new Intl.DateTimeFormat('en-CA', { timeZone:'Africa/Johannesburg', year:'numeric', month:'2-digit', day:'2-digit' }).formatToParts(new Date());
@@ -381,7 +375,6 @@
       return `${y}-${m}-${d}`;
     }
 
-    const qs = new URLSearchParams(location.search);
     const dateParam = qs.get('date');
     let currentDate = (/^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : todayKeySAST());
 
@@ -392,8 +385,6 @@
       return url.toString();
     }
     function shareTextLinkOnly(){ return `Kyk of jy my telling op vandag se SLIMSTIEK kan klop: ${buildShareUrl(currentDate)}`; }
-
-    let stickyPayload = null;
 
     /* ---- Auth ---- */
     let user=null, currentUserName='Speler';
@@ -465,8 +456,8 @@
     let grid=Array.from({length:H},()=>Array(W).fill(null));
     let cur=null, nxt=null;
     let paused=false, ended=false, moving=false;
-    let t=0, tInt=null, gInt=null;
-    let score=0, bestScore=null;
+    let gInt=null;                 // drop-tick only (time display removed)
+    let score=0, bestScore=null;   // local best (client-side only)
     let lbUnsub=null;
 
     function drawGrid(){
@@ -502,8 +493,8 @@
 
     /* ---- Scoring ---- */
     const SCORING = Object.freeze({ PAIR_POINTS:10, PER_LETTER_IN_WORD:5, WORD_BONUS:50 });
-    function setScore(v){ score = Math.max(0, v|0); scoreText.textContent = score; }
-    function addScore(v){ setScore(score + v); }
+    function setScore(v){ score=Math.max(0, v|0); scoreText.textContent=score; }
+    function addScore(v){ setScore(score + (v|0)); }
 
     /* ---- Movement ---- */
     async function move(dx,dy){
@@ -525,8 +516,8 @@
     async function place(){
       if(!cur||cur.y<0) return;
       grid[cur.y][cur.x]={...cur}; drawBlock(cur);
-      await matchAndDrop();
-      await checkWin();
+      await matchAndDrop();  // adds score for matched pairs
+      await checkWin();      // adds score for letters+bonus and ends
       cur=nxt; nxt=createBlock();
       if(cur) drawBlock(cur);
     }
@@ -591,19 +582,17 @@
         }
       }
     }
-    function setTime(v){ t=v; timeText.textContent=fmt(v); }
 
     /* ---- Control ---- */
     function start(){
-      ended=false; over.style.display='none'; shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden');
-      setTime(0); setScore(0);
+      ended=false; over.style.display='none'; shareMenu.classList.add('hidden');
+      setScore(0);
       grid=Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
       cur=createBlock(); nxt=createBlock(); drawBlock(cur);
       paused=false; btnPause.textContent='POUSE';
-      clearInterval(tInt); clearInterval(gInt);
+      clearInterval(gInt);
       gInt=setInterval(()=>{ if(!paused && !ended) move(0,1); },1000);
-      tInt=setInterval(()=>{ if(!paused && !ended) setTime(t+1); },1000);
     }
     function togglePause(){ if(ended) return; paused=!paused; btnPause.textContent = paused ? 'HERVAT' : 'POUSE'; }
     btnStart.addEventListener('click', ()=>{ if(!user && !guestGateBypassOnce){ showNRGate(); return; } guestGateBypassOnce=false; start(); });
@@ -614,19 +603,21 @@
     document.addEventListener('keydown', (e)=>{ if(e.key==='ArrowLeft') move(-1,0); if(e.key==='ArrowRight') move(1,0); if(e.key==='ArrowDown') move(0,1); if(e.key===' ') { e.preventDefault(); hardDrop(); } });
 
     /* ---- Share (points-only) ---- */
+    let stickyPayload = null; // used by yellow tile + modal share (no top DEEL)
     function buildWinShareText(payload){
       const sc = Number(payload?.score ?? score) || 0;
       return `Ek het ${sc} punte gekry met SLIMSTIEK op Kriptiek vandag: ${buildShareUrl(currentDate)}`;
     }
     function toggleShareMenu(){ shareMenu.classList.toggle('hidden'); }
     modalShareBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleShareMenu(); });
+
+    // Hide menus when clicking outside / scrolling / resizing
     document.addEventListener('click', (e)=>{
       if(shareMenu && !shareMenu.contains(e.target) && e.target!==modalShareBtn){ shareMenu.classList.add('hidden'); }
-      if(stickyShareMenu && !stickyShareMenu.contains(e.target) && e.target!==stickyShareBtn){ stickyShareMenu.classList.add('hidden'); }
       document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>{ if(!m.contains(e.target)) m.classList.add('hidden'); });
     });
-    window.addEventListener('scroll',  ()=>{ shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden'); document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>m.classList.add('hidden')); });
-    window.addEventListener('resize',  ()=>{ shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden'); document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>m.classList.add('hidden')); });
+    window.addEventListener('scroll',  ()=>{ shareMenu.classList.add('hidden'); document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>m.classList.add('hidden')); });
+    window.addEventListener('resize',  ()=>{ shareMenu.classList.add('hidden'); document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>m.classList.add('hidden')); });
 
     async function trySystemShare(text){
       try{
@@ -647,37 +638,13 @@
       if(!w && navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>alert("Skakel gekopieer!")); }
     }
 
-    // Prefer success text when we have a result, otherwise link-only
-    const shareSuccessOrLink = () => (stickyPayload ? buildWinShareText(stickyPayload) : shareTextLinkOnly());
+    // Modal share uses the WIN message (points only)
+    const mShareText = () => buildWinShareText(stickyPayload || { score });
+    mWA.onclick   = () => { openWhatsApp(mShareText()); shareMenu.classList.add('hidden'); };
+    mCopy.onclick = async () => { try{ await navigator.clipboard.writeText(mShareText()); alert('Skakel gekopieer!'); }catch{} shareMenu.classList.add('hidden'); };
+    mSys.onclick  = async () => { const ok = await trySystemShare(mShareText()); if(!ok) openWhatsApp(mShareText()); shareMenu.classList.add('hidden'); };
 
-    const sWAHandler   = () => { openWhatsApp(shareSuccessOrLink()); stickyShareMenu.classList.add('hidden'); };
-    const sCopyHandler = async () => { try{ await navigator.clipboard.writeText(shareSuccessOrLink()); alert('Skakel gekopieer!'); }catch{} stickyShareMenu.classList.add('hidden'); };
-    const sSysHandler  = async () => { const txt = shareSuccessOrLink(); const ok = await trySystemShare(txt); if(!ok) openWhatsApp(txt); stickyShareMenu.classList.add('hidden'); };
-    sWA.onclick = sWAHandler; sCopy.onclick = sCopyHandler; sSys.onclick = sSysHandler;
-
-    const mWAHandler   = () => { openWhatsApp(shareSuccessOrLink()); shareMenu.classList.add('hidden'); };
-    const mCopyHandler = async () => { try{ await navigator.clipboard.writeText(shareSuccessOrLink()); alert('Skakel gekopieer!'); }catch{} shareMenu.classList.add('hidden'); };
-    const mSysHandler  = async () => { const txt = shareSuccessOrLink(); const ok = await trySystemShare(txt); if(!ok) openWhatsApp(txt); shareMenu.classList.add('hidden'); };
-    mWA.onclick = mWAHandler; mCopy.onclick = mCopyHandler; mSys.onclick = mSysHandler;
-
-    function enableStickyShare(payload){
-      stickyPayload = { time: Number(payload?.time ?? t), target: TARGET, score: Number(payload?.score ?? score) };
-      stickyShareBtn.classList.remove('hidden');
-      stickyShareBtn.onclick = (e)=>{ e.stopPropagation(); stickyShareMenu.classList.toggle('hidden'); };
-      try{ localStorage.setItem(shareKey(), JSON.stringify({ ...stickyPayload, at: Date.now() })); }catch{}
-    }
-    function maybeEnableStickyShareFromStorage(){
-      try{
-        const raw = localStorage.getItem(shareKey());
-        if(!raw) return;
-        const saved = JSON.parse(raw);
-        if(saved && Number.isFinite(saved.time) && saved.target){
-          stickyPayload = saved;
-          stickyShareBtn.classList.remove('hidden');
-          stickyShareBtn.onclick = (e)=>{ e.stopPropagation(); stickyShareMenu.classList.toggle('hidden'); };
-        }
-      }catch{}
-    }
+    // Yellow tile dropdowns
     function wireShareTile(wrapper){
       const btn  = wrapper.querySelector('.share-tile');
       const menu = wrapper.querySelector('.share-menu-local');
@@ -691,12 +658,26 @@
         menu.classList.toggle('hidden');
       });
 
-      const txt = () => shareSuccessOrLink();
+      const txt = () => (stickyPayload ? buildWinShareText(stickyPayload) : shareTextLinkOnly());
       wa.onclick = () => { openWhatsApp(txt()); menu.classList.add('hidden'); };
       cp.onclick = async () => { try{ await navigator.clipboard.writeText(txt()); alert('Skakel gekopieer!'); }catch{} menu.classList.add('hidden'); };
       sys.onclick = async () => { const ok = await trySystemShare(txt()); if(!ok) openWhatsApp(txt()); menu.classList.add('hidden'); };
     }
     function initTileShareDropdowns(){ document.querySelectorAll('.share-tile-wrap').forEach(wireShareTile); }
+
+    // Save/restore last win payload for tile share
+    function enableStickyShare(payload){
+      stickyPayload = { target: TARGET, score: Number(payload?.score ?? score) };
+      try{ localStorage.setItem(shareKey(), JSON.stringify({ ...stickyPayload, at: Date.now() })); }catch{}
+    }
+    function maybeEnableStickyShareFromStorage(){
+      try{
+        const raw = localStorage.getItem(shareKey());
+        if(!raw) return;
+        const saved = JSON.parse(raw);
+        if(saved && Number.isFinite(saved.score)){ stickyPayload = saved; }
+      }catch{}
+    }
 
     /* ---- Leaderboard (Firestore OR localStorage) — points-only ---- */
     const LB_LOCAL_KEY = d => `slimstiekLocalLB:${d}`;
@@ -771,14 +752,18 @@
 
     /* ---- Game end ---- */
     function end(win){
-      ended=true; clearInterval(tInt); clearInterval(gInt);
+      clearInterval(gInt);
+      ended=true;
       if(!win) return;
+
       if(bestScore==null || score > bestScore) bestScore = score;
       submitToLB(score);
-      enableStickyShare({ time:t, target: TARGET, score });
+      enableStickyShare({ score });
+
       winMsg.innerHTML = `Veels geluk, <strong>${currentUserName}</strong>! Jy het <strong>${TARGET}</strong> voltooi vir <strong>${score}</strong> punte.`;
       over.style.display='flex';
       modalCloseBtn.onclick = ()=>{ over.style.display='none'; };
+
       if(!user) showNRGate();
     }
 
@@ -814,7 +799,7 @@
 
     /* ---- Init ---- */
     function init(){
-      document.querySelectorAll('.share-tile-wrap').forEach(wireShareTile);
+      initTileShareDropdowns();
       loadGame();
     }
     init();
