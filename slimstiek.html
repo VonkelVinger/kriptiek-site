@@ -618,7 +618,7 @@
       const name = currentUserName || 'Speler';
       const word = payload?.target || TARGET || '—';
       const sc   = Number(payload?.score ?? score) || 0;
-      return `Veels geluk, ${name}! Jy het ${word} voltooi vir ${sc} punte. ${buildShareUrl(currentDate)}`;
+      return `Ek het ${sc} punte gekry met SLIMSTIEK op Kriptiek vandag: ${buildShareUrl(currentDate)}`;
     }
     function toggleShareMenu(){ shareMenu.classList.toggle('hidden'); }
     modalShareBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleShareMenu(); });
