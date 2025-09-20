@@ -201,8 +201,8 @@
         <!-- Timers + Score pills -->
         <div class="controls grid grid-cols-3 gap-2 mt-3">
           <div id="timeBox" class="pill">Jou tyd: <b>00:00</b></div>
-          <div id="bestBox" class="pill">Beste score: <b>—</b></div>
-          <div id="scoreBox" class="pill">Jou score: <b>0</b></div>
+          <div id="bestBox" class="pill">Beste telling: <b>—</b></div>
+          <div id="scoreBox" class="pill">Jou telling: <b>0</b></div>
         </div>
 
         <!-- ACTION BARS -->
@@ -343,7 +343,7 @@
     const lbList     = document.getElementById('leaderboardList');
     const timeText   = document.querySelector('#timeBox b');
     const bestText   = document.querySelector('#bestBox b');
-    const scoreText  = document.querySelector('#scoreBox b');
+    const Text  = document.querySelector('#Box b');
 
     const btnLeft = document.getElementById('btnLeft');
     const btnRight= document.getElementById('btnRight');
@@ -466,7 +466,7 @@
     let cur=null, nxt=null;
     let paused=false, ended=false, moving=false;
     let t=0, tInt=null, gInt=null;
-    let score=0, bestScore=null;
+    let =0, best=null;
     let lbUnsub=null;
 
     function drawGrid(){
@@ -502,8 +502,8 @@
 
     /* ---- Scoring ---- */
     const SCORING = Object.freeze({ PAIR_POINTS:10, PER_LETTER_IN_WORD:5, WORD_BONUS:50 });
-    function setScore(v){ score=Math.max(0, v|0); scoreText.textContent=score; }
-    function addScore(v){ setScore(score+v); }
+    function set(v){ =Math.max(0, v|0); Text.textContent=; }
+    function add(v){ set(+v); }
 
     /* ---- Movement ---- */
     async function move(dx,dy){
@@ -544,7 +544,7 @@
       if(!toDel.size) return;
 
       const pairs = Math.floor(toDel.size/2);
-      if(pairs>0) addScore(SCORING.PAIR_POINTS * pairs);
+      if(pairs>0) add(SCORING.PAIR_POINTS * pairs);
 
       await Promise.all(Array.from(toDel).map(key=>new Promise(res=>{
         const [x,y]=key.split(',').map(Number);
@@ -584,8 +584,8 @@
             const c=gridEl.querySelector(`.cell[data-x="${x+i}"][data-y="${y}"]`);
             if(c) c.style.transform='scale(1.05)';
           }
-          addScore(SCORING.PER_LETTER_IN_WORD * TARGET.length);
-          addScore(SCORING.WORD_BONUS);
+          add(SCORING.PER_LETTER_IN_WORD * TARGET.length);
+          add(SCORING.WORD_BONUS);
           setTimeout(()=>end(true), 450);
           return;
         }
@@ -596,7 +596,7 @@
     /* ---- Control ---- */
     function start(){
       ended=false; over.style.display='none'; shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden');
-      setTime(0); setScore(0);
+      setTime(0); set(0);
       grid=Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
       cur=createBlock(); nxt=createBlock(); drawBlock(cur);
