@@ -61,16 +61,12 @@
           if (user.displayName) localStorage.setItem('userName', user.displayName);
         } else {
           localStorage.removeItem('userRegistered');
-          // optional extra cleanup:
-          // localStorage.removeItem('userName');
-          // localStorage.removeItem('userEmail');
         }
       });
     });
   </script>
 
   <style>
-    /* Guest welcome card */
     .message-text.guest-card{
       max-width: 660px;
       text-align: left;
@@ -86,7 +82,6 @@
 
     body { font-family: 'Montserrat', sans-serif; }
 
-    /* Logo banner */
     .logo-container {
       position: relative; display: flex; justify-content: center; align-items: center;
       width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
@@ -119,7 +114,6 @@
 
     .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
 
-    /* Tile hover */
     .tile-img { border-radius: 1rem; box-shadow: 6px 6px 14px rgba(0,0,0,.35); transition: transform .2s ease, box-shadow .2s ease; }
     .tile-img:hover { transform: translateY(-2px); box-shadow: 8px 8px 20px rgba(0,0,0,.4); }
 
@@ -149,7 +143,6 @@
   </header>
 
   <main class="flex-grow py-10 sm:py-12 md:py-16 px-6 text-center relative">
-    <!-- soft radial spotlight behind hero area -->
     <div class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(80%_50%_at_50%_0%,rgba(30,58,138,.08),transparent_60%)]"></div>
 
     <p id="heroHeading" class="text-3xl font-bold dark-blue-text mb-4">
@@ -254,11 +247,9 @@
       if (!cookieConsent) document.getElementById('cookie-banner').classList.remove('hidden');
 
       function showGuestView() {
-        // Heading stays
         const heroHeading = document.getElementById('heroHeading');
         if (heroHeading) heroHeading.textContent = 'WELKOM BY KRIPTIEK';
 
-        // Replace intro paragraph with bullet list card
         if (introPara) {
           const card = document.createElement('div');
           card.className = 'message-text guest-card';
@@ -272,53 +263,50 @@
           introPara.replaceWith(card);
         }
 
-        // Keep the contact link visible
         if (heroContact) {
           heroContact.classList.remove('hidden');
           heroContact.style.display = 'inline-block';
           heroContact.style.marginTop = '8px';
         }
 
-        // Hide old mounts (we use the tile grid for guests)
         if (dilemmaButtons) dilemmaButtons.classList.add('hidden');
         if (blitstiekButtons) blitstiekButtons.classList.add('hidden');
 
-        // Build the 2×2 tile grid for guests
+        // 2-col grid; we’ll add three rows (K buttons, D/B, Slimstiek)
         const grid = document.createElement('div');
         grid.className = 'grid grid-cols-2 gap-6 justify-items-center';
 
-        // Top row: blue K tiles for register/login
+        // Top row: blue K tiles
         grid.appendChild(tile('/register.html?new=1', '/assets/K_REGISTREER_12SEP.png', 'Registreer'));
         grid.appendChild(tile('/login.html?new=1', '/assets/K_MELD_AAN_12SEP.png', 'Meld aan'));
 
-        // Bottom row: Dilemma + Blitstiek (IDs used by daily resolvers below)
+        // Row 2: Dilemma + Blitstiek (today resolvers)
         grid.appendChild(tile('#', '/assets/DILEMMA_12SEP.png', 'Dilemma', 'today-link'));
         grid.appendChild(tile('#', '/assets/BLITSTIEK_12SEP.png', 'Blitstiek', 'blitstiek-today-link'));
 
+        // Row 3 (NEW): Slimstiek today + Slimstiek archive
+        grid.appendChild(tile('#', '/assets/S_SLIMSTIEK_12SEP.png', 'Slimstiek', 'slimstiek-today-link'));
+        grid.appendChild(tile('/slimstiek-argief.html', '/assets/S_ARGIEF_12SEP.png', 'Slimstiek Argief'));
+
         tilesGrid.appendChild(grid);
 
-        // Hide old single Gesels image (avoid duplication)
         if (geselsFallback) geselsFallback.classList.add('hidden');
       }
 
       function showSignedInView() {
-        // hide the empty button mounts to remove gaps
         if (dilemmaButtons) dilemmaButtons.classList.add('hidden');
         if (blitstiekButtons) blitstiekButtons.classList.add('hidden');
 
-        // name resolution
         const storedName = (localStorage.getItem('userName') || '').trim();
         const storedEmail = (localStorage.getItem('userEmail') || '').trim();
         const fallbackName = storedEmail ? storedEmail.split('@')[0] : 'gebruiker';
         const playerName = storedName || fallbackName;
 
-        // Change blue heading; no separate black greeting injected
         const heroHeading = document.getElementById('heroHeading');
         if (heroHeading) {
           heroHeading.innerHTML = `WELKOM TERUG, <strong>${playerName.toUpperCase()}</strong>`;
         }
 
-        // Build 2-col tile grid
         const grid = document.createElement('div');
         grid.className = 'grid grid-cols-2 gap-6 justify-items-center';
 
@@ -326,12 +314,16 @@
         grid.appendChild(tile('/dilemma-argief.html', '/assets/D_ARGIEF_12SEP.png', 'Dilemma Argief'));
         grid.appendChild(tile('#', '/assets/BLITSTIEK_12SEP.png', 'Blitstiek', 'blitstiek-today-link'));
         grid.appendChild(tile('/blitstiek-argief.html', '/assets/B_ARGIEF_12SEP.png', 'Blitstiek Argief'));
+
+        <!-- Row below Blitstiek (NEW): Slimstiek today + Slimstiek archive -->
+        grid.appendChild(tile('#', '/assets/S_SLIMSTIEK_12SEP.png', 'Slimstiek', 'slimstiek-today-link'));
+        grid.appendChild(tile('/slimstiek-argief.html', '/assets/S_ARGIEF_12SEP.png', 'Slimstiek Argief'));
+
         grid.appendChild(tile('/profile.html', '/assets/K_MY_PROFIEL_12SEP.png', 'My Profiel'));
         grid.appendChild(tile('/forum.html', '/assets/K_GESELS_12SEP.png', 'Gesels'));
 
         tilesGrid.appendChild(grid);
 
-        // hide old single Gesels image to avoid duplication
         if (geselsFallback) geselsFallback.classList.add('hidden');
       }
 
@@ -351,7 +343,6 @@
     import { getFirestore, collection, query, where, limit, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
     const db = getFirestore();
 
-    // YYYY-MM-DD in Africa/Johannesburg
     function todayZA() {
       const now = new Date();
       const p = new Intl.DateTimeFormat('af-ZA', { timeZone: 'Africa/Johannesburg', year: 'numeric', month: '2-digit', day: '2-digit' })
@@ -362,21 +353,18 @@
     async function resolveTodayGameId() {
       const d = todayZA();
 
-      // 1) Preferred: a 'date' field on /games docs
       try {
         const q = query(collection(db, 'games'), where('date', '==', d), limit(1));
         const snap = await getDocs(q);
         if (!snap.empty) return snap.docs[0].id;
       } catch (_) {}
 
-      // 2) Fallback: doc id "GameYYYY-MM-DD"
       try {
         const ref1 = doc(db, 'games', `Game${d}`);
         const got1 = await getDoc(ref1);
         if (got1.exists()) return got1.id;
       } catch (_) {}
 
-      // 3) Fallback: doc id "YYYY-MM-DD"
       try {
         const ref2 = doc(db, 'games', d);
         const got2 = await getDoc(ref2);
@@ -418,14 +406,12 @@
     async function resolveTodayBlitstiekId() {
       const d = todayZA();
 
-      // Prefer doc id "GameYYYY-MM-DD" in /blitstiekGames
       try {
         const ref1 = doc(db, 'blitstiekGames', `Game${d}`);
         const got1 = await getDoc(ref1);
         if (got1.exists()) return got1.id;
       } catch (_) {}
 
-      // Fallback: plain "YYYY-MM-DD"
       try {
         const ref2 = doc(db, 'blitstiekGames', d);
         const got2 = await getDoc(ref2);
@@ -451,6 +437,54 @@
       } catch (_) {}
     });
   </script>
+
+  <!-- ZA-safe "today" resolver for SLIMSTIEK (NEW) -->
+  <script type="module">
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    const db = getFirestore();
+
+    function todayZA() {
+      const now = new Date();
+      const p = new Intl.DateTimeFormat('af-ZA', { timeZone: 'Africa/Johannesburg', year: 'numeric', month: '2-digit', day: '2-digit' })
+        .formatToParts(now).reduce((a, x) => (a[x.type] = x.value, a), {});
+      return `${p.year}-${p.month}-${p.day}`;
+    }
+
+    async function resolveTodaySlimstiekId() {
+      const d = todayZA();
+
+      // Prefer doc id "GameYYYY-MM-DD" in /slimstiekGames
+      try {
+        const ref1 = doc(db, 'slimstiekGames', `Game${d}`);
+        const got1 = await getDoc(ref1);
+        if (got1.exists()) return got1.id;
+      } catch (_) {}
+
+      // Fallback: plain "YYYY-MM-DD"
+      try {
+        const ref2 = doc(db, 'slimstiekGames', d);
+        const got2 = await getDoc(ref2);
+        if (got2.exists()) return got2.id;
+      } catch (_) {}
+
+      return null;
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const btn = document.getElementById('slimstiek-today-link');
+      if (!btn) return;
+      try {
+        const gameId = await resolveTodaySlimstiekId();
+        if (gameId) {
+          btn.href = `/slimstiek.html?gameId=${encodeURIComponent(gameId)}`;
+          btn.classList.add('btn-pulse');
+        } else {
+          btn.removeAttribute('href');
+          btn.classList.add('cursor-not-allowed');
+          btn.title = 'Geen Slimstiek beskikbaar vir vandag nie';
+        }
+      } catch (_) {}
+    });
+  </script>
 </body>
 </html>
-
