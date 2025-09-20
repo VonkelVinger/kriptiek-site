@@ -25,11 +25,11 @@
   <style>
     :root{
       --brand:#1e3a8a;
-      --cell-bg:#004d40;   /* cell & chip colour */
-      --gridW:320px;       /* updated by JS */
-      --cell-font:16px;    /* updated by JS */
-      --cellSize:32px;     /* updated by JS */
-      --line:1px;          /* 1 device pixel (set in JS) */
+      --cell-bg:#004d40;
+      --gridW:320px;
+      --cell-font:16px;
+      --cellSize:32px;
+      --line:1px;
     }
     html,body{height:100%}
     body{font-family:'Montserrat',system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#f9fafb;color:#1f2937}
@@ -50,28 +50,15 @@
 
     /* GRID */
     #grid{
-      position:relative;
-      display:grid;
-      grid-template-columns:repeat(8,1fr);
-      grid-template-rows:repeat(10,1fr);
-      gap:0;
-      background:#fff;
-      border:var(--line) solid #0c4a3e;
-      border-radius:8px;
-      overflow:hidden;
-      width:var(--gridW);
-      height:400px;
-      margin:10px auto 8px;
+      position:relative; display:grid; grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(10,1fr);
+      gap:0; background:#fff; border:var(--line) solid #0c4a3e; border-radius:8px; overflow:hidden;
+      width:var(--gridW); height:400px; margin:10px auto 8px;
     }
     #grid::after{
       content:''; position:absolute; inset:0; pointer-events:none; z-index:5;
       background:
-        repeating-linear-gradient(to right,
-          transparent 0 calc(var(--cellSize) - var(--line)),
-          rgba(255,255,255,.28) 0 var(--cellSize)),
-        repeating-linear-gradient(to bottom,
-          transparent 0 calc(var(--cellSize) - var(--line)),
-          rgba(255,255,255,.28) 0 var(--cellSize));
+        repeating-linear-gradient(to right, transparent 0 calc(var(--cellSize) - var(--line)), rgba(255,255,255,.28) 0 var(--cellSize)),
+        repeating-linear-gradient(to bottom, transparent 0 calc(var(--cellSize) - var(--line)), rgba(255,255,255,.28) 0 var(--cellSize));
     }
     .cell{position:relative;background:var(--cell-bg);transition:transform .15s ease-out,opacity .15s ease-out;}
     .cell.f{display:grid;place-items:center;color:#fff;font-weight:800;font-size:var(--cell-font);text-shadow:0 1px 1px rgba(0,0,0,.35);}
@@ -220,7 +207,7 @@
 
         <!-- ACTION BARS -->
         <div class="controls mt-3" id="actionBars">
-          <!-- Guests (N-R) -->
+          <!-- Guests -->
           <div id="barNR" class="action-grid cols-3">
             <a href="/register.html" title="Registreer">
               <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="120" height="120">
@@ -228,7 +215,6 @@
             <a href="/forum.html" title="Gesels saam">
               <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
             </a>
-            <!-- DEEL tile -->
             <div class="relative share-tile-wrap">
               <button type="button" class="share-tile" title="Deel">
                 <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
@@ -244,7 +230,7 @@
             </div>
           </div>
 
-          <!-- Registered (R) -->
+          <!-- Registered -->
           <div id="barR" class="action-grid cols-3 hidden">
             <a href="/forum.html" title="Gesels saam">
               <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
@@ -287,7 +273,7 @@
           <li>
             <p class="font-semibold">3. Punte</p>
             <ul class="list-disc pl-6">
-              <li>+10 per gepaarde verdwyning (vir die twee blokke saam).</li>
+              <li>+10 per gepaarde verdwyning.</li>
               <li>+5 vir elke teiken-letter in die finale woordry.</li>
               <li>+50 bonus as jy die woord voltooi.</li>
             </ul>
@@ -326,7 +312,7 @@
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
     import {
       getFirestore, serverTimestamp, doc, getDoc, setDoc,
-      collection, query, orderBy, limit, getDocs, onSnapshot, where
+      collection, query, orderBy, limit, onSnapshot
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
     /* ---- Firebase ---- */
@@ -469,7 +455,7 @@
     }
     window.addEventListener('resize', resizeGrid);
 
-    /* ---- Grid render ---- */
+    /* ---- Grid/Game ---- */
     const H=10, W=8;
     const COLORS=['#2196f3','#f44336','#4caf50','#ffc107','#9c27b0','#003366','#009688'];
     const CONS='BCDFGHJKLMNPQRSTVWXZ';
@@ -557,7 +543,6 @@
       }
       if(!toDel.size) return;
 
-      // approximate pairs = tiles/2
       const pairs = Math.floor(toDel.size/2);
       if(pairs>0) addScore(SCORING.PAIR_POINTS * pairs);
 
@@ -734,7 +719,10 @@
     function startLiveLeaderboardFS(){
       if(!db){ renderLocalLB(currentDate); return; }
       if(lbUnsub){ lbUnsub(); lbUnsub=null; }
-      const qy = query(collection(db,'leaderboards','slimstiek', currentDate, 'entries'), orderBy('score','desc'), limit(10));
+      const qy = query(
+        collection(db,'leaderboards','slimstiek','dates', currentDate, 'entries'),
+        orderBy('score','desc'), limit(10)
+      );
       lbUnsub = onSnapshot(qy, (snap)=>{
         lbList.innerHTML='';
         if(snap.empty){
@@ -765,7 +753,7 @@
 
       if(!db || !user) return;
       try{
-        const ref = doc(db,'leaderboards','slimstiek', currentDate, 'entries', user.uid);
+        const ref = doc(db,'leaderboards','slimstiek','dates', currentDate, 'entries', user.uid);
         const snap = await getDoc(ref);
         const prev = snap.exists() ? snap.data() : null;
         const isBetter = !prev || (row.score > (prev.score||0));
@@ -792,10 +780,7 @@
       if(!user) showNRGate();
     }
 
-    /* ---- Daily word resolver (Firestore optional) ----
-       Reads:  doc('daily_words', currentDate).slimstiek || .word
-       Fallback: 'TUTS'
-    ---------------------------------------------------*/
+    /* ---- Daily word resolver (Firestore optional) ---- */
     async function resolveTargetWord(){
       if(db){
         try{
