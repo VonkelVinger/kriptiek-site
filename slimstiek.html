@@ -12,12 +12,12 @@
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://www.kriptiek.com/slimstiek.html" />
   <!-- If/when you add a Slimstiek button asset, swap this filename -->
-  <meta property="og:image" content="https://www.kriptiek.com/assets/BLITSTIEK_12SEP.png" />
+  <meta property="og:image" content="https://www.kriptiek.com/assets/S_SLIMSTIEK_12SEP.png" />
   <meta property="og:image:alt" content="SLIMSTIEK knoppie (plekhouer)" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="SLIMSTIEK – Kriptiek" />
   <meta name="twitter:description" content="Kom speel vandag se SLIMSTIEK op Kriptiek." />
-  <meta name="twitter:image" content="https://www.kriptiek.com/assets/BLITSTIEK_12SEP.png" />
+  <meta name="twitter:image" content="https://www.kriptiek.com/assets/S_SLIMSTIEK_12SEP.png" />
 
   <!-- Tailwind + font -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -250,7 +250,7 @@
               <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
             </a>
             <a href="/blitstiek-argief.html" title="Blitstiek-argief">
-              <img class="btn-img" src="/assets/B_ARGIEF_12SEP.png" alt="B Argief" width="120" height="120">
+              <img class="btn-img" src="/assets/S_ARGIEF_12SEP.png" alt="B Argief" width="120" height="120">
             </a>
             <div class="relative share-tile-wrap">
               <button type="button" class="share-tile" title="Deel">
@@ -698,9 +698,9 @@
 
     async function trySystemShare(text){
       try{
-        const res = await fetch(`${SITE_ORIGIN}/assets/BLITSTIEK_12SEP.png`);
+        const res = await fetch(`${SITE_ORIGIN}/assets/S_SLIMSTIEK_12SEP.png`);
         const blob = await res.blob();
-        const files = [new File([blob],'SLIMSTIEK.png',{type:blob.type})];
+        const files = [new File([blob],'S_SLIMSTIEK_12SEP.png',{type:blob.type})];
         if(navigator.canShare && navigator.canShare({files})){
           await navigator.share({ title:'SLIMSTIEK – Kriptiek', text, files });
           return true;
