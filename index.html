@@ -52,19 +52,24 @@
     };
 
     // Hardened listener: set/clear localStorage based on real auth state
-    document.addEventListener('DOMContentLoaded', () => {
-      onAuthStateChanged(auth, (user) => {
-        if (user) {
-          localStorage.setItem('userRegistered', 'true');
-          localStorage.setItem('userId', user.uid);
-          localStorage.setItem('userEmail', user.email || "");
-          if (user.displayName) localStorage.setItem('userName', user.displayName);
-        } else {
-          localStorage.removeItem('userRegistered');
-        }
-      });
-    });
-  </script>
+    <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('slimstiek-today-link');
+    if (!btn) return;
+
+    // Africa/Johannesburg "today"
+    const parts = new Intl.DateTimeFormat('af-ZA', {
+      timeZone: 'Africa/Johannesburg', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).formatToParts(new Date()).reduce((a, x) => (a[x.type] = x.value, a), {});
+    const d = `${parts.year}-${parts.month}-${parts.day}`;
+
+    // Point directly to today's game by date
+    btn.href = `/slimstiek.html?date=${encodeURIComponent(d)}`;
+    btn.classList.add('btn-pulse');
+    btn.removeAttribute('title');
+    btn.classList.remove('cursor-not-allowed');
+  });
+</script>
 
   <style>
     .message-text.guest-card{
@@ -488,3 +493,4 @@
   </script>
 </body>
 </html>
+
