@@ -1,27 +1,32 @@
 <!DOCTYPE html>
 <html lang="af">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1, user-scalable=no" />
   <title>Kriptiek – Slimstiek</title>
-  <link rel="icon" href="/assets/S_SLIMSTIEK_12SEP.png">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Family tile asset -->
+  <link rel="icon" type="image/png" href="/assets/S_SLIMSTIEK_12SEP.png" />
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet" />
+
   <style>
     :root{
-      /* Kriptiek family tokens */
+      /* Family tokens (match Dilemma/Blitstiek) */
       --ink:#0b1220;
       --muted:#667085;
       --corner:18px;
       --shadow:0 16px 32px rgba(0,0,0,.14);
       --band-h:34px;
 
+      /* Family button tone */
+      --navy-900:#0b2a4a;
+
       /* Slimstiek accent (teal) */
       --teal-700:#0f766e;
       --teal-800:#0d5e58;
       --teal-900:#134e4a;
-
-      /* Family dark button tone */
-      --navy-900:#0b2a4a; /* visually matches Dilemma/Blitstiek buttons */
     }
 
     *{box-sizing:border-box}
@@ -34,7 +39,7 @@
 
     .page{width:100%; max-width:1000px; padding:16px}
 
-    /* Header */
+    /* Header (tile + subtitle) */
     .k-header{display:flex; align-items:center; gap:10px; margin-bottom:12px}
     .k-header img{width:44px; height:44px; border-radius:12px; box-shadow:0 6px 14px rgba(0,0,0,.12)}
     .k-title b{display:block; font-size:22px; line-height:1}
@@ -48,7 +53,7 @@
     .card{background:#fff; border:1px solid #e5e7eb; border-radius:var(--corner); box-shadow:var(--shadow)}
     .pad{padding:12px}
 
-    /* Target pill */
+    /* Target pill (family style) */
     .target{
       display:flex; align-items:center; gap:8px;
       background:linear-gradient(160deg,var(--teal-700),var(--teal-900));
@@ -58,7 +63,7 @@
     .tword{display:inline-flex; gap:2px; background:rgba(255,255,255,.14); padding:3px 6px; border-radius:8px}
     .tch{min-width:22px; height:22px; display:grid; place-items:center; background:rgba(0,0,0,.18); border-radius:6px}
 
-    /* Board + band (matches family) */
+    /* Board + band (same chrome as siblings) */
     .board{border:1px solid #0f766e33; border-radius:14px; overflow:hidden; background:#0e3a38}
     #grid{
       width:100%; aspect-ratio:8/10; display:grid;
@@ -80,7 +85,7 @@
     }
     .pill{background:rgba(255,255,255,.12); padding:3px 8px; border-radius:8px}
 
-    /* Controls – same look as Dilemma/Blitstiek */
+    /* Controls (match Dilemma/Blitstiek) */
     .controls{display:flex; flex-direction:column; gap:8px; margin-top:8px}
     .row{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
     .row-2{display:grid; grid-template-columns:1fr 1fr; gap:8px}
@@ -92,7 +97,7 @@
     .btn:active{transform:translateY(1px)}
     .btn.teal{ background:linear-gradient(160deg,var(--teal-700),var(--teal-900)) }
 
-    /* Sidebar: rules + leaderboard */
+    /* Sidebar */
     .h2{font-size:12px; font-weight:800; letter-spacing:1px; color:var(--teal-700); text-transform:uppercase; margin:2px 0 10px}
     .rules{font-size:14px; line-height:1.45; color:#0f172a; margin:0 0 10px; padding-left:18px}
     .rules code{background:#f3f4f6; padding:2px 6px; border-radius:6px}
@@ -104,7 +109,7 @@
     .lb tbody tr:nth-child(odd){background:#f8fafc}
     .lb tbody tr:first-child{background:#ffd700; color:#000; font-weight:800}
 
-    /* Footer */
+    /* Footer (same pattern) */
     footer{margin-top:20px; text-align:center; color:#64748b; font-size:13px}
     footer a{color:#0f766e; text-decoration:none}
     footer a:hover{text-decoration:underline}
@@ -121,10 +126,9 @@
 </head>
 <body>
   <div class="page">
-
-    <!-- Header (tile + family subtitle) -->
+    <!-- Header -->
     <div class="k-header">
-      <img src="/assets/S_SLIMSTIEK_12SEP.png" alt="Slimstiek">
+      <img src="/assets/S_SLIMSTIEK_12SEP.png" alt="Slimstiek" />
       <div class="k-title">
         <b>Slimstiek</b>
         <small>’n Kriptiek woordbou-speletjie – punte, nie tyd</small>
@@ -132,7 +136,7 @@
     </div>
 
     <div class="cols">
-      <!-- LEFT: game card -->
+      <!-- LEFT: game -->
       <div class="card pad">
         <div class="target">TEIKENWOORD: <span id="target-word" class="tword"></span></div>
 
@@ -184,7 +188,7 @@
       </aside>
     </div>
 
-    <!-- Footer (same links pattern) -->
+    <!-- Footer -->
     <footer>
       <a href="/index.html">Tuis</a> ·
       <a href="/privacy.html">Privaatheid</a> ·
@@ -192,9 +196,9 @@
     </footer>
   </div>
 
-  <!-- GAME SCRIPT (family mechanics; points scoring) -->
+  <!-- GAME LOGIC -->
   <script>
-    /* ===== Constants ===== */
+    /* ===== Constants (same mechanics, points scoring) ===== */
     const W=8,H=10,
       COLORS=['#0ea5e9','#f97316','#22c55e','#f59e0b','#a855f7','#0e7490','#7dd3fc'],
       LETTERS='BCDFGHJKLMNPQRSTVWXZ', VOWELS='AEIOUY';
@@ -215,18 +219,29 @@
     function tch(s){const e=document.createElement('span');e.className='tch';e.textContent=s;return e;}
     function buildTarget(){targetEl.innerHTML='';TARGET.split('').forEach(c=>targetEl.appendChild(tch(c)));}
     function initGrid(){
-      gridEl.innerHTML=''; grid=Array.from({length:H},()=>Array(W).fill(null));
+      gridEl.innerHTML='';
+      grid=Array.from({length:H},()=>Array(W).fill(null));
       for(let y=0;y<H;y++) for(let x=0;x<W;x++){
-        const c=document.createElement('div'); c.className='cell'; c.dataset.x=x; c.dataset.y=y; gridEl.appendChild(c);
+        const c=document.createElement('div');
+        c.className='cell'; c.dataset.x=x; c.dataset.y=y;
+        gridEl.appendChild(c);
       }
     }
-    function q(x,y){return gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);}
+    function q(x,y){return gridEl.querySelector(\`.cell[data-x="\${x}"][data-y="\${y}"]\`);}
     function fmt(s){const m=Math.floor(s/60),r=String(s%60).padStart(2,'0');return String(m).padStart(2,'0')+':'+r;}
-    function base(){return Math.max(0,1200-18*seconds);}
-    function hud(){scoreEl.textContent=String(score+base());comboEl.textContent='x'+(Number.isInteger(combo)?combo:combo.toFixed(2)).replace(/\.00$/,'');timeEl.textContent=fmt(seconds);}
+    function base(){return Math.max(0,1200-18*seconds);}                 // time-decay base
+    function hud(){
+      scoreEl.textContent=String(score+base());
+      comboEl.textContent='x'+(Number.isInteger(combo)?combo:combo.toFixed(2)).replace(/\\.00$/,'');
+      timeEl.textContent=fmt(seconds);
+    }
 
     /* ===== Blocks ===== */
-    const create=()=>({x:Math.floor(W/2),y:0,color:COLORS[Math.random()*COLORS.length|0],letter:(Math.random()<.3?VOWELS:LETTERS)[Math.random()*VOWELS.length|0]});
+    const create=()=>({
+      x:Math.floor(W/2), y:0,
+      color:COLORS[Math.random()*COLORS.length|0],
+      letter:(Math.random()<.3?VOWELS:LETTERS)[Math.random()*VOWELS.length|0]
+    });
     function draw(b){ if(!b||b.x<0||b.x>=W||b.y<0||b.y>=H) return; const e=q(b.x,b.y); e.classList.add('filled'); e.style.background=b.color; e.textContent=b.letter; }
     function clear(b){ if(!b||b.x<0||b.x>=W||b.y<0||b.y>=H) return; const e=q(b.x,b.y); e.className='cell'; e.style.background=''; e.textContent=''; }
     function hit(b){ return !b||b.x<0||b.x>=W||b.y>=H||(b.y>=0&&grid[b.y][b.x]); }
@@ -258,27 +273,44 @@
           if(nx>=0&&nx<W&&ny>=0&&ny<H){
             const n=grid[ny][nx];
             if(n&&!inTarget(n.letter)&&(n.letter===c.letter||n.color===c.color)){
-              kill.add(`${x},${y}`); kill.add(`${nx},${ny}`);
+              kill.add(\`\${x},\${y}\`); kill.add(\`\${nx},\${ny}\`);
             }
           }
         }
       }
       if(!kill.size) return;
+
+      // +15 per pair, scaled by combo; combo grows in quarters up to x9
       const popped=kill.size, add=15*Math.ceil(popped/2); score+=add*combo; combo=Math.min(9,combo+.25);
+
       await Promise.all([...kill].map(p=>new Promise(r=>{
         const [x,y]=p.split(',').map(Number), e=q(x,y);
-        if(e){ e.classList.add('pop'); setTimeout(()=>{grid[y][x]=null; clear({x,y}); r();},120); } else r();
+        if(e){ e.classList.add('pop'); setTimeout(()=>{grid[y][x]=null; clear({x,y}); r();},120); }
+        else r();
       })));
+
       // gravity
-      for(let x=0;x<W;x++){let w=H-1; for(let y=H-1;y>=0;y--) if(grid[y][x]){ if(y!==w){ grid[w][x]=grid[y][x]; grid[y][x]=null; clear({x,y}); draw({...grid[w][x],x,y:w}); } w--; }}
+      for(let x=0;x<W;x++){
+        let w=H-1;
+        for(let y=H-1;y>=0;y--){
+          if(grid[y][x]){
+            if(y!==w){ grid[w][x]=grid[y][x]; grid[y][x]=null; clear({x,y}); draw({...grid[w][x],x,y:w}); }
+            w--;
+          }
+        }
+      }
       hud();
     }
 
     async function win(){
       for(let y=0;y<H;y++) for(let x=0;x<=W-TARGET.length;x++){
-        let ok=true; for(let i=0;i<TARGET.length;i++){ if(!grid[y][x+i]||grid[y][x+i].letter!==TARGET[i]){ ok=false; break; } }
+        let ok=true;
+        for(let i=0;i<TARGET.length;i++){
+          if(!grid[y][x+i]||grid[y][x+i].letter!==TARGET[i]){ ok=false; break; }
+        }
         if(ok){
-          score+=Math.round(250*combo); hud();
+          score+=Math.round(250*combo); // finish bonus
+          hud();
           for(let i=0;i<TARGET.length;i++){ const e=q(x+i,y); if(e) e.style.transform='scale(1.1)'; }
           await new Promise(r=>setTimeout(r,400));
           end(true); return;
@@ -295,9 +327,10 @@
     }
     function stop(){ if(tTick) clearInterval(tTick); if(tFall) clearInterval(tFall); }
 
-    /* ===== Overlay & actions ===== */
+    /* ===== Overlay & actions (family flow) ===== */
     function openOverlay(inner){ const w=document.createElement('div'); w.className='overlay'; w.innerHTML=`<div class="modal">${inner}</div>`; document.body.appendChild(w); return w.querySelector('.modal'); }
     function closeOverlay(){ const o=document.querySelector('.overlay'); if(o) o.remove(); }
+
     function showWin(final){
       const html=`
         <h3>Mooi! Jou telling vir <b>${TARGET}</b> is <b>${final}</b></h3>
@@ -313,6 +346,7 @@
       m.querySelector('#share2').onclick=()=>share(score+base());
       m.querySelector('#submit').onclick=()=>{ const n=(m.querySelector('#nameIn').value||'Anoniem').slice(0,24); addLB(GAME_ID,n,score+base()); closeOverlay(); };
     }
+
     function end(win){
       over=true; stop();
       if(win){ showWin(score+base()); }
@@ -336,6 +370,7 @@
       if(e.key===' ') { e.preventDefault(); drop(); }
     });
 
+    /* ===== Sharing & My Profiel (family logic) ===== */
     function share(final){
       const msg=`Ek het ${TARGET} in Slimstiek voltooi vir ${final} punte — kan jy my klop?`;
       const url=location.href.split('?')[0], text=`${msg} ${url}`;
@@ -353,21 +388,46 @@
       }catch(e){}
     };
 
-    /* ===== Leaderboard (local demo; swap to Firestore later) ===== */
+    /* ===== Leaderboard (adapter: use site API if present; fallback localStorage) ===== */
     const lbBody=document.querySelector('#lb tbody');
     function addLB(day,name,points){
+      // If your shared API exists, use it:
+      if (window.kriptiek && window.kriptiek.leaderboard && typeof window.kriptiek.leaderboard.add==='function') {
+        window.kriptiek.leaderboard.add('slimstiek', day, {name, points});
+      }
+      // Fallback local storage
       const key='slimstiek_'+day, rows=JSON.parse(localStorage.getItem(key)||'[]');
-      rows.push({name,points,ts:Date.now()}); rows.sort((a,b)=>b.points-a.points);
-      localStorage.setItem(key,JSON.stringify(rows.slice(0,50))); renderLB(rows);
+      rows.push({name,points,ts:Date.now()});
+      rows.sort((a,b)=>b.points-a.points);
+      localStorage.setItem(key,JSON.stringify(rows.slice(0,50)));
+      renderLB(rows);
     }
-    function renderLB(list){ lbBody.innerHTML=''; let r=1; list.slice(0,10).forEach(x=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${r++}</td><td>${x.name}</td><td>${x.points}</td>`; lbBody.appendChild(tr); }); }
-    function loadLB(day){ const key='slimstiek_'+day, rows=JSON.parse(localStorage.getItem(key)||'[]'); renderLB(rows); }
+    function renderLB(list){
+      lbBody.innerHTML=''; let r=1;
+      list.slice(0,10).forEach(x=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${r++}</td><td>${x.name}</td><td>${x.points}</td>`;
+        lbBody.appendChild(tr);
+      });
+    }
+    function loadLB(day){
+      // If your shared API exists, prefer it:
+      if (window.kriptiek && window.kriptiek.leaderboard && typeof window.kriptiek.leaderboard.list==='function') {
+        const list = window.kriptiek.leaderboard.list('slimstiek', day) || [];
+        renderLB(list.sort((a,b)=>b.points-a.points));
+        return;
+      }
+      // Fallback local storage
+      const key='slimstiek_'+day, rows=JSON.parse(localStorage.getItem(key)||'[]');
+      renderLB(rows);
+    }
 
-    /* ===== Boot: use ?word= for testing, else default ===== */
+    /* ===== Boot ===== */
     (function boot(){
       const q=new URLSearchParams(location.search);
       const w=(q.get('word')||'WOORD').toUpperCase().replace(/[^A-Z]/g,'');
-      TARGET=w||'WOORD'; GAME_ID=new Date().toISOString().slice(0,10);
+      TARGET=w||'WOORD';
+      GAME_ID=new Date().toISOString().slice(0,10);
       buildTarget(); initGrid(); loadLB(GAME_ID);
     })();
   </script>
