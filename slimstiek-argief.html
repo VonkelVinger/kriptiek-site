@@ -77,43 +77,44 @@
 <body class="min-h-screen p-4 text-gray-100 bg-[#f8f5f2]">
 
   <!-- Header/logo -->
-  <header class="bg-white shadow p-4 mb-6">
-    <div class="logo-container">
-      <div id="backgroundCrossword" class="background-crossword"></div>
-      <div class="crossword-grid">
-        <div class="letter-box">S</div>
-        <div class="letter-box">L</div>
-        <div class="letter-box">I</div>
-        <div class="letter-box">M</div>
-        <div class="letter-box">S</div>
-        <div class="letter-box">T</div>
-        <div class="letter-box">I</div>
-        <div class="letter-box">E</div>
-        <div class="letter-box">K</div>
-      </div>
+  <!-- Header/logo (match other archive pages exactly) -->
+<header class="bg-white shadow p-4 mb-6">
+  <div class="logo-container">
+    <div id="backgroundCrossword" class="background-crossword"></div>
+    <div class="crossword-grid">
+      <div class="letter-box" style="transform:scaleX(-1)">K</div>
+      <div class="letter-box" style="transform:scaleX(-1)">R</div>
+      <div class="letter-box">I</div>
+      <div class="letter-box" style="transform:scaleX(-1)">P</div>
+      <div class="letter-box">T</div>
+      <div class="letter-box">I</div>
+      <div class="letter-box" style="transform:scaleX(-1)">E</div>
+      <div class="letter-box">K</div>
     </div>
-    <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        const backgroundCrossword = document.getElementById('backgroundCrossword');
-        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        function rand() { return letters[Math.floor(Math.random() * letters.length)]; }
-        function drawGrid() {
-          backgroundCrossword.innerHTML = '';
-          const rows = Math.ceil(backgroundCrossword.offsetHeight / 30);
-          const cols = Math.ceil(backgroundCrossword.offsetWidth / 30);
-          const total = (rows * cols) || 300;
-          for (let i = 0; i < total; i++) {
-            const d = document.createElement('div');
-            d.className = 'bg-letter';
-            d.textContent = rand();
-            backgroundCrossword.appendChild(d);
-          }
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const backgroundCrossword = document.getElementById('backgroundCrossword');
+      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      function rand() { return letters[Math.floor(Math.random() * letters.length)]; }
+      function drawGrid() {
+        backgroundCrossword.innerHTML = '';
+        const rows = Math.ceil(backgroundCrossword.offsetHeight / 30);
+        const cols = Math.ceil(backgroundCrossword.offsetWidth / 30);
+        const total = (rows * cols) || 300;
+        for (let i = 0; i < total; i++) {
+          const d = document.createElement('div');
+          d.className = 'bg-letter';
+          d.textContent = rand();
+          backgroundCrossword.appendChild(d);
         }
-        drawGrid();
-        window.addEventListener('resize', drawGrid);
-      });
-    </script>
-  </header>
+      }
+      drawGrid();
+      window.addEventListener('resize', drawGrid);
+    });
+  </script>
+</header>
+
 
   <section class="text-center mb-6">
     <h1 class="text-3xl font-bold mb-3 text-[#374151]">Slimstiek-argief</h1>
