@@ -1,261 +1,499 @@
-<script>
-/* ===== Slimstiek points engine (minimal-diff) =====
-   Assumes your Blitstiek page already provides:
-   - target word: window.K.daily.load()  -> { date, word }
-   - leaderboard add: window.K.lb.add(game, date, payload)
-   - leaderboard list: window.K.lb.list(game, date)  (for render)
-   - DOM ids/classes already present from Blitstiek
-   If you don’t have K.*, keep localStorage fallback below.
-*/
+<!DOCTYPE html>
+<html lang="af">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+  <title>Kriptiek – Slimstiek</title>
 
-/* ---------- DOM references (re-use Blitstiek’s selectors) ---------- */
-const gridEl   = document.getElementById('grid');
-const scoreEl  = document.getElementById('score');     // stat band value
-const comboEl  = document.getElementById('combo');     // stat band value
-const timeEl   = document.getElementById('elapsed');   // stat band value
-const lbBody   = document.querySelector('#lb tbody');
-const targetEl = document.getElementById('target-word');
+  <!-- Family tile (same format as the others) -->
+  <link rel="icon" type="image/png" href="/assets/S_SLIMSTIEK_12SEP.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet" />
 
-const btnStart = document.getElementById('start');
-const btnPause = document.getElementById('pause');
-const btnLeft  = document.getElementById('left');
-const btnRight = document.getElementById('right');
-const btnDown  = document.getElementById('down');
-const btnShare = document.getElementById('share');
-const btnProf  = document.getElementById('profile');
+  <!-- ========= PART A: Styles (match Dilemma/Blitstiek chrome) ========= -->
+  <style>
+    :root{
+      --ink:#0b1220; --muted:#667085;
+      --corner:18px; --shadow:0 16px 32px rgba(0,0,0,.14);
+      --band-h:34px;
 
-/* ---------- Game state ---------- */
-const W=8, H=10;
-const COLORS = ['#0ea5e9','#f97316','#22c55e','#f59e0b','#a855f7','#0e7490','#7dd3fc'];
-const LETTERS='BCDFGHJKLMNPQRSTVWXZ', VOWELS='AEIOUY';
+      /* Buttons on Kriptiek are dark/navy; grid is green family */
+      --btn:#0b2a4a;       /* primary button background */
+      --btnText:#ffffff;
+      --grid-bg:#0e3a38;   /* outer grid band */
+      --cell:#0f5d58;      /* empty tile */
+      --cell-lit:#0f766e;  /* filled tile */
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:#f5f7fb; color:var(--ink);
+      font-family:Montserrat,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      display:flex; flex-direction:column; align-items:center;
+    }
+    .page{width:100%; max-width:1000px; padding:16px}
 
-let TARGET='WOORD', GAME_ID='';
-let grid=[], cur=null, next=null;
-let seconds=0, paused=false, over=false, tick=null, fall=null;
-let score=0, combo=1;
+    /* Header (tile + title + subtitle) */
+    .k-header{display:flex; align-items:center; gap:10px; margin-bottom:12px}
+    .k-header img{width:44px; height:44px; border-radius:12px; box-shadow:0 6px 14px rgba(0,0,0,.12)}
+    .k-title b{display:block; font-size:22px; line-height:1}
+    .k-title small{display:block; color:var(--muted); font-weight:600}
 
-const q=(x,y)=>gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
-const fmt=s=>`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
-const base=()=>Math.max(0, 1200 - 18*seconds);   // time-decay base per spec
+    /* Two columns like the other games */
+    .cols{display:grid; grid-template-columns:1fr 320px; gap:14px}
+    @media (max-width:900px){ .cols{grid-template-columns:1fr} }
 
-function hud(){
-  scoreEl.textContent = String(score + base());
-  comboEl.textContent = 'x' + (Number.isInteger(combo)?combo:combo.toFixed(2)).replace(/\.00$/,'');
-  timeEl.textContent  = fmt(seconds);
-}
+    /* Cards */
+    .card{background:#fff; border:1px solid #e5e7eb; border-radius:var(--corner); box-shadow:var(--shadow)}
+    .pad{padding:12px}
 
-function buildTarget(){
-  targetEl.innerHTML='';
-  TARGET.split('').forEach(c=>{
-    const s=document.createElement('span');
-    s.className='tch'; s.textContent=c; targetEl.appendChild(s);
-  });
-}
+    /* Target pill */
+    .target{
+      display:flex; align-items:center; gap:8px;
+      background:#134e4a; color:#fff;
+      font-weight:800; letter-spacing:.6px; font-size:12px;
+      padding:8px 10px; border-radius:10px; margin-bottom:8px
+    }
+    .tword{display:inline-flex; gap:2px; background:rgba(255,255,255,.14); padding:3px 6px; border-radius:8px}
+    .tch{min-width:22px; height:22px; display:grid; place-items:center; background:rgba(0,0,0,.18); border-radius:6px}
 
-function initGrid(){
-  gridEl.innerHTML='';
-  grid = Array.from({length:H},()=>Array(W).fill(null));
-  for(let y=0;y<H;y++) for(let x=0;x<W;x++){
-    const d=document.createElement('div');
-    d.className='cell'; d.dataset.x=x; d.dataset.y=y; gridEl.appendChild(d);
-  }
-}
+    /* Board + stat band (same chrome) */
+    .board{border:1px solid #0f766e33; border-radius:14px; overflow:hidden; background:var(--grid-bg)}
+    #grid{
+      width:100%; aspect-ratio:8/10; display:grid;
+      grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(10,1fr);
+      gap:1px; background:var(--grid-bg);
+    }
+    .cell{
+      background:var(--cell); color:#fff; font-weight:800; display:grid; place-items:center;
+      border:1px solid rgba(255,255,255,.06); font-size:16px;
+      transition:transform .12s ease, opacity .12s ease;
+    }
+    .cell.filled{background:var(--cell-lit)}
+    .cell.pop{transform:scale(1.2); opacity:0}
 
-/* ---------- Blocks ---------- */
-const create=()=>({
-  x:Math.floor(W/2), y:0,
-  color:COLORS[Math.random()*COLORS.length|0],
-  letter:(Math.random()<.3?VOWELS:LETTERS)[Math.random()*VOWELS.length|0]
-});
-function draw(b){ if(!b||b.x<0||b.x>=W||b.y<0||b.y>=H) return; const e=q(b.x,b.y); e.classList.add('filled'); e.style.background=b.color; e.textContent=b.letter; }
-function clear(b){ if(!b||b.x<0||b.x>=W||b.y<0||b.y>=H) return; const e=q(b.x,b.y); e.className='cell'; e.style.background=''; e.textContent=''; }
-const hit=b=>!b||b.x<0||b.x>=W||b.y>=H||(b.y>=0&&grid[b.y][b.x]);
+    .band{
+      height:var(--band-h); display:flex; align-items:center; justify-content:space-between;
+      padding:0 10px; background:linear-gradient(0deg,rgba(0,0,0,.28),rgba(0,0,0,.18)); color:#fff;
+      font-weight:800; letter-spacing:.6px; text-transform:uppercase
+    }
+    .pill{background:rgba(255,255,255,.12); padding:3px 8px; border-radius:8px}
 
-async function move(dx,dy){
-  if(!cur||paused||over) return;
-  clear(cur); const t={...cur,x:cur.x+dx,y:cur.y+dy};
-  if(!hit(t)){ cur=t; draw(cur); }
-  else if(dy>0){ draw(cur); place(); } else draw(cur);
-}
-function drop(){ if(!cur||paused||over) return; clear(cur); while(cur.y<H-1 && !hit({...cur,y:cur.y+1})) cur.y++; place(); }
+    /* Controls (same layout as siblings) */
+    .controls{display:flex; flex-direction:column; gap:8px; margin-top:8px}
+    .row{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+    .row-2{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+    .btn{
+      border:0; border-radius:8px; padding:10px 12px; cursor:pointer;
+      text-transform:uppercase; font-weight:800; letter-spacing:.6px;
+      background:var(--btn); color:var(--btnText);
+    }
+    .btn:active{transform:translateY(1px)}
 
-function inTarget(ch){ return TARGET.includes(ch); }
+    /* Sidebar */
+    .h2{font-size:12px; font-weight:800; letter-spacing:1px; color:#134e4a; text-transform:uppercase; margin:2px 0 10px}
+    .rules{font-size:14px; line-height:1.45; color:#0f172a; margin:0 0 10px; padding-left:18px}
+    .rules code{background:#f3f4f6; padding:2px 6px; border-radius:6px}
 
-async function place(){
-  if(!cur||cur.y<0) return;
-  grid[cur.y][cur.x]={...cur}; draw(cur);
-  await matches(); await win();
-  cur=next; next=create(); draw(cur);
-  if(hit(next)) end(false);
-}
+    table.lb{width:100%; border-collapse:collapse; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden}
+    .lb caption{background:#003366; color:#fff; font-weight:800; letter-spacing:1px; padding:8px; text-transform:uppercase}
+    .lb thead{background:#134e4a; color:#fff; font-size:12px}
+    .lb th,.lb td{padding:8px 10px}
+    .lb tbody tr:nth-child(odd){background:#f8fafc}
+    .lb tbody tr:first-child{background:#ffd700; color:#000; font-weight:800}
 
-async function matches(){
-  const kill=new Set();
-  for(let y=0;y<H;y++) for(let x=0;x<W;x++){
-    const c=grid[y][x]; if(!c||inTarget(c.letter)) continue;
-    for(const [dx,dy] of [[1,0],[0,1],[-1,0],[0,-1]]){
-      const nx=x+dx, ny=y+dy;
-      if(nx>=0&&nx<W&&ny>=0&&ny<H){
-        const n=grid[ny][nx];
-        if(n&&!inTarget(n.letter)&&(n.letter===c.letter||n.color===c.color)){
-          kill.add(`${x},${y}`); kill.add(`${nx},${ny}`);
+    /* Footer */
+    footer{margin-top:20px; text-align:center; color:#64748b; font-size:13px}
+    footer a{color:#134e4a; text-decoration:none}
+    footer a:hover{text-decoration:underline}
+
+    /* Overlay */
+    .overlay{position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; z-index:1000}
+    .modal{background:#0b1220; color:#fff; width:min(520px,92vw); border-radius:12px; box-shadow:var(--shadow); padding:14px}
+    .modal h3{margin:0 0 6px}
+    .modal p{margin:0 0 10px; color:#dbeafe}
+    .modal input{width:100%; padding:10px; border-radius:8px; border:2px solid #134e4a; background:#062a28; color:#fff; font-weight:700}
+    .modal .grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px}
+    .modal .full{grid-column:1/-1}
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- ========= PART B: Page chrome (matches siblings) ========= -->
+    <div class="k-header">
+      <img src="/assets/S_SLIMSTIEK_12SEP.png" alt="Slimstiek" />
+      <div class="k-title">
+        <b>Slimstiek</b>
+        <small>’n Kriptiek woordbou-speletjie – punte, nie tyd</small>
+      </div>
+    </div>
+
+    <div class="cols">
+      <!-- LEFT: game column -->
+      <div class="card pad">
+        <div class="target">TEIKENWOORD: <span id="target-word" class="tword"></span></div>
+
+        <div class="board">
+          <div id="grid" aria-label="speletjie rooster"></div>
+          <div class="band">
+            <span>Punte <span id="score" class="pill">0</span></span>
+            <span>Kombinasie <span id="combo" class="pill">x1</span></span>
+            <span>Tyd <span id="elapsed" class="pill">00:00</span></span>
+          </div>
+        </div>
+
+        <!-- Controls identical in layout to Blitstiek/Dilemma -->
+        <div class="controls">
+          <div class="row">
+            <button id="left" class="btn">◀</button>
+            <button id="down" class="btn">▼</button>
+            <button id="right" class="btn">▶</button>
+          </div>
+          <div class="row-2">
+            <button id="start" class="btn">Begin</button>
+            <button id="pause" class="btn">Pouse</button>
+          </div>
+          <div class="row-2">
+            <button id="share" class="btn">Deel</button>
+            <button id="profile" class="btn">Voeg by My Profiel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: rules + leaderboard -->
+      <aside class="card pad">
+        <div class="h2">Reëls & Punte</div>
+        <ul class="rules">
+          <li>Bou die teikenwoord horisontaal op die rooster.</li>
+          <li><b>Basis-punte</b> neem met tyd af: <code>Basis = 1200 − (18 × sekondes)</code> (min 0).</li>
+          <li>Elke kettingverwydering (kleure/letters wat bars) gee <b>+15</b> en verhoog jou <b>kombinasie</b>.</li>
+          <li>Voltooi die woord vir ’n <b>afwerkingsbonus</b>: <code>250 × kombinasie</code>.</li>
+          <li>Bou te vinnig → lae kombinasie. Talm te lank → rooster vol → verloor.</li>
+        </ul>
+
+        <table class="lb" id="lb">
+          <caption>SLIMSTIEK LEIERBORD</caption>
+          <thead><tr><th>#</th><th>Naam</th><th>Punte</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </aside>
+    </div>
+
+    <!-- Footer (same pattern) -->
+    <footer>
+      <a href="/index.html">Tuis</a> ·
+      <a href="/privacy.html">Privaatheid</a> ·
+      <a href="/kontak.html">Kontak</a>
+    </footer>
+  </div>
+
+  <!-- ========= PART C: Game + Firestore integration ========= -->
+  <script type="module">
+    /* Optional Firestore. If you leave config as {enabled:false},
+       the game runs with TARGET="TUTS" and localStorage leaderboard. */
+    const FIREBASE = {
+      enabled: false,           // set true and fill the config below
+      config: {
+        // apiKey: "...",
+        // authDomain: "...",
+        // projectId: "...",
+        // storageBucket: "...",
+        // messagingSenderId: "...",
+        // appId: "..."
+      }
+    };
+
+    // --- Import Firebase only if enabled ---
+    let app, db, fs;
+    if (FIREBASE.enabled) {
+      const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js");
+      const firestore = await import("https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js");
+      app = initializeApp(FIREBASE.config);
+      db  = firestore.getFirestore(app);
+      fs  = firestore;
+    }
+
+    // ===== Shared daily word / leaderboard (same structure used by both games) =====
+    async function loadDailyWord() {
+      const qs  = new URLSearchParams(location.search);
+      const date= (qs.get('date') || new Date().toISOString().slice(0,10)); // YYYY-MM-DD
+
+      // If Firestore disabled, return the fixed sample word
+      if (!FIREBASE.enabled) return { date, word: "TUTS" };
+
+      // Firestore path: daily_words/{date}
+      const ref  = fs.doc(db, 'daily_words', date);
+      const snap = await fs.getDoc(ref);
+      if (!snap.exists()) {
+        // no doc yet → fall back to "TUTS" so you can still test
+        return { date, word: "TUTS" };
+      }
+      const data = snap.data() || {};
+      if (data.modes && data.modes.slimstiek === false) {
+        // explicitly disabled → also fall back to sample
+        return { date, word: "TUTS" };
+      }
+      const w = String(data.word || 'TUTS').toUpperCase().replace(/[^A-Z]/g,'');
+      return { date, word: w || "TUTS" };
+    }
+
+    async function addLeaderboardEntry(date, name, points) {
+      if (!FIREBASE.enabled) {
+        const key='slimstiek_'+date, rows=JSON.parse(localStorage.getItem(key)||'[]');
+        rows.push({name,points,ts:Date.now()});
+        rows.sort((a,b)=>b.points-a.points);
+        localStorage.setItem(key, JSON.stringify(rows.slice(0,50)));
+        return;
+      }
+      const coll = fs.collection(db, 'daily_words', date, 'leaderboards', 'slimstiek');
+      await fs.addDoc(coll, {
+        name: String(name).slice(0,24),
+        points: Number(points),
+        timestamp: fs.serverTimestamp()
+      });
+    }
+
+    async function listLeaderboard(date, onRows) {
+      if (!FIREBASE.enabled) {
+        const key='slimstiek_'+date, rows=JSON.parse(localStorage.getItem(key)||'[]');
+        onRows(rows.sort((a,b)=>b.points-a.points));
+        return () => {};
+      }
+      const coll = fs.collection(db, 'daily_words', date, 'leaderboards', 'slimstiek');
+      const q    = fs.query(coll, fs.orderBy('points','desc'), fs.limit(10));
+      return fs.onSnapshot(q, (snap)=>{
+        const rows=[]; snap.forEach(d=>rows.push(d.data()));
+        onRows(rows);
+      });
+    }
+
+    // ====== Game engine (points) – Identical inputs/controls as siblings ======
+    const W=8,H=10,
+      COLORS=['#0ea5e9','#f97316','#22c55e','#f59e0b','#a855f7','#0e7490','#7dd3fc'],
+      LETTERS='BCDFGHJKLMNPQRSTVWXZ', VOWELS='AEIOUY';
+
+    const gridEl=document.getElementById('grid'),
+          targetEl=document.getElementById('target-word'),
+          scoreEl=document.getElementById('score'),
+          comboEl=document.getElementById('combo'),
+          timeEl=document.getElementById('elapsed'),
+          lbBody=document.querySelector('#lb tbody');
+
+    const btnStart=document.getElementById('start'),
+          btnPause=document.getElementById('pause'),
+          btnLeft =document.getElementById('left'),
+          btnRight=document.getElementById('right'),
+          btnDown =document.getElementById('down'),
+          btnShare=document.getElementById('share'),
+          btnProf =document.getElementById('profile');
+
+    let TARGET='TUTS', GAME_ID='',
+        grid=[], cur=null, next=null,
+        seconds=0, paused=false, over=false,
+        tTick=null, tFall=null,
+        score=0, combo=1,
+        unSubLB=null;
+
+    const tch=s=>{const e=document.createElement('span'); e.className='tch'; e.textContent=s; return e;};
+    function buildTarget(){ targetEl.innerHTML=''; TARGET.split('').forEach(c=>targetEl.appendChild(tch(c))); }
+    function initGrid(){
+      gridEl.innerHTML=''; grid=Array.from({length:H},()=>Array(W).fill(null));
+      for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+        const c=document.createElement('div'); c.className='cell'; c.dataset.x=x; c.dataset.y=y; gridEl.appendChild(c);
+      }
+    }
+    const q=(x,y)=>gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+    const fmt=s=>`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+    const base=()=>Math.max(0,1200-18*seconds);
+    function hud(){
+      scoreEl.textContent=String(score+base());
+      comboEl.textContent='x'+(Number.isInteger(combo)?combo:combo.toFixed(2)).replace(/\.00$/,'');
+      timeEl.textContent=fmt(seconds);
+    }
+
+    const create=()=>({ x:Math.floor(W/2), y:0,
+      color:COLORS[Math.random()*COLORS.length|0],
+      letter:(Math.random()<.3?VOWELS:LETTERS)[Math.random()*VOWELS.length|0] });
+    function draw(b){ if(!b||b.x<0||b.x>=W||b.y<0||b.y>=H) return; const e=q(b.x,b.y); e.classList.add('filled'); e.style.background=b.color; e.textContent=b.letter; }
+    function clear(b){ if(!b||b.x<0||b.x>=W||b.y<0||b.y>=H) return; const e=q(b.x,b.y); e.className='cell'; e.style.background=''; e.textContent=''; }
+    const hit=b=>!b||b.x<0||b.x>=W||b.y>=H||(b.y>=0&&grid[b.y][b.x]);
+
+    async function move(dx,dy){
+      if(!cur||paused||over) return;
+      clear(cur); const t={...cur,x:cur.x+dx,y:cur.y+dy};
+      if(!hit(t)){ cur=t; draw(cur); }
+      else if(dy>0){ draw(cur); place(); } else draw(cur);
+    }
+    function drop(){ if(!cur||paused||over) return; clear(cur); while(cur.y<H-1 && !hit({...cur,y:cur.y+1})) cur.y++; place(); }
+
+    function inTarget(ch){ return TARGET.includes(ch); }
+
+    async function place(){
+      if(!cur||cur.y<0) return;
+      grid[cur.y][cur.x]={...cur}; draw(cur);
+      await matches(); await win();
+      cur=next; next=create(); draw(cur);
+      if(hit(next)) end(false);
+    }
+
+    async function matches(){
+      const kill=new Set();
+      for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+        const c=grid[y][x]; if(!c||inTarget(c.letter)) continue;
+        for(const [dx,dy] of [[1,0],[0,1],[-1,0],[0,-1]]){
+          const nx=x+dx,ny=y+dy;
+          if(nx>=0&&nx<W&&ny>=0&&ny<H){
+            const n=grid[ny][nx];
+            if(n&&!inTarget(n.letter)&&(n.letter===c.letter||n.color===c.color)){
+              kill.add(`${x},${y}`); kill.add(`${nx},${ny}`);
+            }
+          }
+        }
+      }
+      if(!kill.size) return;
+
+      // +15 per pair, scaled by combo; combo grows in quarters up to x9
+      const popped=kill.size, add=15*Math.ceil(popped/2); score+=add*combo; combo=Math.min(9,combo+.25);
+
+      await Promise.all([...kill].map(p=>new Promise(r=>{
+        const [x,y]=p.split(',').map(Number), e=q(x,y);
+        if(e){ e.classList.add('pop'); setTimeout(()=>{grid[y][x]=null; clear({x,y}); r();},120); } else r();
+      })));
+
+      // gravity
+      for(let x=0;x<W;x++){
+        let w=H-1; for(let y=H-1;y>=0;y--) if(grid[y][x]){
+          if(y!==w){ grid[w][x]=grid[y][x]; grid[y][x]=null; clear({x,y}); draw({...grid[w][x],x,y:w}); }
+          w--;
+        }
+      }
+      hud();
+    }
+
+    async function win(){
+      for(let y=0;y<H;y++) for(let x=0;x<=W-TARGET.length;x++){
+        let ok=true; for(let i=0;i<TARGET.length;i++){
+          if(!grid[y][x+i]||grid[y][x+i].letter!==TARGET[i]){ ok=false; break; }
+        }
+        if(ok){
+          score+=Math.round(250*combo); hud();
+          for(let i=0;i<TARGET.length;i++){ const e=q(x+i,y); if(e) e.style.transform='scale(1.1)'; }
+          await new Promise(r=>setTimeout(r,400));
+          end(true); return;
         }
       }
     }
-  }
-  if(!kill.size) return;
 
-  // +15 per pair, scaled by combo; combo grows in quarters up to x9
-  const popped=kill.size, add=15*Math.ceil(popped/2);
-  score += add * combo;
-  combo = Math.min(9, combo + .25);
+    function start(){
+      stop(); seconds=0; score=0; combo=1; over=false; paused=false;
+      initGrid(); cur=create(); next=create(); draw(cur); hud();
+      tTick=setInterval(()=>{ if(!paused&&!over){ seconds++; hud(); } },1000);
+      tFall=setInterval(()=>{ if(!paused&&!over) move(0,1); },1000);
+    }
+    function stop(){ if(tTick) clearInterval(tTick); if(tFall) clearInterval(tFall); }
 
-  await Promise.all([...kill].map(p=>new Promise(r=>{
-    const [x,y]=p.split(',').map(Number), e=q(x,y);
-    if(e){ e.classList.add('pop'); setTimeout(()=>{ grid[y][x]=null; clear({x,y}); r(); }, 120); }
-    else r();
-  })));
+    function openOverlay(inner){ const w=document.createElement('div'); w.className='overlay'; w.innerHTML=`<div class="modal">${inner}</div>`; document.body.appendChild(w); return w.querySelector('.modal'); }
+    function closeOverlay(){ const o=document.querySelector('.overlay'); if(o) o.remove(); }
 
-  // gravity
-  for(let x=0;x<W;x++){
-    let w=H-1;
-    for(let y=H-1;y>=0;y--){
-      if(grid[y][x]){
-        if(y!==w){ grid[w][x]=grid[y][x]; grid[y][x]=null; clear({x,y}); draw({...grid[w][x],x,y:w}); }
-        w--;
+    function showWin(final){
+      const html=`
+        <h3>Mooi! Jou telling vir <b>${TARGET}</b> is <b>${final}</b></h3>
+        <p>Vul jou naam vir die leierbord of deel dit.</p>
+        <input id="nameIn" placeholder="Jou naam" maxlength="24">
+        <div class="grid">
+          <button id="submit" class="btn">Dien in</button>
+          <button id="share2" class="btn">Deel</button>
+          <button id="again" class="btn full">Speel weer</button>
+        </div>`;
+      const m=openOverlay(html);
+      m.querySelector('#again').onclick=()=>{ closeOverlay(); start(); };
+      m.querySelector('#share2').onclick=()=>share(score+base());
+      m.querySelector('#submit').onclick=async ()=>{
+        const n=(m.querySelector('#nameIn').value||'Anoniem').slice(0,24);
+        await addLeaderboardEntry(GAME_ID,n,score+base());
+        closeOverlay();
+      };
+    }
+
+    function end(win){
+      over=true; stop();
+      if(win){ showWin(score+base()); }
+      else{
+        const m=openOverlay(`<h3>Speletjie verby</h3><p>Die rooster is vol. Jou telling: <b>${score+base()}</b></p><div class="grid"><button id="again" class="btn full">Probeer weer</button></div>`);
+        m.querySelector('#again').onclick=()=>{ closeOverlay(); start(); };
       }
     }
-  }
-  hud();
-}
 
-async function win(){
-  for(let y=0;y<H;y++) for(let x=0;x<=W-TARGET.length;x++){
-    let ok=true;
-    for(let i=0;i<TARGET.length;i++){
-      if(!grid[y][x+i]||grid[y][x+i].letter!==TARGET[i]){ ok=false; break; }
+    // Buttons/keys
+    btnStart.onclick=start;
+    btnPause.onclick=()=>{ if(over) return; paused=!paused; btnPause.textContent=paused?'Hervat':'Pouse'; };
+    btnLeft.onclick =()=>move(-1,0);
+    btnRight.onclick=()=>move(1,0);
+    btnDown.onclick =drop;
+    document.addEventListener('keydown',e=>{
+      if(e.key==='ArrowLeft') move(-1,0);
+      if(e.key==='ArrowRight') move(1,0);
+      if(e.key==='ArrowDown') move(0,1);
+      if(e.key===' '){ e.preventDefault(); drop(); }
+    });
+
+    // Share + My Profiel hooks
+    function share(final){
+      const msg=`Ek het ${TARGET} in Slimstiek voltooi vir ${final} punte — kan jy my klop?`;
+      const url=location.href.split('?')[0], text=`${msg} ${url}`;
+      if(navigator.share){ navigator.share({text,url}).catch(()=>navigator.clipboard.writeText(text)); }
+      else navigator.clipboard.writeText(text);
     }
-    if(ok){
-      score += Math.round(250*combo); // finish bonus
-      hud();
-      for(let i=0;i<TARGET.length;i++){ const e=q(x+i,y); if(e) e.style.transform='scale(1.1)'; }
-      await new Promise(r=>setTimeout(r,400));
-      return end(true);
+    btnShare.onclick=()=>share(score+base());
+    btnProf.onclick=()=>{
+      try{
+        if(window.kriptiek && typeof window.kriptiek.addToProfile==='function'){
+          window.kriptiek.addToProfile({ app:'Slimstiek', day:GAME_ID, word:TARGET, score:score+base() });
+        }
+        alert('Bygevoeg by My Profiel ✅');
+      }catch(e){}
+    };
+
+    // Leaderboard render
+    function renderLB(rows){
+      lbBody.innerHTML=''; let r=1;
+      (rows||[]).slice(0,10).forEach(x=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${r++}</td><td>${x.name}</td><td>${x.points}</td>`;
+        lbBody.appendChild(tr);
+      });
     }
-  }
-}
 
-/* ---------- Loops ---------- */
-function start(){
-  stop(); seconds=0; score=0; combo=1; over=false; paused=false;
-  initGrid(); cur=create(); next=create(); draw(cur); hud();
-  tick=setInterval(()=>{ if(!paused&&!over){ seconds++; hud(); } },1000);
-  fall=setInterval(()=>{ if(!paused&&!over) move(0,1); },1000);
-}
-function stop(){ if(tick) clearInterval(tick); if(fall) clearInterval(fall); }
+    // Boot
+    (async function boot(){
+      const daily = await loadDailyWord();
+      TARGET  = daily.word || 'TUTS';
+      GAME_ID = daily.date;
+      buildTarget(); initGrid(); hud();
 
-/* ---------- Overlay + submit ---------- */
-function openOverlay(inner){ const w=document.createElement('div'); w.className='overlay'; w.innerHTML=`<div class="modal">${inner}</div>`; document.body.appendChild(w); return w.querySelector('.modal'); }
-function closeOverlay(){ const o=document.querySelector('.overlay'); if(o) o.remove(); }
+      if (unSubLB) unSubLB();
+      unSubLB = await listLeaderboard(GAME_ID, renderLB);
+    })();
 
-async function submitScore(final){
-  const name = (document.getElementById('nameIn').value || 'Anoniem').slice(0,24);
-  if (window.K && window.K.lb && typeof window.K.lb.add==='function') {
-    await window.K.lb.add('slimstiek', GAME_ID, { name, points: final });
-  } else {
-    // local fallback
-    const key='slimstiek_'+GAME_ID, rows=JSON.parse(localStorage.getItem(key)||'[]');
-    rows.push({name,points:final,ts:Date.now()});
-    rows.sort((a,b)=>b.points-a.points);
-    localStorage.setItem(key, JSON.stringify(rows.slice(0,50)));
-  }
-  renderLB();
-  closeOverlay();
-}
+  </script>
 
-function showWin(final){
-  const html=`
-    <h3>Mooi! Jou telling vir <b>${TARGET}</b> is <b>${final}</b></h3>
-    <p>Vul jou naam vir die leierbord of deel dit.</p>
-    <input id="nameIn" placeholder="Jou naam" maxlength="24">
-    <div class="grid">
-      <button id="submit" class="btn teal">Dien in</button>
-      <button id="share2" class="btn">Deel</button>
-      <button id="again" class="btn full">Speel weer</button>
-    </div>`;
-  const m=openOverlay(html);
-  m.querySelector('#again').onclick=()=>{ closeOverlay(); start(); };
-  m.querySelector('#share2').onclick=()=>share(score+base());
-  m.querySelector('#submit').onclick=()=>submitScore(score+base());
-}
+  <!-- ========= PART D: Firestore rules (reference) =========
+  // rules_version = '2';
+  // service cloud.firestore {
+  //   match /databases/{database}/documents {
+  //     match /daily_words/{date} {
+  //       allow read: if true;                         // everyone can read the day's word
+  //       // Lock writes to admins (adjust to your auth):
+  //       allow write: if request.auth != null && request.auth.token.admin == true;
 
-function end(win){
-  over=true; stop();
-  if(win) return showWin(score+base());
-  const m=openOverlay(`<h3>Speletjie verby</h3><p>Die rooster is vol. Jou telling: <b>${score+base()}</b></p><div class="grid"><button id="again" class="btn teal full">Probeer weer</button></div>`);
-  m.querySelector('#again').onclick=()=>{ closeOverlay(); start(); };
-}
-
-/* ---------- Buttons (reuse Blitstiek UI) ---------- */
-btnStart.onclick=start;
-btnPause.onclick=()=>{ if(over) return; paused=!paused; btnPause.textContent=paused?'Hervat':'Pouse'; };
-btnLeft.onclick =()=>move(-1,0);
-btnRight.onclick=()=>move(1,0);
-btnDown.onclick =drop;
-
-document.addEventListener('keydown',e=>{
-  if(e.key==='ArrowLeft') move(-1,0);
-  if(e.key==='ArrowRight') move(1,0);
-  if(e.key==='ArrowDown') move(0,1);
-  if(e.key===' '){ e.preventDefault(); drop(); }
-});
-
-/* ---------- Share & My Profiel (same hooks) ---------- */
-function share(final){
-  const msg=`Ek het ${TARGET} in Slimstiek voltooi vir ${final} punte — kan jy my klop?`;
-  const url=location.href.split('?')[0], text=`${msg} ${url}`;
-  if(navigator.share){ navigator.share({text:url?text:msg,url}).catch(()=>navigator.clipboard.writeText(text)); }
-  else navigator.clipboard.writeText(text);
-}
-btnShare.onclick=()=>share(score+base());
-
-btnProf.onclick=()=>{
-  try{
-    if(window.kriptiek && typeof window.kriptiek.addToProfile==='function'){
-      window.kriptiek.addToProfile({ app:'Slimstiek', day:GAME_ID, word:TARGET, score:score+base() });
-    }
-    alert('Bygevoeg by My Profiel ✅');
-  }catch(e){}
-};
-
-/* ---------- Leaderboard render (reuse your K.lb if present) ---------- */
-function renderLB(){
-  let rows=[];
-  if (window.K && window.K.lb && typeof window.K.lb.list==='function') {
-    rows = (window.K.lb.list('slimstiek', GAME_ID) || []).sort((a,b)=>b.points-a.points);
-  } else {
-    rows = JSON.parse(localStorage.getItem('slimstiek_'+GAME_ID)||'[]').sort((a,b)=>b.points-a.points);
-  }
-  lbBody.innerHTML=''; let r=1;
-  rows.slice(0,10).forEach(x=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${r++}</td><td>${x.name}</td><td>${x.points}</td>`;
-    lbBody.appendChild(tr);
-  });
-}
-
-/* ---------- Boot (use your daily loader if available) ---------- */
-(async function boot(){
-  if (window.K && window.K.daily && typeof window.K.daily.load==='function'){
-    const { date, word } = await window.K.daily.load();   // shared with Blitstiek
-    GAME_ID = date; TARGET = (word||'WOORD').toUpperCase();
-  } else {
-    const qs=new URLSearchParams(location.search);
-    GAME_ID = qs.get('date') || new Date().toISOString().slice(0,10);
-    TARGET  = (qs.get('word') || 'WOORD').toUpperCase().replace(/[^A-Z]/g,'');
-  }
-  // Build target and grid, leave “Begin” to start—just like Blitstiek.
-  targetEl.innerHTML=''; TARGET.split('').forEach(c=>{const s=document.createElement('span'); s.className='tch'; s.textContent=c; targetEl.appendChild(s);});
-  initGrid(); renderLB(); hud();
-})();
-</script>
+  //       match /leaderboards/{game}/{entry} {
+  //         allow read: if true;
+  //         allow create: if true;                    // or require auth / add rate limits
+  //         allow update, delete: if false;
+  //       }
+  //     }
+  //   }
+  // }
+  ======================================================== -->
+</body>
+</html>
