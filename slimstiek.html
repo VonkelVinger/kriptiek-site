@@ -11,9 +11,8 @@
   <meta property="og:description" content="Kom speel vandag se SLIMSTIEK op Kriptiek." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://www.kriptiek.com/slimstiek.html" />
-  <!-- If/when you add a Slimstiek button asset, swap this filename -->
   <meta property="og:image" content="https://www.kriptiek.com/assets/S_SLIMSTIEK_12SEP.png" />
-  <meta property="og:image:alt" content="SLIMSTIEK knoppie (plekhouer)" />
+  <meta property="og:image:alt" content="SLIMSTIEK knoppie" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="SLIMSTIEK – Kriptiek" />
   <meta name="twitter:description" content="Kom speel vandag se SLIMSTIEK op Kriptiek." />
@@ -26,16 +25,16 @@
   <style>
     :root{
       --brand:#1e3a8a;
-      --cell-bg:#004d40;   /* hou dieselfde gevoel as Blitstiek */
-      --gridW:320px;
-      --cell-font:16px;
-      --cellSize:32px;
-      --line:1px;
+      --cell-bg:#004d40;   /* cell & chip colour */
+      --gridW:320px;       /* updated by JS */
+      --cell-font:16px;    /* updated by JS */
+      --cellSize:32px;     /* updated by JS */
+      --line:1px;          /* 1 device pixel (set in JS) */
     }
     html,body{height:100%}
     body{font-family:'Montserrat',system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#f9fafb;color:#1f2937}
 
-    /* HEADER (presies soos Blitstiek s’n, maar met 'SLIMSTIEK') */
+    /* HEADER */
     header{background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.08);padding:1rem;text-align:center;position:relative;}
     .logo-container{display:flex;justify-content:center;align-items:center;margin-bottom:10px;}
     .logo-container .letter-box{width:40px;height:40px;margin:2px;display:flex;justify-content:center;align-items:center;background:#374151;color:#fff;font-size:1.2rem;font-weight:700;border-radius:6px;}
@@ -49,7 +48,7 @@
     #target{display:inline-flex;gap:1px;background:var(--cell-bg);color:#fff;padding:2px;border-radius:6px;min-height:34px;align-items:center;}
     #target span{width:30px;height:30px;display:grid;place-items:center;font-weight:800;border:1px solid rgba(255,255,255,.12);}
 
-    /* GRID (presies dieselfde rooster) */
+    /* GRID */
     #grid{
       position:relative;
       display:grid;
@@ -108,7 +107,7 @@
     }
     .share-menu-local button:hover{background:#f3f4f6;}
 
-    /* ACTION BARS (identies aan Blitstiek) */
+    /* ACTION BARS */
     .action-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;justify-items:center;align-items:center;}
     .cols-3{ grid-template-columns:repeat(3,1fr); }
     .action-grid > a, .action-grid > button{
@@ -137,6 +136,7 @@
     </div>
     <p class="welcome" id="welcomeLine">Welkom terug, <span id="playerName" class="font-semibold text-green-700">Speler</span>!</p>
   </header>
+
   <main class="flex-1">
     <div class="max-w-3xl mx-auto px-4 py-4">
 
@@ -250,7 +250,7 @@
               <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
             </a>
             <a href="/slimstiek-argief.html" title="Slimstiek-argief">
-              <img class="btn-img" src="/assets/S_ARGIEF_12SEP.png" alt="B Argief" width="120" height="120">
+              <img class="btn-img" src="/assets/S_ARGIEF_12SEP.png" alt="S Argief" width="120" height="120">
             </a>
             <div class="relative share-tile-wrap">
               <button type="button" class="share-tile" title="Deel">
@@ -269,18 +269,18 @@
         </div>
       </section>
 
-      <!-- HOE OM TE SPEEL (kort aangepas vir punte) -->
+      <!-- HOE OM TE SPEEL -->
       <section class="mt-4 bg-white rounded shadow p-4">
         <h2 class="text-xl font-bold mb-2">HOE OM TE SPEEL</h2>
         <ol class="space-y-3 text-gray-700 leading-relaxed">
           <li>
             <p class="font-semibold">1. Doel</p>
-            <p>Vorm die <strong>teikenwoord</strong> bo so vinnig as moontlik met die vallende blokke. In SLIMSTIEK verdien jy <strong>punte</strong> vir die skoonmaak van blokke en wanneer jy die woord voltooi.</p>
+            <p>Vorm die <strong>teikenwoord</strong> met die vallende blokke. In SLIMSTIEK tel <strong>net punte</strong> – tyd word nie op die leierbord gebruik nie.</p>
           </li>
           <li>
             <p class="font-semibold">2. Reëls vir blokke</p>
             <ul class="list-disc pl-6">
-              <li><strong>Dieselfde letter</strong> of <strong>dieselfde kleur</strong> wat langs of op mekaar tot stilstand kom, verdwyn. (<em>Letters wat in die teikenwoord voorkom, verdwyn nooit nie.</em>)</li>
+              <li><strong>Dieselfde letter</strong> of <strong>dieselfde kleur</strong> wat langs of op mekaar tot stilstand kom, verdwyn. (<em>Letters in die teikenwoord verdwyn nooit nie.</em>)</li>
               <li>Elke gepaarde verdwyning gee punte.</li>
             </ul>
           </li>
@@ -320,6 +320,7 @@
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
+
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
@@ -328,7 +329,7 @@
       collection, query, orderBy, limit, getDocs, onSnapshot, where
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
-    /* ---- Firebase (optional) ---- */
+    /* ---- Firebase ---- */
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
       authDomain: "kriptiek-c9ea2.firebaseapp.com",
@@ -339,20 +340,7 @@
     };
 
     let app, auth, db;
-    try{
-      app = initializeApp(firebaseConfig);
-      auth = getAuth(app);
-      db   = getFirestore(app);
-    }catch(e){
-      console.warn('Firebase init failed (ok for local fallback):', e);
-    }
-
-    /* ---- CONFIG / CONSTANTS ---- */
-    const SCORING = Object.freeze({
-      PAIR_POINTS: 10,      // for the two tiles removed together
-      PER_LETTER_IN_WORD: 5,// counted when word is completed
-      WORD_BONUS: 50
-    });
+    try{ app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); }catch(e){ console.warn('Firebase init failed (ok for local fallback):', e); }
 
     /* ---- DOM ---- */
     const welcomeLine   = document.getElementById('welcomeLine');
@@ -395,65 +383,41 @@
     const gateRegLink = document.getElementById('gateRegLink');
 
     /* ---- Helpers ---- */
+    const SITE_ORIGIN = location.hostname.endsWith('kriptiek.com') ? location.origin : 'https://www.kriptiek.com';
     const pad = n => String(n).padStart(2,'0');
     const fmt = s => s==null ? '--:--' : `${pad(Math.floor(s/60))}:${pad(s%60)}`;
-    const todayISO = () => {
-      // ZA timezone friendly enough for client; for strictness, push to server if needed
-      const d=new Date();
-      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-    };
+
+    function todayKeySAST(){
+      const parts = new Intl.DateTimeFormat('en-CA', { timeZone:'Africa/Johannesburg', year:'numeric', month:'2-digit', day:'2-digit' }).formatToParts(new Date());
+      const y = parts.find(p=>p.type==='year').value;
+      const m = parts.find(p=>p.type==='month').value;
+      const d = parts.find(p=>p.type==='day').value;
+      return `${y}-${m}-${d}`;
+    }
+
     const qs = new URLSearchParams(location.search);
-    const explicitId = qs.get('gameId'); // still supported; used only for share URL
-    const SITE_ORIGIN = location.hostname.endsWith('kriptiek.com') ? location.origin : 'https://www.kriptiek.com';
+    const dateParam = qs.get('date');
+    let currentDate = (/^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : todayKeySAST());
 
-    /* ---- Share helpers ---- */
-    const shareKey = gid => `slimstiekShare:${gid}`;
-    let stickyPayload = null;
-
-    function buildShareUrl(gameId){
+    const shareKey = () => `slimstiekShare:${currentDate}`;
+    function buildShareUrl(dateStr=currentDate){
       const url = new URL('/slimstiek.html', SITE_ORIGIN);
-      if (gameId) url.searchParams.set('gameId', gameId);
+      url.searchParams.set('date', dateStr);
       return url.toString();
     }
-    function shareTextLinkOnly(gid){
-      return `Kom speel vandag se SLIMSTIEK op Kriptiek: ${buildShareUrl(gid)}`;
-    }
-    function buildWinShareText(payload){
-      const tt   = Number(payload?.time);
-      const name = currentUserName || 'Speler';
-      const word = payload?.target || TARGET || '—';
-      const sc   = Number(payload?.score ?? score) || 0;
-      return `Veels geluk, ${name}! Jy het ${word} voltooi in ${fmt(tt)} vir ${sc} punte. ${buildShareUrl(GAME_ID)}`;
-    }
+    function shareTextLinkOnly(){ return `Kom speel vandag se SLIMSTIEK op Kriptiek: ${buildShareUrl(currentDate)}`; }
 
-    /* ---- Mechanics ---- */
-    const H = 10, W = 8;
-    const COLORS = ['#2196f3','#f44336','#4caf50','#ffc107','#9c27b0','#003366','#009688'];
-    const CONS   = 'BCDFGHJKLMNPQRSTVWXZ';
-    const VOWS   = 'AEIOUY';
+    let stickyPayload = null;
 
-    /* ---- State ---- */
-    let user=null;
-    let currentUserName='Speler';
-    let GAME_ID=null, TARGET='';
-    let grid=Array.from({length:H},()=>Array(W).fill(null));
-    let cur=null, nxt=null;
-    let paused=false, ended=false, moving=false;
-    let t=0, tInt=null, gInt=null;
-    let score=0, bestScore=null;
-    let lbUnsub=null;
-    let guestGateBypassOnce=false;
-
-    /* ---- Auth (optional) ---- */
+    /* ---- Auth ---- */
+    let user=null, currentUserName='Speler';
     function setBarsForUser(u){
-      if(u){
-        barR.classList.remove('hidden'); barNR.classList.add('hidden'); welcomeLine.style.display='';
-      }else{
-        barNR.classList.remove('hidden'); barR.classList.add('hidden'); welcomeLine.style.display='none';
-      }
+      if(u){ barR.classList.remove('hidden'); barNR.classList.add('hidden'); welcomeLine.style.display=''; }
+      else{ barNR.classList.remove('hidden'); barR.classList.add('hidden'); welcomeLine.style.display='none'; }
     }
     function showNRGate(){ nrGate.style.display='flex'; }
     function hideNRGate(){ nrGate.style.display='none'; }
+    let guestGateBypassOnce=false;
     function chooseGuest(){ guestGateBypassOnce = true; hideNRGate(); }
     function goRegister(){
       const returnUrl = location.pathname + location.search;
@@ -469,62 +433,56 @@
       try{
         const uref = doc(db,'users',u.uid);
         const snap = await getDoc(uref);
-        if(snap.exists() && snap.data().userName){
-          return String(snap.data().userName).slice(0,24);
-        }
+        if(snap.exists() && snap.data().userName) return String(snap.data().userName).slice(0,24);
       }catch{}
       if (u?.displayName) return String(u.displayName).slice(0,24);
-      if (u?.email){
-        const local = u.email.split('@')[0];
-        return local ? local.slice(0,24) : 'Speler';
-      }
+      if (u?.email){ const local = u.email.split('@')[0]; return local ? local.slice(0,24) : 'Speler'; }
       return 'Speler';
     }
 
-    if (auth){
+    if(auth){
       onAuthStateChanged(auth, async (u)=>{
-        user=u||null;
-        currentUserName = await resolveUserName(user);
-        playerNameEl.textContent = currentUserName;
-        setBarsForUser(user);
-        if(!user) showNRGate();
+        user=u||null; currentUserName = await resolveUserName(user);
+        playerNameEl.textContent=currentUserName; setBarsForUser(user); if(!user) showNRGate();
       });
-    } else {
-      // No Firebase — always guest UI
-      setBarsForUser(null);
-      showNRGate();
-    }
+    } else { setBarsForUser(null); showNRGate(); }
 
     /* ---- Pixel-perfect grid sizing ---- */
     function resizeGrid(){
       const wrap = gridEl.parentElement;
       const availCss = Math.min(320, Math.floor(wrap.clientWidth));
       const dpr = Math.max(1, window.devicePixelRatio || 1);
-      const toDp   = vCss => Math.round(vCss * dpr);
-      const toCss  = vDp  => vDp / dpr;
-      const snapDp = vDp  => Math.floor(vDp / 8) * 8;
+      const toDp=v=>Math.round(v*dpr), toCss=v=>v/dpr, snap=v=>Math.floor(v/8)*8;
 
-      const availDp   = toDp(availCss);
-      const snappedDp = Math.max(toDp(240), snapDp(availDp));
-      const quantW    = toCss(snappedDp);
-
-      const cellCss = Math.floor(quantW / 8);
-      const quantH  = cellCss * 10;
+      const availDp=toDp(availCss);
+      const snappedDp=Math.max(toDp(240), snap(availDp));
+      const quantW=toCss(snappedDp);
+      const cellCss=Math.floor(quantW/8);
+      const quantH=cellCss*10;
 
       document.documentElement.style.setProperty('--cellSize', `${cellCss}px`);
-      const lineCss = 1 / dpr;
-      document.documentElement.style.setProperty('--line', `${lineCss}px`);
-
-      gridEl.style.width  = quantW + 'px';
-      gridEl.style.height = quantH + 'px';
-      document.documentElement.style.setProperty('--gridW', quantW + 'px');
-
-      const glyph = Math.max(15, Math.min(28, Math.round(cellCss * 0.50)));
-      document.documentElement.style.setProperty('--cell-font', glyph + 'px');
+      document.documentElement.style.setProperty('--line', `${1/dpr}px`);
+      gridEl.style.width=quantW+'px'; gridEl.style.height=quantH+'px';
+      document.documentElement.style.setProperty('--gridW', quantW+'px');
+      const glyph = Math.max(15, Math.min(28, Math.round(cellCss*0.50)));
+      document.documentElement.style.setProperty('--cell-font', glyph+'px');
     }
     window.addEventListener('resize', resizeGrid);
 
     /* ---- Grid render ---- */
+    const H=10, W=8;
+    const COLORS=['#2196f3','#f44336','#4caf50','#ffc107','#9c27b0','#003366','#009688'];
+    const CONS='BCDFGHJKLMNPQRSTVWXZ';
+    const VOWS='AEIOUY';
+
+    let TARGET='';
+    let grid=Array.from({length:H},()=>Array(W).fill(null));
+    let cur=null, nxt=null;
+    let paused=false, ended=false, moving=false;
+    let t=0, tInt=null, gInt=null;
+    let score=0, bestScore=null;
+    let lbUnsub=null;
+
     function drawGrid(){
       gridEl.innerHTML='';
       for(let y=0;y<H;y++) for(let x=0;x<W;x++){
@@ -556,20 +514,20 @@
       return { color, letter, x:Math.floor(W/2), y:0 };
     }
 
-    /* ---- Scoring helpers ---- */
-    function setScore(v){ score = Math.max(0, v|0); scoreText.textContent = score; }
-    function addScore(v){ setScore(score + v); }
+    /* ---- Scoring ---- */
+    const SCORING = Object.freeze({ PAIR_POINTS:10, PER_LETTER_IN_WORD:5, WORD_BONUS:50 });
+    function setScore(v){ score=Math.max(0, v|0); scoreText.textContent=score; }
+    function addScore(v){ setScore(score+v); }
 
     /* ---- Movement ---- */
     async function move(dx,dy){
       if(!cur||paused||ended||moving) return;
-      moving = true;
-      clearBlock(cur);
-      const test = { ...cur, x:cur.x+dx, y:cur.y+dy };
+      moving=true; clearBlock(cur);
+      const test={...cur,x:cur.x+dx,y:cur.y+dy};
       if(!collide(test)){ cur=test; drawBlock(cur); }
       else if(dy>0){ drawBlock(cur); place(); }
       else{ drawBlock(cur); }
-      moving = false;
+      moving=false;
     }
     function hardDrop(){
       if(!cur||paused||ended) return;
@@ -581,8 +539,8 @@
     async function place(){
       if(!cur||cur.y<0) return;
       grid[cur.y][cur.x]={...cur}; drawBlock(cur);
-      await matchAndDrop();  // may add score
-      await checkWin();      // ends + adds score for letters and bonus
+      await matchAndDrop();
+      await checkWin();
       cur=nxt; nxt=createBlock();
       if(cur) drawBlock(cur);
     }
@@ -594,16 +552,13 @@
         for(const [dx,dy] of [[1,0],[0,1],[-1,0],[0,-1]]){
           const nx=x+dx, ny=y+dy; if(nx<0||nx>=W||ny<0||ny>=H) continue;
           const b=grid[ny][nx]; if(!b||partOfTarget(b.letter)) continue;
-          if(a.letter===b.letter || a.color===b.color){
-            toDel.add(`${x},${y}`); toDel.add(`${nx},${ny}`);
-          }
+          if(a.letter===b.letter || a.color===b.color){ toDel.add(`${x},${y}`); toDel.add(`${nx},${ny}`); }
         }
       }
       if(!toDel.size) return;
 
-      // score once per pair-set — approximate: pairs = unique tiles / 2
-      const tiles = toDel.size;
-      const pairs = Math.floor(tiles / 2);
+      // approximate pairs = tiles/2
+      const pairs = Math.floor(toDel.size/2);
       if(pairs>0) addScore(SCORING.PAIR_POINTS * pairs);
 
       await Promise.all(Array.from(toDel).map(key=>new Promise(res=>{
@@ -640,12 +595,10 @@
           if(!g || g.letter!==TARGET[i]){ ok=false; break; }
         }
         if(ok){
-          // visual pop
           for(let i=0;i<TARGET.length;i++){
             const c=gridEl.querySelector(`.cell[data-x="${x+i}"][data-y="${y}"]`);
             if(c) c.style.transform='scale(1.05)';
           }
-          // scoring: per-letter + bonus
           addScore(SCORING.PER_LETTER_IN_WORD * TARGET.length);
           addScore(SCORING.WORD_BONUS);
           setTimeout(()=>end(true), 450);
@@ -653,12 +606,12 @@
         }
       }
     }
-    function checkFail(){}
-
-    /* ---- Time & control ---- */
     function setTime(v){ t=v; timeText.textContent=fmt(v); }
+
+    /* ---- Control ---- */
     function start(){
-      ended=false; over.style.display='none'; shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden'); setTime(0); setScore(0);
+      ended=false; over.style.display='none'; shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden');
+      setTime(0); setScore(0);
       grid=Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
       cur=createBlock(); nxt=createBlock(); drawBlock(cur);
@@ -668,24 +621,20 @@
       tInt=setInterval(()=>{ if(!paused && !ended) setTime(t+1); },1000);
     }
     function togglePause(){ if(ended) return; paused=!paused; btnPause.textContent = paused ? 'HERVAT' : 'POUSE'; }
-
-    btnStart.addEventListener('click', ()=>{
-      if(!user && !guestGateBypassOnce){ showNRGate(); return; }
-      guestGateBypassOnce=false; start();
-    });
+    btnStart.addEventListener('click', ()=>{ if(!user && !guestGateBypassOnce){ showNRGate(); return; } guestGateBypassOnce=false; start(); });
     btnPause.addEventListener('click', ()=>togglePause());
     btnLeft .addEventListener('click', ()=>move(-1,0));
     btnRight.addEventListener('click',()=>move(1,0));
     btnDown .addEventListener('click', ()=>hardDrop());
+    document.addEventListener('keydown', (e)=>{ if(e.key==='ArrowLeft') move(-1,0); if(e.key==='ArrowRight') move(1,0); if(e.key==='ArrowDown') move(0,1); if(e.key===' ') { e.preventDefault(); hardDrop(); } });
 
-    document.addEventListener('keydown', (e)=>{
-      if(e.key==='ArrowLeft') move(-1,0);
-      if(e.key==='ArrowRight') move(1,0);
-      if(e.key==='ArrowDown') move(0,1);
-      if(e.key===' ') { e.preventDefault(); hardDrop(); }
-    });
-
-    /* ---- Share wiring ---- */
+    /* ---- Share (points-only) ---- */
+    function buildWinShareText(payload){
+      const name = currentUserName || 'Speler';
+      const word = payload?.target || TARGET || '—';
+      const sc   = Number(payload?.score ?? score) || 0;
+      return `Veels geluk, ${name}! Jy het ${word} voltooi vir ${sc} punte. ${buildShareUrl(currentDate)}`;
+    }
     function toggleShareMenu(){ shareMenu.classList.toggle('hidden'); }
     modalShareBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleShareMenu(); });
     document.addEventListener('click', (e)=>{
@@ -706,9 +655,7 @@
           return true;
         }
       }catch{}
-      try{
-        if(navigator.share){ await navigator.share({ text }); return true; }
-      }catch{}
+      try{ if(navigator.share){ await navigator.share({ text }); return true; } }catch{}
       return false;
     }
     function openWhatsApp(text){
@@ -716,39 +663,34 @@
       const w = window.open(url,'_blank','noopener,noreferrer');
       if(!w && navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>alert("Skakel gekopieer!")); }
     }
-
-    const sWAHandler   = () => { openWhatsApp(stickyPayload ? buildWinShareText(stickyPayload) : shareTextLinkOnly(GAME_ID)); stickyShareMenu.classList.add('hidden'); };
-    const sCopyHandler = async () => { try{ await navigator.clipboard.writeText(stickyPayload ? buildWinShareText(stickyPayload) : shareTextLinkOnly(GAME_ID)); alert('Skakel gekopieer!'); }catch{} stickyShareMenu.classList.add('hidden'); };
-    const sSysHandler  = async () => { const ok = await trySystemShare(stickyPayload ? buildWinShareText(stickyPayload) : shareTextLinkOnly(GAME_ID)); if(!ok) openWhatsApp(stickyPayload ? buildWinShareText(stickyPayload) : shareTextLinkOnly(GAME_ID)); stickyShareMenu.classList.add('hidden'); };
+    const sWAHandler   = () => { openWhatsApp(stickyPayload ? buildWinShareText(stickyPayload) : shareTextLinkOnly()); stickyShareMenu.classList.add('hidden'); };
+    const sCopyHandler = async () => { try{ await navigator.clipboard.writeText(stickyPayload ? buildWinShareText(stickyPayload) : shareTextLinkOnly()); alert('Skakel gekopieer!'); }catch{} stickyShareMenu.classList.add('hidden'); };
+    const sSysHandler  = async () => { const ok = await trySystemShare(stickyPayload ? buildWinShareText(stickyPayload) : shareTextLinkOnly()); if(!ok) openWhatsApp(stickyPayload ? buildWinShareText(stickyPayload) : shareTextLinkOnly()); stickyShareMenu.classList.add('hidden'); };
     sWA.onclick = sWAHandler; sCopy.onclick = sCopyHandler; sSys.onclick = sSysHandler;
 
-    const mWAHandler   = () => { openWhatsApp(shareTextLinkOnly(GAME_ID)); shareMenu.classList.add('hidden'); };
-    const mCopyHandler = async () => { try{ await navigator.clipboard.writeText(shareTextLinkOnly(GAME_ID)); alert('Skakel gekopieer!'); }catch{} shareMenu.classList.add('hidden'); };
-    const mSysHandler  = async () => { const ok = await trySystemShare(shareTextLinkOnly(GAME_ID)); if(!ok) openWhatsApp(shareTextLinkOnly(GAME_ID)); shareMenu.classList.add('hidden'); };
+    const mWAHandler   = () => { openWhatsApp(shareTextLinkOnly()); shareMenu.classList.add('hidden'); };
+    const mCopyHandler = async () => { try{ await navigator.clipboard.writeText(shareTextLinkOnly()); alert('Skakel gekopieer!'); }catch{} shareMenu.classList.add('hidden'); };
+    const mSysHandler  = async () => { const ok = await trySystemShare(shareTextLinkOnly()); if(!ok) openWhatsApp(shareTextLinkOnly()); shareMenu.classList.add('hidden'); };
     mWA.onclick = mWAHandler; mCopy.onclick = mCopyHandler; mSys.onclick = mSysHandler;
 
-    function toggleStickyShareMenu(){ stickyShareMenu.classList.toggle('hidden'); }
     function enableStickyShare(payload){
       stickyPayload = { time: Number(payload?.time ?? t), target: TARGET, score: Number(payload?.score ?? score) };
       stickyShareBtn.classList.remove('hidden');
-      stickyShareBtn.onclick = (e)=>{ e.stopPropagation(); toggleStickyShareMenu(); };
-      try{
-        localStorage.setItem(shareKey(GAME_ID), JSON.stringify({ ...stickyPayload, at: Date.now() }));
-      }catch{}
+      stickyShareBtn.onclick = (e)=>{ e.stopPropagation(); stickyShareMenu.classList.toggle('hidden'); };
+      try{ localStorage.setItem(shareKey(), JSON.stringify({ ...stickyPayload, at: Date.now() })); }catch{}
     }
     function maybeEnableStickyShareFromStorage(){
       try{
-        const raw = localStorage.getItem(shareKey(GAME_ID));
+        const raw = localStorage.getItem(shareKey());
         if(!raw) return;
         const saved = JSON.parse(raw);
         if(saved && Number.isFinite(saved.time) && saved.target){
           stickyPayload = saved;
           stickyShareBtn.classList.remove('hidden');
-          stickyShareBtn.onclick = (e)=>{ e.stopPropagation(); toggleStickyShareMenu(); };
+          stickyShareBtn.onclick = (e)=>{ e.stopPropagation(); stickyShareMenu.classList.toggle('hidden'); };
         }
       }catch{}
     }
-
     function wireShareTile(wrapper){
       const btn  = wrapper.querySelector('.share-tile');
       const menu = wrapper.querySelector('.share-menu-local');
@@ -762,23 +704,19 @@
         menu.classList.toggle('hidden');
       });
 
-      const txt = () => stickyPayload ? buildWinShareText(stickyPayload) : shareTextLinkOnly(GAME_ID);
+      const txt = () => stickyPayload ? buildWinShareText(stickyPayload) : shareTextLinkOnly();
       wa.onclick = () => { openWhatsApp(txt()); menu.classList.add('hidden'); };
       cp.onclick = async () => { try{ await navigator.clipboard.writeText(txt()); alert('Skakel gekopieer!'); }catch{} menu.classList.add('hidden'); };
       sys.onclick = async () => { const ok = await trySystemShare(txt()); if(!ok) openWhatsApp(txt()); menu.classList.add('hidden'); };
     }
     function initTileShareDropdowns(){ document.querySelectorAll('.share-tile-wrap').forEach(wireShareTile); }
 
-    /* ---- Leaderboard (Firestore OR localStorage) ---- */
+    /* ---- Leaderboard (Firestore OR localStorage) — points-only ---- */
     const LB_LOCAL_KEY = d => `slimstiekLocalLB:${d}`;
-    function getLocalLB(date){
-      try{ return JSON.parse(localStorage.getItem(LB_LOCAL_KEY(date))) || []; }catch{ return []; }
-    }
-    function setLocalLB(date, arr){
-      try{ localStorage.setItem(LB_LOCAL_KEY(date), JSON.stringify(arr)); }catch{}
-    }
+    function getLocalLB(date){ try{ return JSON.parse(localStorage.getItem(LB_LOCAL_KEY(date))) || []; }catch{ return []; } }
+    function setLocalLB(date, arr){ try{ localStorage.setItem(LB_LOCAL_KEY(date), JSON.stringify(arr)); }catch{} }
     function renderLocalLB(date){
-      const list = getLocalLB(date).sort((a,b)=> b.score - a.score || a.time - b.time).slice(0,10);
+      const list = getLocalLB(date).sort((a,b)=> (b.score|0)-(a.score|0)).slice(0,10);
       lbList.innerHTML='';
       if(!list.length){
         bestText.textContent='—';
@@ -788,20 +726,15 @@
       bestText.textContent = String(list[0].score);
       list.forEach(row=>{
         const li=document.createElement('li');
-        li.innerHTML = `<strong>${row.userName||'Speler'}</strong>: ${row.score} punte (${fmt(Number(row.time))})`;
+        li.innerHTML = `<strong>${row.userName||'Speler'}</strong>: ${row.score|0} punte`;
         lbList.appendChild(li);
       });
     }
 
-    let currentDate = todayISO();
-
     function startLiveLeaderboardFS(){
-      if(!db) { renderLocalLB(currentDate); return; }
-      if(lbUnsub) { lbUnsub(); lbUnsub=null; }
-      const qy = query(
-        collection(db,'leaderboards','slimstiek', currentDate, 'entries'),
-        orderBy('score','desc'), limit(10)
-      );
+      if(!db){ renderLocalLB(currentDate); return; }
+      if(lbUnsub){ lbUnsub(); lbUnsub=null; }
+      const qy = query(collection(db,'leaderboards','slimstiek', currentDate, 'entries'), orderBy('score','desc'), limit(10));
       lbUnsub = onSnapshot(qy, (snap)=>{
         lbList.innerHTML='';
         if(snap.empty){
@@ -814,42 +747,32 @@
           const v = docSnap.data()||{};
           if(idx===0) bestText.textContent = String(v.score ?? '—');
           const li=document.createElement('li');
-          li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>: ${(v.score??0)} punte (${fmt(Number(v.time))})`;
+          li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>: ${(v.score??0)} punte`;
           lbList.appendChild(li);
           idx++;
         });
-      }, (err)=>{
-        console.warn('LB stream failed, falling back to local:', err);
-        renderLocalLB(currentDate);
-      });
+      }, (err)=>{ console.warn('LB stream failed, falling back to local:', err); renderLocalLB(currentDate); });
     }
 
-    async function submitToLB(scoreVal, timeVal){
+    async function submitToLB(scoreVal){
       // Local first
-      const row = { userName: currentUserName, score: scoreVal|0, time: Number(timeVal|0) };
+      const row = { userName: currentUserName, score: scoreVal|0 };
       const arr = getLocalLB(currentDate);
-      // keep best per (guest) name locally
       const idx = arr.findIndex(r => (r.userName||'') === (row.userName||''));
-      if(idx>=0){
-        const old = arr[idx];
-        if (row.score > old.score || (row.score===old.score && row.time < old.time)) arr[idx] = row;
-      }else{
-        arr.push(row);
-      }
+      if(idx>=0){ if (row.score > (arr[idx].score||0)) arr[idx] = row; }
+      else{ arr.push(row); }
       setLocalLB(currentDate, arr);
 
-      // Firestore (if authed)
       if(!db || !user) return;
       try{
         const ref = doc(db,'leaderboards','slimstiek', currentDate, 'entries', user.uid);
         const snap = await getDoc(ref);
         const prev = snap.exists() ? snap.data() : null;
-        const isBetter = !prev || (row.score > (prev.score||0)) || (row.score===(prev.score||0) && row.time < (prev.time||Infinity));
+        const isBetter = !prev || (row.score > (prev.score||0));
         if(isBetter){
           await setDoc(ref, {
             userName: currentUserName.slice(0,24),
             score: row.score,
-            time: row.time,
             ts: serverTimestamp()
           }, { merge:true });
         }
@@ -860,34 +783,23 @@
     function end(win){
       ended=true; clearInterval(tInt); clearInterval(gInt);
       if(!win) return;
-      // record bestScore client-side
       if(bestScore==null || score > bestScore) bestScore = score;
-      // submit
-      submitToLB(score, t);
-
+      submitToLB(score);
       enableStickyShare({ time:t, target: TARGET, score });
-
-      winMsg.innerHTML = `Veels geluk, <strong>${currentUserName}</strong>! Jy het <strong>${TARGET}</strong> voltooi in <strong>${fmt(t)}</strong> vir <strong>${score}</strong> punte.`;
+      winMsg.innerHTML = `Veels geluk, <strong>${currentUserName}</strong>! Jy het <strong>${TARGET}</strong> voltooi vir <strong>${score}</strong> punte.`;
       over.style.display='flex';
       modalCloseBtn.onclick = ()=>{ over.style.display='none'; };
-
       if(!user) showNRGate();
     }
 
     /* ---- Daily word resolver (Firestore optional) ----
-       Looks up:  doc('daily_words', YYYY-MM-DD).data().slimstiek || .word
-       Fallback:  'TUTS' (as requested)
+       Reads:  doc('daily_words', currentDate).slimstiek || .word
+       Fallback: 'TUTS'
     ---------------------------------------------------*/
     async function resolveTargetWord(){
-      const dateId = todayISO();
-      currentDate = dateId;
-      // precompute GAME_ID only for share URLs (keeps parity with other pages)
-      GAME_ID = explicitId || `Game${dateId}`;
-
-      // Try Firestore if available
       if(db){
         try{
-          const snap = await getDoc(doc(db,'daily_words', dateId));
+          const snap = await getDoc(doc(db,'daily_words', currentDate));
           if(snap.exists()){
             const d = snap.data()||{};
             const w = (d.slimstiek || d.word || '').toString().toUpperCase().replace(/[^A-Z]/g,'');
@@ -895,7 +807,6 @@
           }
         }catch(e){ console.warn('Daily word fetch failed, using fallback:', e); }
       }
-      // Fixed sample target (spec)
       return 'TUTS';
     }
 
@@ -903,23 +814,20 @@
     async function loadGame(){
       TARGET = (await resolveTargetWord()) || 'TUTS';
 
-      // render target chips
+      // target chips
       targetEl.innerHTML='';
       (TARGET || '—').split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
 
       grid = Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
 
-      // restore sticky share
       maybeEnableStickyShareFromStorage();
-
-      // live leaderboard
       startLiveLeaderboardFS();
     }
 
     /* ---- Init ---- */
     function init(){
-      initTileShareDropdowns();
+      document.querySelectorAll('.share-tile-wrap').forEach(wireShareTile);
       loadGame();
     }
     init();
