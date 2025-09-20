@@ -5,22 +5,23 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
   <title>Kriptiek – Slimstiek</title>
 
-  <!-- FAMILY TILE (swap path if needed) -->
+  <!-- Family tile (same format as the others) -->
   <link rel="icon" type="image/png" href="/assets/S_SLIMSTIEK_12SEP.png" />
-
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- ========= PART A: Styles (match Dilemma/Blitstiek chrome) ========= -->
   <style>
     :root{
-      /* Family tokens (matches Dilemma/Blitstiek) */
       --ink:#0b1220; --muted:#667085;
       --corner:18px; --shadow:0 16px 32px rgba(0,0,0,.14);
       --band-h:34px;
 
-      /* Family dark button tone */
-      --navy-900:#0b2a4a;
-
-      /* Slimstiek accent (teal/purple direction kept subtle) */
-      --teal-700:#0f766e; --teal-900:#134e4a;
+      /* Buttons on Kriptiek are dark/navy; grid is green family */
+      --btn:#0b2a4a;       /* primary button background */
+      --btnText:#ffffff;
+      --grid-bg:#0e3a38;   /* outer grid band */
+      --cell:#0f5d58;      /* empty tile */
+      --cell-lit:#0f766e;  /* filled tile */
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -31,13 +32,13 @@
     }
     .page{width:100%; max-width:1000px; padding:16px}
 
-    /* Header (tile + subtitle) */
+    /* Header (tile + title + subtitle) */
     .k-header{display:flex; align-items:center; gap:10px; margin-bottom:12px}
     .k-header img{width:44px; height:44px; border-radius:12px; box-shadow:0 6px 14px rgba(0,0,0,.12)}
     .k-title b{display:block; font-size:22px; line-height:1}
     .k-title small{display:block; color:var(--muted); font-weight:600}
 
-    /* Layout */
+    /* Two columns like the other games */
     .cols{display:grid; grid-template-columns:1fr 320px; gap:14px}
     @media (max-width:900px){ .cols{grid-template-columns:1fr} }
 
@@ -48,26 +49,26 @@
     /* Target pill */
     .target{
       display:flex; align-items:center; gap:8px;
-      background:linear-gradient(160deg,var(--teal-700),var(--teal-900));
-      color:#fff; font-weight:800; letter-spacing:.6px; font-size:12px;
+      background:#134e4a; color:#fff;
+      font-weight:800; letter-spacing:.6px; font-size:12px;
       padding:8px 10px; border-radius:10px; margin-bottom:8px
     }
     .tword{display:inline-flex; gap:2px; background:rgba(255,255,255,.14); padding:3px 6px; border-radius:8px}
     .tch{min-width:22px; height:22px; display:grid; place-items:center; background:rgba(0,0,0,.18); border-radius:6px}
 
     /* Board + stat band (same chrome) */
-    .board{border:1px solid #0f766e33; border-radius:14px; overflow:hidden; background:#0e3a38}
+    .board{border:1px solid #0f766e33; border-radius:14px; overflow:hidden; background:var(--grid-bg)}
     #grid{
       width:100%; aspect-ratio:8/10; display:grid;
       grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(10,1fr);
-      gap:1px; background:#0e3a38;
+      gap:1px; background:var(--grid-bg);
     }
     .cell{
-      background:#0f5d58; color:#fff; font-weight:800; display:grid; place-items:center;
+      background:var(--cell); color:#fff; font-weight:800; display:grid; place-items:center;
       border:1px solid rgba(255,255,255,.06); font-size:16px;
       transition:transform .12s ease, opacity .12s ease;
     }
-    .cell.filled{background:#0f766e}
+    .cell.filled{background:var(--cell-lit)}
     .cell.pop{transform:scale(1.2); opacity:0}
 
     .band{
@@ -77,33 +78,32 @@
     }
     .pill{background:rgba(255,255,255,.12); padding:3px 8px; border-radius:8px}
 
-    /* Controls (family buttons) */
+    /* Controls (same layout as siblings) */
     .controls{display:flex; flex-direction:column; gap:8px; margin-top:8px}
     .row{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
     .row-2{display:grid; grid-template-columns:1fr 1fr; gap:8px}
     .btn{
       border:0; border-radius:8px; padding:10px 12px; cursor:pointer;
-      text-transform:uppercase; font-weight:800; letter-spacing:.6px; color:#fff;
-      background:var(--navy-900);
+      text-transform:uppercase; font-weight:800; letter-spacing:.6px;
+      background:var(--btn); color:var(--btnText);
     }
     .btn:active{transform:translateY(1px)}
-    .btn.teal{ background:linear-gradient(160deg,var(--teal-700),var(--teal-900)) }
 
-    /* Sidebar: rules + leaderboard */
-    .h2{font-size:12px; font-weight:800; letter-spacing:1px; color:var(--teal-700); text-transform:uppercase; margin:2px 0 10px}
+    /* Sidebar */
+    .h2{font-size:12px; font-weight:800; letter-spacing:1px; color:#134e4a; text-transform:uppercase; margin:2px 0 10px}
     .rules{font-size:14px; line-height:1.45; color:#0f172a; margin:0 0 10px; padding-left:18px}
     .rules code{background:#f3f4f6; padding:2px 6px; border-radius:6px}
 
     table.lb{width:100%; border-collapse:collapse; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden}
     .lb caption{background:#003366; color:#fff; font-weight:800; letter-spacing:1px; padding:8px; text-transform:uppercase}
-    .lb thead{background:var(--teal-700); color:#fff; font-size:12px}
+    .lb thead{background:#134e4a; color:#fff; font-size:12px}
     .lb th,.lb td{padding:8px 10px}
     .lb tbody tr:nth-child(odd){background:#f8fafc}
     .lb tbody tr:first-child{background:#ffd700; color:#000; font-weight:800}
 
     /* Footer */
     footer{margin-top:20px; text-align:center; color:#64748b; font-size:13px}
-    footer a{color:#0f766e; text-decoration:none}
+    footer a{color:#134e4a; text-decoration:none}
     footer a:hover{text-decoration:underline}
 
     /* Overlay */
@@ -111,14 +111,15 @@
     .modal{background:#0b1220; color:#fff; width:min(520px,92vw); border-radius:12px; box-shadow:var(--shadow); padding:14px}
     .modal h3{margin:0 0 6px}
     .modal p{margin:0 0 10px; color:#dbeafe}
-    .modal input{width:100%; padding:10px; border-radius:8px; border:2px solid var(--teal-900); background:#062a28; color:#fff; font-weight:700}
+    .modal input{width:100%; padding:10px; border-radius:8px; border:2px solid #134e4a; background:#062a28; color:#fff; font-weight:700}
     .modal .grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px}
     .modal .full{grid-column:1/-1}
   </style>
 </head>
 <body>
   <div class="page">
-    <!-- Header -->
+
+    <!-- ========= PART B: Page chrome (matches siblings) ========= -->
     <div class="k-header">
       <img src="/assets/S_SLIMSTIEK_12SEP.png" alt="Slimstiek" />
       <div class="k-title">
@@ -128,7 +129,7 @@
     </div>
 
     <div class="cols">
-      <!-- LEFT: game -->
+      <!-- LEFT: game column -->
       <div class="card pad">
         <div class="target">TEIKENWOORD: <span id="target-word" class="tword"></span></div>
 
@@ -141,19 +142,19 @@
           </div>
         </div>
 
-        <!-- Buttons (exact family layout) -->
+        <!-- Controls identical in layout to Blitstiek/Dilemma -->
         <div class="controls">
           <div class="row">
-            <button id="left" class="btn teal">◀</button>
-            <button id="down" class="btn teal">▼</button>
-            <button id="right" class="btn teal">▶</button>
+            <button id="left" class="btn">◀</button>
+            <button id="down" class="btn">▼</button>
+            <button id="right" class="btn">▶</button>
           </div>
           <div class="row-2">
-            <button id="start" class="btn teal">Begin</button>
+            <button id="start" class="btn">Begin</button>
             <button id="pause" class="btn">Pouse</button>
           </div>
           <div class="row-2">
-            <button id="share" class="btn teal">Deel</button>
+            <button id="share" class="btn">Deel</button>
             <button id="profile" class="btn">Voeg by My Profiel</button>
           </div>
         </div>
@@ -178,7 +179,7 @@
       </aside>
     </div>
 
-    <!-- Footer (same link pattern) -->
+    <!-- Footer (same pattern) -->
     <footer>
       <a href="/index.html">Tuis</a> ·
       <a href="/privacy.html">Privaatheid</a> ·
@@ -186,38 +187,87 @@
     </footer>
   </div>
 
-  <!-- ===== GAME LOGIC (points scoring, family flow) ===== -->
-  <script>
-    /* ---------- Config hooks (TEMPLATE) ----------
-       Later, replace these two functions with Firestore calls so Slimstiek
-       loads the shared daily word + writes to the shared leaderboard.
-       Keeping names stable so you can drop-in replace.
-    ------------------------------------------------ */
-    const SlimstiekData = {
-      // Return { date:'YYYY-MM-DD', word:'...' } | throw on missing
-      async loadDaily() {
-        // DEV: allow ?word= for local testing, else default to "WOORD"
-        const qs=new URLSearchParams(location.search);
-        const forced=qs.get('word');
-        const date = (qs.get('date') || new Date().toISOString().slice(0,10));
-        const word = (forced || 'WOORD').toUpperCase().replace(/[^A-Z]/g,'');
-        return { date, word };
-      },
-      async addScore(date, name, points) {
-        // TEMPLATE fallback → localStorage
-        const key='slimstiek_'+date;
-        const rows=JSON.parse(localStorage.getItem(key)||'[]');
-        rows.push({ name:String(name).slice(0,24), points:Number(points), ts:Date.now() });
-        rows.sort((a,b)=>b.points-a.points);
-        localStorage.setItem(key, JSON.stringify(rows.slice(0,50)));
-      },
-      listScores(date){
-        const key='slimstiek_'+date;
-        return JSON.parse(localStorage.getItem(key)||'[]').sort((a,b)=>b.points-a.points);
+  <!-- ========= PART C: Game + Firestore integration ========= -->
+  <script type="module">
+    /* Optional Firestore. If you leave config as {enabled:false},
+       the game runs with TARGET="TUTS" and localStorage leaderboard. */
+    const FIREBASE = {
+      enabled: false,           // set true and fill the config below
+      config: {
+        // apiKey: "...",
+        // authDomain: "...",
+        // projectId: "...",
+        // storageBucket: "...",
+        // messagingSenderId: "...",
+        // appId: "..."
       }
     };
 
-    /* ---------- Constants & State ---------- */
+    // --- Import Firebase only if enabled ---
+    let app, db, fs;
+    if (FIREBASE.enabled) {
+      const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js");
+      const firestore = await import("https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js");
+      app = initializeApp(FIREBASE.config);
+      db  = firestore.getFirestore(app);
+      fs  = firestore;
+    }
+
+    // ===== Shared daily word / leaderboard (same structure used by both games) =====
+    async function loadDailyWord() {
+      const qs  = new URLSearchParams(location.search);
+      const date= (qs.get('date') || new Date().toISOString().slice(0,10)); // YYYY-MM-DD
+
+      // If Firestore disabled, return the fixed sample word
+      if (!FIREBASE.enabled) return { date, word: "TUTS" };
+
+      // Firestore path: daily_words/{date}
+      const ref  = fs.doc(db, 'daily_words', date);
+      const snap = await fs.getDoc(ref);
+      if (!snap.exists()) {
+        // no doc yet → fall back to "TUTS" so you can still test
+        return { date, word: "TUTS" };
+      }
+      const data = snap.data() || {};
+      if (data.modes && data.modes.slimstiek === false) {
+        // explicitly disabled → also fall back to sample
+        return { date, word: "TUTS" };
+      }
+      const w = String(data.word || 'TUTS').toUpperCase().replace(/[^A-Z]/g,'');
+      return { date, word: w || "TUTS" };
+    }
+
+    async function addLeaderboardEntry(date, name, points) {
+      if (!FIREBASE.enabled) {
+        const key='slimstiek_'+date, rows=JSON.parse(localStorage.getItem(key)||'[]');
+        rows.push({name,points,ts:Date.now()});
+        rows.sort((a,b)=>b.points-a.points);
+        localStorage.setItem(key, JSON.stringify(rows.slice(0,50)));
+        return;
+      }
+      const coll = fs.collection(db, 'daily_words', date, 'leaderboards', 'slimstiek');
+      await fs.addDoc(coll, {
+        name: String(name).slice(0,24),
+        points: Number(points),
+        timestamp: fs.serverTimestamp()
+      });
+    }
+
+    async function listLeaderboard(date, onRows) {
+      if (!FIREBASE.enabled) {
+        const key='slimstiek_'+date, rows=JSON.parse(localStorage.getItem(key)||'[]');
+        onRows(rows.sort((a,b)=>b.points-a.points));
+        return () => {};
+      }
+      const coll = fs.collection(db, 'daily_words', date, 'leaderboards', 'slimstiek');
+      const q    = fs.query(coll, fs.orderBy('points','desc'), fs.limit(10));
+      return fs.onSnapshot(q, (snap)=>{
+        const rows=[]; snap.forEach(d=>rows.push(d.data()));
+        onRows(rows);
+      });
+    }
+
+    // ====== Game engine (points) – Identical inputs/controls as siblings ======
     const W=8,H=10,
       COLORS=['#0ea5e9','#f97316','#22c55e','#f59e0b','#a855f7','#0e7490','#7dd3fc'],
       LETTERS='BCDFGHJKLMNPQRSTVWXZ', VOWELS='AEIOUY';
@@ -229,13 +279,21 @@
           timeEl=document.getElementById('elapsed'),
           lbBody=document.querySelector('#lb tbody');
 
-    let TARGET='WOORD', GAME_ID='',
+    const btnStart=document.getElementById('start'),
+          btnPause=document.getElementById('pause'),
+          btnLeft =document.getElementById('left'),
+          btnRight=document.getElementById('right'),
+          btnDown =document.getElementById('down'),
+          btnShare=document.getElementById('share'),
+          btnProf =document.getElementById('profile');
+
+    let TARGET='TUTS', GAME_ID='',
         grid=[], cur=null, next=null,
         seconds=0, paused=false, over=false,
         tTick=null, tFall=null,
-        score=0, combo=1;
+        score=0, combo=1,
+        unSubLB=null;
 
-    /* ---------- UI helpers ---------- */
     const tch=s=>{const e=document.createElement('span'); e.className='tch'; e.textContent=s; return e;};
     function buildTarget(){ targetEl.innerHTML=''; TARGET.split('').forEach(c=>targetEl.appendChild(tch(c))); }
     function initGrid(){
@@ -253,7 +311,6 @@
       timeEl.textContent=fmt(seconds);
     }
 
-    /* ---------- Blocks ---------- */
     const create=()=>({ x:Math.floor(W/2), y:0,
       color:COLORS[Math.random()*COLORS.length|0],
       letter:(Math.random()<.3?VOWELS:LETTERS)[Math.random()*VOWELS.length|0] });
@@ -269,6 +326,8 @@
     }
     function drop(){ if(!cur||paused||over) return; clear(cur); while(cur.y<H-1 && !hit({...cur,y:cur.y+1})) cur.y++; place(); }
 
+    function inTarget(ch){ return TARGET.includes(ch); }
+
     async function place(){
       if(!cur||cur.y<0) return;
       grid[cur.y][cur.x]={...cur}; draw(cur);
@@ -276,8 +335,6 @@
       cur=next; next=create(); draw(cur);
       if(hit(next)) end(false);
     }
-
-    const inTarget=ch=>TARGET.includes(ch);
 
     async function matches(){
       const kill=new Set();
@@ -295,6 +352,7 @@
       }
       if(!kill.size) return;
 
+      // +15 per pair, scaled by combo; combo grows in quarters up to x9
       const popped=kill.size, add=15*Math.ceil(popped/2); score+=add*combo; combo=Math.min(9,combo+.25);
 
       await Promise.all([...kill].map(p=>new Promise(r=>{
@@ -326,7 +384,6 @@
       }
     }
 
-    /* ---------- Loops ---------- */
     function start(){
       stop(); seconds=0; score=0; combo=1; over=false; paused=false;
       initGrid(); cur=create(); next=create(); draw(cur); hud();
@@ -335,7 +392,6 @@
     }
     function stop(){ if(tTick) clearInterval(tTick); if(tFall) clearInterval(tFall); }
 
-    /* ---------- Overlay & flows ---------- */
     function openOverlay(inner){ const w=document.createElement('div'); w.className='overlay'; w.innerHTML=`<div class="modal">${inner}</div>`; document.body.appendChild(w); return w.querySelector('.modal'); }
     function closeOverlay(){ const o=document.querySelector('.overlay'); if(o) o.remove(); }
 
@@ -345,7 +401,7 @@
         <p>Vul jou naam vir die leierbord of deel dit.</p>
         <input id="nameIn" placeholder="Jou naam" maxlength="24">
         <div class="grid">
-          <button id="submit" class="btn teal">Dien in</button>
+          <button id="submit" class="btn">Dien in</button>
           <button id="share2" class="btn">Deel</button>
           <button id="again" class="btn full">Speel weer</button>
         </div>`;
@@ -354,8 +410,8 @@
       m.querySelector('#share2').onclick=()=>share(score+base());
       m.querySelector('#submit').onclick=async ()=>{
         const n=(m.querySelector('#nameIn').value||'Anoniem').slice(0,24);
-        await SlimstiekData.addScore(GAME_ID,n,score+base());
-        renderLB(); closeOverlay();
+        await addLeaderboardEntry(GAME_ID,n,score+base());
+        closeOverlay();
       };
     }
 
@@ -363,35 +419,33 @@
       over=true; stop();
       if(win){ showWin(score+base()); }
       else{
-        const m=openOverlay(`<h3>Speletjie verby</h3><p>Die rooster is vol. Jou telling: <b>${score+base()}</b></p><div class="grid"><button id="again" class="btn teal full">Probeer weer</button></div>`);
+        const m=openOverlay(`<h3>Speletjie verby</h3><p>Die rooster is vol. Jou telling: <b>${score+base()}</b></p><div class="grid"><button id="again" class="btn full">Probeer weer</button></div>`);
         m.querySelector('#again').onclick=()=>{ closeOverlay(); start(); };
       }
     }
 
-    /* ---------- Buttons ---------- */
-    document.getElementById('start').onclick=start;
-    document.getElementById('pause').onclick=()=>{ if(over) return; paused=!paused; document.getElementById('pause').textContent=paused?'Hervat':'Pouse'; };
-    document.getElementById('left').onclick=()=>move(-1,0);
-    document.getElementById('right').onclick=()=>move(1,0);
-    document.getElementById('down').onclick=drop;
-
+    // Buttons/keys
+    btnStart.onclick=start;
+    btnPause.onclick=()=>{ if(over) return; paused=!paused; btnPause.textContent=paused?'Hervat':'Pouse'; };
+    btnLeft.onclick =()=>move(-1,0);
+    btnRight.onclick=()=>move(1,0);
+    btnDown.onclick =drop;
     document.addEventListener('keydown',e=>{
       if(e.key==='ArrowLeft') move(-1,0);
       if(e.key==='ArrowRight') move(1,0);
       if(e.key==='ArrowDown') move(0,1);
-      if(e.key===' ') { e.preventDefault(); drop(); }
+      if(e.key===' '){ e.preventDefault(); drop(); }
     });
 
-    /* ---------- Share & My Profiel (family) ---------- */
+    // Share + My Profiel hooks
     function share(final){
       const msg=`Ek het ${TARGET} in Slimstiek voltooi vir ${final} punte — kan jy my klop?`;
       const url=location.href.split('?')[0], text=`${msg} ${url}`;
       if(navigator.share){ navigator.share({text,url}).catch(()=>navigator.clipboard.writeText(text)); }
       else navigator.clipboard.writeText(text);
     }
-    document.getElementById('share').onclick=()=>share(score+base());
-
-    document.getElementById('profile').onclick=()=>{
+    btnShare.onclick=()=>share(score+base());
+    btnProf.onclick=()=>{
       try{
         if(window.kriptiek && typeof window.kriptiek.addToProfile==='function'){
           window.kriptiek.addToProfile({ app:'Slimstiek', day:GAME_ID, word:TARGET, score:score+base() });
@@ -400,23 +454,46 @@
       }catch(e){}
     };
 
-    /* ---------- Leaderboard render ---------- */
-    function renderLB(){
-      const rows = SlimstiekData.listScores(GAME_ID);
+    // Leaderboard render
+    function renderLB(rows){
       lbBody.innerHTML=''; let r=1;
-      rows.slice(0,10).forEach(x=>{
+      (rows||[]).slice(0,10).forEach(x=>{
         const tr=document.createElement('tr');
         tr.innerHTML=`<td>${r++}</td><td>${x.name}</td><td>${x.points}</td>`;
         lbBody.appendChild(tr);
       });
     }
 
-    /* ---------- Boot (template) ---------- */
+    // Boot
     (async function boot(){
-      const daily = await SlimstiekData.loadDaily();
-      TARGET = daily.word; GAME_ID = daily.date;
-      buildTarget(); initGrid(); renderLB(); // ready to play; click "Begin"
+      const daily = await loadDailyWord();
+      TARGET  = daily.word || 'TUTS';
+      GAME_ID = daily.date;
+      buildTarget(); initGrid(); hud();
+
+      if (unSubLB) unSubLB();
+      unSubLB = await listLeaderboard(GAME_ID, renderLB);
     })();
+
   </script>
+
+  <!-- ========= PART D: Firestore rules (reference) =========
+  // rules_version = '2';
+  // service cloud.firestore {
+  //   match /databases/{database}/documents {
+  //     match /daily_words/{date} {
+  //       allow read: if true;                         // everyone can read the day's word
+  //       // Lock writes to admins (adjust to your auth):
+  //       allow write: if request.auth != null && request.auth.token.admin == true;
+
+  //       match /leaderboards/{game}/{entry} {
+  //         allow read: if true;
+  //         allow create: if true;                    // or require auth / add rate limits
+  //         allow update, delete: if false;
+  //       }
+  //     }
+  //   }
+  // }
+  ======================================================== -->
 </body>
 </html>
