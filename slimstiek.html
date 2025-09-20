@@ -25,7 +25,7 @@
   <style>
     :root{
       --brand:#1e3a8a;
-      --cell-bg:#004d40;   /* hou dieselfde gevoel as Blitstiek */
+      --cell-bg:#004d40;
       --gridW:320px;
       --cell-font:16px;
       --cellSize:32px;
@@ -50,28 +50,16 @@
 
     /* GRID */
     #grid{
-      position:relative;
-      display:grid;
-      grid-template-columns:repeat(8,1fr);
-      grid-template-rows:repeat(10,1fr);
-      gap:0;
-      background:#fff;
-      border:var(--line) solid #0c4a3e;
-      border-radius:8px;
-      overflow:hidden;
-      width:var(--gridW);
-      height:400px;
-      margin:10px auto 8px;
+      position:relative; display:grid;
+      grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(10,1fr);
+      gap:0; background:#fff; border:var(--line) solid #0c4a3e; border-radius:8px; overflow:hidden;
+      width:var(--gridW); height:400px; margin:10px auto 8px;
     }
     #grid::after{
       content:''; position:absolute; inset:0; pointer-events:none; z-index:5;
       background:
-        repeating-linear-gradient(to right,
-          transparent 0 calc(var(--cellSize) - var(--line)),
-          rgba(255,255,255,.28) 0 var(--cellSize)),
-        repeating-linear-gradient(to bottom,
-          transparent 0 calc(var(--cellSize) - var(--line)),
-          rgba(255,255,255,.28) 0 var(--cellSize));
+        repeating-linear-gradient(to right, transparent 0 calc(var(--cellSize) - var(--line)), rgba(255,255,255,.28) 0 var(--cellSize)),
+        repeating-linear-gradient(to bottom, transparent 0 calc(var(--cellSize) - var(--line)), rgba(255,255,255,.28) 0 var(--cellSize));
     }
     .cell{position:relative;background:var(--cell-bg);transition:transform .15s ease-out,opacity .15s ease-out;}
     .cell.f{display:grid;place-items:center;color:#fff;font-weight:800;font-size:var(--cell-font);text-shadow:0 1px 1px rgba(0,0,0,.35);}
@@ -96,7 +84,7 @@
     #leaderboardList li:nth-child(odd){background:#f3f4f6;}
     #leaderboardList li:first-child{background:#d1fae5;font-weight:700;}
 
-    /* Share dropdown (tile + modal) */
+    /* Share dropdown */
     .share-menu-local{
       background:#fff;border:1px solid #e5e7eb;box-shadow:0 8px 24px rgba(0,0,0,.12);
       border-radius:.5rem;width:240px;padding:.5rem;z-index:3000;line-height:1.25;
@@ -193,13 +181,13 @@
           </div>
         </div>
 
-        <!-- Start/Pause (top DEEL removed) -->
+        <!-- Start/Pause -->
         <div class="controls mt-3 flex items-center justify-center gap-2">
           <button id="btnStart" class="btn">BEGIN</button>
           <button id="btnPause" class="btn gray">POUSE</button>
         </div>
 
-        <!-- Score pills (time removed) -->
+        <!-- Score pills -->
         <div class="controls grid grid-cols-2 gap-2 mt-3">
           <div id="bestBox" class="pill">Beste telling: <b>—</b></div>
           <div id="scoreBox" class="pill">Jou telling: <b>0</b></div>
@@ -215,7 +203,6 @@
             <a href="/forum.html" title="Gesels saam">
               <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
             </a>
-            <!-- Yellow DEEL tile -->
             <div class="relative share-tile-wrap">
               <button type="button" class="share-tile" title="Deel">
                 <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
@@ -239,7 +226,6 @@
             <a href="/slimstiek-argief.html" title="Slimstiek-argief">
               <img class="btn-img" src="/assets/S_ARGIEF_12SEP.png" alt="S Argief" width="120" height="120">
             </a>
-            <!-- Yellow DEEL tile -->
             <div class="relative share-tile-wrap">
               <button type="button" class="share-tile" title="Deel">
                 <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
@@ -263,26 +249,26 @@
         <ol class="space-y-3 text-gray-700 leading-relaxed">
           <li>
             <p class="font-semibold">1. Doel</p>
-            <p>Probeer soveel as moontlik punte aanteken voordat jy die <strong>teikenwoord</strong> met die vallende blokke vorm. Hoe langer jy dit uitrek, hoe beter is jou kans om 'n groter puntetelling te behaal.</p>
+            <p>Probeer soveel as moontlik punte aanteken voordat hy die <strong>teikenwoord</strong> met die vallende blokke vorm. Hoe langer jy dit uitrek, hoe beter is jou kans om 'n groter puntetelling te behaal.</p>
           </li>
           <li>
             <p class="font-semibold">2. Reëls vir blokke</p>
             <ul class="list-disc pl-6">
-              <li><strong>Blokke met dieselfde letter</strong> of <strong>kleur</strong> wat langs of op mekaar tot stilstand kom, sal verdwyn sodat jy meer tyd wen om punte aan te teken. (<em>MAAR: Letters in die teikenwoord verdwyn nooit nie.</em>)</li>
-              <li>Jy kry punte vir elke paar blok wat verdwyn.</li>
+              <li><strong>Blokke met dieselfde letter</strong> of <strong>kleur</strong> wat langs of op mekaar tot stilstand kom, sal verdwyn. (<em>MAAR: Letters in die teikenwoord verdwyn nooit nie.</em>)</li>
+              <li>Jy kry punte vir elke blok wat verdwyn.</li>
             </ul>
           </li>
           <li>
             <p class="font-semibold">3. Punte</p>
             <ul class="list-disc pl-6">
-              <li>10 punte vir elke paar blokke wat verdwyn.</li>
-              <li>50 punte as die letter EN die kleur van gepaarde blokke dieselfde is.</li>
-              <li>100 bonuspunte as jy die teikenwoord gebou kry, maar dit is dan ook die einde van die spel.</li>
+              <li>10 punte vir elke <em>paar</em> blokke wat verdwyn.</li>
+              <li>+50 ekstra as <em>beide</em> die letter en die kleur van daardie paar dieselfde is.</li>
+              <li>+100 bonuspunte as jy die teikenwoord bou (spel eindig).</li>
             </ul>
           </li>
           <li>
             <p class="font-semibold">4. Kontroles</p>
-            <p>Op jou toetsbord, gebruik links- en regs-pyltjies om die blokke horisontaal te laat skuif, en die <strong>spasiebalk</strong> om die blok dadelik tot onder te laat val. Op 'n raakskerm, gebruik die knoppies op die skerm.</p>
+            <p>Op jou toetsbord, gebruik links en regs om die blokke horisontaal te laat skuif, en die <strong>spasiebalk</strong> om die blok dadelik tot onder te laat val. Op 'n raakskerm, gebruik die knoppies op die skerm.</p>
           </li>
         </ol>
       </section>
@@ -456,8 +442,8 @@
     let grid=Array.from({length:H},()=>Array(W).fill(null));
     let cur=null, nxt=null;
     let paused=false, ended=false, moving=false;
-    let gInt=null;                 // drop-tick only (time display removed)
-    let score=0, bestScore=null;   // local best (client-side only)
+    let gInt=null;                 // drop-tick only
+    let score=0, bestScore=null;
     let lbUnsub=null;
 
     function drawGrid(){
@@ -491,8 +477,12 @@
       return { color, letter, x:Math.floor(W/2), y:0 };
     }
 
-    /* ---- Scoring ---- */
-    const SCORING = Object.freeze({ PAIR_POINTS:10, PER_LETTER_IN_WORD:5, WORD_BONUS:50 });
+    /* ---- Scoring (revised) ---- */
+    const SCORING = Object.freeze({
+      PAIR_POINTS: 10,     // letter OR color match
+      BOTH_BONUS:  50,     // extra if both letter AND color match
+      WORD_BONUS:  100     // when word completes (game ends)
+    });
     function setScore(v){ score=Math.max(0, v|0); scoreText.textContent=score; }
     function addScore(v){ setScore(score + (v|0)); }
 
@@ -516,27 +506,47 @@
     async function place(){
       if(!cur||cur.y<0) return;
       grid[cur.y][cur.x]={...cur}; drawBlock(cur);
-      await matchAndDrop();  // adds score for matched pairs
-      await checkWin();      // adds score for letters+bonus and ends
+      await matchAndDrop();  // revised scoring inside
+      await checkWin();      // now only WORD_BONUS
       cur=nxt; nxt=createBlock();
       if(cur) drawBlock(cur);
     }
 
     async function matchAndDrop(){
       const toDel=new Set();
-      for(let y=0;y<H;y++) for(let x=0;x<W;x++){
-        const a=grid[y][x]; if(!a||partOfTarget(a.letter)) continue;
-        for(const [dx,dy] of [[1,0],[0,1],[-1,0],[0,-1]]){
-          const nx=x+dx, ny=y+dy; if(nx<0||nx>=W||ny<0||ny>=H) continue;
-          const b=grid[ny][nx]; if(!b||partOfTarget(b.letter)) continue;
-          if(a.letter===b.letter || a.color===b.color){ toDel.add(`${x},${y}`); toDel.add(`${nx},${ny}`); }
+      let pairCount = 0;
+      let bothBonus = 0;
+
+      // count pairs using RIGHT and DOWN edges only (avoid double counting)
+      for(let y=0;y<H;y++){
+        for(let x=0;x<W;x++){
+          const a=grid[y][x];
+          if(!a || partOfTarget(a.letter)) continue;
+
+          for(const [dx,dy] of [[1,0],[0,1]]){
+            const nx=x+dx, ny=y+dy;
+            if(nx<0||nx>=W||ny<0||ny>=H) continue;
+            const b=grid[ny][nx];
+            if(!b || partOfTarget(b.letter)) continue;
+
+            const sameLetter = a.letter===b.letter;
+            const sameColor  = a.color===b.color;
+
+            if(sameLetter || sameColor){
+              pairCount++;
+              if(sameLetter && sameColor) bothBonus++;
+              toDel.add(`${x},${y}`); toDel.add(`${nx},${ny}`);
+            }
+          }
         }
       }
+
       if(!toDel.size) return;
 
-      const pairs = Math.floor(toDel.size/2);
-      if(pairs>0) addScore(SCORING.PAIR_POINTS * pairs);
+      // scoring per pair (+ extra for both)
+      addScore(pairCount * SCORING.PAIR_POINTS + bothBonus * SCORING.BOTH_BONUS);
 
+      // animate & remove
       await Promise.all(Array.from(toDel).map(key=>new Promise(res=>{
         const [x,y]=key.split(',').map(Number);
         const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
@@ -575,7 +585,6 @@
             const c=gridEl.querySelector(`.cell[data-x="${x+i}"][data-y="${y}"]`);
             if(c) c.style.transform='scale(1.05)';
           }
-          addScore(SCORING.PER_LETTER_IN_WORD * TARGET.length);
           addScore(SCORING.WORD_BONUS);
           setTimeout(()=>end(true), 450);
           return;
@@ -603,7 +612,7 @@
     document.addEventListener('keydown', (e)=>{ if(e.key==='ArrowLeft') move(-1,0); if(e.key==='ArrowRight') move(1,0); if(e.key==='ArrowDown') move(0,1); if(e.key===' ') { e.preventDefault(); hardDrop(); } });
 
     /* ---- Share (points-only) ---- */
-    let stickyPayload = null; // used by yellow tile + modal share (no top DEEL)
+    let stickyPayload = null;
     function buildWinShareText(payload){
       const sc = Number(payload?.score ?? score) || 0;
       return `Ek het ${sc} punte gekry met SLIMSTIEK op Kriptiek vandag: ${buildShareUrl(currentDate)}`;
@@ -611,7 +620,6 @@
     function toggleShareMenu(){ shareMenu.classList.toggle('hidden'); }
     modalShareBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleShareMenu(); });
 
-    // Hide menus when clicking outside / scrolling / resizing
     document.addEventListener('click', (e)=>{
       if(shareMenu && !shareMenu.contains(e.target) && e.target!==modalShareBtn){ shareMenu.classList.add('hidden'); }
       document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>{ if(!m.contains(e.target)) m.classList.add('hidden'); });
@@ -638,13 +646,11 @@
       if(!w && navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>alert("Skakel gekopieer!")); }
     }
 
-    // Modal share uses the WIN message (points only)
     const mShareText = () => buildWinShareText(stickyPayload || { score });
     mWA.onclick   = () => { openWhatsApp(mShareText()); shareMenu.classList.add('hidden'); };
     mCopy.onclick = async () => { try{ await navigator.clipboard.writeText(mShareText()); alert('Skakel gekopieer!'); }catch{} shareMenu.classList.add('hidden'); };
     mSys.onclick  = async () => { const ok = await trySystemShare(mShareText()); if(!ok) openWhatsApp(mShareText()); shareMenu.classList.add('hidden'); };
 
-    // Yellow tile dropdowns
     function wireShareTile(wrapper){
       const btn  = wrapper.querySelector('.share-tile');
       const menu = wrapper.querySelector('.share-menu-local');
@@ -665,7 +671,6 @@
     }
     function initTileShareDropdowns(){ document.querySelectorAll('.share-tile-wrap').forEach(wireShareTile); }
 
-    // Save/restore last win payload for tile share
     function enableStickyShare(payload){
       stickyPayload = { target: TARGET, score: Number(payload?.score ?? score) };
       try{ localStorage.setItem(shareKey(), JSON.stringify({ ...stickyPayload, at: Date.now() })); }catch{}
@@ -679,7 +684,7 @@
       }catch{}
     }
 
-    /* ---- Leaderboard (Firestore OR localStorage) — points-only ---- */
+    /* ---- Leaderboard ---- */
     const LB_LOCAL_KEY = d => `slimstiekLocalLB:${d}`;
     function getLocalLB(date){ try{ return JSON.parse(localStorage.getItem(LB_LOCAL_KEY(date))) || []; }catch{ return []; } }
     function setLocalLB(date, arr){ try{ localStorage.setItem(LB_LOCAL_KEY(date), JSON.stringify(arr)); }catch{} }
@@ -726,7 +731,6 @@
     }
 
     async function submitToLB(scoreVal){
-      // Local first
       const row = { userName: currentUserName, score: scoreVal|0 };
       const arr = getLocalLB(currentDate);
       const idx = arr.findIndex(r => (r.userName||'') === (row.userName||''));
@@ -767,7 +771,7 @@
       if(!user) showNRGate();
     }
 
-    /* ---- Daily word resolver (Firestore optional) ---- */
+    /* ---- Daily word ---- */
     async function resolveTargetWord(){
       if(db){
         try{
@@ -782,11 +786,10 @@
       return 'TUTS';
     }
 
-    /* ---- Load game ---- */
+    /* ---- Load ---- */
     async function loadGame(){
       TARGET = (await resolveTargetWord()) || 'TUTS';
 
-      // target chips
       targetEl.innerHTML='';
       (TARGET || '—').split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
 
