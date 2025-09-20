@@ -343,7 +343,7 @@
     const lbList     = document.getElementById('leaderboardList');
     const timeText   = document.querySelector('#timeBox b');
     const bestText   = document.querySelector('#bestBox b');
-    const Text  = document.querySelector('#Box b');
+    const scoreText  = document.querySelector('#scoreBox b');
 
     const btnLeft = document.getElementById('btnLeft');
     const btnRight= document.getElementById('btnRight');
@@ -466,7 +466,7 @@
     let cur=null, nxt=null;
     let paused=false, ended=false, moving=false;
     let t=0, tInt=null, gInt=null;
-    let =0, best=null;
+    let score=0, bestScore=null;
     let lbUnsub=null;
 
     function drawGrid(){
@@ -502,8 +502,8 @@
 
     /* ---- Scoring ---- */
     const SCORING = Object.freeze({ PAIR_POINTS:10, PER_LETTER_IN_WORD:5, WORD_BONUS:50 });
-    function set(v){ =Math.max(0, v|0); Text.textContent=; }
-    function add(v){ set(+v); }
+    function setScore(v){ score = Math.max(0, v|0); scoreText.textContent = score; }
+    function addScore(v){ setScore(score + v); }
 
     /* ---- Movement ---- */
     async function move(dx,dy){
@@ -544,7 +544,7 @@
       if(!toDel.size) return;
 
       const pairs = Math.floor(toDel.size/2);
-      if(pairs>0) add(SCORING.PAIR_POINTS * pairs);
+      if(pairs>0) addScore(SCORING.PAIR_POINTS * pairs);
 
       await Promise.all(Array.from(toDel).map(key=>new Promise(res=>{
         const [x,y]=key.split(',').map(Number);
@@ -584,8 +584,8 @@
             const c=gridEl.querySelector(`.cell[data-x="${x+i}"][data-y="${y}"]`);
             if(c) c.style.transform='scale(1.05)';
           }
-          add(SCORING.PER_LETTER_IN_WORD * TARGET.length);
-          add(SCORING.WORD_BONUS);
+          addScore(SCORING.PER_LETTER_IN_WORD * TARGET.length);
+          addScore(SCORING.WORD_BONUS);
           setTimeout(()=>end(true), 450);
           return;
         }
@@ -596,7 +596,7 @@
     /* ---- Control ---- */
     function start(){
       ended=false; over.style.display='none'; shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden');
-      setTime(0); set(0);
+      setTime(0); setScore(0);
       grid=Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
       cur=createBlock(); nxt=createBlock(); drawBlock(cur);
@@ -615,9 +615,7 @@
 
     /* ---- Share (points-only) ---- */
     function buildWinShareText(payload){
-      const name = currentUserName || 'Speler';
-      const word = payload?.target || TARGET || '—';
-      const sc   = Number(payload?.score ?? score) || 0;
+      const sc = Number(payload?.score ?? score) || 0;
       return `Ek het ${sc} punte gekry met SLIMSTIEK op Kriptiek vandag: ${buildShareUrl(currentDate)}`;
     }
     function toggleShareMenu(){ shareMenu.classList.toggle('hidden'); }
@@ -648,14 +646,18 @@
       const w = window.open(url,'_blank','noopener,noreferrer');
       if(!w && navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>alert("Skakel gekopieer!")); }
     }
-    const sWAHandler   = () => { openWhatsApp(stickyPayload ? buildWinShareText(stickyPayload) : shareTextLinkOnly()); stickyShareMenu.classList.add('hidden'); };
-    const sCopyHandler = async () => { try{ await navigator.clipboard.writeText(stickyPayload ? buildWinShareText(stickyPayload) : shareTextLinkOnly()); alert('Skakel gekopieer!'); }catch{} stickyShareMenu.classList.add('hidden'); };
-    const sSysHandler  = async () => { const ok = await trySystemShare(stickyPayload ? buildWinShareText(stickyPayload) : shareTextLinkOnly()); if(!ok) openWhatsApp(stickyPayload ? buildWinShareText(stickyPayload) : shareTextLinkOnly()); stickyShareMenu.classList.add('hidden'); };
+
+    // Prefer success text when we have a result, otherwise link-only
+    const shareSuccessOrLink = () => (stickyPayload ? buildWinShareText(stickyPayload) : shareTextLinkOnly());
+
+    const sWAHandler   = () => { openWhatsApp(shareSuccessOrLink()); stickyShareMenu.classList.add('hidden'); };
+    const sCopyHandler = async () => { try{ await navigator.clipboard.writeText(shareSuccessOrLink()); alert('Skakel gekopieer!'); }catch{} stickyShareMenu.classList.add('hidden'); };
+    const sSysHandler  = async () => { const txt = shareSuccessOrLink(); const ok = await trySystemShare(txt); if(!ok) openWhatsApp(txt); stickyShareMenu.classList.add('hidden'); };
     sWA.onclick = sWAHandler; sCopy.onclick = sCopyHandler; sSys.onclick = sSysHandler;
 
-    const mWAHandler   = () => { openWhatsApp(shareTextLinkOnly()); shareMenu.classList.add('hidden'); };
-    const mCopyHandler = async () => { try{ await navigator.clipboard.writeText(shareTextLinkOnly()); alert('Skakel gekopieer!'); }catch{} shareMenu.classList.add('hidden'); };
-    const mSysHandler  = async () => { const ok = await trySystemShare(shareTextLinkOnly()); if(!ok) openWhatsApp(shareTextLinkOnly()); shareMenu.classList.add('hidden'); };
+    const mWAHandler   = () => { openWhatsApp(shareSuccessOrLink()); shareMenu.classList.add('hidden'); };
+    const mCopyHandler = async () => { try{ await navigator.clipboard.writeText(shareSuccessOrLink()); alert('Skakel gekopieer!'); }catch{} shareMenu.classList.add('hidden'); };
+    const mSysHandler  = async () => { const txt = shareSuccessOrLink(); const ok = await trySystemShare(txt); if(!ok) openWhatsApp(txt); shareMenu.classList.add('hidden'); };
     mWA.onclick = mWAHandler; mCopy.onclick = mCopyHandler; mSys.onclick = mSysHandler;
 
     function enableStickyShare(payload){
@@ -689,7 +691,7 @@
         menu.classList.toggle('hidden');
       });
 
-      const txt = () => stickyPayload ? buildWinShareText(stickyPayload) : shareTextLinkOnly();
+      const txt = () => shareSuccessOrLink();
       wa.onclick = () => { openWhatsApp(txt()); menu.classList.add('hidden'); };
       cp.onclick = async () => { try{ await navigator.clipboard.writeText(txt()); alert('Skakel gekopieer!'); }catch{} menu.classList.add('hidden'); };
       sys.onclick = async () => { const ok = await trySystemShare(txt()); if(!ok) openWhatsApp(txt()); menu.classList.add('hidden'); };
