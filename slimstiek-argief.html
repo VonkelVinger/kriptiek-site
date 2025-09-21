@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SLIMSTIEK Argief – Kriptiek</title>
 
-  <!-- Favicon and App Icons (same set as Blitstiek’s page) -->
+  <!-- Favicon and App Icons -->
   <link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=3">
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png?v=3">
@@ -42,7 +42,7 @@
     /* Legend swatches */
     .legend-swatch { width: 20px; height: 20px; border-radius: 0.375rem; display: inline-block; box-sizing: border-box; }
 
-    /* Header/logo (matches your Blitstiek archive) */
+    /* Header/logo */
     .logo-container {
       position: relative; display: flex; justify-content: center; align-items: center;
       width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
@@ -77,49 +77,47 @@
 <body class="min-h-screen p-4 text-gray-100 bg-[#f8f5f2]">
 
   <!-- Header/logo -->
-  <!-- Header/logo (match other archive pages exactly) -->
-<header class="bg-white shadow p-4 mb-6">
-  <div class="logo-container">
-    <div id="backgroundCrossword" class="background-crossword"></div>
-    <div class="crossword-grid">
-      <div class="letter-box" style="transform:scaleX(-1)">K</div>
-      <div class="letter-box" style="transform:scaleX(-1)">R</div>
-      <div class="letter-box">I</div>
-      <div class="letter-box" style="transform:scaleX(-1)">P</div>
-      <div class="letter-box">T</div>
-      <div class="letter-box">I</div>
-      <div class="letter-box" style="transform:scaleX(-1)">E</div>
-      <div class="letter-box">K</div>
+  <header class="bg-white shadow p-4 mb-6">
+    <div class="logo-container">
+      <div id="backgroundCrossword" class="background-crossword"></div>
+      <div class="crossword-grid">
+        <div class="letter-box" style="transform:scaleX(-1)">K</div>
+        <div class="letter-box" style="transform:scaleX(-1)">R</div>
+        <div class="letter-box">I</div>
+        <div class="letter-box" style="transform:scaleX(-1)">P</div>
+        <div class="letter-box">T</div>
+        <div class="letter-box">I</div>
+        <div class="letter-box" style="transform:scaleX(-1)">E</div>
+        <div class="letter-box">K</div>
+      </div>
     </div>
-  </div>
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const backgroundCrossword = document.getElementById('backgroundCrossword');
-      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      function rand() { return letters[Math.floor(Math.random() * letters.length)]; }
-      function drawGrid() {
-        backgroundCrossword.innerHTML = '';
-        const rows = Math.ceil(backgroundCrossword.offsetHeight / 30);
-        const cols = Math.ceil(backgroundCrossword.offsetWidth / 30);
-        const total = (rows * cols) || 300;
-        for (let i = 0; i < total; i++) {
-          const d = document.createElement('div');
-          d.className = 'bg-letter';
-          d.textContent = rand();
-          backgroundCrossword.appendChild(d);
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const backgroundCrossword = document.getElementById('backgroundCrossword');
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        function rand() { return letters[Math.floor(Math.random() * letters.length)]; }
+        function drawGrid() {
+          backgroundCrossword.innerHTML = '';
+          const rows = Math.ceil(backgroundCrossword.offsetHeight / 30);
+          const cols = Math.ceil(backgroundCrossword.offsetWidth / 30);
+          const total = (rows * cols) || 300;
+          for (let i = 0; i < total; i++) {
+            const d = document.createElement('div');
+            d.className = 'bg-letter';
+            d.textContent = rand();
+            backgroundCrossword.appendChild(d);
+          }
         }
-      }
-      drawGrid();
-      window.addEventListener('resize', drawGrid);
-    });
-  </script>
-</header>
-
+        drawGrid();
+        window.addEventListener('resize', drawGrid);
+      });
+    </script>
+  </header>
 
   <section class="text-center mb-6">
     <h1 class="text-3xl font-bold mb-3 text-[#374151]">Slimstiek-argief</h1>
 
-    <!-- Legend (same colors/labels) -->
+    <!-- Legend -->
     <div class="max-w-3xl mx-auto text-sm text-gray-700 flex items-center justify-center gap-6">
       <span class="inline-flex items-center gap-2">
         <span class="legend-swatch" style="background-color:#ea580c;"></span>
@@ -141,7 +139,7 @@
     <div id="archiveList" class="space-y-10"></div>
     <div id="emptyMsg" class="text-center text-gray-500 hidden">Geen vorige speletjies om te wys nie.</div>
 
-    <!-- Month navigation BELOW the calendar (same as Blitstiek) -->
+    <!-- Month navigation BELOW the calendar -->
     <div id="monthNav" class="flex justify-between mt-6 hidden">
       <button id="prevMonth" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-[#374151]">← Vorige maand</button>
       <button id="nextMonth" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-[#374151]">Volgende maand →</button>
@@ -161,9 +159,11 @@
   </footer>
 
   <script type="module">
-    // Optional Firebase (not required for local calendar)
+    // Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getFirestore } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import {
+      getFirestore, collection, getDocs, query, where
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -174,13 +174,17 @@
       appId: "1:620450620939:web:e93a18ac23b53b33db890e"
     };
 
-    try { initializeApp(firebaseConfig); getFirestore(); } catch(e) { /* ok if no FS */ }
+    let db = null;
+    try { db = getFirestore(initializeApp(firebaseConfig)); } catch(e) { /* ok if no FS */ }
 
     // Colors (match legend)
     const ORANGE = "#ea580c"; // today
     const BLUE   = "#374151"; // played (device)
     const GREEN  = "#166534"; // not played
     const BASE   = "block px-2 py-2 rounded font-bold text-white";
+
+    // Admin UID (from project baseline)
+    const ADMIN_UID = "jI7f0Wk4MqfPq7p69vjl8OlJUvS2";
 
     // ZA "today" (Africa/Johannesburg)
     function todayKeySAST() {
@@ -203,7 +207,98 @@
       } catch { return false; }
     }
 
-    // Build calendar for a YYYY-MM
+    // --- Load only admin-created Slimstiek games ---------------------------------
+
+    /**
+     * Extract a YYYY-MM-DD key from a doc (by field or id).
+     */
+    function extractDateKey(doc) {
+      const data = doc.data ? doc.data() : {};
+      // 1) explicit date field
+      if (data && typeof data.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(data.date)) return data.date;
+
+      // 2) gameId field like "GameYYYY-MM-DD" or "YYYY-MM-DD"
+      if (data && typeof data.gameId === 'string') {
+        const m1 = data.gameId.match(/^Game(\d{4}-\d{2}-\d{2})$/);
+        if (m1) return m1[1];
+        if (/^\d{4}-\d{2}-\d{2}$/.test(data.gameId)) return data.gameId;
+      }
+
+      // 3) document id: "GameYYYY-MM-DD" or "YYYY-MM-DD"
+      if (doc.id) {
+        const m2 = doc.id.match(/^Game(\d{4}-\d{2}-\d{2})$/);
+        if (m2) return m2[1];
+        if (/^\d{4}-\d{2}-\d{2}$/.test(doc.id)) return doc.id;
+      }
+
+      return null;
+    }
+
+    /**
+     * Returns a Set of date keys for Slimstiek games created by the admin tool:
+     *   - adminCreated === true OR createdBy == ADMIN_UID
+     *   - AND target !== 'TUTS'
+     *   - AND date <= TODAY
+     */
+    async function loadAdminSlimstiekDates() {
+      const set = new Set();
+      if (!db) return set;
+
+      const col = collection(db, "slimstiekGames");
+      const q1 = query(col, where("adminCreated", "==", true));
+      const q2 = query(col, where("createdBy", "==", ADMIN_UID));
+
+      const snaps = await Promise.all([getDocs(q1), getDocs(q2)]);
+
+      for (const snap of snaps) {
+        snap.forEach(doc => {
+          const data = doc.data();
+          // Filter out placeholder/test targets
+          if ((data?.target || data?.word || "").toUpperCase() === "TUTS") return;
+
+          const dateKey = extractDateKey(doc);
+          if (dateKey && dateKey <= TODAY) set.add(dateKey);
+        });
+      }
+
+      return set;
+    }
+
+    // --- Calendar rendering limited to available dates ---------------------------
+
+    let AVAILABLE_DATES = new Set();   // YYYY-MM-DD
+    let MIN_DATE = null;               // earliest available date
+    let MAX_DATE = null;               // latest available date (<= TODAY)
+
+    function computeMinMax() {
+      if (AVAILABLE_DATES.size === 0) { MIN_DATE = MAX_DATE = null; return; }
+      const arr = Array.from(AVAILABLE_DATES).sort(); // lexicographic works on YYYY-MM-DD
+      MIN_DATE = arr[0];
+      MAX_DATE = arr[arr.length - 1];
+    }
+
+    function monthKeyFromDate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2,'0');
+      return `${y}-${m}`;
+    }
+
+    function monthHasAny(mk) {
+      // mk like YYYY-MM; check any AVAILABLE_DATES starting with mk
+      for (const d of AVAILABLE_DATES) if (d.slice(0,7) === mk) return true;
+      return false;
+    }
+
+    function clampToNearestMonthWithGames(current) {
+      // If the current month has no games, move backward until you find one (or forward if needed)
+      let tries = 0;
+      while (!monthHasAny(monthKeyFromDate(current)) && tries < 36) {
+        current.setMonth(current.getMonth() - 1);
+        tries++;
+      }
+      return current;
+    }
+
     function renderMonth(monthKey) {
       const container = document.getElementById("archiveList");
       container.innerHTML = "";
@@ -229,7 +324,7 @@
         calendar.appendChild(header);
       });
 
-      // Prepare days (JS Date treats 'YYYY-MM-01' as local; it's fine for layout)
+      // Prepare days
       const firstDay = new Date(`${year}-${month}-01`);
       const totalDays = new Date(year, month, 0).getDate();
       const startDay = (firstDay.getDay() + 6) % 7; // Monday-start
@@ -241,11 +336,10 @@
       for (let day = 1; day <= totalDays; day++) {
         const dateStr = `${year}-${month}-${String(day).padStart(2, "0")}`;
         const cell = document.createElement("div");
-
-        // Slimstiek is daily → every date up to TODAY is clickable; future dates are shaded text.
+        const isAvailable = AVAILABLE_DATES.has(dateStr);
         const isFuture = dateStr > TODAY;
 
-        if (!isFuture) {
+        if (isAvailable && !isFuture) {
           const a = document.createElement("a");
           a.href = `/slimstiek.html?date=${dateStr}`;
           a.textContent = day;
@@ -284,30 +378,42 @@
       container.appendChild(section);
     }
 
-    // Month navigation (current, previous, next — like your Blitstiek page)
-    function monthKeyFromDate(d) {
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2,'0');
-      return `${y}-${m}`;
-    }
-
+    // Month navigation
     const monthNav = document.getElementById("monthNav");
     const prevBtn  = document.getElementById("prevMonth");
     const nextBtn  = document.getElementById("nextMonth");
 
-    // Start at current month; allow navigation +/- N months where useful
     let current = new Date();
+
+    function updateMonthNavButtons() {
+      const mk = monthKeyFromDate(current);
+      const todayMonth = TODAY.slice(0,7);
+
+      // Prev enabled if there's any earlier month >= MIN_DATE
+      if (!MIN_DATE) {
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+        return;
+      }
+      const curYYYYMM = mk;
+      const minYYYYMM = MIN_DATE.slice(0,7);
+      prevBtn.disabled = curYYYYMM <= minYYYYMM;
+
+      // Next enabled if current month < min(todayMonth, MAX_DATE's month)
+      const maxYYYYMM = (MAX_DATE || TODAY).slice(0,7);
+      const upperBound = maxYYYYMM < todayMonth ? maxYYYYMM : todayMonth;
+      nextBtn.disabled = curYYYYMM >= upperBound;
+    }
+
     function update() {
       const mk = monthKeyFromDate(current);
-      renderMonth(mk);
-
-      // Enable prev if there are any past months (we’ll allow going back arbitrarily)
-      prevBtn.disabled = false;
-      // Disable next if month is the current or future month compared to TODAY
-      const todayMonth = TODAY.slice(0,7);
-      nextBtn.disabled = mk >= todayMonth;
-
+      if (!monthHasAny(mk)) {
+        // Snap to nearest month that has games
+        current = clampToNearestMonthWithGames(current);
+      }
+      renderMonth(monthKeyFromDate(current));
       monthNav.classList.remove("hidden");
+      updateMonthNavButtons();
     }
 
     prevBtn.addEventListener("click", ()=>{
@@ -315,19 +421,30 @@
       update();
     });
     nextBtn.addEventListener("click", ()=>{
-      const todayMonth = TODAY.slice(0,7);
-      const mk = monthKeyFromDate(current);
-      if (mk < todayMonth) {
-        current.setMonth(current.getMonth()+1);
-        update();
-      }
+      current.setMonth(current.getMonth()+1);
+      update();
     });
 
     // Init
-    renderBackgroundLetters();
-    update();
+    renderBackgroundLetters(); // no-op (handled in header)
+    (async () => {
+      AVAILABLE_DATES = await loadAdminSlimstiekDates();
+      computeMinMax();
 
-    // Draw background letters once
+      const emptyMsg = document.getElementById("emptyMsg");
+      if (AVAILABLE_DATES.size === 0) {
+        emptyMsg.classList.remove("hidden");
+        // Still render current month skeleton (non-clickable)
+        update();
+        return;
+      }
+
+      // Start at the latest available month (not future)
+      const start = new Date(MAX_DATE.replace(/-/g, "/"));
+      current = start;
+      update();
+    })();
+
     function renderBackgroundLetters(){
       // no-op; handled in header inline script
     }
