@@ -70,7 +70,7 @@
       .letter-box { width: 35px; height: 35px; font-size: 1.2rem; }
       .crossword-grid { gap: 2px; }
       .logo-container { padding: 0.75rem; }
-      .bg-letter { font-size: 0.9rem; }
+      <span class="bg-letter { font-size: 0.9rem; }"></span>
     }
   </style>
 </head>
@@ -160,7 +160,7 @@
     // Firebase (optional read)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import {
-      getFirestore, collection, getDocs, query, where
+      getFirestore, collection, getDocs, query, where, doc, getDoc
     } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -204,19 +204,19 @@
       } catch { return false; }
     }
 
-    // --- Load only admin-created Slimstiek games ---------------------------------
-    function extractDateKey(doc) {
-      const data = doc.data ? doc.data() : {};
+    // --- Load Slimstiek dates created by admin, with fallback to daily_words -----
+    function extractDateKey(docLike) {
+      const data = docLike.data ? docLike.data() : docLike;
       if (data && typeof data.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(data.date)) return data.date;
       if (data && typeof data.gameId === 'string') {
         const m1 = data.gameId.match(/^Game(\d{4}-\d{2}-\d{2})$/);
         if (m1) return m1[1];
         if (/^\d{4}-\d{2}-\d{2}$/.test(data.gameId)) return data.gameId;
       }
-      if (doc.id) {
-        const m2 = doc.id.match(/^Game(\d{4}-\d{2}-\d{2})$/);
+      if (docLike.id) {
+        const m2 = docLike.id.match(/^Game(\d{4}-\d{2}-\d{2})$/);
         if (m2) return m2[1];
-        if (/^\d{4}-\d{2}-\d{2}$/.test(doc.id)) return doc.id;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(docLike.id)) return docLike.id;
       }
       return null;
     }
@@ -225,19 +225,31 @@
       const set = new Set();
       if (!db) return set;
 
-      const col = collection(db, "slimstiekGames");
-      const q1 = query(col, where("adminCreated", "==", true));
-      const q2 = query(col, where("createdBy", "==", ADMIN_UID));
-
+      // A) Canonical collection (preferred)
+      const c = collection(db, "slimstiekGames");
+      const q1 = query(c, where("adminCreated", "==", true));
+      const q2 = query(c, where("createdBy", "==", ADMIN_UID));
       const snaps = await Promise.all([getDocs(q1), getDocs(q2)]);
       for (const snap of snaps) {
-        snap.forEach(doc => {
-          const data = doc.data();
+        snap.forEach(docSnap => {
+          const data = docSnap.data();
           if ((data?.target || data?.word || "").toUpperCase() === "TUTS") return;
-          const dateKey = extractDateKey(doc);
+          const dateKey = extractDateKey(docSnap);
           if (dateKey && dateKey <= TODAY) set.add(dateKey);
         });
       }
+
+      // B) Fallback: any daily_words with a Slimstiek word (admin uses this too)
+      //    We exclude TUTS and future dates.
+      const dw = await getDocs(collection(db, "daily_words"));
+      dw.forEach(docSnap => {
+        const idDate = extractDateKey(docSnap) || docSnap.id; // daily_words id is YYYY-MM-DD
+        const d = docSnap.data() || {};
+        const w = (d.slimstiek || d.word || "").toUpperCase();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(idDate) && idDate <= TODAY && w && w !== "TUTS") {
+          set.add(idDate);
+        }
+      });
 
       return set;
     }
@@ -392,16 +404,16 @@
       if (AVAILABLE_DATES.size === 0) {
         // Show today's month as a skeleton, do not clamp or enable nav
         emptyMsg.classList.remove("hidden");
-        current = new Date();                    // keep 2025-09 (today), not 2022
-        renderMonth(monthKeyFromDate(current));  // no clamp
-        monthNav.classList.add("hidden");        // hide nav (nothing to browse)
+        current = new Date();
+        renderMonth(monthKeyFromDate(current));
+        monthNav.classList.add("hidden");
         return;
       }
 
       // Start at the latest available month (<= TODAY)
       current = new Date((MAX_DATE || TODAY).replace(/-/g, "/"));
       emptyMsg.classList.add("hidden");
-      update(); // normal clamping allowed
+      update();
     })();
   </script>
 </body>
