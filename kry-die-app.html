@@ -37,7 +37,6 @@
     .btn-secondary:hover{ filter:brightness(1.03); }
     .badge{ display:inline-block; padding:.25rem .6rem; border-radius:999px; font-size:.75rem; font-weight:700; }
     .badge-ok{ background:#16a34a; color:#fff; }
-    .badge-warn{ background:#f59e0b; color:#111827; }
     .tile-img{ border-radius: 1rem; box-shadow: 6px 6px 14px rgba(0,0,0,.28); }
   </style>
 </head>
@@ -69,7 +68,7 @@
       <!-- State: Install available -->
       <section id="installCard" class="card p-4 hidden">
         <div class="flex items-start gap-3">
-          <div class="badge badge-warn mt-0.5">⬇️ Installeerbaar</div>
+          <div class="badge mt-0.5" style="background:#f59e0b;color:#111827;">⬇️ Installeerbaar</div>
         </div>
         <h2 class="text-xl font-bold mt-2">Installeer met een kliek</h2>
         <p class="text-slate-700 mt-1">
@@ -86,10 +85,7 @@
 
       <!-- State: No native prompt (fallback instructions) -->
       <section id="manualCard" class="card p-4">
-        <div class="flex items-start gap-3">
-          <div class="badge badge-warn mt-1.5">ℹ️ INSTRUKSIES</div>
-        </div>
-        <h2 class="text-xl font-bold mt-2">Hoe om te installeer (as die knoppie nie wys nie)</h2>
+        <h2 class="text-xl font-bold">Hoe om te installeer (as die knoppie nie wys nie)</h2>
 
         <details class="mt-3" open>
           <summary class="font-bold cursor-pointer">Android (Chrome/Edge/Brave)</summary>
@@ -121,15 +117,6 @@
           </ol>
         </details>
 
-        <!-- Optional APK (placeholder) -->
-        <div class="mt-5 p-3 rounded-lg bg-amber-50 border border-amber-200">
-          <p class="font-bold">Android APK (opsioneel)</p>
-          <p class="text-sm text-slate-700">
-            Het jy ’n APK nodig? <a href="/assets/kriptiek.apk" class="underline font-bold">Laai die APK hier af</a>
-            (plaas die lêer en pas die roete aan indien van toepassing).
-          </p>
-        </div>
-
         <div class="mt-4">
           <a href="/" class="btn btn-secondary">Terug na tuisblad</a>
         </div>
@@ -144,10 +131,8 @@
   <script>
     // --- Detect installed state (PWA) ---
     function isStandalone() {
-      // Android/desktop via CSS media query
-      const mq = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
-      // iOS Safari
-      const iosStandalone = window.navigator.standalone === true;
+      const mq = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches; // Android/desktop
+      const iosStandalone = window.navigator.standalone === true; // iOS Safari
       return mq || iosStandalone;
     }
 
@@ -195,9 +180,8 @@
       refreshUI();
       if (installBtn) {
         installBtn.addEventListener('click', async () => {
-          if (!deferredPrompt) return; // no prompt available
+          if (!deferredPrompt) return;
           deferredPrompt.prompt();
-          // const { outcome } = await deferredPrompt.userChoice; // optional use
           deferredPrompt = null;
           refreshUI();
         });
