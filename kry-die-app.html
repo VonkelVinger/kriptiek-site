@@ -7,6 +7,7 @@
 
   <!-- PWA manifest (same as site) -->
   <link rel="manifest" href="/assets/site.webmanifest?v=3">
+  <meta name="theme-color" content="#1e3a8a" />
 
   <!-- Icons / meta -->
   <link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
@@ -57,7 +58,7 @@
           <div class="badge badge-ok mt-0.5">✅ Reeds geïnstalleer</div>
         </div>
         <p class="text-slate-700 mt-3">
-          Jy het reeds die Kriptiek-app. Jy kan dit vanaf jou tuisskerm/openbare programme oopmaak.
+          Jy het reeds die Kriptiek-app. Jy kan dit vanaf jou tuisskerm of vanuit jou toepassingslys oopmaak.
         </p>
         <div class="mt-4 flex gap-3">
           <a href="/" class="btn btn-primary">Maak app oop</a>
@@ -72,7 +73,7 @@
         </div>
         <h2 class="text-xl font-bold mt-2">Installeer met een kliek</h2>
         <p class="text-slate-700 mt-1">
-          Kliek hieronder om die app op jou tuisskerm (home screen) te installeer. Jy kan dit later skuif ver verwyder.
+          Kliek hieronder om die app op jou tuisskerm (home screen) te installeer. Jy kan dit later skuif of verwyder.
         </p>
         <div class="mt-4 flex gap-3">
           <button id="installBtn" class="btn btn-primary">Installeer nou</button>
@@ -94,7 +95,7 @@
           <summary class="font-bold cursor-pointer">Android (Chrome/Edge/Brave)</summary>
           <ol class="list-decimal pl-6 mt-2 space-y-1 text-slate-700">
             <li>Maak <strong>Chrome</strong> oop.</li>
-            <li>Kliek die <strong>drie kolletjies bo mekaar ( ⋮ )</strong> bo regs.</li>
+            <li>Kliek die <strong>drie kolletjies bo mekaar (⋮)</strong> bo regs.</li>
             <li>Kies <strong>“Add to Home screen”</strong> of <strong>“Install app”</strong>.</li>
             <li>Bevestig – die Kriptiek-app behoort nou op jou tuisskerm te wees.</li>
           </ol>
@@ -104,7 +105,7 @@
           <summary class="font-bold cursor-pointer">iPhone / iPad (Safari)</summary>
           <ol class="list-decimal pl-6 mt-2 space-y-1 text-slate-700">
             <li>Maak <strong>Safari</strong> oop op hierdie blad.</li>
-            <li>Kliek die <strong>Share</strong>-ikoon.</li>
+            <li>Kliek die <strong>Deel-ikoon (Share)</strong>.</li>
             <li>Kies <strong>“Add to Home Screen”</strong>.</li>
             <li>Bevestig – die Kriptiek-app behoort nou op jou tuisskerm te wees.</li>
           </ol>
@@ -172,8 +173,8 @@
     function showInstalled(){
       installedCard.classList.remove('hidden');
       installCard.classList.add('hidden');
-      // keep the manual card visible for tips; hide if you prefer:
-      // manualCard.classList.add('hidden');
+      // Hide instructions when app is detected (cleaner UI):
+      manualCard.classList.add('hidden');
     }
 
     function refreshUI(){
@@ -186,7 +187,7 @@
       } else {
         installCard.classList.add('hidden');
       }
-      // Manual remains visible as fallback/guide
+      // Manual remains visible as fallback/guide when not installed
       manualCard.classList.remove('hidden');
     }
 
@@ -196,8 +197,7 @@
         installBtn.addEventListener('click', async () => {
           if (!deferredPrompt) return; // no prompt available
           deferredPrompt.prompt();
-          // Optionally inspect outcome:
-          // const { outcome } = await deferredPrompt.userChoice;
+          // const { outcome } = await deferredPrompt.userChoice; // optional use
           deferredPrompt = null;
           refreshUI();
         });
