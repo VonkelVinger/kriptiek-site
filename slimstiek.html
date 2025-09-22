@@ -261,9 +261,16 @@
           <li>
             <p class="font-semibold">3. Punte</p>
             <ul class="list-disc pl-6">
-              <li>+10 punte vir elke <em>paar</em> blokke wat verdwyn.</li>
-              <li>+50 ekstra as <em>die letter sowel as kleur</em> van die blokke dieselfde is.</li>
-              <li>+100 bonuspunte sodra jy die teikenwoord gebou kry, maar die spel eindig dan ook.</li>
+              <li>
+                <strong>+10 punte</strong> vir elke <em>paar</em> blokke wat verdwyn,
+                <strong>vermenigvuldig met die boonste ry</strong> waarin daardie paar voorkom.
+                (<em>Die heel onderste ry is ry 1; as die boonste van die twee blokke in ry 2 is, word met 2 vermenigvuldig.</em>)
+              </li>
+              <li>
+                <strong>+50 ekstra</strong> as <em>die letter en die kleur</em> van die twee blokke dieselfde is,
+                ook vermenigvuldig met die boonste ry waarin dit gebeur.
+              </li>
+              <li><strong>+100 bonuspunte</strong> sodra jy die teikenwoord gebou kry – die spel eindig dan ook.</li>
             </ul>
           </li>
           <li>
@@ -512,10 +519,12 @@
       if(cur) drawBlock(cur);
     }
 
+    // ★ NEW: Row-multiplied scoring (+10 per pair, +50 both, times row multiplier)
     async function matchAndDrop(){
       const toDel=new Set();
-      let pairCount = 0;
-      let bothBonus = 0;
+      let pairScoreTotal = 0;
+
+      const rowNumber = (y) => H - y; // bottom row = 1, top row = H
 
       // count pairs using RIGHT and DOWN edges only (avoid double counting)
       for(let y=0;y<H;y++){
@@ -533,9 +542,17 @@
             const sameColor  = a.color===b.color;
 
             if(sameLetter || sameColor){
-              pairCount++;
-              if(sameLetter && sameColor) bothBonus++;
-              toDel.add(`${x},${y}`); toDel.add(`${nx},${ny}`);
+              // Row multiplier uses the UPPER (smaller y) of the pair
+              const upperY = Math.min(y, ny);
+              const mult   = rowNumber(upperY);
+
+              let pairPts = SCORING.PAIR_POINTS;          // +10
+              if(sameLetter && sameColor) pairPts += SCORING.BOTH_BONUS; // +50 extra
+
+              pairScoreTotal += pairPts * mult;
+
+              toDel.add(`${x},${y}`); 
+              toDel.add(`${nx},${ny}`);
             }
           }
         }
@@ -543,8 +560,8 @@
 
       if(!toDel.size) return;
 
-      // scoring per pair (+ extra for both)
-      addScore(pairCount * SCORING.PAIR_POINTS + bothBonus * SCORING.BOTH_BONUS);
+      // apply total score for this tick’s removals
+      addScore(pairScoreTotal);
 
       // animate & remove
       await Promise.all(Array.from(toDel).map(key=>new Promise(res=>{
