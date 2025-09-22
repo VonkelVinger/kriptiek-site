@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="af">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no" />
+  <title>Kry die Kriptiek-app</title>
+
+  <!-- PWA manifest (same as site) -->
+  <link rel="manifest" href="/assets/site.webmanifest?v=3">
+
+  <!-- Icons / meta -->
+  <link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=3">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png?v=3">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=3">
+
+  <!-- Social -->
+  <meta property="og:title" content="Kry die Kriptiek-app" />
+  <meta property="og:description" content="Installeer die Kriptiek PWA op jou foon of rekenaar." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.kriptiek.com/kry-die-app.html" />
+  <meta property="og:image" content="https://www.kriptiek.com/assets/share-logo.png?v=1" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <!-- Styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root{ --brand:#1e3a8a; }
+    body{ font-family:'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:#f8f5f2; color:#0f172a; }
+    .card{ background:#fff; border-radius:14px; box-shadow:0 10px 24px rgba(0,0,0,.10); border:1px solid rgba(15,23,42,.06); }
+    .btn{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.8rem 1.1rem; border-radius:.75rem; font-weight:700; }
+    .btn-primary{ background:var(--brand); color:#fff; }
+    .btn-primary:hover{ filter:brightness(1.05); }
+    .btn-secondary{ background:#e2e8f0; color:#0f172a; }
+    .btn-secondary:hover{ filter:brightness(1.03); }
+    .badge{ display:inline-block; padding:.25rem .6rem; border-radius:999px; font-size:.75rem; font-weight:700; }
+    .badge-ok{ background:#16a34a; color:#fff; }
+    .badge-warn{ background:#f59e0b; color:#111827; }
+    .tile-img{ border-radius: 1rem; box-shadow: 6px 6px 14px rgba(0,0,0,.28); }
+  </style>
+</head>
+<body>
+  <header class="px-4 py-6">
+    <div class="max-w-xl mx-auto text-center">
+      <img src="/assets/KRYDIEAPP_12SEP.png" alt="KRY DIE APP" class="w-36 h-36 mx-auto tile-img mb-3">
+      <h1 class="text-3xl md:text-4xl font-bold text-[var(--brand)]">Kry die Kriptiek-app</h1>
+      <p class="text-slate-600 mt-1">Installeer as ’n ligte PWA – vinnig, veilig, en op datum.</p>
+    </div>
+  </header>
+
+  <main class="px-4 pb-14">
+    <div class="max-w-xl mx-auto space-y-5">
+      <!-- State: Already installed -->
+      <section id="installedCard" class="card p-4 hidden">
+        <div class="flex items-start gap-3">
+          <div class="badge badge-ok mt-0.5">✅ Reeds geïnstalleer</div>
+        </div>
+        <p class="text-slate-700 mt-3">
+          Jy het reeds die Kriptiek-app. Jy kan dit vanaf jou tuisskerm/openbare programme oopmaak.
+        </p>
+        <div class="mt-4 flex gap-3">
+          <a href="/" class="btn btn-primary">Maak app oop</a>
+          <a href="/" class="btn btn-secondary">Gaan na tuisblad</a>
+        </div>
+      </section>
+
+      <!-- State: Install available -->
+      <section id="installCard" class="card p-4 hidden">
+        <div class="flex items-start gap-3">
+          <div class="badge badge-warn mt-0.5">⬇️ Installeerbaar</div>
+        </div>
+        <h2 class="text-xl font-bold mt-2">Installeer met een kliek</h2>
+        <p class="text-slate-700 mt-1">
+          Kliek hieronder om die inbou-installasie te gebruik. Dit voeg Kriptiek by jou tuisskerm/dock.
+        </p>
+        <div class="mt-4 flex gap-3">
+          <button id="installBtn" class="btn btn-primary">Installeer nou</button>
+          <a href="/" class="btn btn-secondary">Gaan na tuisblad</a>
+        </div>
+        <p class="text-xs text-slate-500 mt-3">
+          *As niks gebeur nie, kyk die handleidings hieronder vir jou toestel.
+        </p>
+      </section>
+
+      <!-- State: No native prompt (fallback instructions) -->
+      <section id="manualCard" class="card p-4">
+        <div class="flex items-start gap-3">
+          <div class="badge badge-warn mt-0.5">ℹ️ Handleiding</div>
+        </div>
+        <h2 class="text-xl font-bold mt-2">Hoe om te installeer (as die knoppie nie wys nie)</h2>
+
+        <details class="mt-3" open>
+          <summary class="font-bold cursor-pointer">Android (Chrome/Edge/Brave)</summary>
+          <ol class="list-decimal pl-6 mt-2 space-y-1 text-slate-700">
+            <li>Maak <strong>Chrome</strong> oop op hierdie blad.</li>
+            <li>Kliek die <strong>menu ⋮</strong> bo-reg.</li>
+            <li>Kies <strong>“Add to Home screen”</strong> of <strong>“Install app”</strong>.</li>
+            <li>Bevestig – Kriptiek verskyn nou op jou tuisskerm.</li>
+          </ol>
+        </details>
+
+        <details class="mt-3">
+          <summary class="font-bold cursor-pointer">iPhone / iPad (Safari)</summary>
+          <ol class="list-decimal pl-6 mt-2 space-y-1 text-slate-700">
+            <li>Maak <strong>Safari</strong> oop op hierdie blad.</li>
+            <li>Kliek die <strong>Share</strong> ikoon.</li>
+            <li>Kies <strong>“Add to Home Screen”</strong>.</li>
+            <li>Bevestig – Kriptiek verskyn op jou tuisskerm.</li>
+          </ol>
+          <p class="text-xs text-slate-500 mt-2">Let wel: iOS wys nie ’n egte “install”-prompt soos Android nie.</p>
+        </details>
+
+        <details class="mt-3">
+          <summary class="font-bold cursor-pointer">Rekenaar (Chrome/Edge)</summary>
+          <ol class="list-decimal pl-6 mt-2 space-y-1 text-slate-700">
+            <li>In Chrome/Edge: kyk regs in die adresbalk vir ’n <strong>“Install”</strong> ikoon.</li>
+            <li>Kliek <strong>Install</strong> en bevestig.</li>
+            <li>Kriptiek verskyn nou as ’n aparte app in jou Start/Apps.</li>
+          </ol>
+        </details>
+
+        <!-- Optional APK (placeholder) -->
+        <div class="mt-5 p-3 rounded-lg bg-amber-50 border border-amber-200">
+          <p class="font-bold">Android APK (opsioneel)</p>
+          <p class="text-sm text-slate-700">
+            Het jy ’n APK nodig? <a href="/assets/kriptiek.apk" class="underline font-bold">Laai die APK hier af</a>
+            (plaas die lêer en werk die pad aan indien van toepassing).
+          </p>
+        </div>
+
+        <div class="mt-4">
+          <a href="/" class="btn btn-secondary">Terug na tuisblad</a>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="px-4 pb-8 text-center text-sm text-gray-500">
+    &copy; 2025 Kriptiek • <a class="underline" href="/privacy.html">Privaatheid</a> • <a class="underline" href="/terms.html">Voorwaardes</a>
+  </footer>
+
+  <script>
+    // --- Detect installed state (PWA) ---
+    function isStandalone() {
+      // Android/desktop via CSS media query
+      const mq = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+      // iOS Safari
+      const iosStandalone = window.navigator.standalone === true;
+      return mq || iosStandalone;
+    }
+
+    // --- UI refs ---
+    const installedCard = document.getElementById('installedCard');
+    const installCard   = document.getElementById('installCard');
+    const manualCard    = document.getElementById('manualCard');
+    const installBtn    = document.getElementById('installBtn');
+
+    // --- beforeinstallprompt handling ---
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      refreshUI();
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      showInstalled();
+    });
+
+    function showInstalled(){
+      installedCard.classList.remove('hidden');
+      installCard.classList.add('hidden');
+      // keep the manual card visible for tips; hide if you prefer:
+      // manualCard.classList.add('hidden');
+    }
+
+    function refreshUI(){
+      if (isStandalone()) {
+        showInstalled();
+        return;
+      }
+      if (deferredPrompt) {
+        installCard.classList.remove('hidden');
+      } else {
+        installCard.classList.add('hidden');
+      }
+      // Manual remains visible as fallback/guide
+      manualCard.classList.remove('hidden');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      refreshUI();
+      if (installBtn) {
+        installBtn.addEventListener('click', async () => {
+          if (!deferredPrompt) return; // no prompt available
+          deferredPrompt.prompt();
+          // Optionally inspect outcome:
+          // const { outcome } = await deferredPrompt.userChoice;
+          deferredPrompt = null;
+          refreshUI();
+        });
+      }
+    });
+  </script>
+</body>
+</html>
