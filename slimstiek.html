@@ -44,16 +44,24 @@
     .headline{text-align:center;font-size:1.125rem;font-weight:700;color:#374151;margin:16px 0 8px;}
 
     /* Target chips */
-    #targetWrap{width:100%;max-width:var(--gridW);margin:0 auto 8px;display:flex;justify-content:center;}
-    #target{display:inline-flex;gap:1px;background:var(--cell-bg);color:#fff;padding:2px;border-radius:6px;min-height:34px;align-items:center;}
+    #targetWrap{width:100%;max-width:var(--gridW);margin:0 auto 4px;display:flex;justify-content:center;}
+    #target{display:inline-flex;gap:1px;background:var(--cell-bg);color:#fff;padding:2px;border-radius:6px;min-height:34px;align-items:center;transition:box-shadow .3s ease;}
     #target span{width:30px;height:30px;display:grid;place-items:center;font-weight:800;border:1px solid rgba(255,255,255,.12);}
+    #target.goal-glow{animation:targetGlow 1.2s ease-out 1;}
+    @keyframes targetGlow{
+      0%{box-shadow:0 0 0 rgba(255,221,0,0)}
+      40%{box-shadow:0 0 22px rgba(255,221,0,.9)}
+      100%{box-shadow:0 0 0 rgba(255,221,0,0)}
+    }
 
+    /* Grid wrapper */
+    .game-wrap{position:relative}
     /* GRID */
     #grid{
       position:relative; display:grid;
       grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(10,1fr);
       gap:0; background:#fff; border:var(--line) solid #0c4a3e; border-radius:8px; overflow:hidden;
-      width:var(--gridW); height:400px; margin:10px auto 8px;
+      width:var(--gridW); height:400px; margin:6px auto 8px;
     }
     #grid::after{
       content:''; position:absolute; inset:0; pointer-events:none; z-index:5;
@@ -64,6 +72,27 @@
     .cell{position:relative;background:var(--cell-bg);transition:transform .15s ease-out,opacity .15s ease-out;}
     .cell.f{display:grid;place-items:center;color:#fff;font-weight:800;font-size:var(--cell-font);text-shadow:0 1px 1px rgba(0,0,0,.35);}
     .cell.pop{transform:scale(1.15);opacity:0;}
+
+    /* FX overlay for floating scores */
+    #fx{position:absolute; inset:0; pointer-events:none; overflow:hidden;}
+    .float-score{
+      position:absolute; transform:translate(-50%,0);
+      font-weight:800; font-size:14px; line-height:1;
+      color:#fff; text-shadow:0 2px 6px rgba(0,0,0,.55);
+      padding:.15rem .35rem; border-radius:.4rem; background:rgba(0,0,0,.18);
+      animation:floatUp .9s ease-out forwards;
+      will-change:transform,opacity,filter;
+    }
+    @keyframes floatUp{
+      0%{opacity:0; transform:translate(-50%,8px); filter:blur(.2px)}
+      15%{opacity:1}
+      85%{opacity:1}
+      100%{opacity:0; transform:translate(-50%,-18px); filter:blur(1px)}
+    }
+
+    /* Row hint */
+    #rowHint{margin-top:-2px; text-align:center; font-size:.75rem; color:#6b7280;}
+    #rowHint b{color:#065f46}
 
     /* Modal */
     #over{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:50;}
@@ -131,10 +160,15 @@
       <div class="headline">TEIKENWOORD:</div>
       <div id="targetWrap"><div id="target"><span>—</span></div></div>
 
+      <!-- small live row-multiplier hint -->
+      <div id="rowHint">Ry-multiplier: ×<b id="rowMultVal">1</b></div>
+
       <!-- GAME card -->
       <section class="card p-4">
-        <div class="relative">
+        <div class="relative game-wrap">
           <div id="grid"></div>
+          <!-- FX overlay for floating scores -->
+          <div id="fx" aria-hidden="true"></div>
 
           <!-- Success modal -->
           <div id="over">
@@ -255,7 +289,7 @@
             <p class="font-semibold">2. Reëls vir blokke</p>
             <ul class="list-disc pl-6">
               <li><strong>Blokke met dieselfde letter</strong> of <strong>kleur</strong> wat langs of op mekaar tot stilstand kom, sal verdwyn. <em>MAAR: Letters in die teikenwoord verdwyn nooit nie.</em></li>
-              <li>Jy kry punte vir elke paar blokke wat verdwyn.</li>
+              <li>Jy kry punte vir elke <strong>paar blokke</strong> wat verdwyn.</li>
             </ul>
           </li>
           <li>
@@ -329,6 +363,7 @@
 
     const targetEl   = document.getElementById('target');
     const gridEl     = document.getElementById('grid');
+    const fxEl       = document.getElementById('fx');
     const over       = document.getElementById('over');
     const winMsg     = document.getElementById('winMsg');
     const modalShareBtn = document.getElementById('modalShareBtn');
@@ -355,6 +390,8 @@
     const gateGuestBtn= document.getElementById('gateGuestBtn');
     const gateRegBtn  = document.getElementById('gateRegBtn');
     const gateRegLink = document.getElementById('gateRegLink');
+
+    const rowMultLabel = document.getElementById('rowMultVal');
 
     /* ---- Helpers ---- */
     const SITE_ORIGIN = location.hostname.endsWith('kriptiek.com') ? location.origin : 'https://www.kriptiek.com';
@@ -493,6 +530,35 @@
     function setScore(v){ score=Math.max(0, v|0); scoreText.textContent=score; }
     function addScore(v){ setScore(score + (v|0)); }
 
+    /* ---- Row hint ---- */
+    function updateRowHint(){
+      const y = cur ? Math.max(0, Math.min(H-1, cur.y)) : H-1;
+      const mult = H - y; // bottom = 1
+      rowMultLabel.textContent = String(mult);
+    }
+
+    /* ---- Floating score badges ---- */
+    function cellSizePx(){
+      const raw = getComputedStyle(document.documentElement).getPropertyValue('--cellSize') || '32px';
+      return Number(String(raw).replace('px','').trim()) || 32;
+    }
+    function spawnFloatAt(px, py, text){
+      const el = document.createElement('div');
+      el.className = 'float-score';
+      el.textContent = text;
+      el.style.left = px + 'px';
+      el.style.top  = py + 'px';
+      fxEl.appendChild(el);
+      setTimeout(()=>{ el.remove(); }, 950);
+    }
+    function spawnFloatForPair(x1,y1,x2,y2, points, mult){
+      const s = cellSizePx();
+      // midpoint between two cells (horiz/vert both OK)
+      const cx = ((x1 + 0.5) + (x2 + 0.5)) / 2 * s;
+      const cy = ((y1 + 0.5) + (y2 + 0.5)) / 2 * s;
+      spawnFloatAt(cx, cy, `+${points} ×${mult}`);
+    }
+
     /* ---- Movement ---- */
     async function move(dx,dy){
       if(!cur||paused||ended||moving) return;
@@ -502,12 +568,14 @@
       else if(dy>0){ drawBlock(cur); place(); }
       else{ drawBlock(cur); }
       moving=false;
+      updateRowHint();
     }
     function hardDrop(){
       if(!cur||paused||ended) return;
       clearBlock(cur);
       while(cur.y<H-1 && !collide({...cur,y:cur.y+1})) cur.y++;
       place();
+      updateRowHint();
     }
 
     async function place(){
@@ -517,9 +585,10 @@
       await checkWin();      // now only WORD_BONUS
       cur=nxt; nxt=createBlock();
       if(cur) drawBlock(cur);
+      updateRowHint();
     }
 
-    // ★ NEW: Row-multiplied scoring (+10 per pair, +50 both, times row multiplier)
+    // ★ Row-multiplied scoring (+10 per pair, +50 both, times row multiplier) + float badges
     async function matchAndDrop(){
       const toDel=new Set();
       let pairScoreTotal = 0;
@@ -549,9 +618,13 @@
               let pairPts = SCORING.PAIR_POINTS;          // +10
               if(sameLetter && sameColor) pairPts += SCORING.BOTH_BONUS; // +50 extra
 
-              pairScoreTotal += pairPts * mult;
+              const added = pairPts * mult;
+              pairScoreTotal += added;
 
-              toDel.add(`${x},${y}`); 
+              // spawn floating points at midpoint
+              spawnFloatForPair(x, y, nx, ny, added, mult);
+
+              toDel.add(`${x},${y}`);
               toDel.add(`${nx},${ny}`);
             }
           }
@@ -602,6 +675,8 @@
             const c=gridEl.querySelector(`.cell[data-x="${x+i}"][data-y="${y}"]`);
             if(c) c.style.transform='scale(1.05)';
           }
+          targetEl.classList.add('goal-glow');
+          setTimeout(()=>targetEl.classList.remove('goal-glow'), 1400);
           addScore(SCORING.WORD_BONUS);
           setTimeout(()=>end(true), 450);
           return;
@@ -613,12 +688,14 @@
     function start(){
       ended=false; over.style.display='none'; shareMenu.classList.add('hidden');
       setScore(0);
+      fxEl.innerHTML='';
       grid=Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
       cur=createBlock(); nxt=createBlock(); drawBlock(cur);
       paused=false; btnPause.textContent='POUSE';
       clearInterval(gInt);
       gInt=setInterval(()=>{ if(!paused && !ended) move(0,1); },1000);
+      updateRowHint();
     }
     function togglePause(){ if(ended) return; paused=!paused; btnPause.textContent = paused ? 'HERVAT' : 'POUSE'; }
     btnStart.addEventListener('click', ()=>{ if(!user && !guestGateBypassOnce){ showNRGate(); return; } guestGateBypassOnce=false; start(); });
@@ -815,6 +892,7 @@
 
       maybeEnableStickyShareFromStorage();
       startLiveLeaderboardFS();
+      updateRowHint();
     }
 
     /* ---- Init ---- */
