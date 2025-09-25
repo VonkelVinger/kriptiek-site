@@ -216,7 +216,7 @@
         </div>
 
         <!-- Start/Pause -->
-        <div class="controls mt-3 flex items-center justify-center gap-2">
+        <div class="controls mt-3 flex items-center justify-content-center gap-2">
           <button id="btnStart" class="btn">BEGIN</button>
           <button id="btnPause" class="btn gray">POUSE</button>
         </div>
@@ -365,6 +365,7 @@
     const gridEl     = document.getElementById('grid');
     const fxEl       = document.getElementById('fx');
     const over       = document.getElementById('over');
+    theShareEls: {};
     const winMsg     = document.getElementById('winMsg');
     const modalShareBtn = document.getElementById('modalShareBtn');
     const modalCloseBtn = document.getElementById('modalCloseBtn');
@@ -407,6 +408,18 @@
 
     const dateParam = qs.get('date');
     let currentDate = (/^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : todayKeySAST());
+
+    // --- Canonical URL normalization (after currentDate is known) ---
+    try {
+      const urlObj = new URL(window.location.href);
+      urlObj.searchParams.set('date', currentDate);
+      urlObj.hash = '';
+      const canonical = urlObj.pathname + '?' + urlObj.searchParams.toString();
+      const current = window.location.pathname + window.location.search + window.location.hash;
+      if (current !== canonical) {
+        history.replaceState(null, '', canonical);
+      }
+    } catch {}
 
     const shareKey = () => `slimstiekShare:${currentDate}`;
     function buildShareUrl(dateStr=currentDate){
@@ -459,7 +472,7 @@
       const wrap = gridEl.parentElement;
       const availCss = Math.min(320, Math.floor(wrap.clientWidth));
       const dpr = Math.max(1, window.devicePixelRatio || 1);
-      const toDp=v=>Math.round(v*dpr), toCss=v=>v/dpr, snap=v=>Math.floor(v/8)*8;
+      const toDp=v=>Math.round(v*dpr), toCss=v=>v/dpr, snap=v=>Math.floor(v/8)* 8;
 
       const availDp=toDp(availCss);
       const snappedDp=Math.max(toDp(240), snap(availDp));
@@ -553,7 +566,6 @@
     }
     function spawnFloatForPair(x1,y1,x2,y2, points, mult){
       const s = cellSizePx();
-      // midpoint between two cells (horiz/vert both OK)
       const cx = ((x1 + 0.5) + (x2 + 0.5)) / 2 * s;
       const cy = ((y1 + 0.5) + (y2 + 0.5)) / 2 * s;
       spawnFloatAt(cx, cy, `+${points} ×${mult}`);
@@ -581,21 +593,21 @@
     async function place(){
       if(!cur||cur.y<0) return;
       grid[cur.y][cur.x]={...cur}; drawBlock(cur);
-      await matchAndDrop();  // revised scoring inside
-      await checkWin();      // now only WORD_BONUS
+      await matchAndDrop();
+      await checkWin();
       cur=nxt; nxt=createBlock();
       if(cur) drawBlock(cur);
       updateRowHint();
     }
 
-    // ★ Row-multiplied scoring (+10 per pair, +50 both, times row multiplier) + float badges
+    // Row-multiplied scoring (+10 per pair, +50 both, times row multiplier) + float badges
     async function matchAndDrop(){
       const toDel=new Set();
       let pairScoreTotal = 0;
 
       const rowNumber = (y) => H - y; // bottom row = 1, top row = H
 
-      // count pairs using RIGHT and DOWN edges only (avoid double counting)
+      // count pairs using RIGHT and DOWN edges only
       for(let y=0;y<H;y++){
         for(let x=0;x<W;x++){
           const a=grid[y][x];
@@ -611,17 +623,15 @@
             const sameColor  = a.color===b.color;
 
             if(sameLetter || sameColor){
-              // Row multiplier uses the UPPER (smaller y) of the pair
               const upperY = Math.min(y, ny);
               const mult   = rowNumber(upperY);
 
-              let pairPts = SCORING.PAIR_POINTS;          // +10
-              if(sameLetter && sameColor) pairPts += SCORING.BOTH_BONUS; // +50 extra
+              let pairPts = SCORING.PAIR_POINTS;
+              if(sameLetter && sameColor) pairPts += SCORING.BOTH_BONUS;
 
               const added = pairPts * mult;
               pairScoreTotal += added;
 
-              // spawn floating points at midpoint
               spawnFloatForPair(x, y, nx, ny, added, mult);
 
               toDel.add(`${x},${y}`);
@@ -633,7 +643,6 @@
 
       if(!toDel.size) return;
 
-      // apply total score for this tick’s removals
       addScore(pairScoreTotal);
 
       // animate & remove
@@ -816,7 +825,7 @@
         snap.forEach(docSnap=>{
           const v = docSnap.data()||{};
           if(idx===0) bestText.textContent = String(v.score ?? '—');
-          const li=document.createElement('li');
+        const li=document.createElement('li');
           li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>: ${(v.score??0)} punte`;
           lbList.appendChild(li);
           idx++;
