@@ -70,7 +70,7 @@
       .letter-box { width: 35px; height: 35px; font-size: 1.2rem; }
       .crossword-grid { gap: 2px; }
       .logo-container { padding: 0.75rem; }
-      <span class="bg-letter { font-size: 0.9rem; }"></span>
+      .bg-letter { font-size: 0.9rem; } /* ← fixed stray <span> */
     }
   </style>
 </head>
@@ -160,7 +160,7 @@
     // Firebase (optional read)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import {
-      getFirestore, collection, getDocs, query, where, doc, getDoc
+      getFirestore, collection, getDocs, query, where
     } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -239,8 +239,7 @@
         });
       }
 
-      // B) Fallback: any daily_words with a Slimstiek word (admin uses this too)
-      //    We exclude TUTS and future dates.
+      // B) Fallback: any daily_words with a Slimstiek word (exclude TUTS & future)
       const dw = await getDocs(collection(db, "daily_words"));
       dw.forEach(docSnap => {
         const idDate = extractDateKey(docSnap) || docSnap.id; // daily_words id is YYYY-MM-DD
@@ -314,10 +313,14 @@
         const isFuture = dateStr > TODAY;
 
         if (isAvailable && !isFuture) {
+          const u = new URL('/slimstiek.html', location.origin);
+          u.searchParams.set('date', dateStr);
+
           const a = document.createElement("a");
-          a.href = `/slimstiek.html?date=${dateStr}`;
+          a.href = u.toString();
           a.textContent = day;
           a.className = BASE;
+          // a.rel = "nofollow"; // ← optional: enable if you prefer not to have bots crawl each day
 
           const isPlayed = devicePlayed(dateStr);
           const isToday = dateStr === TODAY;
