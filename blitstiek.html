@@ -819,6 +819,21 @@
     async function loadGame(){
       GAME_ID = await resolveGameId();
 
+      // --- Canonical URL normalization (after GAME_ID is known) ---
+      try {
+        if (GAME_ID) {
+          const urlObj = new URL(window.location.href);
+          urlObj.searchParams.set('gameId', GAME_ID);
+          urlObj.hash = '';
+          const canonicalPathAndQuery = urlObj.pathname + '?' + urlObj.searchParams.toString();
+          const current = window.location.pathname + window.location.search + window.location.hash;
+          if (current !== canonicalPathAndQuery) {
+            // keep same filename/path (prevents 404s), just normalize query/hash
+            history.replaceState(null, '', canonicalPathAndQuery);
+          }
+        }
+      } catch {}
+
       if(!GAME_ID){
         targetEl.innerHTML = `<span>—</span>`;
         drawGrid();
