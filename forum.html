@@ -20,6 +20,9 @@
       font-size: 1.8rem; font-weight: bold; border: 2px solid #1f2937; border-radius: 0.375rem; text-transform: uppercase; box-shadow: inset 0 0 5px rgba(0,0,0,.2); }
     .flipped-k { transform: scaleX(-1); }
     @media (max-width: 640px) { .letter-box { width: 38px; height: 38px; font-size: 1.2rem; } .crossword-grid { gap: 2px; } .logo-container { padding: 0.5rem; } }
+    .tile { border-radius: .75rem; box-shadow: 0 6px 18px rgba(0,0,0,.08); }
+    .btn { transition: .15s ease; }
+    .btn:hover { transform: translateY(-1px); }
   </style>
 </head>
 <body class="relative">
@@ -38,6 +41,51 @@
   </header>
 
   <main class="max-w-xl mx-auto p-6 relative z-10">
+
+    <!-- 🔝 PINNED: Ander Afrikaanse speletjies (tight list, easy to edit) -->
+    <section class="mb-6 p-4 bg-white border tile">
+      <h2 class="text-lg font-semibold mb-2">🔗 Ander Afrikaanse speletjies</h2>
+      <ul class="space-y-1 text-sm text-gray-800">
+        <li>🟠 <a class="underline" href="/dilemma.html">Dilemma</a></li>
+        <li>🟢 <a class="underline" href="/blitstiek.html">Blitstiek</a></li>
+        <li>🧠 <a class="underline" href="/slimstiek.html">Slimstiek</a></li>
+        <li>🌱 Obsessie <span class="text-gray-500">(voorheen Wortel)</span> — <a id="link-obsessie" class="underline" href="#" rel="nofollow">voeg skakel by</a></li>
+        <li>🇬🇧 Wordle — <a id="link-wordle" class="underline" href="https://www.nytimes.com/games/wordle/index.html" rel="nofollow">nyt wordle</a></li>
+        <li>🕊️ Watse — <a id="link-watse" class="underline" href="#" rel="nofollow">voeg skakel by</a></li>
+        <li>🪶 Kwartel — <a id="link-kwartel" class="underline" href="#" rel="nofollow">voeg skakel by</a></li>
+      </ul>
+      <p class="mt-3 text-xs text-gray-500">👉 Laat weet ons van ander raaisels of speletjies wat jy op dié lys sou wou sien.</p>
+    </section>
+
+    <!-- 🧾 Resultate-sjabloon (compact; share/copy; insert into composer) -->
+    <section class="mb-6 p-4 bg-white border tile">
+      <h2 class="text-lg font-semibold mb-2">🧾 Resultate-sjabloon</h2>
+      <p class="text-sm text-gray-600 mb-2">Hou dit netjies en vergelykbaar. Vul jou waardes in, deel dit, of plaas dit hier as ’n nuwe plasing.</p>
+
+      <textarea id="scoreTemplate" rows="7" class="w-full p-2 border rounded mb-2 text-sm">
+📊 My resultate vandag:
+
+🟠 Dilemma: 4/6
+🟢 Blitstiek: 3:21
+🧠 Slimstiek: 7420
+🌱 Obsessie: 3
+🇬🇧 Wordle: 3
+🕊️ Watse: X
+🪶 Kwartel: X
+
+👉 Laat weet ons van ander raaisels of speletjies wat jy op dié lys sou wou sien.
+— kriptiek.com
+      </textarea>
+
+      <div class="flex gap-2">
+        <button id="shareTemplateBtn" class="btn bg-yellow-400 hover:bg-yellow-500 text-black px-3 py-2 rounded">DEEL</button>
+        <button id="copyTemplateBtn" class="btn bg-gray-800 hover:bg-black text-white px-3 py-2 rounded">Kopieer</button>
+        <button id="insertTemplateBtn" class="btn bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded">Gebruik as nuwe plasing</button>
+      </div>
+      <div id="tplMsg" class="text-xs text-gray-500 mt-2"></div>
+    </section>
+
+    <!-- Composer -->
     <div id="new-post" class="mb-6">
       <h2 class="text-lg font-semibold mb-2">Jou nuwe plasing</h2>
       <input type="text" id="postTitle" maxlength="80" placeholder="Titel" class="w-full p-2 border rounded mb-2">
@@ -68,7 +116,6 @@
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
-
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
@@ -95,7 +142,7 @@
     onAuthStateChanged(auth, (u) => {
       const wasNull = currentUser === null;
       currentUser = u;
-      if (wasNull) loadPosts(true); // refresh when auth resolves
+      if (wasNull) loadPosts(true);
       document.getElementById("new-post").style.display =
         (localStorage.getItem("userRegistered") === "true" && !!currentUser) ? "block" : "none";
     });
@@ -148,7 +195,7 @@
 
       await addDoc(postsRef, {
         title, content, userName,
-        authorId: currentUser.uid,         // required by rules
+        authorId: currentUser.uid,
         timestamp: serverTimestamp()
       });
 
@@ -166,10 +213,7 @@
       try {
         const repliesRef = collection(db, "forumPosts", postId, "replies");
         const rs = await getDocs(query(repliesRef, orderBy("createdAt", "asc")));
-        if (rs.empty) {
-          repliesBox.innerHTML = "";
-          return;
-        }
+        if (rs.empty) { repliesBox.innerHTML = ""; return; }
         const items = [];
         rs.forEach(r => {
           const rr = r.data();
@@ -180,7 +224,7 @@
           );
         });
         repliesBox.innerHTML = items.join("");
-      } catch (e) {
+      } catch {
         repliesBox.innerHTML = `<div class="text-red-500 text-xs">Kon nie antwoorde laai nie.</div>`;
       }
     }
@@ -194,7 +238,6 @@
         const agg = await getCountFromServer(query(likesRef));
         countEl.textContent = agg.data().count;
       } catch {
-        // Fallback: non-aggregation count
         const likesRef = collection(db, "forumPosts", postId, "likes");
         const snap = await getDocs(likesRef);
         countEl.textContent = snap.size;
@@ -252,7 +295,7 @@
         else if (typeof post.timestamp === "string") ts = new Date(post.timestamp);
 
         const canDelete = (post.authorId && currentUser && post.authorId === currentUser.uid)
-                          || (!post.authorId && post.userName === userName); // fallback for legacy posts
+                          || (!post.authorId && post.userName === userName);
 
         div.innerHTML = `
           <div class="flex items-center justify-between mb-2">
@@ -280,7 +323,6 @@
         `;
         container.appendChild(div);
 
-        // load replies and likes for this post
         loadReplies(docSnap.id);
         refreshLikeUI(docSnap.id);
       });
@@ -302,39 +344,26 @@
           const input = document.querySelector(`#reply-${id} .reply-input`);
           const content = (input.value || "").trim();
           if (!content) return;
-          if (!currentUser) {
-            alert("Jy moet aangemeld wees om te antwoord.");
-            return;
-          }
+          if (!currentUser) { alert("Jy moet aangemeld wees om te antwoord."); return; }
 
-          // 1) Create reply in subcollection
           await addDoc(collection(db, "forumPosts", id, "replies"), {
-            authorId: currentUser.uid,      // required by rules
+            authorId: currentUser.uid,
             userName,
             content,
             createdAt: serverTimestamp()
           });
 
-          // 2) Optional: update replyCount on parent (only that field is allowed by rules)
-          try {
-            await updateDoc(doc(db, "forumPosts", id), { replyCount: (post.replyCount || 0) + 1 });
-          } catch (_) {}
-
           input.value = "";
-          loadReplies(id); // refresh replies for this post only
+          loadReplies(id);
         };
       });
 
       document.querySelectorAll(".like-btn").forEach(btn => {
         btn.onclick = async () => {
           const id = btn.dataset.id;
-          if (!currentUser) {
-            alert("Meld asseblief aan om te stem.");
-            return;
-          }
+          if (!currentUser) { alert("Meld asseblief aan om te stem."); return; }
           try {
             const likeRef = doc(db, "forumPosts", id, "likes", currentUser.uid);
-            // Rules enforce one doc per user; if it exists, this throws
             await setDoc(likeRef, { createdAt: serverTimestamp(), userName });
           } finally {
             await refreshLikeUI(id);
@@ -352,10 +381,61 @@
       });
     }
 
+    // --- Template helpers ---
+    const tpl = document.getElementById('scoreTemplate');
+    const tplMsg = document.getElementById('tplMsg');
+    const siteUrl = 'https://www.kriptiek.com';
+
+    function cleanedTemplate() {
+      // ensure a trailing site link for attribution
+      let t = (tpl.value || '').trim();
+      if (!t.includes('kriptiek.com')) t += `\n— kriptiek.com`;
+      return t;
+    }
+
+    async function copyToClipboard(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        tplMsg.textContent = 'Gekopieer na knipbord.';
+      } catch {
+        tplMsg.textContent = 'Kon nie kopieer nie. Selekteer en kopieer handmatig.';
+      }
+      setTimeout(()=> tplMsg.textContent = '', 2500);
+    }
+
+    document.getElementById('copyTemplateBtn').addEventListener('click', () => {
+      copyToClipboard(cleanedTemplate());
+    });
+
+    document.getElementById('shareTemplateBtn').addEventListener('click', async () => {
+      const text = cleanedTemplate();
+      if (navigator.share) {
+        try {
+          await navigator.share({ text });
+          tplMsg.textContent = 'Deel-venster geopen.';
+        } catch {
+          tplMsg.textContent = 'Deel gekanselleer.';
+        }
+      } else {
+        copyToClipboard(text);
+      }
+      setTimeout(()=> tplMsg.textContent = '', 2500);
+    });
+
+    document.getElementById('insertTemplateBtn').addEventListener('click', () => {
+      const contentEl = document.getElementById('postContent');
+      const titleEl = document.getElementById('postTitle');
+      if (!titleEl.value.trim()) titleEl.value = 'Vandag se resultate';
+      contentEl.value = cleanedTemplate();
+      document.getElementById('charCount').textContent = contentEl.value.length;
+      tplMsg.textContent = 'Sjabloon by die plasing gevoeg.';
+      setTimeout(()=> tplMsg.textContent = '', 2500);
+    });
+
+    // --- Composer & search wiring ---
     document.getElementById("postContent").addEventListener("input", e => {
       document.getElementById("charCount").textContent = e.target.value.length;
     });
-
     document.getElementById("submitBtn").addEventListener("click", submitPost);
     document.getElementById("loadMoreBtn").addEventListener("click", () => loadPosts());
     document.getElementById("searchInput").addEventListener("input", () => loadPosts(true));
@@ -364,6 +444,7 @@
   </script>
 
   <script>
+    // Background crossword
     const backgroundCrossword = document.getElementById('backgroundCrossword');
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     function getRandomLetter(){ return letters[Math.floor(Math.random()*letters.length)]; }
