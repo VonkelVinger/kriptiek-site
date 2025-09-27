@@ -5,26 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DILEMMA – Kriptiek</title>
 
-  <!-- Canonical & Open Graph / Twitter -->
-  <link rel="canonical" href="https://www.kriptiek.com/dilemmagame.html" />
+  <!-- Canonical & Open Graph / Twitter (Dilemma-specific) -->
+  <link rel="canonical" href="https://www.kriptiek.com/dilemma.html" />
 
   <meta property="og:site_name" content="Kriptiek" />
   <meta property="og:title" content="DILEMMA – Kriptiek" />
   <meta property="og:description" content="Kom speel vandag se DILEMMA op Kriptiek." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://www.kriptiek.com/dilemmagame.html" />
-  <!-- Open Graph -->
-<meta property="og:image" content="https://www.kriptiek.com/assets/DILEMMA_OG_1200x630.png" />
-<meta property="og:image:alt" content="DILEMMA knoppie" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
+  <meta property="og:url" content="https://www.kriptiek.com/dilemma.html" />
+  <meta property="og:image" content="https://www.kriptiek.com/assets/DILEMMA_12SEP.png" />
+  <meta property="og:image:alt" content="DILEMMA knoppie" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
 
-<!-- Twitter -->
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="DILEMMA – Kriptiek" />
-<meta name="twitter:description" content="Kom speel vandag se DILEMMA op Kriptiek." />
-<meta name="twitter:image" content="https://www.kriptiek.com/assets/DILEMMA_OG_1200x630.png" />
-
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="DILEMMA – Kriptiek" />
+  <meta name="twitter:description" content="Kom speel vandag se DILEMMA op Kriptiek." />
+  <meta name="twitter:image" content="https://www.kriptiek.com/assets/DILEMMA_12SEP.png" />
 
   <!-- Tailwind + font -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -61,7 +58,7 @@
     .share-menu-local{
       background:#fff; border:1px solid #e5e7eb; box-shadow:0 8px 24px rgba(0,0,0,.12);
       border-radius:.5rem; width:240px; padding:.5rem; z-index:3000;
-      line-height:1.25;
+      line-height:1.25; /* normal leading inside the menu */
     }
     .share-menu-local button{
       width:100%; text-align:left; padding:.5rem .75rem; border-radius:.375rem; font-weight:600;
@@ -73,16 +70,17 @@
     .action-grid{
       display:grid;
       grid-template-columns:repeat(3,1fr);
-      gap:.5rem;
+      gap:.5rem;                         /* 8px gap like Blitstiek */
       justify-items:center;
       align-items:center;
-      max-width:376px;
+      max-width:376px;                   /* 3×120px tiles + 2×8px gaps */
       margin:0 auto;
     }
     .action-grid.two{
       grid-template-columns:repeat(2,1fr);
-      max-width:248px;
+      max-width:248px;                   /* 2×120px + 1×8px */
     }
+    /* Scope zero line-height to the TILE controls only (not dropdown menus) */
     .action-grid > a, .action-grid > button{
       display:grid;
       place-items:center;
@@ -92,7 +90,7 @@
       background:transparent;
       border:0;
       padding:0;
-      line-height:0;
+      line-height:0;                     /* prevents extra space inside PNG tiles */
       cursor:pointer;
     }
     .btn-img{
@@ -280,21 +278,8 @@ function todayZA() {
 const gameId = params.get("gameId") || `Game${todayZA()}`;
 const doneKey = `dilemma-${gameId}-done`;
 const progressKey = `dilemma-${gameId}-progress`;
+const gameUrl = window.location.href;
 
-/* ---- Canonical share URL (preserve current filename) ---- */
-const SITE_ORIGIN = "https://www.kriptiek.com";
-const urlObj = new URL(window.location.href);
-// Ensure a stable gameId param; preserve current filename/path.
-urlObj.searchParams.set("gameId", gameId);
-urlObj.hash = "";
-const canonicalGameUrl = `${SITE_ORIGIN}${urlObj.pathname}?${urlObj.searchParams.toString()}`;
-try {
-  if (window.location.href !== canonicalGameUrl) {
-    history.replaceState(null, "", canonicalGameUrl);
-  }
-} catch (_) {}
-
-/* util for old ID format if ever needed */
 function altIdIfOldFormat(id) {
   const m = id.match(/^Game(\d{4}-\d{2}-\d{2})$/);
   return m ? m[1] : null;
@@ -680,12 +665,12 @@ async function loadLeaderboard() {
 let lastSummary = null;
 
 function shareTextFromSummary(summary) {
-  if (!summary) return `Kom speel vandag se DILEMMA op Kriptiek: ${canonicalGameUrl}`;
+  if (!summary) return `Kom speel vandag se DILEMMA op Kriptiek: ${gameUrl}`;
   if (summary.didWin) {
     const woord = summary.guesses === 1 ? 'raaiskoot' : 'raaiskote';
-    return `Ek het hierdie DILEMMA in ${summary.guesses} ${woord} opgelos. Probeer self by ${canonicalGameUrl}`;
+    return `Ek het hierdie DILEMMA in ${summary.guesses} ${woord} opgelos. Probeer self by ${gameUrl}`;
   }
-  return `Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${canonicalGameUrl}`;
+  return `Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${gameUrl}`;
 }
 function openWhatsApp(text){
   const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
