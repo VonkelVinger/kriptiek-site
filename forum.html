@@ -4,6 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kriptiek Gesels</title>
+
+  <!-- Canonical & Open Graph / Twitter (purple GESELS tile preview) -->
+  <link rel="canonical" href="https://www.kriptiek.com/forum.html" />
+  <meta property="og:site_name" content="Kriptiek" />
+  <meta property="og:title" content="GESELS SAAM – Kriptiek" />
+  <meta property="og:description" content="Deel jou resultate en gesels saam op Kriptiek." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.kriptiek.com/forum.html" />
+  <meta property="og:image" content="https://www.kriptiek.com/assets/K_GESELS_12SEP.png" />
+  <meta property="og:image:alt" content="GESELS SAAM" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://www.kriptiek.com/assets/K_GESELS_12SEP.png" />
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
   <style>
@@ -25,7 +38,7 @@
     .btn:hover { transform: translateY(-1px); }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 
-    /* 🔽 Share dropdown */
+    /* Share dropdown */
     .share-wrap { position: relative; display: inline-block; }
     .share-menu { position: absolute; left: 0; top: 100%; margin-top: .5rem; width: 220px; background: #fff; border: 1px solid #e5e7eb;
       border-radius: .75rem; box-shadow: 0 8px 18px rgba(0,0,0,.12); overflow: hidden; z-index: 30; }
@@ -475,7 +488,7 @@
         };
       });
 
-      // 🔽 Share button + menu actions
+      // Share button + menu actions
       document.querySelectorAll(".share-post-btn").forEach(btn => {
         btn.onclick = () => {
           closeAllShareMenus();
@@ -505,10 +518,11 @@
       document.querySelectorAll(".share-system").forEach(btn => {
         btn.onclick = async (e) => {
           const text = decodeURIComponent(e.currentTarget.dataset.text || "");
+          const url = 'https://www.kriptiek.com/forum.html';
           if (navigator.share) {
-            try { await navigator.share({ text }); } catch {}
+            try { await navigator.share({ text, url }); } catch {}
           } else {
-            try { await navigator.clipboard.writeText(text); alert('Gekopieer na knipbord.'); }
+            try { await navigator.clipboard.writeText(text + "\n\n" + url); alert('Gekopieer na knipbord.'); }
             catch { alert('Kon nie kopieer nie.'); }
           }
           closeAllShareMenus();
