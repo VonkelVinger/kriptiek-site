@@ -4,6 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kriptiek Gesels</title>
+
+  <!-- Canonical & Open Graph / Twitter (purple GESELS tile) -->
+  <link rel="canonical" href="https://www.kriptiek.com/forum.html" />
+  <meta property="og:site_name" content="Kriptiek" />
+  <meta property="og:title" content="GESELS SAAM – Kriptiek" />
+  <meta property="og:description" content="Deel jou resultate en gesels saam op Kriptiek." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.kriptiek.com/forum.html" />
+  <meta property="og:image" content="https://www.kriptiek.com/assets/K_GESELS_12SEP.png" />
+  <meta property="og:image:alt" content="GESELS SAAM" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://www.kriptiek.com/assets/K_GESELS_12SEP.png" />
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
   <style>
@@ -74,7 +87,7 @@
     import {
       getFirestore, collection, addDoc, getDocs, serverTimestamp,
       query, orderBy, updateDoc, doc, deleteDoc, limit, startAfter,
-      getDoc, setDoc, getCountFromServer
+      getDoc, setDoc, getCountFromServer, increment
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -194,7 +207,6 @@
         const agg = await getCountFromServer(query(likesRef));
         countEl.textContent = agg.data().count;
       } catch {
-        // Fallback: non-aggregation count
         const likesRef = collection(db, "forumPosts", postId, "likes");
         const snap = await getDocs(likesRef);
         countEl.textContent = snap.size;
@@ -252,7 +264,7 @@
         else if (typeof post.timestamp === "string") ts = new Date(post.timestamp);
 
         const canDelete = (post.authorId && currentUser && post.authorId === currentUser.uid)
-                          || (!post.authorId && post.userName === userName); // fallback for legacy posts
+                          || (!post.authorId && post.userName === userName);
 
         div.innerHTML = `
           <div class="flex items-center justify-between mb-2">
@@ -280,7 +292,6 @@
         `;
         container.appendChild(div);
 
-        // load replies and likes for this post
         loadReplies(docSnap.id);
         refreshLikeUI(docSnap.id);
       });
@@ -315,9 +326,9 @@
             createdAt: serverTimestamp()
           });
 
-          // 2) Optional: update replyCount on parent (only that field is allowed by rules)
+          // 2) Atomically increment replyCount on parent
           try {
-            await updateDoc(doc(db, "forumPosts", id), { replyCount: (post.replyCount || 0) + 1 });
+            await updateDoc(doc(db, "forumPosts", id), { replyCount: increment(1) });
           } catch (_) {}
 
           input.value = "";
@@ -334,7 +345,6 @@
           }
           try {
             const likeRef = doc(db, "forumPosts", id, "likes", currentUser.uid);
-            // Rules enforce one doc per user; if it exists, this throws
             await setDoc(likeRef, { createdAt: serverTimestamp(), userName });
           } finally {
             await refreshLikeUI(id);
