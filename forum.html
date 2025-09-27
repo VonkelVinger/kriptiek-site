@@ -24,6 +24,15 @@
     .btn { transition: .15s ease; }
     .btn:hover { transform: translateY(-1px); }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
+    /* 🔽 Share dropdown */
+    .share-wrap { position: relative; display: inline-block; }
+    .share-menu { position: absolute; left: 0; top: 100%; margin-top: .5rem; width: 220px; background: #fff; border: 1px solid #e5e7eb;
+      border-radius: .75rem; box-shadow: 0 8px 18px rgba(0,0,0,.12); overflow: hidden; z-index: 30; }
+    .share-menu.hidden { display: none; }
+    .share-head { background: #facc15; color: #1f2937; font-weight: 700; font-size: .65rem; letter-spacing: .02em; padding: .35rem .5rem; }
+    .share-item { display: flex; align-items: center; gap:.5rem; width: 100%; text-align: left; padding: .6rem .7rem; font-size: .95rem; }
+    .share-item:hover { background:#f9fafb; }
   </style>
 </head>
 <body class="relative">
@@ -122,6 +131,8 @@
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
+
+  <!-- ============================== JS ============================== -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
@@ -288,16 +299,41 @@
       return `${header}\n\n${title}\n\n${content}\n\n${link}`;
     }
 
-    async function sharePost(title, content) {
+    // Build the dropdown DOM for a given post
+    function buildShareDropdown(docId, title, content) {
       const text = sharePostPayload(title, content);
-      if (navigator.share) {
-        try { await navigator.share({ text }); }
-        catch { /* user cancelled */ }
-      } else {
-        try { await navigator.clipboard.writeText(text); alert('Gekopieer na knipbord.'); }
-        catch { alert('Kon nie kopieer nie. Selekteer en kopieer handmatig.'); }
-      }
+      const encoded = encodeURIComponent(text);
+
+      return `
+        <div class="share-wrap">
+          <button class="share-post-btn" data-id="${docId}" title="Deel">
+            <img src="/assets/SHARE_12SEP.png" alt="DEEL" class="h-10 w-auto select-none" />
+          </button>
+          <div class="share-menu hidden" id="share-menu-${docId}">
+            <div class="share-head">DEEL VIA</div>
+            <button class="share-item share-wa" data-id="${docId}" data-text="${encoded}">
+              <span>📱 WhatsApp</span>
+            </button>
+            <button class="share-item share-copy" data-id="${docId}" data-text="${encoded}">
+              <span>📋 Kopieer skakel</span>
+            </button>
+            <button class="share-item share-system" data-id="${docId}" data-text="${encoded}">
+              <span>🖥️ Stelsel-deel</span>
+            </button>
+          </div>
+        </div>`;
     }
+
+    // Toggle helpers (close on outside click/scroll/resize)
+    function closeAllShareMenus() {
+      document.querySelectorAll('.share-menu').forEach(m => m.classList.add('hidden'));
+    }
+    document.addEventListener('click', (e) => {
+      const inShare = e.target.closest('.share-wrap');
+      if (!inShare) closeAllShareMenus();
+    });
+    window.addEventListener('scroll', closeAllShareMenus, { passive: true });
+    window.addEventListener('resize', closeAllShareMenus);
 
     async function loadPosts(reset = false) {
       const container = document.getElementById("forumPosts");
@@ -366,9 +402,7 @@
 
           ${templated ? `
             <div class="mt-2">
-              <button class="share-post-btn" data-id="${docSnap.id}" title="Deel">
-                <img src="/assets/SHARE_12SEP.png" alt="DEEL" class="h-10 w-auto select-none" />
-              </button>
+              ${buildShareDropdown(docSnap.id, post.title || '', post.content || '')}
             </div>
           ` : ``}
 
@@ -383,13 +417,6 @@
         // Wire up per-post actions
         loadReplies(docSnap.id);
         refreshLikeUI(docSnap.id);
-
-        const shareBtn = div.querySelector('.share-post-btn');
-        if (shareBtn) {
-          shareBtn.addEventListener('click', () => {
-            sharePost(post.title || '', post.content || '');
-          });
-        }
       });
 
       // Clear highlight once visible at least once
@@ -445,6 +472,46 @@
             await deleteDoc(doc(db, "forumPosts", btn.dataset.id));
             loadPosts(true);
           }
+        };
+      });
+
+      // 🔽 Share button + menu actions
+      document.querySelectorAll(".share-post-btn").forEach(btn => {
+        btn.onclick = () => {
+          closeAllShareMenus();
+          const menu = document.getElementById(`share-menu-${btn.dataset.id}`);
+          if (menu) menu.classList.toggle('hidden');
+        };
+      });
+
+      document.querySelectorAll(".share-wa").forEach(btn => {
+        btn.onclick = (e) => {
+          const text = decodeURIComponent(e.currentTarget.dataset.text || "");
+          const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+          window.open(url, '_blank');
+          closeAllShareMenus();
+        };
+      });
+
+      document.querySelectorAll(".share-copy").forEach(btn => {
+        btn.onclick = async (e) => {
+          const text = decodeURIComponent(e.currentTarget.dataset.text || "");
+          try { await navigator.clipboard.writeText(text); alert('Gekopieer na knipbord.'); }
+          catch { alert('Kon nie kopieer nie. Selekteer en kopieer handmatig.'); }
+          closeAllShareMenus();
+        };
+      });
+
+      document.querySelectorAll(".share-system").forEach(btn => {
+        btn.onclick = async (e) => {
+          const text = decodeURIComponent(e.currentTarget.dataset.text || "");
+          if (navigator.share) {
+            try { await navigator.share({ text }); } catch {}
+          } else {
+            try { await navigator.clipboard.writeText(text); alert('Gekopieer na knipbord.'); }
+            catch { alert('Kon nie kopieer nie.'); }
+          }
+          closeAllShareMenus();
         };
       });
     }
