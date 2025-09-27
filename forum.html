@@ -20,10 +20,6 @@
       font-size: 1.8rem; font-weight: bold; border: 2px solid #1f2937; border-radius: 0.375rem; text-transform: uppercase; box-shadow: inset 0 0 5px rgba(0,0,0,.2); }
     .flipped-k { transform: scaleX(-1); }
     @media (max-width: 640px) { .letter-box { width: 38px; height: 38px; font-size: 1.2rem; } .crossword-grid { gap: 2px; } .logo-container { padding: 0.5rem; } }
-    .tile { border-radius: .75rem; box-shadow: 0 6px 18px rgba(0,0,0,.08); }
-    .btn { transition: .15s ease; }
-    .btn:hover { transform: translateY(-1px); }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
   </style>
 </head>
 <body class="relative">
@@ -42,56 +38,6 @@
   </header>
 
   <main class="max-w-xl mx-auto p-6 relative z-10">
-
-    <!-- 🔝 Nuttige skakels -->
-    <section class="mb-6 p-4 bg-white border tile">
-      <h2 class="text-lg font-semibold mb-2">🔗 Nuttige skakels</h2>
-      <ul class="space-y-1 text-sm text-gray-800">
-        <li>🧩 <a class="underline" href="/index.html">Kriptiek</a></li>
-        <li>🌱 <a class="underline" href="https://obsessie.wrintiewaar.co.za/" rel="nofollow">Obsessie</a> <span class="text-gray-500">(voorheen Wortel)</span></li>
-        <li>🔠 <a class="underline" href="https://www.nytimes.com/games/wordle/index.html" rel="nofollow">Wordle</a></li>
-        <li>🕊️ <a class="underline" href="https://klyntji.com/watse" rel="nofollow">Watse</a></li>
-        <li>🪶 <a class="underline" href="https://www.kwartel.io/#/" rel="nofollow">Kwartel</a></li>
-      </ul>
-      <p class="mt-3 text-sm">
-        <a class="underline text-gray-800" href="/contact.html">👉 Laat weet ons van ander raaisels of speletjies wat jy op dié lys sou wou sien.</a>
-      </p>
-    </section>
-
-    <!-- 🧾 Deel-blok -->
-    <section class="mb-6 p-4 bg-white border tile">
-      <h2 class="text-lg font-semibold mb-1">🧾 Deel alles op een plek</h2>
-      <p id="tplIntro" class="text-sm text-gray-700 mb-3"></p>
-
-      <textarea id="scoreTemplate" rows="8" class="w-full p-2 border rounded mb-2 text-sm mono" placeholder="📊 My resultate vandag:
-
-🟠 Dilemma: —
-🟢 Blitstiek: —
-🧠 Slimstiek: —
-🌱 Obsessie: —
-🇬🇧 Wordle: —
-🕊️ Watse: —
-🪶 Kwartel: —
-
-— kriptiek.com"></textarea>
-
-      <div class="flex gap-2">
-        <button id="copyTemplateBtn" class="btn bg-gray-800 hover:bg-black text-white px-3 py-2 rounded">Kopieer hierdie leë vorm</button>
-      </div>
-      <div id="tplMsg" class="text-xs text-gray-500 mt-2"></div>
-
-      <div class="mt-4 text-xs text-gray-500">
-        <ol class="list-decimal pl-5 space-y-1">
-          <li>Kliek op “Kopieer” om die leë vorm op jou knipbord te plaas.</li>
-          <li>Plak die leë vorm dan met Ctrl-V in die boodskapveld van ’n nuwe plasing.</li>
-          <li>Vul jou resultate in waar toepaslik, skryf ’n titel boaan en kliek <strong>STUUR</strong>.</li>
-          <li>Los die vorm leeg waar jy niks wil deel nie. (En wees gereed om die volle resultate van enige afsonderlike raaisel of speletjie agterna apart te plaas as iemand dalk twyfel oor jou eerlikheid!)</li>
-          <li>Kliek op <strong>DEEL</strong> (onder jou nuwe plasing) om die volle geplaaste boodskap met al jou resultate op jou knipbord te sit sodat jy dit op ander forums ook kan gaan plak as jy wil.</li>
-        </ol>
-      </div>
-    </section>
-
-    <!-- Composer -->
     <div id="new-post" class="mb-6">
       <h2 class="text-lg font-semibold mb-2">Jou nuwe plasing</h2>
       <input type="text" id="postTitle" maxlength="80" placeholder="Titel" class="w-full p-2 border rounded mb-2">
@@ -122,6 +68,7 @@
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
@@ -148,7 +95,7 @@
     onAuthStateChanged(auth, (u) => {
       const wasNull = currentUser === null;
       currentUser = u;
-      if (wasNull) loadPosts(true);
+      if (wasNull) loadPosts(true); // refresh when auth resolves
       document.getElementById("new-post").style.display =
         (localStorage.getItem("userRegistered") === "true" && !!currentUser) ? "block" : "none";
     });
@@ -184,30 +131,6 @@
                  .replace(/\n/g, "<br>");
     }
 
-    // ---------- Template helpers ----------
-    const tplArea = document.getElementById('scoreTemplate');
-    const tplMsg = document.getElementById('tplMsg');
-    const tplIntro = document.getElementById('tplIntro');
-
-    // Dynamic date in instructions
-    const todayStr = new Date().toLocaleDateString('af-ZA', { day: 'numeric', month: 'long', year: 'numeric' });
-    tplIntro.textContent =
-      `Gebruik hierdie vorm om al jou resultate vir ${todayStr} in een maklik leesbare formaat te plaas en dan te deel. Só maak jy:`;
-
-    async function copyToClipboard(text) {
-      try { await navigator.clipboard.writeText(text); tplMsg.textContent = 'Gekopieer na knipbord.'; }
-      catch { tplMsg.textContent = 'Kon nie kopieer nie. Selekteer en kopieer handmatig.'; }
-      setTimeout(()=> tplMsg.textContent = '', 2500);
-    }
-
-    document.getElementById('copyTemplateBtn').addEventListener('click', () => {
-      const text = (tplArea.value || tplArea.placeholder || '').trim();
-      copyToClipboard(text);
-      // mark that user intends a template post (for showing SHARE after submit)
-      sessionStorage.setItem('intendTemplatePost', '1');
-    });
-
-    // ---------- Composer + posting ----------
     async function submitPost() {
       const title = document.getElementById('postTitle').value.trim();
       const content = document.getElementById('postContent').value.trim();
@@ -223,17 +146,11 @@
       }
       msg.textContent = '';
 
-      const docRef = await addDoc(postsRef, {
+      await addDoc(postsRef, {
         title, content, userName,
-        authorId: currentUser.uid,
+        authorId: currentUser.uid,         // required by rules
         timestamp: serverTimestamp()
       });
-
-      // If user used the template flow, remember this post ID for SHARE tile
-      if (sessionStorage.getItem('intendTemplatePost') === '1') {
-        localStorage.setItem('lastTemplatePostId', docRef.id);
-        sessionStorage.removeItem('intendTemplatePost');
-      }
 
       document.getElementById('postTitle').value = '';
       document.getElementById('postContent').value = '';
@@ -245,21 +162,44 @@
     async function loadReplies(postId) {
       const repliesBox = document.getElementById(`replies-${postId}`);
       if (!repliesBox) return;
-      repliesBox.innerHTML = ``; // replies optional for MVP
+      repliesBox.innerHTML = `<div class="text-gray-400 text-xs">Laai antwoorde…</div>`;
+      try {
+        const repliesRef = collection(db, "forumPosts", postId, "replies");
+        const rs = await getDocs(query(repliesRef, orderBy("createdAt", "asc")));
+        if (rs.empty) {
+          repliesBox.innerHTML = "";
+          return;
+        }
+        const items = [];
+        rs.forEach(r => {
+          const rr = r.data();
+          items.push(
+            `<div class="border-l-4 border-blue-300 pl-2">
+               <span class="font-semibold">${(rr.userName || "Anoniem")}</span>: ${applyFormatting(rr.content || "")}
+             </div>`
+          );
+        });
+        repliesBox.innerHTML = items.join("");
+      } catch (e) {
+        repliesBox.innerHTML = `<div class="text-red-500 text-xs">Kon nie antwoorde laai nie.</div>`;
+      }
     }
 
     async function refreshLikeUI(postId) {
       const countEl = document.getElementById(`like-count-${postId}`);
       const btn = document.querySelector(`.like-btn[data-id="${postId}"]`);
+
       try {
         const likesRef = collection(db, "forumPosts", postId, "likes");
         const agg = await getCountFromServer(query(likesRef));
         countEl.textContent = agg.data().count;
       } catch {
+        // Fallback: non-aggregation count
         const likesRef = collection(db, "forumPosts", postId, "likes");
         const snap = await getDocs(likesRef);
         countEl.textContent = snap.size;
       }
+
       if (currentUser) {
         const likeRef = doc(db, "forumPosts", postId, "likes", currentUser.uid);
         const likeDoc = await getDoc(likeRef);
@@ -270,32 +210,6 @@
         btn.title = already ? "Jy het reeds gestem" : "Stem vir hierdie plasing";
       } else {
         btn.title = "Meld aan om te stem";
-      }
-    }
-
-    function isTemplatedText(text) {
-      if (!text) return false;
-      const t = text.toLowerCase();
-      const hasHeader = t.includes('📊') || t.includes('my resultate');
-      const tokens = ['dilemma:', 'blitstiek:', 'slimstiek:', 'obsessie:', 'wordle:', 'watse:', 'kwartel:'];
-      const matches = tokens.reduce((n, k) => n + (t.includes(k) ? 1 : 0), 0);
-      return hasHeader && matches >= 2; // at least two game lines
-    }
-
-    function sharePostPayload(title, content) {
-      const header = 'Só het ek vandag gevaar';
-      const link = 'https://www.kriptiek.com/forum.html';
-      return `${header}\n\n${title}\n\n${content}\n\n${link}`;
-    }
-
-    async function sharePost(title, content) {
-      const text = sharePostPayload(title, content);
-      if (navigator.share) {
-        try { await navigator.share({ text }); }
-        catch { /* user cancelled */ }
-      } else {
-        try { await navigator.clipboard.writeText(text); alert('Gekopieer na knipbord.'); }
-        catch { alert('Kon nie kopieer nie. Selekteer en kopieer handmatig.'); }
       }
     }
 
@@ -323,8 +237,6 @@
       lastVisible = snap.docs[snap.docs.length - 1];
       loadMoreBtn.classList.remove("hidden");
 
-      const recentTemplateId = localStorage.getItem('lastTemplatePostId');
-
       snap.forEach(docSnap => {
         const post = docSnap.data();
         if (searchTerm &&
@@ -340,9 +252,7 @@
         else if (typeof post.timestamp === "string") ts = new Date(post.timestamp);
 
         const canDelete = (post.authorId && currentUser && post.authorId === currentUser.uid)
-                          || (!post.authorId && post.userName === userName);
-
-        const templated = isTemplatedText(post.content || "") || (recentTemplateId === docSnap.id);
+                          || (!post.authorId && post.userName === userName); // fallback for legacy posts
 
         div.innerHTML = `
           <div class="flex items-center justify-between mb-2">
@@ -350,50 +260,30 @@
               <div class="w-8 h-8 rounded-full bg-blue-700 text-white text-sm flex items-center justify-center font-bold">${initials}</div>
               <div class="text-xs text-gray-500">${post.userName} • ${relativeTime(ts)}</div>
             </div>
-            <div class="flex items-center gap-3">
-              ${canDelete ? `<button class="text-red-500 text-xs delete-btn" data-id="${docSnap.id}">Verwyder</button>` : ""}
-            </div>
+            ${canDelete ? `<button class="text-red-500 text-xs delete-btn" data-id="${docSnap.id}">Verwyder</button>` : ""}
           </div>
           <h3 class="text-lg font-bold text-gray-800 mb-1">${post.title || ''}</h3>
-          <p class="text-gray-700 whitespace-pre-line mb-3">${applyFormatting(post.content || '')}</p>
-
+          <p class="text-gray-700 whitespace-pre-line mb-2">${applyFormatting(post.content || '')}</p>
           <div class="flex items-center gap-4 text-sm text-gray-600 mb-2">
             <button class="like-btn flex items-center gap-1" data-id="${docSnap.id}">
               👍 <span class="like-count" id="like-count-${docSnap.id}">0</span>
             </button>
             <button class="reply-toggle" data-id="${docSnap.id}">💬 Reageer</button>
           </div>
-
-          ${templated ? `
-            <div class="mt-2">
-              <button class="share-post-btn" data-id="${docSnap.id}" title="Deel">
-                <img src="/assets/SHARE_12SEP.png" alt="DEEL" class="h-10 w-auto select-none" />
-              </button>
-            </div>
-          ` : ``}
-
           <div class="reply-box hidden mt-2" id="reply-${docSnap.id}">
             <textarea class="w-full p-2 border rounded mb-1 reply-input" rows="2" maxlength="300" placeholder="Jou antwoord..."></textarea>
             <button class="send-reply bg-blue-600 text-white px-2 py-1 rounded text-sm" data-id="${docSnap.id}">Stuur</button>
           </div>
-          <div class="replies text-sm mt-2 space-y-1" id="replies-${docSnap.id}"></div>
+          <div class="replies text-sm mt-2 space-y-1" id="replies-${docSnap.id}">
+            <div class="text-gray-400 text-xs">Laai antwoorde…</div>
+          </div>
         `;
         container.appendChild(div);
 
-        // Wire up per-post actions
+        // load replies and likes for this post
         loadReplies(docSnap.id);
         refreshLikeUI(docSnap.id);
-
-        const shareBtn = div.querySelector('.share-post-btn');
-        if (shareBtn) {
-          shareBtn.addEventListener('click', () => {
-            sharePost(post.title || '', post.content || '');
-          });
-        }
       });
-
-      // Clear highlight once visible at least once
-      if (recentTemplateId) localStorage.removeItem('lastTemplatePostId');
 
       attachPostEvents();
     }
@@ -412,26 +302,39 @@
           const input = document.querySelector(`#reply-${id} .reply-input`);
           const content = (input.value || "").trim();
           if (!content) return;
-          if (!currentUser) { alert("Jy moet aangemeld wees om te antwoord."); return; }
+          if (!currentUser) {
+            alert("Jy moet aangemeld wees om te antwoord.");
+            return;
+          }
 
+          // 1) Create reply in subcollection
           await addDoc(collection(db, "forumPosts", id, "replies"), {
-            authorId: currentUser.uid,
+            authorId: currentUser.uid,      // required by rules
             userName,
             content,
             createdAt: serverTimestamp()
           });
 
+          // 2) Optional: update replyCount on parent (only that field is allowed by rules)
+          try {
+            await updateDoc(doc(db, "forumPosts", id), { replyCount: (post.replyCount || 0) + 1 });
+          } catch (_) {}
+
           input.value = "";
-          loadReplies(id);
+          loadReplies(id); // refresh replies for this post only
         };
       });
 
       document.querySelectorAll(".like-btn").forEach(btn => {
         btn.onclick = async () => {
           const id = btn.dataset.id;
-          if (!currentUser) { alert("Meld asseblief aan om te stem."); return; }
+          if (!currentUser) {
+            alert("Meld asseblief aan om te stem.");
+            return;
+          }
           try {
             const likeRef = doc(db, "forumPosts", id, "likes", currentUser.uid);
+            // Rules enforce one doc per user; if it exists, this throws
             await setDoc(likeRef, { createdAt: serverTimestamp(), userName });
           } finally {
             await refreshLikeUI(id);
@@ -449,10 +352,10 @@
       });
     }
 
-    // Live counter + search wiring
     document.getElementById("postContent").addEventListener("input", e => {
       document.getElementById("charCount").textContent = e.target.value.length;
     });
+
     document.getElementById("submitBtn").addEventListener("click", submitPost);
     document.getElementById("loadMoreBtn").addEventListener("click", () => loadPosts());
     document.getElementById("searchInput").addEventListener("input", () => loadPosts(true));
@@ -461,7 +364,6 @@
   </script>
 
   <script>
-    // Background crossword
     const backgroundCrossword = document.getElementById('backgroundCrossword');
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     function getRandomLetter(){ return letters[Math.floor(Math.random()*letters.length)]; }
