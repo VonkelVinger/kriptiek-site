@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DILEMMA – Kriptiek</title>
 
-  <!-- Canonical & Open Graph / Twitter -->
+  <!-- Canonical & Open Graph / Twitter (Dilemma-specific) -->
+  <!-- ✅ point everything at dilemmagame.html -->
   <link rel="canonical" href="https://www.kriptiek.com/dilemmagame.html" />
 
   <meta property="og:site_name" content="Kriptiek" />
@@ -13,12 +14,11 @@
   <meta property="og:description" content="Kom speel vandag se DILEMMA op Kriptiek." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://www.kriptiek.com/dilemmagame.html" />
-  <!-- Smaller social image -->
+  <!-- ✅ use the 1200×630 asset -->
   <meta property="og:image" content="https://www.kriptiek.com/assets/DILEMMA_OG_1200x630.png" />
   <meta property="og:image:alt" content="DILEMMA knoppie" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:type" content="image/png" />
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="DILEMMA – Kriptiek" />
@@ -30,10 +30,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
 
   <style>
-    body { font-family: 'Montserrat', sans-serif; background-color: #f9fafb; color: #1f2937; }
-    header { background-color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,.1); padding: 1rem; text-align: center; }
+    body { font-family: 'Montserrat', sans-serif; background-color: #f9fafb; color:#1f2937; }
+    header { background:#fff; box-shadow:0 2px 4px rgba(0,0,0,.1); padding:1rem; text-align:center; }
     .logo-container { display:flex; justify-content:center; align-items:center; margin-bottom:10px; }
-    .logo-container .letter-box { width:40px; height:40px; margin:2px; display:flex; justify-content:center; align-items:center; background-color:#374151; color:#fff; font-size:1.5rem; font-weight:700; border-radius:4px; }
+    .logo-container .letter-box { width:40px; height:40px; margin:2px; display:flex; justify-content:center; align-items:center; background:#374151; color:#fff; font-size:1.5rem; font-weight:700; border-radius:4px; }
 
     .game-container { max-width: 640px; margin: 0 auto; padding: 1rem; }
     .tile-row{ display:flex; justify-content:center; margin-bottom:5px; }
@@ -59,8 +59,7 @@
     /* Local share dropdowns */
     .share-menu-local{
       background:#fff; border:1px solid #e5e7eb; box-shadow:0 8px 24px rgba(0,0,0,.12);
-      border-radius:.5rem; width:240px; padding:.5rem; z-index:3000;
-      line-height:1.25;
+      border-radius:.5rem; width:240px; padding:.5rem; z-index:3000; line-height:1.25;
     }
     .share-menu-local button{
       width:100%; text-align:left; padding:.5rem .75rem; border-radius:.375rem; font-weight:600;
@@ -68,39 +67,17 @@
     }
     .share-menu-local button:hover{ background:#f3f4f6; }
 
-    /* ---- Action bars (match Blitstiek look) ---- */
+    /* ---- Action tiles (small buttons) ---- */
     .action-grid{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:.5rem;
-      justify-items:center;
-      align-items:center;
-      max-width:376px;
-      margin:0 auto;
+      display:grid; grid-template-columns:repeat(3,1fr); gap:.5rem;
+      justify-items:center; align-items:center; max-width:376px; margin:0 auto;
     }
-    .action-grid.two{
-      grid-template-columns:repeat(2,1fr);
-      max-width:248px;
-    }
-    /* Scope line-height to the TILE controls only */
+    .action-grid.two{ grid-template-columns:repeat(2,1fr); max-width:248px; }
     .action-grid > a, .action-grid > button{
-      display:grid;
-      place-items:center;
-      width:100%;
-      aspect-ratio:1/1;
-      max-width:120px;
-      background:transparent;
-      border:0;
-      padding:0;
-      line-height:0;
-      cursor:pointer;
+      display:grid; place-items:center; width:100%; aspect-ratio:1/1; max-width:120px;
+      background:transparent; border:0; padding:0; line-height:0; cursor:pointer;
     }
-    .btn-img{
-      width:100%; height:100%;
-      object-fit:contain;
-      box-shadow:0 6px 15px rgba(0,0,0,.25);
-      display:block;
-    }
+    .btn-img{ width:100%; height:100%; object-fit:contain; box-shadow:0 6px 15px rgba(0,0,0,.25); display:block; }
     .btn-img:hover{ transform:translateY(-1px); filter:brightness(1.02); }
     .btn-img:active{ transform:translateY(0); filter:brightness(.98); }
   </style>
@@ -243,8 +220,6 @@ const gameGrid = document.getElementById("game-grid");
 const keyboard = document.getElementById("keyboard");
 const modal = document.getElementById("resultModal");
 const resultMsg = document.getElementById("resultMessage");
-const shareBtn = document.getElementById("modalShareBtn");
-const closeBtn = document.getElementById("closeModalBtn");
 const leaderboardList = document.getElementById("leaderboardList");
 const playerNameEl = document.getElementById("playerName");
 const statusLine = document.getElementById("statusLine");
@@ -269,6 +244,8 @@ let currentUid = null;
 let displayName = localStorage.getItem("userName") || "Speler";
 
 const params = new URLSearchParams(window.location.search);
+
+/* ---- Stable daily ID + canonical share URL ---- */
 function todayZA() {
   const now = new Date();
   const parts = new Intl.DateTimeFormat('af-ZA', {
@@ -281,18 +258,14 @@ const gameId = params.get("gameId") || `Game${todayZA()}`;
 const doneKey = `dilemma-${gameId}-done`;
 const progressKey = `dilemma-${gameId}-progress`;
 
-/* ---- Canonical share URL (preserve current filename) ---- */
+/* Canonical share URL (always dilemmagame.html + ?gameId=…) */
 const SITE_ORIGIN = "https://www.kriptiek.com";
 const urlObj = new URL(window.location.href);
-// Ensure a stable gameId param; preserve current filename/path.
+urlObj.pathname = "/dilemmagame.html";
 urlObj.searchParams.set("gameId", gameId);
 urlObj.hash = "";
 const canonicalGameUrl = `${SITE_ORIGIN}${urlObj.pathname}?${urlObj.searchParams.toString()}`;
-try {
-  if (window.location.href !== canonicalGameUrl) {
-    history.replaceState(null, "", canonicalGameUrl);
-  }
-} catch (_) {}
+try { if (window.location.href !== canonicalGameUrl) history.replaceState(null, "", canonicalGameUrl); } catch {}
 
 /* util for old ID format if ever needed */
 function altIdIfOldFormat(id) {
@@ -305,6 +278,7 @@ playerNameEl.textContent = displayName;
 function renderAuthRequired() {
   const clue = document.getElementById("clue");
   clue.textContent = "Jy moet aangemeld wees om te speel.";
+  // Replace old links/blue button with two tile buttons
   keyboard.innerHTML = `
     <div class="action-grid two mt-2">
       <a href="/login.html" title="Meld aan">
@@ -314,6 +288,7 @@ function renderAuthRequired() {
         <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="120" height="120">
       </a>
     </div>`;
+  // Hide the R action bar if present
   const barR = document.getElementById('barR');
   if (barR) barR.classList.add('hidden');
 }
@@ -767,6 +742,7 @@ async function gameFailed() {
 }
 
 /* ---- Modal + keyboard ---- */
+const closeBtn = document.getElementById("closeModalBtn");
 closeBtn.onclick = () => { modal.style.display = "none"; };
 document.addEventListener("keydown", e => {
   if (e.key === "Enter") handleEnter();
@@ -800,6 +776,7 @@ onAuthStateChanged(auth, async (user) => {
   if (!user) {
     renderAuthRequired();
     await loadLeaderboard(); // public board still visible
+    // still wire share menus so the yellow tile works if visible later
     return;
   }
 
@@ -827,6 +804,32 @@ onAuthStateChanged(auth, async (user) => {
 
   // Wire the two share menus
   const shareBtnModal = document.getElementById("modalShareBtn");
+  function wireShareDropdown(triggerBtn, menuEl){
+    if (!triggerBtn) return;
+    triggerBtn.addEventListener('click', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      document.querySelectorAll('.share-menu-local').forEach(m => { if(m!==menuEl) m.classList.add('hidden'); });
+      menuEl.classList.toggle('hidden');
+    });
+    document.addEventListener('click', (e) => {
+      if (!menuEl.contains(e.target) && e.target !== triggerBtn) menuEl.classList.add('hidden');
+    });
+    window.addEventListener('scroll', () => menuEl.classList.add('hidden'));
+    window.addEventListener('resize', () => menuEl.classList.add('hidden'));
+  }
+  function bindMenuActions(menuEl, {waBtn, copyBtn, sysBtn}){
+    const text = () => shareTextFromSummary(lastSummary);
+    waBtn.onclick = () => { openWhatsApp(text()); menuEl.classList.add('hidden'); };
+    copyBtn.onclick = async () => {
+      try { await navigator.clipboard.writeText(text()); alert("Skakel gekopieer!"); } catch {}
+      menuEl.classList.add('hidden');
+    };
+    sysBtn.onclick = async () => {
+      try { if (navigator.share) await navigator.share({ text: text() }); else openWhatsApp(text()); }
+      catch {}
+      menuEl.classList.add('hidden');
+    };
+  }
   wireShareDropdown(shareBtnModal, mMenu);
   bindMenuActions(mMenu, { waBtn: mWA, copyBtn: mCopy, sysBtn: mSys });
   wireShareDropdown(tileShareBtn, pMenu);
