@@ -5,35 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DILEMMA – Kriptiek</title>
 
-  <!-- Canonical & Open Graph / Twitter (Dilemma-specific) -->
-  <link rel="canonical" href="https://www.kriptiek.com/dilemma.html" />
+  <!-- Canonical & Open Graph / Twitter -->
+  <link rel="canonical" href="https://www.kriptiek.com/dilemmagame.html" />
 
   <meta property="og:site_name" content="Kriptiek" />
   <meta property="og:title" content="DILEMMA – Kriptiek" />
   <meta property="og:description" content="Kom speel vandag se DILEMMA op Kriptiek." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://www.kriptiek.com/dilemma.html" />
-  <meta property="og:image" content="https://www.kriptiek.com/assets/DILEMMA_12SEP.png" />
+  <meta property="og:url" content="https://www.kriptiek.com/dilemmagame.html" />
+  <!-- Smaller social image -->
+  <meta property="og:image" content="https://www.kriptiek.com/assets/DILEMMA_OG_1200x630.png" />
   <meta property="og:image:alt" content="DILEMMA knoppie" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/png" />
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="DILEMMA – Kriptiek" />
   <meta name="twitter:description" content="Kom speel vandag se DILEMMA op Kriptiek." />
-  <meta name="twitter:image" content="https://www.kriptiek.com/assets/DILEMMA_12SEP.png" />
+  <meta name="twitter:image" content="https://www.kriptiek.com/assets/DILEMMA_OG_1200x630.png" />
 
   <!-- Tailwind + font -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
 
   <style>
-    :root{
-      /* 🔽 single knob to change all square-tile buttons site-wide on this page */
-      --tile-size: 96px;           /* was 120px */
-      --tile-gap: 8px;
-    }
-
     body { font-family: 'Montserrat', sans-serif; background-color: #f9fafb; color: #1f2937; }
     header { background-color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,.1); padding: 1rem; text-align: center; }
     .logo-container { display:flex; justify-content:center; align-items:center; margin-bottom:10px; }
@@ -76,29 +72,27 @@
     .action-grid{
       display:grid;
       grid-template-columns:repeat(3,1fr);
-      gap: var(--tile-gap);
+      gap:.5rem;
       justify-items:center;
       align-items:center;
-      /* 3 × tile + 2 × gap */
-      max-width: calc(var(--tile-size) * 3 + var(--tile-gap) * 2);
+      max-width:376px;
       margin:0 auto;
     }
     .action-grid.two{
       grid-template-columns:repeat(2,1fr);
-      /* 2 × tile + 1 × gap */
-      max-width: calc(var(--tile-size) * 2 + var(--tile-gap));
+      max-width:248px;
     }
-    /* Scope zero line-height to the TILE controls only (not dropdown menus) */
+    /* Scope line-height to the TILE controls only */
     .action-grid > a, .action-grid > button{
       display:grid;
       place-items:center;
       width:100%;
       aspect-ratio:1/1;
-      max-width: var(--tile-size);
+      max-width:120px;
       background:transparent;
       border:0;
       padding:0;
-      line-height:0;   /* prevents extra space inside PNG tiles */
+      line-height:0;
       cursor:pointer;
     }
     .btn-img{
@@ -134,14 +128,14 @@
   <div id="barR" class="mt-4 hidden">
     <div class="action-grid">
       <a href="/forum.html" title="Gesels saam">
-        <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="96" height="96">
+        <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
       </a>
       <a href="/dilemma-argief.html" title="Dilemma-argief">
-        <img class="btn-img" src="/assets/D_ARGIEF_12SEP.png" alt="Argief" width="96" height="96">
+        <img class="btn-img" src="/assets/D_ARGIEF_12SEP.png" alt="Argief" width="120" height="120">
       </a>
       <div class="relative">
         <button id="tileShareBtn" type="button" title="Deel">
-          <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="96" height="96">
+          <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
         </button>
         <!-- Share dropdown anchored to yellow tile -->
         <div id="shareMenuPersistent" class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
@@ -287,8 +281,18 @@ const gameId = params.get("gameId") || `Game${todayZA()}`;
 const doneKey = `dilemma-${gameId}-done`;
 const progressKey = `dilemma-${gameId}-progress`;
 
-/* Stable share URL for previews */
-const shareUrl = 'https://www.kriptiek.com/dilemma.html';
+/* ---- Canonical share URL (preserve current filename) ---- */
+const SITE_ORIGIN = "https://www.kriptiek.com";
+const urlObj = new URL(window.location.href);
+// Ensure a stable gameId param; preserve current filename/path.
+urlObj.searchParams.set("gameId", gameId);
+urlObj.hash = "";
+const canonicalGameUrl = `${SITE_ORIGIN}${urlObj.pathname}?${urlObj.searchParams.toString()}`;
+try {
+  if (window.location.href !== canonicalGameUrl) {
+    history.replaceState(null, "", canonicalGameUrl);
+  }
+} catch (_) {}
 
 /* util for old ID format if ever needed */
 function altIdIfOldFormat(id) {
@@ -301,17 +305,15 @@ playerNameEl.textContent = displayName;
 function renderAuthRequired() {
   const clue = document.getElementById("clue");
   clue.textContent = "Jy moet aangemeld wees om te speel.";
-  // Replace old links/blue button with two smaller tile buttons
   keyboard.innerHTML = `
     <div class="action-grid two mt-2">
       <a href="/login.html" title="Meld aan">
-        <img class="btn-img" src="/assets/K_MELD_AAN_12SEP.png" alt="Meld aan" width="96" height="96">
+        <img class="btn-img" src="/assets/K_MELD_AAN_12SEP.png" alt="Meld aan" width="120" height="120">
       </a>
       <a href="/register.html" title="Registreer">
-        <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="96" height="96">
+        <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="120" height="120">
       </a>
     </div>`;
-  // Hide the R action bar if present
   const barR = document.getElementById('barR');
   if (barR) barR.classList.add('hidden');
 }
@@ -676,12 +678,12 @@ async function loadLeaderboard() {
 let lastSummary = null;
 
 function shareTextFromSummary(summary) {
-  if (!summary) return `Kom speel vandag se DILEMMA op Kriptiek: ${shareUrl}`;
+  if (!summary) return `Kom speel vandag se DILEMMA op Kriptiek: ${canonicalGameUrl}`;
   if (summary.didWin) {
     const woord = summary.guesses === 1 ? 'raaiskoot' : 'raaiskote';
-    return `Ek het hierdie DILEMMA in ${summary.guesses} ${woord} opgelos. Probeer self by ${shareUrl}`;
+    return `Ek het hierdie DILEMMA in ${summary.guesses} ${woord} opgelos. Probeer self by ${canonicalGameUrl}`;
   }
-  return `Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${shareUrl}`;
+  return `Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${canonicalGameUrl}`;
 }
 function openWhatsApp(text){
   const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
