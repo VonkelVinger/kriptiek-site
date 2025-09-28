@@ -14,9 +14,9 @@
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://www.kriptiek.com/dilemmagame.html" />
 
-  <!-- IMPORTANT: cache-busting query so platforms re-fetch the correct orange tile -->
-  <meta property="og:image" content="https://www.kriptiek.com/assets/DILEMMA_12SEP.png?v=5" />
-  <meta property="og:image:secure_url" content="https://www.kriptiek.com/assets/DILEMMA_12SEP.png?v=5" />
+  <!-- Cache-busted share image so platforms fetch the correct orange tile -->
+  <meta property="og:image" content="https://www.kriptiek.com/assets/DILEMMA_12SEP.png?v=6" />
+  <meta property="og:image:secure_url" content="https://www.kriptiek.com/assets/DILEMMA_12SEP.png?v=6" />
   <meta property="og:image:alt" content="DILEMMA knoppie" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -25,7 +25,7 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="DILEMMA – Kriptiek" />
   <meta name="twitter:description" content="Kom speel vandag se DILEMMA op Kriptiek." />
-  <meta name="twitter:image" content="https://www.kriptiek.com/assets/DILEMMA_12SEP.png?v=5" />
+  <meta name="twitter:image" content="https://www.kriptiek.com/assets/DILEMMA_12SEP.png?v=6" />
 
   <!-- Tailwind + font -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -282,8 +282,15 @@ const gameId = params.get("gameId") || `Game${todayZA()}`;
 const doneKey = `dilemma-${gameId}-done`;
 const progressKey = `dilemma-${gameId}-progress`;
 
-/* Stable share URL (don’t leak query string) */
-const SHARE_URL = "https://www.kriptiek.com/dilemmagame.html";
+/* URLs for sharing */
+const SHARE_URL = "https://www.kriptiek.com/dilemmagame.html"; // canonical page
+const SHARE_TEXT_URL = (() => {
+  // per-game link in the message text, with tiny cache-buster for WhatsApp chats
+  const u = new URL(SHARE_URL);
+  u.searchParams.set('gameId', gameId);
+  u.searchParams.set('wa', 'v6');
+  return u.toString();
+})();
 
 function altIdIfOldFormat(id) {
   const m = id.match(/^Game(\d{4}-\d{2}-\d{2})$/);
@@ -665,12 +672,13 @@ async function loadLeaderboard() {
 let lastSummary = null;
 
 function shareTextFromSummary(summary) {
-  if (!summary) return `Kom speel vandag se DILEMMA op Kriptiek: ${SHARE_URL}`;
+  const link = SHARE_TEXT_URL; // per-game link with cache-buster
+  if (!summary) return `Kom speel vandag se DILEMMA op Kriptiek: ${link}`;
   if (summary.didWin) {
     const woord = summary.guesses === 1 ? 'raaiskoot' : 'raaiskote';
-    return `Ek het hierdie DILEMMA in ${summary.guesses} ${woord} opgelos. Probeer self by ${SHARE_URL}`;
+    return `Ek het hierdie DILEMMA in ${summary.guesses} ${woord} opgelos. Probeer self by ${link}`;
   }
-  return `Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${SHARE_URL}`;
+  return `Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${link}`;
 }
 function openWhatsApp(text){
   const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
