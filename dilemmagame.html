@@ -6,13 +6,13 @@
   <title>DILEMMA – Kriptiek</title>
 
   <!-- Canonical & Open Graph / Twitter (Dilemma-specific) -->
-  <link rel="canonical" href="https://www.kriptiek.com/dilemma.html" />
+  <link rel="canonical" href="https://www.kriptiek.com/dilemmagame.html" />
 
   <meta property="og:site_name" content="Kriptiek" />
   <meta property="og:title" content="DILEMMA – Kriptiek" />
   <meta property="og:description" content="Kom speel vandag se DILEMMA op Kriptiek." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://www.kriptiek.com/dilemma.html" />
+  <meta property="og:url" content="https://www.kriptiek.com/dilemmagame.html" />
   <meta property="og:image" content="https://www.kriptiek.com/assets/DILEMMA_12SEP.png" />
   <meta property="og:image:alt" content="DILEMMA knoppie" />
   <meta property="og:image:width" content="1200" />
@@ -58,7 +58,7 @@
     .share-menu-local{
       background:#fff; border:1px solid #e5e7eb; box-shadow:0 8px 24px rgba(0,0,0,.12);
       border-radius:.5rem; width:240px; padding:.5rem; z-index:3000;
-      line-height:1.25; /* normal leading inside the menu */
+      line-height:1.25;
     }
     .share-menu-local button{
       width:100%; text-align:left; padding:.5rem .75rem; border-radius:.375rem; font-weight:600;
@@ -70,17 +70,16 @@
     .action-grid{
       display:grid;
       grid-template-columns:repeat(3,1fr);
-      gap:.5rem;                         /* 8px gap like Blitstiek */
+      gap:.5rem;
       justify-items:center;
       align-items:center;
-      max-width:376px;                   /* 3×120px tiles + 2×8px gaps */
+      max-width:376px;
       margin:0 auto;
     }
     .action-grid.two{
       grid-template-columns:repeat(2,1fr);
-      max-width:248px;                   /* 2×120px + 1×8px */
+      max-width:248px;
     }
-    /* Scope zero line-height to the TILE controls only (not dropdown menus) */
     .action-grid > a, .action-grid > button{
       display:grid;
       place-items:center;
@@ -90,7 +89,7 @@
       background:transparent;
       border:0;
       padding:0;
-      line-height:0;                     /* prevents extra space inside PNG tiles */
+      line-height:0;
       cursor:pointer;
     }
     .btn-img{
@@ -278,7 +277,9 @@ function todayZA() {
 const gameId = params.get("gameId") || `Game${todayZA()}`;
 const doneKey = `dilemma-${gameId}-done`;
 const progressKey = `dilemma-${gameId}-progress`;
-const gameUrl = window.location.href;
+
+/* Stable share URL (don’t leak query string) */
+const SHARE_URL = "https://www.kriptiek.com/dilemmagame.html";
 
 function altIdIfOldFormat(id) {
   const m = id.match(/^Game(\d{4}-\d{2}-\d{2})$/);
@@ -290,7 +291,6 @@ playerNameEl.textContent = displayName;
 function renderAuthRequired() {
   const clue = document.getElementById("clue");
   clue.textContent = "Jy moet aangemeld wees om te speel.";
-  // Replace old links/blue button with two tile buttons
   keyboard.innerHTML = `
     <div class="action-grid two mt-2">
       <a href="/login.html" title="Meld aan">
@@ -300,7 +300,6 @@ function renderAuthRequired() {
         <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="120" height="120">
       </a>
     </div>`;
-  // Hide the R action bar if present
   const barR = document.getElementById('barR');
   if (barR) barR.classList.add('hidden');
 }
@@ -503,7 +502,6 @@ function restoreLocalProgress() {
 async function submitScore(guessCount, didWin) {
   if (!currentUid) return;
 
-  // refresh displayName from users doc
   try {
     const uDoc = await getDoc(doc(db, "users", currentUid));
     if (uDoc.exists() && typeof uDoc.data().userName === "string") {
@@ -513,7 +511,6 @@ async function submitScore(guessCount, didWin) {
     }
   } catch (e) { console.warn("Could not read users doc:", e); }
 
-  // update user stats and compute success rate
   let successRate = null;
   try {
     const uref = doc(db, "users", currentUid);
@@ -547,7 +544,6 @@ async function submitScore(guessCount, didWin) {
     console.warn("User stats update failed (non-fatal):", e);
   }
 
-  // write leaderboard row
   try {
     await setDoc(
       doc(db, "games", gameId, "leaderboard", currentUid),
@@ -665,12 +661,12 @@ async function loadLeaderboard() {
 let lastSummary = null;
 
 function shareTextFromSummary(summary) {
-  if (!summary) return `Kom speel vandag se DILEMMA op Kriptiek: ${gameUrl}`;
+  if (!summary) return `Kom speel vandag se DILEMMA op Kriptiek: ${SHARE_URL}`;
   if (summary.didWin) {
     const woord = summary.guesses === 1 ? 'raaiskoot' : 'raaiskote';
-    return `Ek het hierdie DILEMMA in ${summary.guesses} ${woord} opgelos. Probeer self by ${gameUrl}`;
+    return `Ek het hierdie DILEMMA in ${summary.guesses} ${woord} opgelos. Probeer self by ${SHARE_URL}`;
   }
-  return `Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${gameUrl}`;
+  return `Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${SHARE_URL}`;
 }
 function openWhatsApp(text){
   const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
@@ -720,7 +716,6 @@ async function gameCompleted(guessCount) {
 
   lastSummary = { didWin:true, guesses:guessCount };
 
-  // persist + leaderboard
   saveLocalProgress(true);
   localStorage.setItem(`${doneKey}-result`, `win:${guessCount}`);
   await setDoc(doc(db, "userGames", currentUid, "plays", gameId),
@@ -742,7 +737,6 @@ async function gameFailed() {
 
   lastSummary = { didWin:false, guesses:null };
 
-  // persist + leaderboard
   saveLocalProgress(true);
   localStorage.setItem(`${doneKey}-result`, `loss`);
   await setDoc(doc(db, "userGames", currentUid, "plays", gameId),
@@ -786,13 +780,12 @@ function checkGuessWithFlip(guess) {
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     renderAuthRequired();
-    await loadLeaderboard(); // public board still visible
+    await loadLeaderboard();
     return;
   }
 
   currentUid = user.uid;
 
-  // load display name if stored
   try {
     const uDoc = await getDoc(doc(db, "users", currentUid));
     const nm = uDoc.exists() ? uDoc.data()?.userName : null;
@@ -808,18 +801,15 @@ onAuthStateChanged(auth, async (user) => {
   createKeyboard();
   restoreLocalProgress();
 
-  // Show action bar for signed-in users
   const barR = document.getElementById('barR');
   if (barR) barR.classList.remove('hidden');
 
-  // Wire the two share menus
   const shareBtnModal = document.getElementById("modalShareBtn");
   wireShareDropdown(shareBtnModal, mMenu);
   bindMenuActions(mMenu, { waBtn: mWA, copyBtn: mCopy, sysBtn: mSys });
   wireShareDropdown(tileShareBtn, pMenu);
   bindMenuActions(pMenu, { waBtn: pWA, copyBtn: pCopy, sysBtn: pSys });
 
-  // Completed before? show summary + ensure leaderboard row
   const lsDone = localStorage.getItem(doneKey) === "true";
   let fsDone = false;
   try {
