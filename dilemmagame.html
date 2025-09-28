@@ -28,6 +28,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
 
   <style>
+    :root{
+      /* 🔽 single knob to change all square-tile buttons site-wide on this page */
+      --tile-size: 96px;           /* was 120px */
+      --tile-gap: 8px;
+    }
+
     body { font-family: 'Montserrat', sans-serif; background-color: #f9fafb; color: #1f2937; }
     header { background-color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,.1); padding: 1rem; text-align: center; }
     .logo-container { display:flex; justify-content:center; align-items:center; margin-bottom:10px; }
@@ -58,7 +64,7 @@
     .share-menu-local{
       background:#fff; border:1px solid #e5e7eb; box-shadow:0 8px 24px rgba(0,0,0,.12);
       border-radius:.5rem; width:240px; padding:.5rem; z-index:3000;
-      line-height:1.25; /* normal leading inside the menu */
+      line-height:1.25;
     }
     .share-menu-local button{
       width:100%; text-align:left; padding:.5rem .75rem; border-radius:.375rem; font-weight:600;
@@ -70,15 +76,17 @@
     .action-grid{
       display:grid;
       grid-template-columns:repeat(3,1fr);
-      gap:.5rem;                         /* 8px gap like Blitstiek */
+      gap: var(--tile-gap);
       justify-items:center;
       align-items:center;
-      max-width:376px;                   /* 3×120px tiles + 2×8px gaps */
+      /* 3 × tile + 2 × gap */
+      max-width: calc(var(--tile-size) * 3 + var(--tile-gap) * 2);
       margin:0 auto;
     }
     .action-grid.two{
       grid-template-columns:repeat(2,1fr);
-      max-width:248px;                   /* 2×120px + 1×8px */
+      /* 2 × tile + 1 × gap */
+      max-width: calc(var(--tile-size) * 2 + var(--tile-gap));
     }
     /* Scope zero line-height to the TILE controls only (not dropdown menus) */
     .action-grid > a, .action-grid > button{
@@ -86,11 +94,11 @@
       place-items:center;
       width:100%;
       aspect-ratio:1/1;
-      max-width:120px;
+      max-width: var(--tile-size);
       background:transparent;
       border:0;
       padding:0;
-      line-height:0;                     /* prevents extra space inside PNG tiles */
+      line-height:0;   /* prevents extra space inside PNG tiles */
       cursor:pointer;
     }
     .btn-img{
@@ -126,14 +134,14 @@
   <div id="barR" class="mt-4 hidden">
     <div class="action-grid">
       <a href="/forum.html" title="Gesels saam">
-        <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
+        <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="96" height="96">
       </a>
       <a href="/dilemma-argief.html" title="Dilemma-argief">
-        <img class="btn-img" src="/assets/D_ARGIEF_12SEP.png" alt="Argief" width="120" height="120">
+        <img class="btn-img" src="/assets/D_ARGIEF_12SEP.png" alt="Argief" width="96" height="96">
       </a>
       <div class="relative">
         <button id="tileShareBtn" type="button" title="Deel">
-          <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
+          <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="96" height="96">
         </button>
         <!-- Share dropdown anchored to yellow tile -->
         <div id="shareMenuPersistent" class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
@@ -278,8 +286,11 @@ function todayZA() {
 const gameId = params.get("gameId") || `Game${todayZA()}`;
 const doneKey = `dilemma-${gameId}-done`;
 const progressKey = `dilemma-${gameId}-progress`;
-const gameUrl = window.location.href;
 
+/* Stable share URL for previews */
+const shareUrl = 'https://www.kriptiek.com/dilemma.html';
+
+/* util for old ID format if ever needed */
 function altIdIfOldFormat(id) {
   const m = id.match(/^Game(\d{4}-\d{2}-\d{2})$/);
   return m ? m[1] : null;
@@ -290,14 +301,14 @@ playerNameEl.textContent = displayName;
 function renderAuthRequired() {
   const clue = document.getElementById("clue");
   clue.textContent = "Jy moet aangemeld wees om te speel.";
-  // Replace old links/blue button with two tile buttons
+  // Replace old links/blue button with two smaller tile buttons
   keyboard.innerHTML = `
     <div class="action-grid two mt-2">
       <a href="/login.html" title="Meld aan">
-        <img class="btn-img" src="/assets/K_MELD_AAN_12SEP.png" alt="Meld aan" width="120" height="120">
+        <img class="btn-img" src="/assets/K_MELD_AAN_12SEP.png" alt="Meld aan" width="96" height="96">
       </a>
       <a href="/register.html" title="Registreer">
-        <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="120" height="120">
+        <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="96" height="96">
       </a>
     </div>`;
   // Hide the R action bar if present
@@ -665,12 +676,12 @@ async function loadLeaderboard() {
 let lastSummary = null;
 
 function shareTextFromSummary(summary) {
-  if (!summary) return `Kom speel vandag se DILEMMA op Kriptiek: ${gameUrl}`;
+  if (!summary) return `Kom speel vandag se DILEMMA op Kriptiek: ${shareUrl}`;
   if (summary.didWin) {
     const woord = summary.guesses === 1 ? 'raaiskoot' : 'raaiskote';
-    return `Ek het hierdie DILEMMA in ${summary.guesses} ${woord} opgelos. Probeer self by ${gameUrl}`;
+    return `Ek het hierdie DILEMMA in ${summary.guesses} ${woord} opgelos. Probeer self by ${shareUrl}`;
   }
-  return `Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${gameUrl}`;
+  return `Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${shareUrl}`;
 }
 function openWhatsApp(text){
   const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
