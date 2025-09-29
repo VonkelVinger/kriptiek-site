@@ -36,7 +36,7 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
 
-<!-- Firebase boot + global logout -->
+<!-- Firebase boot + global logout (dispatches authready) -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
@@ -61,7 +61,7 @@
     }
   };
 
-  // Hardened listener: set/clear localStorage based on real auth state
+  // Set/clear localStorage based on real auth state, then notify UI
   document.addEventListener('DOMContentLoaded', () => {
     onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -75,6 +75,7 @@
         // localStorage.removeItem('userName');
         // localStorage.removeItem('userEmail');
       }
+      document.dispatchEvent(new CustomEvent('authready', { detail: { signedIn: !!user }}));
     });
   });
 </script>
@@ -170,15 +171,14 @@
     <!-- Hero Support CTA (no subtext) -->
     <div class="message-text my-4">
       <a id="supportLink"
-   href="https://www.buymeacoffee.com/kriptiek"
-   target="_blank" rel="noopener noreferrer"
-   onclick="gtag('event','bmac_click',{from:'hero'})"
-   class="inline-flex items-center justify-center w-full px-5 py-3
-          bg-yellow-500 hover:bg-yellow-600 text-white font-bold
-          rounded-xl shadow-md transition duration-200 btn-pulse">
-  <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
-</a>
-
+         href="https://www.buymeacoffee.com/kriptiek"
+         target="_blank" rel="noopener noreferrer"
+         onclick="gtag('event','bmac_click',{from:'hero'})"
+         class="inline-flex items-center justify-center w-full px-5 py-3
+                bg-yellow-500 hover:bg-yellow-600 text-white font-bold
+                rounded-xl shadow-md transition duration-200 btn-pulse">
+        <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
+      </a>
     </div>
 
     <a id="contactHeroLink" href="/contact.html" class="underline font-bold text-[#1e3a8a]">
@@ -359,9 +359,9 @@
         grid.appendChild(tile('/blitstiek-argief.html', '/assets/B_ARGIEF_12SEP.png', 'Blitstiek Argief'));
         grid.appendChild(tile('#', '/assets/S_SLIMSTIEK_12SEP.png', 'Slimstiek', 'slimstiek-today-link'));
         grid.appendChild(tile('/slimstiek-argief.html', '/assets/S_ARGIEF_12SEP.png', 'Slimstiek Argief'));
-        grid.appendChild(tile('/forum.html', '/assets/K_GESELS_12SEP.png', 'Gesels saam'));
 
-        /* 🔄 REPLACED: was Gesels —> now KRY DIE APP */
+        /* Keep BOTH tiles as requested */
+        grid.appendChild(tile('/forum.html', '/assets/K_GESELS_12SEP.png', 'Gesels saam'));
         grid.appendChild(tile('/profile.html', '/assets/K_MY_PROFIEL_12SEP.png', 'My profiel'));
 
         tilesGrid.appendChild(grid);
@@ -369,11 +369,15 @@
         if (geselsFallback) geselsFallback.classList.add('hidden');
       }
 
-      if (localStorage.getItem('userRegistered') === 'true') {
-        showSignedInView();
-      } else {
-        showGuestView();
-      }
+      // Wait for real auth state to choose view (fixes # links on first paint)
+      let rendered = false;
+      document.addEventListener('authready', (e) => {
+        rendered = true;
+        e.detail.signedIn ? showSignedInView() : showGuestView();
+      }, { once: true });
+
+      // Fallback: render guest after ~1s if auth never reports (rare)
+      setTimeout(() => { if (!rendered) showGuestView(); }, 1000);
     });
 
     function acceptCookies() { localStorage.setItem('cookieConsent', 'accepted'); document.getElementById('cookie-banner').style.display = 'none'; }
@@ -499,7 +503,3 @@
   </script>
 </body>
 </html>
-
-
-
-
