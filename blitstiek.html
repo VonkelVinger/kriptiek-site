@@ -458,7 +458,6 @@
     /* EXACT success wording for yellow tile after finishing */
     function buildWinShareText(payload){
       const tt   = Number(payload?.time);
-      theNameFix: {};
       const name = currentUserName || 'Speler';
       const word = payload?.target || TARGET || '—';
       return `Veels geluk, ${name}, jy het ${word} in ${fmt(tt)} voltooi!`;
@@ -962,17 +961,14 @@
     await loadGame();
   </script>
 
-
-<!-- 🟡 Buy Me a Coffee CTA above leaderboard -->
+<!-- 🟡 Buy Me a Coffee CTA above the real leaderboard (Blitstiek) -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const target =
-    Array.from(document.querySelectorAll('h1,h2,h3,h4,section,div'))
-      .find(el => /Leierbord/i.test(el.textContent.trim()))
-    || document.getElementById('leaderboard')
-    || document.querySelector('[data-leaderboard], .leaderboard');
+  // Find the leaderboard list and its containing section (the card)
+  const list = document.getElementById('leaderboardList');
+  const section = list ? list.closest('section') : null;
 
-  if (!target || !target.parentElement) return;
+  if (!section || !section.parentElement) return;
 
   const wrap = document.createElement('div');
   wrap.className = 'my-4';
@@ -988,12 +984,11 @@ document.addEventListener('DOMContentLoaded', () => {
       </a>
     </div>
   `;
-  target.parentElement.insertBefore(wrap, target);
+
+  // Insert just BEFORE the leaderboard section
+  section.parentElement.insertBefore(wrap, section);
 });
 </script>
 
-
-
-  
 </body>
 </html>
