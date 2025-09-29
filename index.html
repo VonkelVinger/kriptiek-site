@@ -11,132 +11,131 @@
   gtag('config', 'G-S9V4CMP1FP');
 </script>
 
-  
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kriptiek</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kriptiek</title>
 
-  <!-- Favicon and App Icons -->
-  <link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=3">
-  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png?v=3">
-  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=3">
-  <link rel="manifest" href="/assets/site.webmanifest?v=3">
+<!-- Favicon and App Icons -->
+<link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=3">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png?v=3">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=3">
+<link rel="manifest" href="/assets/site.webmanifest?v=3">
 
-  <!-- Social Share Image -->
-  <meta property="og:image" content="https://www.kriptiek.com/assets/share-logo.png?v=1" />
-  <meta name="twitter:image" content="https://www.kriptiek.com/assets/share-logo.png?v=1" />
-  <meta property="og:title" content="Kriptiek – Tuiste van DILEMMA" />
-  <meta property="og:description" content="Speel DILEMMA aanlyn" />
-  <meta property="og:url" content="https://www.kriptiek.com/" />
-  <meta property="og:type" content="website" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="image" content="https://www.kriptiek.com/assets/share-logo.png?v=1" />
+<!-- Social Share Image -->
+<meta property="og:image" content="https://www.kriptiek.com/assets/share-logo.png?v=1" />
+<meta name="twitter:image" content="https://www.kriptiek.com/assets/share-logo.png?v=1" />
+<meta property="og:title" content="Kriptiek – Tuiste van DILEMMA" />
+<meta property="og:description" content="Speel DILEMMA aanlyn" />
+<meta property="og:url" content="https://www.kriptiek.com/" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="image" content="https://www.kriptiek.com/assets/share-logo.png?v=1" />
 
-  <!-- Styles -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+<!-- Styles -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
 
-  <!-- Firebase boot + global logout -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+<!-- Firebase boot + global logout -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
-      authDomain: "kriptiek-c9ea2.firebaseapp.com",
-      projectId: "kriptiek-c9ea2",
-      storageBucket: "kriptiek-c9ea2.appspot.com",
-      messagingSenderId: "620450620939",
-      appId: "1:620450620939:web:e93a18ac23b53b33db890e"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+    authDomain: "kriptiek-c9ea2.firebaseapp.com",
+    projectId: "kriptiek-c9ea2",
+    storageBucket: "kriptiek-c9ea2.appspot.com",
+    messagingSenderId: "620450620939",
+    appId: "1:620450620939:web:e93a18ac23b53b33db890e"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
 
-    // Global logout helper (kept; no visible button)
-    window.kriptiekLogout = async function () {
-      try { await signOut(auth); } finally {
-        try { localStorage.clear(); sessionStorage.clear(); } catch {}
-        setTimeout(() => { window.location.href = "/index.html"; }, 120);
+  // Global logout helper (kept; no visible button)
+  window.kriptiekLogout = async function () {
+    try { await signOut(auth); } finally {
+      try { localStorage.clear(); sessionStorage.clear(); } catch {}
+      setTimeout(() => { window.location.href = "/index.html"; }, 120);
+    }
+  };
+
+  // Hardened listener: set/clear localStorage based on real auth state
+  document.addEventListener('DOMContentLoaded', () => {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        localStorage.setItem('userRegistered', 'true');
+        localStorage.setItem('userId', user.uid);
+        localStorage.setItem('userEmail', user.email || "");
+        if (user.displayName) localStorage.setItem('userName', user.displayName);
+      } else {
+        localStorage.removeItem('userRegistered');
+        // optional extra cleanup:
+        // localStorage.removeItem('userName');
+        // localStorage.removeItem('userEmail');
       }
-    };
-
-    // Hardened listener: set/clear localStorage based on real auth state
-    document.addEventListener('DOMContentLoaded', () => {
-      onAuthStateChanged(auth, (user) => {
-        if (user) {
-          localStorage.setItem('userRegistered', 'true');
-          localStorage.setItem('userId', user.uid);
-          localStorage.setItem('userEmail', user.email || "");
-          if (user.displayName) localStorage.setItem('userName', user.displayName);
-        } else {
-          localStorage.removeItem('userRegistered');
-          // optional extra cleanup:
-          // localStorage.removeItem('userName');
-          // localStorage.removeItem('userEmail');
-        }
-      });
     });
-  </script>
+  });
+</script>
 
-  <style>
-    .message-text.guest-card{
-      max-width: 660px;
-      text-align: left;
-      line-height: 1.5;
-      margin: 0.25rem auto 0;
-      padding: 12px 16px;
-      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.82));
-      border-radius: 12px;
-      border: 1px solid rgba(15,23,42,.08);
-      box-shadow: 0 8px 18px rgba(0,0,0,.08);
-      color: #0f172a;
-    }
+<style>
+  .message-text.guest-card{
+    max-width: 660px;
+    text-align: left;
+    line-height: 1.5;
+    margin: 0.25rem auto 0;
+    padding: 12px 16px;
+    background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.82));
+    border-radius: 12px;
+    border: 1px solid rgba(15,23,42,.08);
+    box-shadow: 0 8px 18px rgba(0,0,0,.08);
+    color: #0f172a;
+  }
 
-    body { font-family: 'Montserrat', sans-serif; }
+  body { font-family: 'Montserrat', sans-serif; }
 
-    .logo-container {
-      position: relative; display: flex; justify-content: center; align-items: center;
-      width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
-      isolation: isolate;
-    }
-    .logo-container::before{
-      content:""; position:absolute; inset:-2px; border-radius:1rem;
-      background:conic-gradient(from 180deg at 50% 50%, #1e3a8a, #334155, #1e3a8a);
-      animation:spin 14s linear infinite; z-index:0; padding:2px;
-      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-      -webkit-mask-composite: xor; mask-composite: exclude;
-    }
-    @keyframes spin{ to{ transform:rotate(1turn); } }
-    @media (prefers-reduced-motion: reduce){ .logo-container::before{ animation:none; } }
+  .logo-container {
+    position: relative; display: flex; justify-content: center; align-items: center;
+    width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
+    isolation: isolate;
+  }
+  .logo-container::before{
+    content:""; position:absolute; inset:-2px; border-radius:1rem;
+    background:conic-gradient(from 180deg at 50% 50%, #1e3a8a, #334155, #1e3a8a);
+    animation:spin 14s linear infinite; z-index:0; padding:2px;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+  }
+  @keyframes spin{ to{ transform:rotate(1turn); } }
+  @media (prefers-reduced-motion: reduce){ .logo-container::before{ animation:none; } }
 
-    .crossword-grid { display: grid; grid-template-columns: repeat(8, minmax(40px, 1fr)); gap: 4px; position: relative; z-index: 10; }
-    .letter-box {
-      width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
-      background-color: #374151; color: white; font-size: 1.8rem; font-weight: bold; border: 2px solid #1f2937; border-radius: 0.375rem;
-      text-transform: uppercase; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
-    }
-    .flipped-k { transform: scaleX(-1); }
+  .crossword-grid { display: grid; grid-template-columns: repeat(8, minmax(40px, 1fr)); gap: 4px; position: relative; z-index: 10; }
+  .letter-box {
+    width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
+    background-color: #374151; color: white; font-size: 1.8rem; font-weight: bold; border: 2px solid #1f2937; border-radius: 0.375rem;
+    text-transform: uppercase; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+  }
+  .flipped-k { transform: scaleX(-1); }
 
-    .background-crossword {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
-      opacity: 0.5; z-index: 1; pointer-events: none; animation: bgFloat 30s linear infinite;
-    }
-    @keyframes bgFloat{ 0%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } 100%{ transform:translateY(0); } }
+  .background-crossword {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
+    opacity: 0.5; z-index: 1; pointer-events: none; animation: bgFloat 30s linear infinite;
+  }
+  @keyframes bgFloat{ 0%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } 100%{ transform:translateY(0); } }
 
-    .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
+  .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
 
-    .tile-img { border-radius: 1rem; box-shadow: 6px 6px 14px rgba(0,0,0,.35); transition: transform .2s ease, box-shadow .2s ease; }
-    .tile-img:hover { transform: translateY(-2px); box-shadow: 8px 8px 20px rgba(0,0,0,.4); }
+  .tile-img { border-radius: 1rem; box-shadow: 6px 6px 14px rgba(0,0,0,.35); transition: transform .2s ease, box-shadow .2s ease; }
+  .tile-img:hover { transform: translateY(-2px); box-shadow: 8px 8px 20px rgba(0,0,0,.4); }
 
-    .dark-blue-text { color: #1e3a8a; font-weight: bold; }
-    .message-text { max-width: 520px; margin: 0 auto; text-align: center; }
+  .dark-blue-text { color: #1e3a8a; font-weight: bold; }
+  .message-text { max-width: 520px; margin: 0 auto; text-align: center; }
 
-    @keyframes gentlePulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.03); } }
-    .btn-pulse{ animation:gentlePulse 1.6s ease-in-out 2; }
-  </style>
+  @keyframes gentlePulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.03); } }
+  .btn-pulse{ animation:gentlePulse 1.6s ease-in-out 2; }
+</style>
 </head>
 
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -168,23 +167,19 @@
       Kies onder wat jy wil speel.
     </p>
 
-<!-- Hero Support CTA (replaces the current <p class="message-text my-4">…</p>) -->
-<!-- Hero Support CTA (replaces the current <p class="message-text my-4">…</p>) -->
-<div class="message-text my-4">
-  <a id="supportLink"
-     href="https://www.buymeacoffee.com/kriptiek"
-     target="_blank" rel="noopener noreferrer"
-     onclick="gtag('event','bmac_click',{from:'hero'})"
-     class="inline-flex items-center justify-center gap-2 w-full px-5 py-3
-            bg-yellow-500 hover:bg-yellow-600 text-white font-bold
-            rounded-xl shadow-md transition duration-200 btn-pulse">
-    <img src="/assets/favicon-32x32.png" alt="Kriptiek" class="w-5 h-5 object-contain" />
-    <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
-  </a>
-  <p class="text-xs text-slate-600 mt-2 text-center">
-    Kliek hier as jy ons met 'n geldelike bydrae kan help
-  </p>
-</div>
+    <!-- Hero Support CTA (no subtext) -->
+    <div class="message-text my-4">
+      <a id="supportLink"
+         href="https://www.buymeacoffee.com/kriptiek"
+         target="_blank" rel="noopener noreferrer"
+         onclick="gtag('event','bmac_click',{from:'hero'})"
+         class="inline-flex items-center justify-center gap-2 w-full px-5 py-3
+                bg-yellow-500 hover:bg-yellow-600 text-white font-bold
+                rounded-xl shadow-md transition duration-200 btn-pulse">
+        <img src="/assets/favicon-32x32.png" alt="Kriptiek" class="w-5 h-5 object-contain" />
+        <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
+      </a>
+    </div>
 
     <a id="contactHeroLink" href="/contact.html" class="underline font-bold text-[#1e3a8a]">
       Kontak ons as jy enige probleme ervaar.
@@ -197,16 +192,16 @@
     <!-- New tile grid mount -->
     <div id="tiles-grid" class="mt-6 mx-auto max-w-[28rem]"></div>
 
-    <!-- 🟡 Support CTA under tiles (full width to match grid) -->
+    <!-- 🟡 Support CTA under tiles (same wording as top, no favicon; keep subtext) -->
     <section id="support-cta" class="max-w-[28rem] mx-auto mt-6">
       <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800">
         <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
-           class="flex items-center justify-center gap-2 w-full px-5 py-3 
+           onclick="gtag('event','bmac_click',{from:'bottom-card'})"
+           class="flex items-center justify-center w-full px-5 py-3 
                   bg-yellow-500 hover:bg-yellow-600 text-white font-bold 
                   rounded-xl shadow-md transition duration-200"
-           aria-label="Hou Kriptiek gratis – skenk via Buy Me a Coffee">
-          <img src="/assets/favicon-32x32.png" alt="Kriptiek logo" class="w-5 h-5 object-contain" />
-          <span>Hou Kriptiek gratis</span>
+           aria-label="Help ons om Kriptiek gratis te hou">
+          <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
         </a>
         <p class="text-xs text-slate-600 mt-3 text-center">
           Kliek bo as jy Kriptiek.com finansieel kan ondersteun. Daarsonder sal ons nie kan voortbestaan nie!
@@ -214,7 +209,7 @@
       </div>
     </section>
 
-    <!-- Old Gesels Saam image (kept as fallback; will be hidden for signed-in users to avoid duplication) -->
+    <!-- Old Gesels Saam image (kept as fallback; hidden for signed-in users) -->
     <section id="gesels-fallback" class="text-center mt-10">
       <a href="/forum.html" class="block mx-auto w-fit">
         <img src="/assets/gesels-saam.png" alt="Gesels saam" class="tile-img w-40 h-auto" />
@@ -231,14 +226,6 @@
     <a href="/faq.html" class="underline">Gereelde vrae</a> |
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
-    <span class="mx-1">|</span>
-    <!-- 🟡 Footer support link -->
-    <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
-       class="inline-flex items-center gap-1 font-semibold text-yellow-700 hover:text-yellow-800 align-middle"
-       aria-label="Hou Kriptiek gratis – footer skakel">
-      <img src="/assets/favicon-32x32.png" alt="Kriptiek logo" class="w-4 h-4" />
-      <span>Hou Kriptiek gratis</span>
-    </a>
   </footer>
 
   <div id="cookie-banner" class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-300 shadow-md p-4 text-sm text-gray-800 text-center z-50 hidden">
@@ -512,14 +499,3 @@
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
