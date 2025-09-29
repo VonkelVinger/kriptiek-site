@@ -60,9 +60,26 @@
     <p class="text-sm text-gray-600">Spog, skinder of kla, maar gedra jou of jy word verwyder. Jy moet geregistreer wees om kommentaar te kan plaas.</p>
   </header>
 
+  <!-- 🟡 BMaC CTA (same as other pages) -->
+  <section class="max-w-xl mx-auto px-6 mt-3">
+    <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800">
+      <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
+         onclick="gtag && gtag('event','bmac_click',{from:'forum-hero'})"
+         class="flex items-center justify-center w-full px-5 py-3
+                bg-yellow-500 hover:bg-yellow-600 text-white font-bold
+                rounded-xl shadow-md transition duration-200"
+         aria-label="Help ons om Kriptiek gratis te hou">
+        <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
+      </a>
+      <p class="text-xs text-slate-600 mt-2 text-center">
+        Kliek bo as jy Kriptiek.com finansieel kan ondersteun. Daarsonder sal ons nie kan voortbestaan nie!
+      </p>
+    </div>
+  </section>
+
   <main class="max-w-xl mx-auto p-6 relative z-10">
     <div id="new-post" class="mb-6">
-      <h2 class="text-lg font-semibold mb-2">JOU NUWE PLASING</h2>
+      <h2 class="text-lg font-semibold mb-2">Jou nuwe plasing</h2>
       <input type="text" id="postTitle" maxlength="80" placeholder="Titel" class="w-full p-2 border rounded mb-2">
       <textarea id="postContent" maxlength="500" rows="4" placeholder="Tik jou boodskap (maks. 500 karakters)" class="w-full p-2 border rounded mb-1"></textarea>
       <div class="text-sm text-gray-500 mb-2"><span id="charCount">0</span>/500 karakters</div>
