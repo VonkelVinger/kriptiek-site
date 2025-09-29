@@ -961,5 +961,39 @@
     /* ---- Init ---- */
     await loadGame();
   </script>
+
+
+<!-- 🟡 Buy Me a Coffee CTA above leaderboard -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const target =
+    Array.from(document.querySelectorAll('h1,h2,h3,h4,section,div'))
+      .find(el => /Leierbord/i.test(el.textContent.trim()))
+    || document.getElementById('leaderboard')
+    || document.querySelector('[data-leaderboard], .leaderboard');
+
+  if (!target || !target.parentElement) return;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'my-4';
+  wrap.innerHTML = `
+    <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800">
+      <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
+         onclick="gtag && gtag('event','bmac_click',{from:'blitstiek-leaderboard'})"
+         class="flex items-center justify-center w-full px-5 py-3
+                bg-yellow-500 hover:bg-yellow-600 text-white font-bold
+                rounded-xl shadow-md transition duration-200"
+         aria-label="Help ons om Kriptiek gratis te hou">
+        <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
+      </a>
+    </div>
+  `;
+  target.parentElement.insertBefore(wrap, target);
+});
+</script>
+
+
+
+  
 </body>
 </html>
