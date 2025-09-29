@@ -835,7 +835,7 @@
         snap.forEach(docSnap=>{
           const v = docSnap.data()||{};
           if(idx===0) bestText.textContent = String(v.score ?? '—');
-        const li=document.createElement('li');
+          const li=document.createElement('li');
           li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>: ${(v.score??0)} punte`;
           lbList.appendChild(li);
           idx++;
@@ -921,5 +921,31 @@
     }
     init();
   </script>
+
+<!-- 🟡 Buy Me a Coffee CTA above leaderboard -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const list = document.getElementById('leaderboardList');
+  const section = list ? list.closest('section') : null;
+  if (!section || !section.parentElement) return;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'my-4';
+  wrap.innerHTML = `
+    <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800">
+      <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
+         onclick="gtag && gtag('event','bmac_click',{from:'slimstiek-leaderboard'})"
+         class="flex items-center justify-center w-full px-5 py-3
+                bg-yellow-500 hover:bg-yellow-600 text-white font-bold
+                rounded-xl shadow-md transition duration-200"
+         aria-label="Help ons om Kriptiek gratis te hou">
+        <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
+      </a>
+    </div>
+  `;
+  section.parentElement.insertBefore(wrap, section);
+});
+</script>
+
 </body>
 </html>
