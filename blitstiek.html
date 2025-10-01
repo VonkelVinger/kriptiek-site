@@ -453,12 +453,12 @@
     }
 
     /* ✅ Exact success wording for WhatsApp/system share (after finishing) */
-    
     function buildWinShareText(payload){
-  const tt   = Number(payload?.time);
-  const word = String(payload?.target || TARGET || '—').toUpperCase();
-  return `Ek het ${word} op BLITSTIEK in ${fmt(tt)} gebou: ${buildShareUrl(GAME_ID)}`;
-}
+      const tt   = Number(payload?.time);
+      const word = String(payload?.target || TARGET || '—').toUpperCase();
+      return `Ek het ${word} op BLITSTIEK in ${fmt(tt)} gebou: ${buildShareUrl(GAME_ID)}`;
+    }
+
     /* Chooses success text if we have a time; otherwise link-only */
     function currentShareText(){
       return (stickyPayload && Number.isFinite(Number(stickyPayload.time)))
@@ -722,23 +722,28 @@
       return false;
     }
 
-    // ✅ Use success text (with time) if available, else the basic link-only text
- sWA.onclick   = () => { openWhatsApp(currentShareText()); stickyShareMenu.classList.add('hidden'); };
-sCopy.onclick = async () => { try{ await navigator.clipboard.writeText(currentShareText()); alert('Skakel gekopieer!'); }catch{} stickyShareMenu.classList.add('hidden'); };
-sSys.onclick  = async () => {
-  const ok = await trySystemShare(currentShareText());
-  if(!ok) openWhatsApp(currentShareText());
-  stickyShareMenu.classList.add('hidden');
-};
+    // ✅ Use success text (with time) if available, else the basic link-only text for MODAL menu
+    mWA.onclick   = () => { openWhatsApp(currentShareText()); shareMenu.classList.add('hidden'); };
+    mCopy.onclick = async () => {
+      try{ await navigator.clipboard.writeText(currentShareText()); alert('Skakel gekopieer!'); }catch{}
+      shareMenu.classList.add('hidden');
+    };
+    mSys.onclick  = async () => {
+      const ok = await trySystemShare(currentShareText());
+      if(!ok) openWhatsApp(currentShareText());
+      shareMenu.classList.add('hidden');
+    };
 
-// Sticky share menu (uses success text if available)
-sWA.onclick   = () => { openWhatsApp(currentShareText()); stickyShareMenu.classList.add('hidden'); };
-sCopy.onclick = async () => { try{ await navigator.clipboard.writeText(currentShareText()); alert('Skakel gekopieer!'); }catch{} stickyShareMenu.classList.add('hidden'); };
-sSys.onclick  = async () => {
-  const ok = await trySystemShare(currentShareText());
-  if(!ok) openWhatsApp(currentShareText());
-  stickyShareMenu.classList.add('hidden');
-      
+    // Sticky share menu (uses success text if available)
+    sWA.onclick   = () => { openWhatsApp(currentShareText()); stickyShareMenu.classList.add('hidden'); };
+    sCopy.onclick = async () => {
+      try{ await navigator.clipboard.writeText(currentShareText()); alert('Skakel gekopieer!'); }catch{}
+      stickyShareMenu.classList.add('hidden');
+    };
+    sSys.onclick  = async () => {
+      const ok = await trySystemShare(currentShareText());
+      if(!ok) openWhatsApp(currentShareText());
+      stickyShareMenu.classList.add('hidden');
     };
 
     /* ---- Leaderboard submit ---- */
