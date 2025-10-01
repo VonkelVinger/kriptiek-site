@@ -60,18 +60,21 @@
     <p class="text-sm text-gray-600">Spog, skinder of kla, maar gedra jou of jy word verwyder. Jy moet geregistreer wees om kommentaar te kan plaas.</p>
   </header>
 
+  <!-- 🔔 Live new-post banner (hidden by default) -->
+  <div id="liveBanner"
+       class="hidden sticky top-0 z-20 bg-green-600 text-white text-center px-4 py-2 cursor-pointer">
+    Nuwe plasing beskikbaar — kliek om te laai
+  </div>
+
   <!-- 🟡 BMaC CTA (same as other pages) -->
   <section class="max-w-xl mx-auto px-6 mt-3">
     <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800">
-
-<a href="https://www.buymeacoffee.com/kriptiek"
-   class="flex items-center justify-center w-full px-5 py-3
-          bg-yellow-500 hover:bg-yellow-600 text-white font-bold
-          rounded-xl shadow-md transition duration-200">
-  HELP ONS OM KRIPTIEK GRATIS TE HOU
-</a>
-
-      
+      <a href="https://www.buymeacoffee.com/kriptiek"
+         class="flex items-center justify-center w-full px-5 py-3
+                bg-yellow-500 hover:bg-yellow-600 text-white font-bold
+                rounded-xl shadow-md transition duration-200">
+        HELP ONS OM KRIPTIEK GRATIS TE HOU
+      </a>
       <p class="text-xs text-slate-600 mt-2 text-center">
         Kliek bo as jy Kriptiek.com finansieel kan ondersteun. Daarsonder sal ons nie kan voortbestaan nie!
       </p>
@@ -115,7 +118,8 @@
     import {
       getFirestore, collection, addDoc, getDocs, serverTimestamp,
       query, orderBy, updateDoc, doc, deleteDoc, limit, startAfter,
-      getDoc, setDoc, getCountFromServer, increment
+      getDoc, setDoc, getCountFromServer, increment,
+      onSnapshot            // ⬅️ real-time listener
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -151,6 +155,10 @@
 
     // Track rendered posts to avoid duplicates when loadPosts fires more than once
     const renderedIds = new Set();
+
+    // 🔔 Live watcher state
+    let latestDocId = null;
+    let liveUnsub = null;
 
     function relativeTime(date) {
       const now = new Date();
@@ -188,17 +196,21 @@
       btn.disabled = true;
 
       try {
-        await addDoc(postsRef, {
+        const ref = await addDoc(postsRef, {
           title, content, userName,
           authorId: currentUser.uid,         // required by rules
           timestamp: serverTimestamp()
         });
+
+        // 👇 voorkom dat jou eie nuwe plasing die banner laat wys
+        latestDocId = ref.id;
 
         document.getElementById('postTitle').value = '';
         document.getElementById('postContent').value = '';
         document.getElementById('charCount').textContent = '0';
         lastVisible = null;
         loadPosts(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } finally {
         btn.disabled = false;
       }
@@ -239,7 +251,6 @@
         const agg = await getCountFromServer(likesRef);
         countEl.textContent = agg.data().count;
       } catch {
-        // fallback if count API not available in some environments
         const likesRef = collection(db, "forumPosts", postId, "likes");
         const snap = await getDocs(likesRef);
         countEl.textContent = snap.size;
@@ -274,6 +285,12 @@
       let qRef = query(postsRef, orderBy("timestamp", "desc"), limit(postLimit));
       if (lastVisible) qRef = query(postsRef, orderBy("timestamp", "desc"), startAfter(lastVisible), limit(postLimit));
       const snap = await getDocs(qRef);
+
+      // ✅ On the very first load, remember current "top" so the banner doesn't flash
+      if (reset && !lastVisible && snap.docs.length && latestDocId === null) {
+        latestDocId = snap.docs[0].id;
+      }
+
       if (snap.empty) {
         loadMoreBtn.classList.add("hidden");
         allLoaded = true;
@@ -400,6 +417,41 @@
       });
     }
 
+    // 🔔 Start a light real-time watcher that only tracks the newest doc
+    function startLiveWatcher() {
+      const latestQ = query(postsRef, orderBy("timestamp", "desc"), limit(1));
+      liveUnsub = onSnapshot(
+        latestQ,
+        { includeMetadataChanges: true },
+        (snap) => {
+          const top = snap.docs[0];
+          if (!top) return;
+          if (top.metadata.hasPendingWrites) return; // ignore local writes
+
+          const newTopId = top.id;
+
+          // First attach: set the baseline
+          if (latestDocId === null) {
+            latestDocId = newTopId;
+            return;
+          }
+
+          // If a new doc arrives at the top and we haven't rendered it yet -> show banner
+          if (newTopId !== latestDocId && !renderedIds.has(newTopId)) {
+            const b = document.getElementById("liveBanner");
+            b.classList.remove("hidden");
+          }
+        }
+      );
+    }
+
+    // Clicking the banner loads newest posts and hides the banner
+    document.getElementById("liveBanner").addEventListener("click", () => {
+      document.getElementById("liveBanner").classList.add("hidden");
+      loadPosts(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
     document.getElementById("postContent").addEventListener("input", e => {
       document.getElementById("charCount").textContent = e.target.value.length;
     });
@@ -408,7 +460,10 @@
     document.getElementById("loadMoreBtn").addEventListener("click", () => loadPosts());
     document.getElementById("searchInput").addEventListener("input", () => loadPosts(true));
     document.getElementById("searchInput").value = "";
+
+    // Initial load + start the live watcher
     loadPosts(true);
+    startLiveWatcher();
   </script>
 
   <script>
