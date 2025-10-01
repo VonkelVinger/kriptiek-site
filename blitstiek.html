@@ -453,11 +453,12 @@
     }
 
     /* ✅ Exact success wording for WhatsApp/system share (after finishing) */
+    
     function buildWinShareText(payload){
-      const tt = Number(payload?.time);
-      return `Ek het FOUTLOOS op BLITSTIEK in ${fmt(tt)} gebou: ${buildShareUrl(GAME_ID)}`;
-    }
-
+  const tt   = Number(payload?.time);
+  const word = String(payload?.target || TARGET || '—').toUpperCase();
+  return `Ek het ${word} op BLITSTIEK in ${fmt(tt)} gebou: ${buildShareUrl(GAME_ID)}`;
+}
     /* Chooses success text if we have a time; otherwise link-only */
     function currentShareText(){
       return (stickyPayload && Number.isFinite(Number(stickyPayload.time)))
