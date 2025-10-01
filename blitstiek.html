@@ -125,10 +125,8 @@
       justify-items:center;
       align-items:center;
     }
-    /* 3-up override for bars with three tiles */
     .cols-3{ grid-template-columns:repeat(3,1fr); }
 
-    /* Scope to direct children so dropdowns aren’t affected */
     .action-grid > a,
     .action-grid > button{
       display:grid;
@@ -139,12 +137,11 @@
       padding:0; margin:0;
       background:transparent !important;
       border:0; border-radius:0;
-      line-height:0;           /* keep tiles tight; won’t leak into menus now */
+      line-height:0;
       appearance:none; -webkit-appearance:none;
       box-shadow:none;
       cursor:pointer;
     }
-    /* Square PNG fills wrapper; no distortion; carries shadow */
     .btn-img{
       width:100%; height:100%;
       display:block;
@@ -450,17 +447,22 @@
       return url.toString();
     }
 
-    /* LINK-ONLY (modal + sticky; and yellow tile before completion) */
+    /* LINK-ONLY (used before completion) */
     function shareTextLinkOnly(gid){
       return `Kom speel vandag se BLITSTIEK op Kriptiek: ${buildShareUrl(gid)}`;
     }
 
-    /* EXACT success wording for yellow tile after finishing */
+    /* ✅ Exact success wording for WhatsApp/system share (after finishing) */
     function buildWinShareText(payload){
-      const tt   = Number(payload?.time);
-      const name = currentUserName || 'Speler';
-      const word = payload?.target || TARGET || '—';
-      return `Veels geluk, ${name}, jy het ${word} in ${fmt(tt)} voltooi!`;
+      const tt = Number(payload?.time);
+      return `Ek het FOUTLOOS op BLITSTIEK in ${fmt(tt)} gebou: ${buildShareUrl(GAME_ID)}`;
+    }
+
+    /* Chooses success text if we have a time; otherwise link-only */
+    function currentShareText(){
+      return (stickyPayload && Number.isFinite(Number(stickyPayload.time)))
+        ? buildWinShareText(stickyPayload)
+        : shareTextLinkOnly(GAME_ID);
     }
 
     /* ---- Mechanics ---- */
@@ -680,11 +682,6 @@
     });
 
     /* ---- Share (modal & sticky & tile) ---- */
-    function shareTextFrom(){ return shareTextLinkOnly(GAME_ID); }
-    function tileShareText(){
-      const hasResult = stickyPayload && Number.isFinite(Number(stickyPayload.time));
-      return hasResult ? buildWinShareText(stickyPayload) : shareTextLinkOnly(GAME_ID);
-    }
     function toggleShareMenu(){ shareMenu.classList.toggle('hidden'); }
     modalShareBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleShareMenu(); });
 
@@ -692,13 +689,20 @@
     document.addEventListener('click', (e)=>{
       if(shareMenu && !shareMenu.contains(e.target) && e.target!==modalShareBtn){ shareMenu.classList.add('hidden'); }
       if(stickyShareMenu && !stickyShareMenu.contains(e.target) && e.target!==stickyShareBtn){ stickyShareMenu.classList.add('hidden'); }
-      // close any tile menus under the action bars
       document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>{
         if(!m.contains(e.target)) m.classList.add('hidden');
       });
     });
-    window.addEventListener('scroll',  ()=>{ shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden'); document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>m.classList.add('hidden')); });
-    window.addEventListener('resize',  ()=>{ shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden'); document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>m.classList.add('hidden')); });
+    window.addEventListener('scroll',  ()=>{
+      shareMenu.classList.add('hidden');
+      stickyShareMenu.classList.add('hidden');
+      document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>m.classList.add('hidden'));
+    });
+    window.addEventListener('resize',  ()=>{
+      shareMenu.classList.add('hidden');
+      stickyShareMenu.classList.add('hidden');
+      document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>m.classList.add('hidden'));
+    });
 
     // System share helper (tries to attach green tile image on mobile)
     async function trySystemShare(text){
@@ -717,11 +721,12 @@
       return false;
     }
 
-    mWA.onclick   = () => { openWhatsApp(shareTextFrom()); shareMenu.classList.add('hidden'); };
-    mCopy.onclick = async () => { try{ await navigator.clipboard.writeText(shareTextFrom()); alert('Skakel gekopieer!'); }catch{} shareMenu.classList.add('hidden'); };
+    // ✅ Use success text (with time) if available, else the basic link-only text
+    mWA.onclick   = () => { openWhatsApp(currentShareText()); shareMenu.classList.add('hidden'); };
+    mCopy.onclick = async () => { try{ await navigator.clipboard.writeText(currentShareText()); alert('Skakel gekopieer!'); }catch{} shareMenu.classList.add('hidden'); };
     mSys.onclick  = async () => {
-      const ok = await trySystemShare(shareTextFrom());
-      if(!ok) openWhatsApp(shareTextFrom());
+      const ok = await trySystemShare(currentShareText());
+      if(!ok) openWhatsApp(currentShareText());
       shareMenu.classList.add('hidden');
     };
 
@@ -837,7 +842,6 @@
           const canonicalPathAndQuery = urlObj.pathname + '?' + urlObj.searchParams.toString();
           const current = window.location.pathname + window.location.search + window.location.hash;
           if (current !== canonicalPathAndQuery) {
-            // keep same filename/path (prevents 404s), just normalize query/hash
             history.replaceState(null, '', canonicalPathAndQuery);
           }
         }
@@ -889,23 +893,6 @@
     btnRight.addEventListener('click',()=>move(1,0));
     btnDown .addEventListener('click', ()=>hardDrop());
 
-    // Sticky share menu actions (link-only)
-    function shareTextCurrent(){ return shareTextFrom(); }
-    sWA.onclick   = () => { openWhatsApp(shareTextCurrent()); stickyShareMenu.classList.add('hidden'); };
-    sCopy.onclick = async () => { try{ await navigator.clipboard.writeText(shareTextCurrent()); alert('Skakel gekopieer!'); }catch{} stickyShareMenu.classList.add('hidden'); };
-    sSys.onclick  = async () => {
-      const ok = await trySystemShare(shareTextCurrent());
-      if(!ok) openWhatsApp(shareTextCurrent());
-      stickyShareMenu.classList.add('hidden');
-    };
-
-    document.addEventListener('keydown', (e)=>{
-      if(e.key==='ArrowLeft') move(-1,0);
-      if(e.key==='ArrowRight') move(1,0);
-      if(e.key==='ArrowDown') move(0,1);
-      if(e.key===' ') { e.preventDefault(); hardDrop(); }
-    });
-
     function toggleStickyShareMenu(){ stickyShareMenu.classList.toggle('hidden'); }
     function openWhatsApp(text){
       const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
@@ -947,7 +934,7 @@
         menu.classList.toggle('hidden');
       });
 
-      const txt = () => tileShareText();
+      const txt = () => currentShareText(); // ✅ use success text if available
       wa.onclick = () => { openWhatsApp(txt()); menu.classList.add('hidden'); };
       cp.onclick = async () => { try{ await navigator.clipboard.writeText(txt()); alert('Skakel gekopieer!'); }catch{} menu.classList.add('hidden'); };
       sys.onclick = async () => { const ok = await trySystemShare(txt()); if(!ok) openWhatsApp(txt()); menu.classList.add('hidden'); };
@@ -964,7 +951,6 @@
 <!-- 🟡 Buy Me a Coffee CTA above the real leaderboard (Blitstiek) -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  // Find the leaderboard list and its containing section (the card)
   const list = document.getElementById('leaderboardList');
   const section = list ? list.closest('section') : null;
 
@@ -984,8 +970,6 @@ document.addEventListener('DOMContentLoaded', () => {
       </a>
     </div>
   `;
-
-  // Insert just BEFORE the leaderboard section
   section.parentElement.insertBefore(wrap, section);
 });
 </script>
