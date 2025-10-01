@@ -163,7 +163,7 @@
       }
       if (seconds < 60) return "nou";
       const minutes = Math.floor(seconds / 60);
-      if (minutes < 60) return `${minutes} minuut${minutes === 1 ? "" : "e"} gelede`;
+      if (minutes < 60) return minutes === 1 ? "1 minuut gelede" : `${minutes} minute gelede`;
       const hours = Math.floor(minutes / 60);
       if (hours < 24) return `${hours} uur gelede`;
       return days === 1 ? "1 dag gelede" : `${days} dae gelede`;
@@ -267,7 +267,7 @@
         container.innerHTML = "";
         lastVisible = null;
         allLoaded = false;
-        renderedIds.clear(); // important: allow fresh render, and stop accidental duplicates
+        renderedIds.clear(); // allow fresh render; prevents duplicates
       }
       if (allLoaded) return;
 
