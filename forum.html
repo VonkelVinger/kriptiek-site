@@ -149,6 +149,9 @@
     let lastVisible = null;
     let allLoaded = false;
 
+    // Track rendered posts to avoid duplicates when loadPosts fires more than once
+    const renderedIds = new Set();
+
     function relativeTime(date) {
       const now = new Date();
       const seconds = Math.floor((now - date) / 1000);
@@ -163,7 +166,7 @@
       if (minutes < 60) return `${minutes} minuut${minutes === 1 ? "" : "e"} gelede`;
       const hours = Math.floor(minutes / 60);
       if (hours < 24) return `${hours} uur gelede`;
-      return `${days} dag${days === 1 ? "" : "e"} gelede`;
+      return days === 1 ? "1 dag gelede" : `${days} dae gelede`;
     }
 
     function applyFormatting(text) {
@@ -176,28 +179,29 @@
       const title = document.getElementById('postTitle').value.trim();
       const content = document.getElementById('postContent').value.trim();
       const msg = document.getElementById('formMsg');
+      const btn = document.getElementById('submitBtn');
 
-      if (!title || !content) {
-        msg.textContent = 'Titel en boodskap is verpligtend.';
-        return;
-      }
-      if (!currentUser) {
-        msg.textContent = 'Jy moet aangemeld wees om te plaas.';
-        return;
-      }
+      if (!title || !content) { msg.textContent = 'Titel en boodskap is verpligtend.'; return; }
+      if (!currentUser) { msg.textContent = 'Jy moet aangemeld wees om te plaas.'; return; }
+
       msg.textContent = '';
+      btn.disabled = true;
 
-      await addDoc(postsRef, {
-        title, content, userName,
-        authorId: currentUser.uid,         // required by rules
-        timestamp: serverTimestamp()
-      });
+      try {
+        await addDoc(postsRef, {
+          title, content, userName,
+          authorId: currentUser.uid,         // required by rules
+          timestamp: serverTimestamp()
+        });
 
-      document.getElementById('postTitle').value = '';
-      document.getElementById('postContent').value = '';
-      document.getElementById('charCount').textContent = '0';
-      lastVisible = null;
-      loadPosts(true);
+        document.getElementById('postTitle').value = '';
+        document.getElementById('postContent').value = '';
+        document.getElementById('charCount').textContent = '0';
+        lastVisible = null;
+        loadPosts(true);
+      } finally {
+        btn.disabled = false;
+      }
     }
 
     async function loadReplies(postId) {
@@ -232,9 +236,10 @@
 
       try {
         const likesRef = collection(db, "forumPosts", postId, "likes");
-        const agg = await getCountFromServer(query(likesRef));
+        const agg = await getCountFromServer(likesRef);
         countEl.textContent = agg.data().count;
       } catch {
+        // fallback if count API not available in some environments
         const likesRef = collection(db, "forumPosts", postId, "likes");
         const snap = await getDocs(likesRef);
         countEl.textContent = snap.size;
@@ -262,6 +267,7 @@
         container.innerHTML = "";
         lastVisible = null;
         allLoaded = false;
+        renderedIds.clear(); // important: allow fresh render, and stop accidental duplicates
       }
       if (allLoaded) return;
 
@@ -278,10 +284,14 @@
       loadMoreBtn.classList.remove("hidden");
 
       snap.forEach(docSnap => {
+        if (renderedIds.has(docSnap.id)) return; // skip duplicates caused by multiple calls
         const post = docSnap.data();
+
         if (searchTerm &&
             !post.title?.toLowerCase().includes(searchTerm) &&
             !post.content?.toLowerCase().includes(searchTerm)) return;
+
+        renderedIds.add(docSnap.id);
 
         const div = document.createElement("div");
         div.className = "mb-6 p-4 border rounded bg-white shadow";
