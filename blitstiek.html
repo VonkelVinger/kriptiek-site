@@ -729,6 +729,15 @@
       const ok = await trySystemShare(currentShareText());
       if(!ok) openWhatsApp(currentShareText());
       shareMenu.classList.add('hidden');
+
+// Sticky share menu (uses success text if available)
+sWA.onclick   = () => { openWhatsApp(currentShareText()); stickyShareMenu.classList.add('hidden'); };
+sCopy.onclick = async () => { try{ await navigator.clipboard.writeText(currentShareText()); alert('Skakel gekopieer!'); }catch{} stickyShareMenu.classList.add('hidden'); };
+sSys.onclick  = async () => {
+  const ok = await trySystemShare(currentShareText());
+  if(!ok) openWhatsApp(currentShareText());
+  stickyShareMenu.classList.add('hidden');
+      
     };
 
     /* ---- Leaderboard submit ---- */
