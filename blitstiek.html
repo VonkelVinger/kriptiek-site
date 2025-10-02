@@ -682,6 +682,32 @@
       guestGateBypassOnce=false; start();
     });
 
+    /* ---- Keyboard controls (arrows + space + P) ---- */
+    window.addEventListener('keydown', (e) => {
+      // ignore if overlays open
+      const gateOpen  = nrGate && nrGate.style.display === 'flex';
+      const modalOpen = over   && over.style.display   === 'flex';
+      if (gateOpen || modalOpen) return;
+
+      // avoid typing in inputs (if any are ever added)
+      const tag = (document.activeElement && document.activeElement.tagName) || '';
+      if (['INPUT','TEXTAREA','SELECT'].includes(tag)) return;
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          e.preventDefault(); move(-1, 0); break;
+        case 'ArrowRight':
+          e.preventDefault(); move( 1, 0); break;
+        case 'ArrowDown':
+        case ' ':
+        case 'Spacebar':
+          e.preventDefault(); hardDrop(); break;
+        case 'p':
+        case 'P':
+          e.preventDefault(); togglePause(); break;
+      }
+    });
+
     /* ---- Share (modal & sticky & tile) ---- */
     function toggleShareMenu(){ shareMenu.classList.toggle('hidden'); }
     modalShareBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleShareMenu(); });
