@@ -431,7 +431,7 @@
     let guestGateBypassOnce = false;
     function showNRGate(){ nrGate.style.display='flex'; }
     function hideNRGate(){ nrGate.style.display='none'; }
-    function chooseGuest(){ guestGateBypassOnce = true; hideNRGate(); }
+    function chooseGuest(){ guestGateBypassOnce = true; hideNRGate(); window.focus?.(); }
     function goRegister(){
       const returnUrl = location.pathname + location.search;
       sessionStorage.setItem('returnAfterAuth', returnUrl);
@@ -679,32 +679,44 @@
     // gate-aware start
     btnStart.addEventListener('click', ()=>{
       if(!user && !guestGateBypassOnce){ showNRGate(); return; }
-      guestGateBypassOnce=false; start();
+      guestGateBypassOnce=false; window.focus?.(); start();
     });
 
     /* ---- Keyboard controls (arrows + space + P) ---- */
     window.addEventListener('keydown', (e) => {
-      // ignore if overlays open
-      const gateOpen  = nrGate && nrGate.style.display === 'flex';
-      const modalOpen = over   && over.style.display   === 'flex';
-      if (gateOpen || modalOpen) return;
+      // If the success modal is open, ignore gameplay keys
+      const modalOpen = over && over.style.display === 'flex';
+      if (modalOpen) return;
 
       // avoid typing in inputs (if any are ever added)
       const tag = (document.activeElement && document.activeElement.tagName) || '';
       if (['INPUT','TEXTAREA','SELECT'].includes(tag)) return;
 
+      // If the N-R gate is open, accept first gameplay key to proceed as guest
+      const gateOpen = nrGate && nrGate.style.display === 'flex';
+      const isGameplayKey = (
+        e.key === 'ArrowLeft' ||
+        e.key === 'ArrowRight' ||
+        e.key === 'ArrowDown' ||
+        e.key === ' ' || e.key === 'Spacebar' ||
+        e.key === 'p' || e.key === 'P'
+      );
+
+      if (gateOpen && isGameplayKey) {
+        e.preventDefault();
+        chooseGuest();           // hide the gate and focus window
+        if (!cur) start();       // start a round if not already started
+      }
+
+      // Normal controls
       switch (e.key) {
-        case 'ArrowLeft':
-          e.preventDefault(); move(-1, 0); break;
-        case 'ArrowRight':
-          e.preventDefault(); move( 1, 0); break;
+        case 'ArrowLeft':  e.preventDefault(); move(-1, 0); break;
+        case 'ArrowRight': e.preventDefault(); move( 1, 0); break;
         case 'ArrowDown':
         case ' ':
-        case 'Spacebar':
-          e.preventDefault(); hardDrop(); break;
+        case 'Spacebar':   e.preventDefault(); hardDrop();  break;
         case 'p':
-        case 'P':
-          e.preventDefault(); togglePause(); break;
+        case 'P':          e.preventDefault(); togglePause(); break;
       }
     });
 
