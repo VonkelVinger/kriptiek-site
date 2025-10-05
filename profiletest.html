@@ -16,7 +16,7 @@
 
     /* Pills */
     .pill { display:inline-block; padding:4px 12px; border-radius:9999px; font-weight:700; font-size:12px; line-height:18px; }
-    .pill-blue { background:#1e3a8a; color:#fff; }  /* use for Kriptiek + Dilemma */
+    .pill-blue { background:#1e3a8a; color:#fff; }
 
     /* Key-value list */
     .kv { display:grid; grid-template-columns: 1fr auto; gap:.25rem .75rem; }
@@ -28,20 +28,14 @@
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
-  <header class="bg-white shadow p-4">
-    <div class="max-w-4xl mx-auto flex items-center justify-center relative">
-      <h1 class="text-xl font-bold text-[#1e3a8a]">Jou Kriptiek-profiel (TOETS)</h1>
-      <!-- Top-right Kriptiek pill -->
-      <div class="absolute right-0">
-        <span id="pillOverall" class="pill pill-blue">KRIPTIEK-TELLING: …</span>
-      </div>
-    </div>
-    <p class="text-xs text-gray-500 mt-1 text-center">Hierdie blad wys ’n voorskou van die Dilemma-telling. Geen skrywes word gedoen nie.</p>
+  <header class="bg-white shadow p-4 text-center">
+    <h1 class="text-xl font-bold text-[#1e3a8a]">Jou Kriptiek-profiel (TOETS)</h1>
+    <p class="text-xs text-gray-500 mt-1">Hierdie blad wys ’n voorskou van die Dilemma-telling. Geen skrywes word gedoen nie.</p>
   </header>
 
   <main class="flex-grow p-4">
-    <!-- Top row: two equal-height cards; buttons aligned at the bottom -->
-    <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-6 items-stretch">
+    <!-- Top row: three columns on md+; buttons aligned at the bottom of the first two cards -->
+    <div class="max-w-5xl mx-auto grid md:grid-cols-3 gap-6 items-stretch">
       <!-- LEFT: General profile -->
       <section class="bg-white shadow rounded-xl p-5 flex flex-col h-full">
         <h2 class="text-lg font-bold mb-1">Profiel</h2>
@@ -63,7 +57,7 @@
             <p class="text-xs text-gray-500 mt-1">Let wel: Om jou e-pos te verander vereis dalk her-verifikasie.</p>
           </div>
 
-          <!-- Action row pinned to the bottom of the card -->
+          <!-- Action row pinned to the bottom -->
           <div class="mt-auto flex flex-wrap items-center gap-2">
             <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded">BÊRE</button>
             <button id="resetPwBtn" type="button" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
@@ -74,7 +68,7 @@
         </form>
       </section>
 
-      <!-- RIGHT: Verwyder card (button pinned to bottom to align with left action row) -->
+      <!-- MIDDLE: Verwyder card (button pinned to bottom to align with left actions) -->
       <section class="bg-white shadow rounded-xl p-5 flex flex-col h-full">
         <h3 class="text-lg font-bold mb-2">Verwyder my rekening</h3>
         <p class="text-sm text-gray-600 mb-3">
@@ -90,10 +84,15 @@
           <p id="deleteMsg" class="text-sm mt-2"></p>
         </div>
       </section>
+
+      <!-- RIGHT: Kriptiek-telling pill in its own white box -->
+      <section class="bg-white shadow rounded-xl p-5 flex items-center justify-center">
+        <span id="pillOverall" class="pill pill-blue text-sm md:text-base px-4 py-2">KRIPTIEK-TELLING: …</span>
+      </section>
     </div>
 
     <!-- Dilemma section -->
-    <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-6 mt-6">
+    <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-6 mt-6">
       <!-- Dilemma-telling (BETA, read-only preview) -->
       <section class="bg-white shadow rounded-xl p-5">
         <div class="flex items-center justify-between mb-2">
@@ -215,7 +214,7 @@
     const el = (id)=>document.getElementById(id);
 
     // --- Config (preview only — no writes) ---
-    const D_POINTS = [150,135,120,110,105,100]; // for 1..6 guesses
+    const D_POINTS = [150,135,120,110,105,100];
     const LOSS_POINTS = 20;
     const STREAK_UNIT = 5;
     const ARCHIVE_UNIT = 15;
@@ -371,9 +370,9 @@
       document.getElementById('bestStreak').textContent = data.bestStreak || 0;
       renderDist(data.guessDist || {});
 
-      // Support & pills
+      // Support status (for visibility copy)
       const supporter = isPaid(data);
-      // We'll mirror Dilemma preview for now (updated below)
+
       // Fetch plays for preview
       const playsRef = collection(db, 'userGames', user.uid, 'plays');
       const playsSnap = await getDocs(playsRef);
@@ -408,7 +407,7 @@
       document.getElementById('dilemmaTotal').textContent = String(preview.subtotal);
       document.getElementById('pillDilemma').textContent = `DILEMMA-TELLING: ${preview.subtotal}`;
 
-      // Header Kriptiek pill mirrors Dilemma for now
+      // KRIPTIEK pill mirrors Dilemma for now
       pillOverall.textContent = `KRIPTIEK-TELLING: ${preview.subtotal}`;
 
       const visMsg = supporter
@@ -430,7 +429,7 @@
 
       try {
         if (newEmail && newEmail !== (user.email || '')) {
-          await updateEmail(user, newEmail); // may require recent login
+          await updateEmail(user, newEmail);
         }
         const payload = {
           userName: name,
@@ -451,17 +450,14 @@
     });
 
     // Password reset
-    resetPwBtn.addEventListener('click', async ()=>{
+    document.getElementById('resetPwBtn').addEventListener('click', async ()=>{
       const user = auth.currentUser;
       if (!user || !user.email){
         formMsg.textContent = "Geen e-pos gevind vir jou rekening nie.";
         formMsg.className = "text-red-600"; return;
       }
       try {
-        await sendPasswordResetEmail(auth, user.email, {
-          url: 'https://www.kriptiek.com/login.html',
-          handleCodeInApp: false
-        });
+        await sendPasswordResetEmail(auth, user.email, { url: 'https://www.kriptiek.com/login.html', handleCodeInApp: false });
         formMsg.textContent = "Wagwoordherstel-e-pos is gestuur (kyk ook jou spam).";
         formMsg.className = "text-green-600";
       } catch (err) {
@@ -471,31 +467,22 @@
     });
 
     // Soft-delete request
-    const deleteBtnEl = document.getElementById('deleteBtn');
-    deleteBtnEl.addEventListener('click', async ()=>{
+    document.getElementById('deleteBtn').addEventListener('click', async ()=>{
       const user = auth.currentUser;
       if (!user) return;
       const ok = confirm("Is jy seker? Jou rekening word gedeaktiveer en vir verwydering ingedien.");
       if (!ok) return;
       try {
-        await setDoc(doc(db,'users', user.uid), {
-          status: "deletion_requested",
-          updatedAt: serverTimestamp()
-        }, { merge: true });
+        await setDoc(doc(db,'users', user.uid), { status: "deletion_requested", updatedAt: serverTimestamp() }, { merge: true });
+        await setDoc(doc(db,'deletionRequests', user.uid), { requestedAt: serverTimestamp(), uid: user.uid, email: user.email || null }, { merge: true });
 
-        await setDoc(doc(db,'deletionRequests', user.uid), {
-          requestedAt: serverTimestamp(),
-          uid: user.uid,
-          email: user.email || null
-        }, { merge: true });
-
-        document.getElementById('deleteMsg').textContent = "Versoek gestuur. Jy sal nou afgemeld word.";
-        document.getElementById('deleteMsg').className = "text-green-600";
+        deleteMsg.textContent = "Versoek gestuur. Jy sal nou afgemeld word.";
+        deleteMsg.className = "text-green-600";
         await signOut(auth);
         setTimeout(()=>{ window.location.href = "/index.html"; }, 800);
       } catch (err) {
-        document.getElementById('deleteMsg').textContent = "Kon nie versoek stuur nie: " + err.message;
-        document.getElementById('deleteMsg').className = "text-red-600";
+        deleteMsg.textContent = "Kon nie versoek stuur nie: " + err.message;
+        deleteMsg.className = "text-red-600";
       }
     });
   </script>
