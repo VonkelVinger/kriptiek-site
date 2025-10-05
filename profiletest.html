@@ -19,9 +19,13 @@
     .pill-blue { background:#1e3a8a; color:#fff; }
     .pill-gray { background:#4b5563; color:#fff; }
 
+    /* Key-value list */
     .kv { display:grid; grid-template-columns: 1fr auto; gap:.25rem .75rem; }
     .kv div:nth-child(odd){ color:#374151; }
     .kv div:nth-child(even){ text-align:right; font-variant-numeric: tabular-nums; }
+
+    /* Highlight total row */
+    .kv-total { grid-column: 1 / -1; background:#fef9c3; border:1px solid #fde68a; border-radius:.5rem; padding:.5rem .75rem; font-weight:700; }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -31,16 +35,14 @@
   </header>
 
   <main class="flex-grow p-4">
-    <!-- Pills row -->
-    <div class="max-w-3xl mx-auto mb-3 flex flex-wrap items-center gap-2">
-      <span id="pillDilemma" class="pill pill-blue">DILEMMA-TELLING: …</span>
-      <span id="pillOverall" class="pill pill-gray">KRIPTIEK-TELLING: …</span>
-    </div>
-
-    <div class="max-w-3xl mx-auto grid md:grid-cols-2 gap-6">
-      <!-- Editable profile -->
+    <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-6">
+      <!-- LEFT: General profile (now with KRIPTIEK pill in header) -->
       <section class="bg-white shadow rounded-xl p-5">
-        <h2 class="text-lg font-bold mb-1">Profiel</h2>
+        <div class="flex items-center justify-between mb-1">
+          <h2 class="text-lg font-bold">Profiel</h2>
+          <span id="pillOverall" class="pill pill-gray">KRIPTIEK-TELLING: …</span>
+        </div>
+
         <p id="statusBanner" class="hidden text-sm mb-3 px-3 py-2 rounded bg-yellow-50 text-yellow-800">
           Jou rekening is gemerk vir verwydering. Kontak ons as dit ’n fout is.
         </p>
@@ -59,36 +61,38 @@
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
-            <button type="submit"
-                    class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded">BÊRE</button>
-            <button id="resetPwBtn" type="button"
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+            <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded">BÊRE</button>
+            <button id="resetPwBtn" type="button" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
               VRA NUWE WAGWOORD
             </button>
           </div>
           <p id="formMsg" class="text-sm mt-2"></p>
         </form>
-
-        <hr class="my-5">
-
-        <!-- Soft delete -->
-        <div>
-          <h3 class="font-semibold mb-2">Verwyder my rekening</h3>
-          <p class="text-sm text-gray-600 mb-3">
-            Kliek op die rooi knoppie onder om te vra dat jou rekening <span class="font-semibold">gedeaktiveer word.</span> Dit sal ’n verwyderingsversoek indien, waarna jou toegang onmiddellik geblokkeer sal word. Die laaste stap word op die bediener gedoen.
-          </p>
-          <button id="deleteBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
-            VERWYDER MY REKENING
-          </button>
-          <p id="deleteMsg" class="text-sm mt-2"></p>
-        </div>
       </section>
 
+      <!-- RIGHT: Move "Verwyder my rekening" here -->
+      <section class="bg-white shadow rounded-xl p-5">
+        <h3 class="text-lg font-bold mb-2">Verwyder my rekening</h3>
+        <p class="text-sm text-gray-600 mb-3">
+          Kliek op die rooi knoppie onder om te vra dat jou rekening <span class="font-semibold">gedeaktiveer word.</span> Dit sal ’n verwyderingsversoek indien, waarna jou toegang onmiddellik geblokkeer sal word. Die laaste stap word op die bediener gedoen.
+        </p>
+        <button id="deleteBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+          VERWYDER MY REKENING
+        </button>
+        <p id="deleteMsg" class="text-sm mt-2"></p>
+      </section>
+    </div>
+
+    <!-- BELOW: Dilemma section (pill moved here) -->
+    <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-6 mt-6">
       <!-- Dilemma-telling (BETA, read-only preview) -->
       <section class="bg-white shadow rounded-xl p-5">
         <div class="flex items-center justify-between mb-2">
           <h2 class="text-lg font-bold">Jou Dilemma-telling (BETA)</h2>
-          <span id="paidBadge" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">Ondersteuner: onbekend</span>
+          <div class="flex items-center gap-2">
+            <span id="paidBadge" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">Ondersteuner: onbekend</span>
+            <span id="pillDilemma" class="pill pill-blue">DILEMMA-TELLING: …</span>
+          </div>
         </div>
 
         <div class="bg-gray-50 rounded p-3 mb-4">
@@ -106,10 +110,13 @@
           <div>Wenpunte (6 raai × 100)</div> <div id="sc6">0</div>
           <div>Verliespunte (gespeel maar verloor)</div> <div id="scL">0</div>
           <div>Streek-bonus (+5 × min(lopie,5))</div> <div id="scStreak">0</div>
-          <div>Argief-bonus (+15 per ouer oorwinning, kap +60/weke)</div> <div id="scArchive">0</div>
+          <div>Argief-bonus (+15 per oorwinning, kap +60/weke)</div> <div id="scArchive">0</div>
           <div>Konsistensie (⌊(wen% − 50)/5⌋)</div> <div id="scCons">0</div>
-          <div class="col-span-2 border-t my-2"></div>
-          <div>Totaal (sonder betaal-bonus en Top-10)</div> <div id="scTotal">0</div>
+
+          <div class="kv-total mt-1">
+            <span class="mr-2">Totaal (sonder betaal-bonus en Top-10)</span>
+            <span class="float-right mono" id="scTotal">0</span>
+          </div>
         </div>
 
         <details class="mt-4">
@@ -127,10 +134,10 @@
         </details>
       </section>
 
-      <!-- Existing read-only stats -->
-      <section class="bg-white shadow rounded-xl p-5 md:col-span-2">
+      <!-- Stats card unchanged, still part of Dilemma section -->
+      <section class="bg-white shadow rounded-xl p-5">
         <h2 class="text-lg font-bold mb-4">Jou Dilemma-statistiek</h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center mb-4">
+        <div class="grid grid-cols-2 md:grid-cols-2 gap-3 text-center mb-4">
           <div class="bg-gray-50 rounded p-3">
             <div class="text-2xl font-bold mono" id="gamesPlayed">0</div>
             <div class="text-xs text-gray-500">Dilemmas gespeel</div>
@@ -314,10 +321,10 @@
         return;
       }
 
-      // Basic form prefills
-      document.getElementById('emailInput').value = user.email || '';
+      // Prefill
+      emailInput.value = user.email || '';
       const cachedName = localStorage.getItem('userName') || '';
-      if (cachedName) document.getElementById('nameInput').value = cachedName;
+      if (cachedName) nameInput.value = cachedName;
 
       const userRef = doc(db, 'users', user.uid);
       const snap = await getDoc(userRef);
@@ -333,16 +340,15 @@
         }, { merge: true });
       }
       const data = (await getDoc(userRef)).data() || {};
+      if (data.userName) nameInput.value = data.userName;
 
-      if (data.userName) document.getElementById('nameInput').value = data.userName;
-
-      // Lock UI if user flagged for deletion
+      // Deactivation UI
       const isDeactivated = data.status && data.status !== 'active';
       if (isDeactivated) {
         statusBanner.classList.remove('hidden');
-        document.getElementById('nameInput').disabled = true;
-        document.getElementById('emailInput').disabled = true;
-        document.getElementById('resetPwBtn').disabled = true;
+        nameInput.disabled = true;
+        emailInput.disabled = true;
+        resetPwBtn.disabled = true;
         document.querySelector('#profileForm button[type="submit"]').disabled = true;
       }
 
@@ -356,9 +362,9 @@
       document.getElementById('bestStreak').textContent = data.bestStreak || 0;
       renderDist(data.guessDist || {});
 
-      // Supporter status
+      // Support & pills
       const supporter = isPaid(data);
-      document.getElementById('paidBadge').textContent = supporter ? "Ondersteuner: ja" : "Ondersteuner: nee";
+      paidBadge.textContent = supporter ? "Ondersteuner: ja" : "Ondersteuner: nee";
 
       // Fetch plays for preview
       const playsRef = collection(db, 'userGames', user.uid, 'plays');
@@ -378,7 +384,7 @@
 
       const preview = computePreviewScore({userData: data, plays});
 
-      // Breakdown UI
+      // Breakdown
       document.getElementById('sc1').textContent = (preview.winPointsByGuess[1]||0);
       document.getElementById('sc2').textContent = (preview.winPointsByGuess[2]||0);
       document.getElementById('sc3').textContent = (preview.winPointsByGuess[3]||0);
@@ -389,9 +395,9 @@
       document.getElementById('scStreak').textContent = preview.streakBonus;
       document.getElementById('scArchive').textContent = preview.archiveBonus;
       document.getElementById('scCons').textContent = preview.consistency;
-      document.getElementById('scTotal').textContent = preview.subtotal;
 
-      // Top line + pills
+      // Totals & pills
+      document.getElementById('scTotal').textContent = preview.subtotal;
       document.getElementById('dilemmaTotal').textContent = String(preview.subtotal);
       pillDilemma.textContent = `DILEMMA-TELLING: ${preview.subtotal}`;
       pillOverall.textContent = `KRIPTIEK-TELLING: ${preview.subtotal}`; // mirror for now
@@ -403,7 +409,7 @@
 
     });
 
-    // Form actions
+    // Save profile changes
     document.getElementById('profileForm').addEventListener('submit', async (e)=>{
       e.preventDefault();
       const user = auth.currentUser;
@@ -415,7 +421,7 @@
 
       try {
         if (newEmail && newEmail !== (user.email || '')) {
-          await updateEmail(user, newEmail);
+          await updateEmail(user, newEmail); // may require recent login
         }
         const payload = {
           userName: name,
@@ -435,6 +441,7 @@
       }
     });
 
+    // Password reset
     resetPwBtn.addEventListener('click', async ()=>{
       const user = auth.currentUser;
       if (!user || !user.email){
@@ -454,6 +461,7 @@
       }
     });
 
+    // Soft-delete request
     deleteBtn.addEventListener('click', async ()=>{
       const user = auth.currentUser;
       if (!user) return;
