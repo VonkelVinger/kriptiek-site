@@ -15,7 +15,7 @@
     .mono { font-variant-numeric: tabular-nums; }
 
     /* Pills */
-    .pill { display:inline-block; padding:4px 12px; border-radius:9999px; font-weight:700; font-size:12px; line-height:18px; }
+    .pill { display:inline-block; padding:6px 14px; border-radius:9999px; font-weight:700; font-size:13px; line-height:18px; }
     .pill-blue { background:#1e3a8a; color:#fff; }
 
     /* Key-value list */
@@ -34,10 +34,21 @@
   </header>
 
   <main class="flex-grow p-4">
-    <!-- Top row: two main cards, with a small pill card stacked above the Verwyder card -->
-    <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-6">
-      <!-- LEFT: General profile -->
-      <section class="bg-white shadow rounded-xl p-5 flex flex-col h-full">
+    <!-- Two-row grid on desktop:
+         Row 1: (spacer) | small Kriptiek card
+         Row 2: Profile card | Verwyder card
+         Row 2 cards stretch equal height; action rows pinned to bottom -->
+    <div class="max-w-5xl mx-auto grid md:grid-cols-2 md:grid-rows-[auto_1fr] gap-6 items-stretch">
+      <!-- Row 1, Col 1: spacer to keep small card above the right main card -->
+      <div class="hidden md:block"></div>
+
+      <!-- Row 1, Col 2: Small KRIPTIEK pill card -->
+      <section class="bg-white shadow rounded-xl p-5 flex items-center justify-center md:row-start-1 md:col-start-2">
+        <span id="pillOverall" class="pill pill-blue text-base md:text-lg">JOU KRIPTIEK-TELLING: …</span>
+      </section>
+
+      <!-- Row 2, Col 1: General profile (big card) -->
+      <section class="bg-white shadow rounded-xl p-5 flex flex-col h-full md:row-start-2 md:col-start-1">
         <h2 class="text-lg font-bold mb-1">Profiel</h2>
 
         <p id="statusBanner" class="hidden text-sm mb-3 px-3 py-2 rounded bg-yellow-50 text-yellow-800">
@@ -57,6 +68,7 @@
             <p class="text-xs text-gray-500 mt-1">Let wel: Om jou e-pos te verander vereis dalk her-verifikasie.</p>
           </div>
 
+          <!-- Action row pinned to the bottom -->
           <div class="mt-auto flex flex-wrap items-center gap-2">
             <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded">BÊRE</button>
             <button id="resetPwBtn" type="button" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
@@ -67,33 +79,23 @@
         </form>
       </section>
 
-      <!-- RIGHT column: small pill card on top, Verwyder card below -->
-      <div class="flex flex-col gap-6">
-        <!-- Small KRIPTIEK-TELLING pill card -->
-        <section class="bg-white shadow rounded-xl p-5 flex items-center justify-center">
-          <div class="text-center">
-            <div class="text-[11px] uppercase tracking-wide text-gray-500 mb-1">Jou Kriptiek-telling</div>
-            <span id="pillOverall" class="pill pill-blue text-base md:text-lg px-4 py-2">KRIPTIEK-TELLING: …</span>
-          </div>
-        </section>
+      <!-- Row 2, Col 2: Verwyder card (big card) -->
+      <section class="bg-white shadow rounded-xl p-5 flex flex-col h-full md:row-start-2 md:col-start-2">
+        <h3 class="text-lg font-bold mb-2">Verwyder my rekening</h3>
+        <p class="text-sm text-gray-600 mb-3">
+          Kliek op die rooi knoppie onder om te vra dat jou rekening <span class="font-semibold">gedeaktiveer word.</span>
+          Dit sal ’n verwyderingsversoek indien, waarna jou toegang onmiddellik geblokkeer sal word.
+          Die laaste stap word op die bediener gedoen.
+        </p>
 
-        <!-- Verwyder card (unchanged) -->
-        <section class="bg-white shadow rounded-xl p-5 flex flex-col">
-          <h3 class="text-lg font-bold mb-2">Verwyder my rekening</h3>
-          <p class="text-sm text-gray-600 mb-3">
-            Kliek op die rooi knoppie onder om te vra dat jou rekening <span class="font-semibold">gedeaktiveer word.</span>
-            Dit sal ’n verwyderingsversoek indien, waarna jou toegang onmiddellik geblokkeer sal word.
-            Die laaste stap word op die bediener gedoen.
-          </p>
-
-          <div class="mt-auto">
-            <button id="deleteBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
-              VERWYDER MY REKENING
-            </button>
-            <p id="deleteMsg" class="text-sm mt-2"></p>
-          </div>
-        </section>
-      </div>
+        <!-- Button pinned to the bottom to align with left buttons -->
+        <div class="mt-auto">
+          <button id="deleteBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+            VERWYDER MY REKENING
+          </button>
+          <p id="deleteMsg" class="text-sm mt-2"></p>
+        </div>
+      </section>
     </div>
 
     <!-- Dilemma section -->
@@ -155,7 +157,7 @@
             <div class="text-2xl font-bold mono" id="gamesPlayed">0</div>
             <div class="text-xs text-gray-500">Dilemmas gespeel</div>
           </div>
-        <div class="bg-gray-50 rounded p-3">
+          <div class="bg-gray-50 rounded p-3">
             <div class="text-2xl font-bold mono" id="successRate">0%</div>
             <div class="text-xs text-gray-500">Sukseskoers</div>
           </div>
@@ -215,7 +217,6 @@
     const pillDilemma = document.getElementById('pillDilemma');
     const pillOverall  = document.getElementById('pillOverall');
     const paidBadge = document.getElementById('paidBadge');
-    const el = (id)=>document.getElementById(id);
 
     // --- Config (preview only — no writes) ---
     const D_POINTS = [150,135,120,110,105,100]; // for 1..6 guesses
@@ -239,8 +240,8 @@
     }
     function weekKey(dt){
       const t = new Date(dt.getTime());
-      const day = (t.getDay()+6)%7; // Mon=0..Sun=6
-      t.setDate(t.getDate()-day + 3); // Thu
+      const day = (t.getDay()+6)%7;
+      t.setDate(t.getDate()-day + 3); // Thu baseline
       const firstThu = new Date(t.getFullYear(),0,4);
       const dayDiff = (t - firstThu) / 86400000;
       const week = 1 + Math.floor(dayDiff/7);
@@ -250,7 +251,8 @@
       const s = userData?.support || {};
       if (!s.isPaid) return false;
       if (!s.paidUntil) return true;
-      const ms = s.paidUntil?.toMillis ? s.paidUntil.toMillis() : (typeof s.paidUntil==='number' ? s.paidUntil : Date.parse(s.paidUntil));
+      const ms = s.paidUntil?.toMillis ? s.paidUntil.toMillis() :
+                 (typeof s.paidUntil==='number' ? s.paidUntil : Date.parse(s.paidUntil));
       return !isNaN(ms) ? ms > Date.now() : true;
     }
     function renderDist(dist) {
@@ -272,7 +274,7 @@
     }
     function computePreviewScore({userData, plays}) {
       const dist = userData.guessDist || {};
-      const winsByGuess = [0,0,0,0,0,0,0]; // 1..6
+      const winsByGuess = [0,0,0,0,0,0,0];
       for (let i=1;i<=6;i++) winsByGuess[i] = Number(dist[String(i)]||0);
 
       const sorted = [...plays].sort((a,b)=>{
@@ -374,10 +376,8 @@
       document.getElementById('bestStreak').textContent = data.bestStreak || 0;
       renderDist(data.guessDist || {});
 
-      // Support status
+      // Support & plays
       const supporter = isPaid(data);
-
-      // Fetch plays for preview
       const playsRef = collection(db, 'userGames', user.uid, 'plays');
       const playsSnap = await getDocs(playsRef);
       const plays = [];
@@ -395,7 +395,7 @@
 
       const preview = computePreviewScore({userData: data, plays});
 
-      // Dilemma section outputs
+      // Dilemma breakdown
       document.getElementById('sc1').textContent = (preview.winPointsByGuess[1]||0);
       document.getElementById('sc2').textContent = (preview.winPointsByGuess[2]||0);
       document.getElementById('sc3').textContent = (preview.winPointsByGuess[3]||0);
@@ -407,12 +407,11 @@
       document.getElementById('scArchive').textContent = preview.archiveBonus;
       document.getElementById('scCons').textContent = preview.consistency;
 
+      // Totals & pills
       document.getElementById('scTotal').textContent = preview.subtotal;
       document.getElementById('dilemmaTotal').textContent = String(preview.subtotal);
       document.getElementById('pillDilemma').textContent = `DILEMMA-TELLING: ${preview.subtotal}`;
-
-      // Fill the small pill card (mirrors Dilemma for now)
-      pillOverall.textContent = `KRIPTIEK-TELLING: ${preview.subtotal}`;
+      pillOverall.textContent = `JOU KRIPTIEK-TELLING: ${preview.subtotal}`;
 
       const visMsg = supporter
         ? `Jou telling is tans publiek sigbaar in ranglyste. (Ondersteuner: minstens ${PAYMENT_THRESHOLD_COPY}.)`
@@ -432,9 +431,7 @@
       if (name.length < 2){ formMsg.textContent = "Naam te kort."; formMsg.className="text-red-600"; return;}
 
       try {
-        if (newEmail && newEmail !== (user.email || '')) {
-          await updateEmail(user, newEmail);
-        }
+        if (newEmail && newEmail !== (user.email || '')) await updateEmail(user, newEmail);
         const payload = {
           userName: name,
           email: newEmail || user.email || '',
@@ -442,9 +439,7 @@
         };
         await setDoc(doc(db,'users', user.uid), payload, { merge:true });
         await setDoc(doc(db,'registrations', user.uid), { ...payload, userId: user.uid }, { merge:true });
-
         localStorage.setItem('userName', name);
-
         formMsg.textContent = "Profiel gestoor.";
         formMsg.className = "text-green-600";
       } catch (err) {
@@ -479,14 +474,13 @@
       try {
         await setDoc(doc(db,'users', user.uid), { status: "deletion_requested", updatedAt: serverTimestamp() }, { merge: true });
         await setDoc(doc(db,'deletionRequests', user.uid), { requestedAt: serverTimestamp(), uid: user.uid, email: user.email || null }, { merge: true });
-
-        deleteMsg.textContent = "Versoek gestuur. Jy sal nou afgemeld word.";
-        deleteMsg.className = "text-green-600";
+        document.getElementById('deleteMsg').textContent = "Versoek gestuur. Jy sal nou afgemeld word.";
+        document.getElementById('deleteMsg').className = "text-green-600";
         await signOut(auth);
         setTimeout(()=>{ window.location.href = "/index.html"; }, 800);
       } catch (err) {
-        deleteMsg.textContent = "Kon nie versoek stuur nie: " + err.message;
-        deleteMsg.className = "text-red-600";
+        document.getElementById('deleteMsg').textContent = "Kon nie versoek stuur nie: " + err.message;
+        document.getElementById('deleteMsg').className = "text-red-600";
       }
     });
   </script>
