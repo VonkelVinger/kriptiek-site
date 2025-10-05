@@ -34,8 +34,8 @@
   </header>
 
   <main class="flex-grow p-4">
-    <!-- Top row: three columns on md+; buttons aligned at the bottom of the first two cards -->
-    <div class="max-w-5xl mx-auto grid md:grid-cols-3 gap-6 items-stretch">
+    <!-- Top row: two main cards, with a small pill card stacked above the Verwyder card -->
+    <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-6">
       <!-- LEFT: General profile -->
       <section class="bg-white shadow rounded-xl p-5 flex flex-col h-full">
         <h2 class="text-lg font-bold mb-1">Profiel</h2>
@@ -57,7 +57,6 @@
             <p class="text-xs text-gray-500 mt-1">Let wel: Om jou e-pos te verander vereis dalk her-verifikasie.</p>
           </div>
 
-          <!-- Action row pinned to the bottom -->
           <div class="mt-auto flex flex-wrap items-center gap-2">
             <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded">BÊRE</button>
             <button id="resetPwBtn" type="button" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
@@ -68,27 +67,33 @@
         </form>
       </section>
 
-      <!-- MIDDLE: Verwyder card (button pinned to bottom to align with left actions) -->
-      <section class="bg-white shadow rounded-xl p-5 flex flex-col h-full">
-        <h3 class="text-lg font-bold mb-2">Verwyder my rekening</h3>
-        <p class="text-sm text-gray-600 mb-3">
-          Kliek op die rooi knoppie onder om te vra dat jou rekening <span class="font-semibold">gedeaktiveer word.</span>
-          Dit sal ’n verwyderingsversoek indien, waarna jou toegang onmiddellik geblokkeer sal word.
-          Die laaste stap word op die bediener gedoen.
-        </p>
+      <!-- RIGHT column: small pill card on top, Verwyder card below -->
+      <div class="flex flex-col gap-6">
+        <!-- Small KRIPTIEK-TELLING pill card -->
+        <section class="bg-white shadow rounded-xl p-5 flex items-center justify-center">
+          <div class="text-center">
+            <div class="text-[11px] uppercase tracking-wide text-gray-500 mb-1">Jou Kriptiek-telling</div>
+            <span id="pillOverall" class="pill pill-blue text-base md:text-lg px-4 py-2">KRIPTIEK-TELLING: …</span>
+          </div>
+        </section>
 
-        <div class="mt-auto">
-          <button id="deleteBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
-            VERWYDER MY REKENING
-          </button>
-          <p id="deleteMsg" class="text-sm mt-2"></p>
-        </div>
-      </section>
+        <!-- Verwyder card (unchanged) -->
+        <section class="bg-white shadow rounded-xl p-5 flex flex-col">
+          <h3 class="text-lg font-bold mb-2">Verwyder my rekening</h3>
+          <p class="text-sm text-gray-600 mb-3">
+            Kliek op die rooi knoppie onder om te vra dat jou rekening <span class="font-semibold">gedeaktiveer word.</span>
+            Dit sal ’n verwyderingsversoek indien, waarna jou toegang onmiddellik geblokkeer sal word.
+            Die laaste stap word op die bediener gedoen.
+          </p>
 
-      <!-- RIGHT: Kriptiek-telling pill in its own white box -->
-      <section class="bg-white shadow rounded-xl p-5 flex items-center justify-center">
-        <span id="pillOverall" class="pill pill-blue text-sm md:text-base px-4 py-2">KRIPTIEK-TELLING: …</span>
-      </section>
+          <div class="mt-auto">
+            <button id="deleteBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+              VERWYDER MY REKENING
+            </button>
+            <p id="deleteMsg" class="text-sm mt-2"></p>
+          </div>
+        </section>
+      </div>
     </div>
 
     <!-- Dilemma section -->
@@ -150,7 +155,7 @@
             <div class="text-2xl font-bold mono" id="gamesPlayed">0</div>
             <div class="text-xs text-gray-500">Dilemmas gespeel</div>
           </div>
-          <div class="bg-gray-50 rounded p-3">
+        <div class="bg-gray-50 rounded p-3">
             <div class="text-2xl font-bold mono" id="successRate">0%</div>
             <div class="text-xs text-gray-500">Sukseskoers</div>
           </div>
@@ -207,14 +212,13 @@
     const deleteMsg = document.getElementById('deleteMsg');
     const statusBanner = document.getElementById('statusBanner');
 
-    // Pills + Dilemma-telling UI
     const pillDilemma = document.getElementById('pillDilemma');
     const pillOverall  = document.getElementById('pillOverall');
     const paidBadge = document.getElementById('paidBadge');
     const el = (id)=>document.getElementById(id);
 
     // --- Config (preview only — no writes) ---
-    const D_POINTS = [150,135,120,110,105,100];
+    const D_POINTS = [150,135,120,110,105,100]; // for 1..6 guesses
     const LOSS_POINTS = 20;
     const STREAK_UNIT = 5;
     const ARCHIVE_UNIT = 15;
@@ -370,7 +374,7 @@
       document.getElementById('bestStreak').textContent = data.bestStreak || 0;
       renderDist(data.guessDist || {});
 
-      // Support status (for visibility copy)
+      // Support status
       const supporter = isPaid(data);
 
       // Fetch plays for preview
@@ -407,7 +411,7 @@
       document.getElementById('dilemmaTotal').textContent = String(preview.subtotal);
       document.getElementById('pillDilemma').textContent = `DILEMMA-TELLING: ${preview.subtotal}`;
 
-      // KRIPTIEK pill mirrors Dilemma for now
+      // Fill the small pill card (mirrors Dilemma for now)
       pillOverall.textContent = `KRIPTIEK-TELLING: ${preview.subtotal}`;
 
       const visMsg = supporter
