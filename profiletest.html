@@ -15,9 +15,8 @@
     .mono { font-variant-numeric: tabular-nums; }
 
     /* Pills */
-    .pill { display:inline-block; padding:2px 10px; border-radius:9999px; font-weight:700; font-size:12px; line-height:18px; }
-    .pill-blue { background:#1e3a8a; color:#fff; }
-    .pill-gray { background:#4b5563; color:#fff; }
+    .pill { display:inline-block; padding:4px 12px; border-radius:9999px; font-weight:700; font-size:12px; line-height:18px; }
+    .pill-blue { background:#1e3a8a; color:#fff; }  /* use for Kriptiek + Dilemma */
 
     /* Key-value list */
     .kv { display:grid; grid-template-columns: 1fr auto; gap:.25rem .75rem; }
@@ -29,25 +28,29 @@
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
-  <header class="bg-white shadow p-4 text-center">
-    <h1 class="text-xl font-bold text-[#1e3a8a]">Jou Kriptiek-profiel (TOETS)</h1>
-    <p class="text-xs text-gray-500 mt-1">Hierdie blad wys ’n voorskou van die Dilemma-telling. Geen skrywes word gedoen nie.</p>
+  <header class="bg-white shadow p-4">
+    <div class="max-w-4xl mx-auto flex items-center justify-center relative">
+      <h1 class="text-xl font-bold text-[#1e3a8a]">Jou Kriptiek-profiel (TOETS)</h1>
+      <!-- Top-right Kriptiek pill -->
+      <div class="absolute right-0">
+        <span id="pillOverall" class="pill pill-blue">KRIPTIEK-TELLING: …</span>
+      </div>
+    </div>
+    <p class="text-xs text-gray-500 mt-1 text-center">Hierdie blad wys ’n voorskou van die Dilemma-telling. Geen skrywes word gedoen nie.</p>
   </header>
 
   <main class="flex-grow p-4">
-    <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-6">
-      <!-- LEFT: General profile (now with KRIPTIEK pill in header) -->
-      <section class="bg-white shadow rounded-xl p-5">
-        <div class="flex items-center justify-between mb-1">
-          <h2 class="text-lg font-bold">Profiel</h2>
-          <span id="pillOverall" class="pill pill-gray">KRIPTIEK-TELLING: …</span>
-        </div>
+    <!-- Top row: two equal-height cards; buttons aligned at the bottom -->
+    <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-6 items-stretch">
+      <!-- LEFT: General profile -->
+      <section class="bg-white shadow rounded-xl p-5 flex flex-col h-full">
+        <h2 class="text-lg font-bold mb-1">Profiel</h2>
 
         <p id="statusBanner" class="hidden text-sm mb-3 px-3 py-2 rounded bg-yellow-50 text-yellow-800">
           Jou rekening is gemerk vir verwydering. Kontak ons as dit ’n fout is.
         </p>
 
-        <form id="profileForm" class="space-y-4">
+        <form id="profileForm" class="space-y-4 flex-1">
           <div>
             <label class="block text-sm font-semibold text-gray-700">Naam (kan 'n skuilnaam wees)</label>
             <input id="nameInput" type="text" minlength="2" maxlength="40" required
@@ -60,7 +63,8 @@
             <p class="text-xs text-gray-500 mt-1">Let wel: Om jou e-pos te verander vereis dalk her-verifikasie.</p>
           </div>
 
-          <div class="flex flex-wrap items-center gap-2">
+          <!-- Action row pinned to the bottom of the card -->
+          <div class="mt-auto flex flex-wrap items-center gap-2">
             <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded">BÊRE</button>
             <button id="resetPwBtn" type="button" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
               VRA NUWE WAGWOORD
@@ -70,20 +74,25 @@
         </form>
       </section>
 
-      <!-- RIGHT: Move "Verwyder my rekening" here -->
-      <section class="bg-white shadow rounded-xl p-5">
+      <!-- RIGHT: Verwyder card (button pinned to bottom to align with left action row) -->
+      <section class="bg-white shadow rounded-xl p-5 flex flex-col h-full">
         <h3 class="text-lg font-bold mb-2">Verwyder my rekening</h3>
         <p class="text-sm text-gray-600 mb-3">
-          Kliek op die rooi knoppie onder om te vra dat jou rekening <span class="font-semibold">gedeaktiveer word.</span> Dit sal ’n verwyderingsversoek indien, waarna jou toegang onmiddellik geblokkeer sal word. Die laaste stap word op die bediener gedoen.
+          Kliek op die rooi knoppie onder om te vra dat jou rekening <span class="font-semibold">gedeaktiveer word.</span>
+          Dit sal ’n verwyderingsversoek indien, waarna jou toegang onmiddellik geblokkeer sal word.
+          Die laaste stap word op die bediener gedoen.
         </p>
-        <button id="deleteBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
-          VERWYDER MY REKENING
-        </button>
-        <p id="deleteMsg" class="text-sm mt-2"></p>
+
+        <div class="mt-auto">
+          <button id="deleteBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+            VERWYDER MY REKENING
+          </button>
+          <p id="deleteMsg" class="text-sm mt-2"></p>
+        </div>
       </section>
     </div>
 
-    <!-- BELOW: Dilemma section (pill moved here) -->
+    <!-- Dilemma section -->
     <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-6 mt-6">
       <!-- Dilemma-telling (BETA, read-only preview) -->
       <section class="bg-white shadow rounded-xl p-5">
@@ -134,7 +143,7 @@
         </details>
       </section>
 
-      <!-- Stats card unchanged, still part of Dilemma section -->
+      <!-- Stats card -->
       <section class="bg-white shadow rounded-xl p-5">
         <h2 class="text-lg font-bold mb-4">Jou Dilemma-statistiek</h2>
         <div class="grid grid-cols-2 md:grid-cols-2 gap-3 text-center mb-4">
@@ -364,8 +373,7 @@
 
       // Support & pills
       const supporter = isPaid(data);
-      paidBadge.textContent = supporter ? "Ondersteuner: ja" : "Ondersteuner: nee";
-
+      // We'll mirror Dilemma preview for now (updated below)
       // Fetch plays for preview
       const playsRef = collection(db, 'userGames', user.uid, 'plays');
       const playsSnap = await getDocs(playsRef);
@@ -384,7 +392,7 @@
 
       const preview = computePreviewScore({userData: data, plays});
 
-      // Breakdown
+      // Dilemma section outputs
       document.getElementById('sc1').textContent = (preview.winPointsByGuess[1]||0);
       document.getElementById('sc2').textContent = (preview.winPointsByGuess[2]||0);
       document.getElementById('sc3').textContent = (preview.winPointsByGuess[3]||0);
@@ -396,11 +404,12 @@
       document.getElementById('scArchive').textContent = preview.archiveBonus;
       document.getElementById('scCons').textContent = preview.consistency;
 
-      // Totals & pills
       document.getElementById('scTotal').textContent = preview.subtotal;
       document.getElementById('dilemmaTotal').textContent = String(preview.subtotal);
-      pillDilemma.textContent = `DILEMMA-TELLING: ${preview.subtotal}`;
-      pillOverall.textContent = `KRIPTIEK-TELLING: ${preview.subtotal}`; // mirror for now
+      document.getElementById('pillDilemma').textContent = `DILEMMA-TELLING: ${preview.subtotal}`;
+
+      // Header Kriptiek pill mirrors Dilemma for now
+      pillOverall.textContent = `KRIPTIEK-TELLING: ${preview.subtotal}`;
 
       const visMsg = supporter
         ? `Jou telling is tans publiek sigbaar in ranglyste. (Ondersteuner: minstens ${PAYMENT_THRESHOLD_COPY}.)`
@@ -462,7 +471,8 @@
     });
 
     // Soft-delete request
-    deleteBtn.addEventListener('click', async ()=>{
+    const deleteBtnEl = document.getElementById('deleteBtn');
+    deleteBtnEl.addEventListener('click', async ()=>{
       const user = auth.currentUser;
       if (!user) return;
       const ok = confirm("Is jy seker? Jou rekening word gedeaktiveer en vir verwydering ingedien.");
@@ -479,13 +489,13 @@
           email: user.email || null
         }, { merge: true });
 
-        deleteMsg.textContent = "Versoek gestuur. Jy sal nou afgemeld word.";
-        deleteMsg.className = "text-green-600";
+        document.getElementById('deleteMsg').textContent = "Versoek gestuur. Jy sal nou afgemeld word.";
+        document.getElementById('deleteMsg').className = "text-green-600";
         await signOut(auth);
         setTimeout(()=>{ window.location.href = "/index.html"; }, 800);
       } catch (err) {
-        deleteMsg.textContent = "Kon nie versoek stuur nie: " + err.message;
-        deleteMsg.className = "text-red-600";
+        document.getElementById('deleteMsg').textContent = "Kon nie versoek stuur nie: " + err.message;
+        document.getElementById('deleteMsg').className = "text-red-600";
       }
     });
   </script>
