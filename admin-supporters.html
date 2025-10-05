@@ -6,50 +6,88 @@
   <title>Admin – Ondersteuners</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet"/>
-  <style>body{font-family:'Montserrat',sans-serif;background:#f8fafc}</style>
+  <style>
+    body{font-family:'Montserrat',sans-serif;background:#f8fafc}
+    .mono{font-variant-numeric:tabular-nums}
+    .btn{padding:.5rem .75rem;border-radius:.5rem;color:#fff}
+  </style>
 </head>
 <body class="min-h-screen p-4">
   <main class="max-w-xl mx-auto bg-white rounded-xl shadow p-4">
     <h1 class="text-xl font-bold mb-2 text-[#1e3a8a]">Admin: Betalende ondersteuners</h1>
     <p id="gate" class="text-sm text-red-700 bg-red-50 rounded p-2 mb-4 hidden">Toegang geweier.</p>
 
-    <div id="panel" class="space-y-4 hidden">
-      <div class="flex items-center gap-2">
-        <a href="/profiletest.html" class="text-blue-700 underline text-sm">Gaan na profiletest.html</a>
+    <div id="panel" class="space-y-5 hidden">
+      <div class="flex items-center gap-3 text-sm">
+        <a href="/profiletest.html" class="text-blue-700 underline">Gaan na profiletest.html</a>
       </div>
 
-      <div class="bg-gray-50 rounded p-3">
-        <h2 class="font-semibold mb-2">Handmatig stel</h2>
-        <label class="text-sm block">Gebruiker se UID</label>
-        <input id="uidInput" class="w-full border rounded p-2 mb-2" placeholder="Plak UID hier"/>
-        <div class="flex flex-wrap items-center gap-2">
+      <!-- Lookup -->
+      <section class="bg-gray-50 rounded p-3">
+        <h2 class="font-semibold mb-2">Soek gebruiker</h2>
+        <div class="grid grid-cols-1 gap-2">
+          <label class="text-sm">Soek per e-pos (presiese pas):</label>
+          <div class="flex gap-2">
+            <input id="emailInput" type="email" placeholder="naam@domein.com" class="flex-1 border rounded p-2"/>
+            <button id="searchEmailBtn" class="btn bg-blue-600 hover:bg-blue-700">SOEK OP E-POS</button>
+          </div>
+
+          <div class="text-xs text-gray-600">Of laai per UID:</div>
+          <div class="flex gap-2">
+            <input id="uidInput" placeholder="Plak UID" class="flex-1 border rounded p-2"/>
+            <button id="loadUidBtn" class="btn bg-gray-600 hover:bg-gray-700">LAI PER UID</button>
+          </div>
+        </div>
+
+        <div id="resultsWrap" class="mt-3 hidden">
+          <div class="text-sm font-semibold mb-1">Meer as een resultaat — kies een:</div>
+          <ul id="resultsList" class="text-sm space-y-1"></ul>
+        </div>
+
+        <p id="lookupMsg" class="text-sm mt-2"></p>
+      </section>
+
+      <!-- Edit -->
+      <section class="bg-gray-50 rounded p-3">
+        <h2 class="font-semibold mb-2">Merk as ondersteuner</h2>
+        <div class="text-sm mb-2">
+          <div>Gekose UID: <span id="currentUid" class="mono">—</span></div>
+          <div>Naam: <span id="currentName">—</span></div>
+          <div>E-pos: <span id="currentEmail">—</span></div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
           <label class="text-sm flex items-center gap-2">
             <input id="isPaid" type="checkbox" class="h-4 w-4"> Is betaalde ondersteuner
           </label>
-          <label class="text-sm">Betaal geldig tot:
+          <label class="text-sm">Geldig tot:
             <input id="paidUntil" type="date" class="border rounded p-1 ml-1">
           </label>
         </div>
+
         <div class="flex flex-wrap gap-2 mt-3">
-          <button id="loadBtn" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded">LAI</button>
-          <button id="saveBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">STOOR</button>
-          <button id="clearBtn" class="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded">Maak onbetaald</button>
+          <button id="saveBtn" class="btn bg-green-600 hover:bg-green-700">STOOR</button>
+          <button id="clearBtn" class="btn bg-yellow-600 hover:bg-yellow-700">MAAK ONBETAALD</button>
         </div>
         <p id="msg" class="text-sm mt-2"></p>
-      </div>
+      </section>
 
-      <div class="bg-gray-50 rounded p-3">
+      <!-- Quick self-mark for testing -->
+      <section class="bg-gray-50 rounded p-3">
         <h2 class="font-semibold mb-2">Vinnig: Maak MÝ ’n ondersteuner (30 dae)</h2>
-        <button id="makeMeBtn" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded">MERK MY AS BETAAL vir 30 dae</button>
+        <button id="makeMeBtn" class="btn bg-purple-600 hover:bg-purple-700">MERK MY AS BETAAL</button>
         <p class="text-xs text-gray-600 mt-1">Gebruik dit om gou te toets op <code>profiletest.html</code>.</p>
-      </div>
+      </section>
     </div>
   </main>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import {
+      getFirestore, doc, getDoc, setDoc, serverTimestamp, Timestamp,
+      collection, query, where, getDocs
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
     // CONFIG
     const ADMIN_UID = "jI7f0Wk4MqfPq7p69vjl8OlJUvS2";
@@ -66,17 +104,28 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    // UI refs
     const gate = document.getElementById('gate');
     const panel = document.getElementById('panel');
+    const emailInput = document.getElementById('emailInput');
+    const searchEmailBtn = document.getElementById('searchEmailBtn');
     const uidInput = document.getElementById('uidInput');
+    const loadUidBtn = document.getElementById('loadUidBtn');
+    const resultsWrap = document.getElementById('resultsWrap');
+    const resultsList = document.getElementById('resultsList');
+    const lookupMsg = document.getElementById('lookupMsg');
+
+    const currentUid = document.getElementById('currentUid');
+    const currentName = document.getElementById('currentName');
+    const currentEmail = document.getElementById('currentEmail');
     const isPaid = document.getElementById('isPaid');
     const paidUntil = document.getElementById('paidUntil');
-    const msg = document.getElementById('msg');
-
-    const loadBtn = document.getElementById('loadBtn');
     const saveBtn = document.getElementById('saveBtn');
     const clearBtn = document.getElementById('clearBtn');
+    const msg = document.getElementById('msg');
     const makeMeBtn = document.getElementById('makeMeBtn');
+
+    let selectedUid = null;
 
     onAuthStateChanged(auth, async (user)=>{
       if (!user) {
@@ -88,67 +137,138 @@
         return;
       }
       panel.classList.remove('hidden');
-      uidInput.value = user.uid; // prefill for convenience
+    });
 
-      loadBtn.onclick = async ()=>{
-        msg.textContent = "";
-        const uid = uidInput.value.trim();
-        if (!uid) { msg.textContent = "Geen UID."; msg.className="text-red-600"; return; }
-        const snap = await getDoc(doc(db,'users', uid));
-        if (!snap.exists()){ msg.textContent="Geen userdoc."; msg.className="text-red-600"; return; }
-        const data = snap.data()||{};
-        const s = data.support||{};
-        isPaid.checked = !!s.isPaid;
-        if (s.paidUntil?.toDate){
-          const dt = s.paidUntil.toDate();
-          paidUntil.value = dt.toISOString().slice(0,10);
-        } else {
-          paidUntil.value = "";
-        }
-        msg.textContent = "Gelaai.";
-        msg.className="text-green-600";
-      };
+    async function loadUser(uid){
+      lookupMsg.textContent = "";
+      resultsWrap.classList.add('hidden');
+      selectedUid = uid;
+      currentUid.textContent = uid || "—";
+      currentName.textContent = "—";
+      currentEmail.textContent = "—";
+      isPaid.checked = false; paidUntil.value = "";
 
-      saveBtn.onclick = async ()=>{
-        msg.textContent = "";
-        const uid = uidInput.value.trim();
-        if (!uid) { msg.textContent = "Geen UID."; msg.className="text-red-600"; return; }
-        let untilVal = paidUntil.value ? Timestamp.fromDate(new Date(paidUntil.value+"T23:59:59")) : null;
-        await setDoc(doc(db,'users', uid), {
-          support: {
-            isPaid: !!isPaid.checked,
-            paidUntil: untilVal
-          },
-          updatedAt: serverTimestamp()
-        }, { merge: true });
-        msg.textContent = "Gestoor.";
-        msg.className="text-green-600";
-      };
+      if (!uid) return;
 
-      clearBtn.onclick = async ()=>{
-        const uid = uidInput.value.trim();
-        if (!uid) { msg.textContent = "Geen UID."; msg.className="text-red-600"; return; }
-        await setDoc(doc(db,'users', uid), {
-          support: { isPaid: false, paidUntil: null },
-          updatedAt: serverTimestamp()
-        }, { merge: true });
-        isPaid.checked = false; paidUntil.value="";
-        msg.textContent = "Merk as onbetaald voltooi.";
-        msg.className="text-green-600";
-      };
+      const snap = await getDoc(doc(db,'users', uid));
+      if (!snap.exists()){
+        lookupMsg.textContent = "Geen userdoc vir dié UID nie.";
+        lookupMsg.className = "text-red-600";
+        return;
+      }
+      const data = snap.data()||{};
+      currentName.textContent = data.userName || "—";
+      currentEmail.textContent = data.email || "—";
+      const s = data.support || {};
+      isPaid.checked = !!s.isPaid;
+      if (s.paidUntil?.toDate){
+        const dt = s.paidUntil.toDate();
+        paidUntil.value = dt.toISOString().slice(0,10);
+      }
+      lookupMsg.textContent = "Gelaai.";
+      lookupMsg.className = "text-green-600";
+    }
 
-      makeMeBtn.onclick = async ()=>{
-        const uid = user.uid;
-        uidInput.value = uid;
-        const until = new Date();
-        until.setDate(until.getDate()+30);
-        await setDoc(doc(db,'users', uid), {
-          support: { isPaid: true, paidUntil: Timestamp.fromDate(until) },
-          updatedAt: serverTimestamp()
-        }, { merge: true });
-        msg.textContent = "Jy is vir 30 dae as ondersteuner gemerk.";
-        msg.className="text-green-600";
-      };
+    async function searchByEmail(email){
+      lookupMsg.textContent = "";
+      resultsList.innerHTML = "";
+      resultsWrap.classList.add('hidden');
+
+      if (!email){
+        lookupMsg.textContent = "Tik ’n e-posadres.";
+        lookupMsg.className = "text-red-600";
+        return;
+      }
+
+      // Exact match on users.email
+      const q = query(collection(db,'users'), where('email','==', email));
+      const snap = await getDocs(q);
+      if (snap.empty){
+        lookupMsg.textContent = "Geen gebruiker met daardie e-pos gevind nie.";
+        lookupMsg.className = "text-red-600";
+        return;
+      }
+
+      const hits = [];
+      snap.forEach(d => hits.push({ uid: d.id, ...d.data() }));
+
+      if (hits.length === 1){
+        uidInput.value = hits[0].uid;
+        await loadUser(hits[0].uid);
+      } else {
+        // Multiple results — show chooser
+        resultsWrap.classList.remove('hidden');
+        resultsList.innerHTML = hits.map(h => `
+          <li class="flex items-center justify-between bg-white border rounded p-2">
+            <div class="text-sm">
+              <div><span class="font-semibold">${h.userName || "—"}</span> · <span class="mono">${h.uid}</span></div>
+              <div class="text-xs text-gray-600">${h.email || ""}</div>
+            </div>
+            <button data-uid="${h.uid}" class="px-2 py-1 rounded bg-blue-600 text-white text-xs">KIES</button>
+          </li>
+        `).join('');
+        resultsList.querySelectorAll('button[data-uid]').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const uid = btn.getAttribute('data-uid');
+            uidInput.value = uid;
+            await loadUser(uid);
+            resultsWrap.classList.add('hidden');
+          });
+        });
+        lookupMsg.textContent = `${hits.length} resultate — kies een.`;
+        lookupMsg.className = "text-yellow-700";
+      }
+    }
+
+    searchEmailBtn.addEventListener('click', async ()=>{
+      await searchByEmail(emailInput.value.trim());
+    });
+
+    loadUidBtn.addEventListener('click', async ()=>{
+      await loadUser(uidInput.value.trim());
+    });
+
+    saveBtn.addEventListener('click', async ()=>{
+      if (!selectedUid){
+        msg.textContent = "Geen gebruiker gelaai nie.";
+        msg.className = "text-red-600"; return;
+      }
+      let untilVal = paidUntil.value ? Timestamp.fromDate(new Date(paidUntil.value+"T23:59:59")) : null;
+      await setDoc(doc(db,'users', selectedUid), {
+        support: { isPaid: !!isPaid.checked, paidUntil: untilVal },
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      msg.textContent = "Gestoor.";
+      msg.className = "text-green-600";
+    });
+
+    clearBtn.addEventListener('click', async ()=>{
+      if (!selectedUid){
+        msg.textContent = "Geen gebruiker gelaai nie.";
+        msg.className = "text-red-600"; return;
+      }
+      await setDoc(doc(db,'users', selectedUid), {
+        support: { isPaid: false, paidUntil: null },
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      isPaid.checked = false; paidUntil.value="";
+      msg.textContent = "Merk as onbetaald voltooi.";
+      msg.className = "text-green-600";
+    });
+
+    makeMeBtn.addEventListener('click', async ()=>{
+      const user = auth.currentUser;
+      if (!user) return;
+      const until = new Date();
+      until.setDate(until.getDate()+30);
+      await setDoc(doc(db,'users', user.uid), {
+        support: { isPaid: true, paidUntil: Timestamp.fromDate(until) },
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      uidInput.value = user.uid;
+      await loadUser(user.uid);
+      msg.textContent = "Jy is vir 30 dae as ondersteuner gemerk.";
+      msg.className = "text-green-600";
     });
   </script>
 </body>
