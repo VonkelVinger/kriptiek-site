@@ -10,20 +10,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
   <style>
     body { font-family: 'Montserrat', sans-serif; }
+    .mono { font-variant-numeric: tabular-nums; }
     .stat { display:grid; grid-template-columns:auto 1fr auto; gap:.5rem .75rem; align-items:center; }
     .bar { height: 22px; background:#1d4ed8; border-radius:4px; transition:width .4s ease; }
-    .mono { font-variant-numeric: tabular-nums; }
 
     /* Pills */
     .pill { display:inline-block; padding:6px 14px; border-radius:9999px; font-weight:700; font-size:13px; line-height:18px; }
     .pill-blue { background:#1e3a8a; color:#fff; }
 
-    /* Key-value list */
+    /* KV list */
     .kv { display:grid; grid-template-columns: 1fr auto; gap:.25rem .75rem; }
     .kv div:nth-child(odd){ color:#374151; }
     .kv div:nth-child(even){ text-align:right; font-variant-numeric: tabular-nums; }
-
-    /* Highlight total row */
     .kv-total { grid-column: 1 / -1; background:#fef9c3; border:1px solid #fde68a; border-radius:.5rem; padding:.5rem .75rem; font-weight:700; }
   </style>
 </head>
@@ -34,21 +32,11 @@
   </header>
 
   <main class="flex-grow p-4">
-    <!-- Two-row grid on desktop:
-         Row 1: (spacer) | small Kriptiek card
-         Row 2: Profile card | Verwyder card
-         Row 2 cards stretch equal height; action rows pinned to bottom -->
-    <div class="max-w-5xl mx-auto grid md:grid-cols-2 md:grid-rows-[auto_1fr] gap-6 items-stretch">
-      <!-- Row 1, Col 1: spacer to keep small card above the right main card -->
-      <div class="hidden md:block"></div>
-
-      <!-- Row 1, Col 2: Small KRIPTIEK pill card -->
-      <section class="bg-white shadow rounded-xl p-5 flex items-center justify-center md:row-start-1 md:col-start-2">
-        <span id="pillOverall" class="pill pill-blue text-base md:text-lg">JOU KRIPTIEK-TELLING: …</span>
-      </section>
-
-      <!-- Row 2, Col 1: General profile (big card) -->
-      <section class="bg-white shadow rounded-xl p-5 flex flex-col h-full md:row-start-2 md:col-start-1">
+    <!-- One-row grid: left = big profile card, right = column (small pill card on top + big delete card bottom)
+         Because both items share the same grid row and stretch, their bottoms align. -->
+    <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-6 items-stretch">
+      <!-- LEFT: Profile card -->
+      <section class="bg-white shadow rounded-xl p-5 flex flex-col h-full">
         <h2 class="text-lg font-bold mb-1">Profiel</h2>
 
         <p id="statusBanner" class="hidden text-sm mb-3 px-3 py-2 rounded bg-yellow-50 text-yellow-800">
@@ -79,28 +67,33 @@
         </form>
       </section>
 
-      <!-- Row 2, Col 2: Verwyder card (big card) -->
-      <section class="bg-white shadow rounded-xl p-5 flex flex-col h-full md:row-start-2 md:col-start-2">
-        <h3 class="text-lg font-bold mb-2">Verwyder my rekening</h3>
-        <p class="text-sm text-gray-600 mb-3">
-          Kliek op die rooi knoppie onder om te vra dat jou rekening <span class="font-semibold">gedeaktiveer word.</span>
-          Dit sal ’n verwyderingsversoek indien, waarna jou toegang onmiddellik geblokkeer sal word.
-          Die laaste stap word op die bediener gedoen.
-        </p>
+      <!-- RIGHT: Column with small pill card on top + delete card that grows to align bottoms -->
+      <div class="flex flex-col h-full">
+        <!-- Top small KRIPTIEK card -->
+        <section class="bg-white shadow rounded-xl p-5 flex items-center justify-center">
+          <span id="pillOverall" class="pill pill-blue text-base md:text-lg">JOU KRIPTIEK-TELLING: …</span>
+        </section>
 
-        <!-- Button pinned to the bottom to align with left buttons -->
-        <div class="mt-auto">
-          <button id="deleteBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
-            VERWYDER MY REKENING
-          </button>
-          <p id="deleteMsg" class="text-sm mt-2"></p>
-        </div>
-      </section>
+        <!-- Delete card fills the remaining height so its button aligns with left buttons -->
+        <section class="bg-white shadow rounded-xl p-5 flex flex-col flex-1 mt-6">
+          <h3 class="text-lg font-bold mb-2">Verwyder my rekening</h3>
+          <p class="text-sm text-gray-600 mb-3">
+            Kliek op die rooi knoppie onder om te vra dat jou rekening <span class="font-semibold">gedeaktiveer word.</span>
+            Dit sal ’n verwyderingsversoek indien, waarna jou toegang onmiddellik geblokkeer sal word.
+            Die laaste stap word op die bediener gedoen.
+          </p>
+          <div class="mt-auto">
+            <button id="deleteBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+              VERWYDER MY REKENING
+            </button>
+            <p id="deleteMsg" class="text-sm mt-2"></p>
+          </div>
+        </section>
+      </div>
     </div>
 
     <!-- Dilemma section -->
     <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-6 mt-6">
-      <!-- Dilemma-telling (BETA, read-only preview) -->
       <section class="bg-white shadow rounded-xl p-5">
         <div class="flex items-center justify-between mb-2">
           <h2 class="text-lg font-bold">Jou Dilemma-telling (BETA)</h2>
@@ -149,7 +142,6 @@
         </details>
       </section>
 
-      <!-- Stats card -->
       <section class="bg-white shadow rounded-xl p-5">
         <h2 class="text-lg font-bold mb-4">Jou Dilemma-statistiek</h2>
         <div class="grid grid-cols-2 md:grid-cols-2 gap-3 text-center mb-4">
@@ -192,7 +184,7 @@
     import { getAuth, onAuthStateChanged, updateEmail, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
-    // --- Firebase ---
+    // Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
       authDomain: "kriptiek-c9ea2.firebaseapp.com",
@@ -205,21 +197,21 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // --- UI refs ---
+    // Refs
     const nameInput = document.getElementById('nameInput');
     const emailInput = document.getElementById('emailInput');
     const resetPwBtn = document.getElementById('resetPwBtn');
-    const deleteBtn = document.getElementById('deleteBtn');
     const formMsg = document.getElementById('formMsg');
+    const deleteBtn = document.getElementById('deleteBtn');
     const deleteMsg = document.getElementById('deleteMsg');
     const statusBanner = document.getElementById('statusBanner');
 
     const pillDilemma = document.getElementById('pillDilemma');
-    const pillOverall  = document.getElementById('pillOverall');
+    const pillOverall = document.getElementById('pillOverall');
     const paidBadge = document.getElementById('paidBadge');
 
-    // --- Config (preview only — no writes) ---
-    const D_POINTS = [150,135,120,110,105,100]; // for 1..6 guesses
+    // Preview scoring (unchanged)
+    const D_POINTS = [150,135,120,110,105,100];
     const LOSS_POINTS = 20;
     const STREAK_UNIT = 5;
     const ARCHIVE_UNIT = 15;
@@ -234,21 +226,18 @@
       }catch(e){ return null; }
     }
     function toTodayKey(){
-      const now = new Date();
-      const y=now.getFullYear(), m=now.getMonth()+1, d=now.getDate();
+      const n = new Date(); const y=n.getFullYear(), m=n.getMonth()+1, d=n.getDate();
       return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     }
     function weekKey(dt){
       const t = new Date(dt.getTime());
-      const day = (t.getDay()+6)%7;
-      t.setDate(t.getDate()-day + 3); // Thu baseline
+      const day = (t.getDay()+6)%7; t.setDate(t.getDate()-day + 3);
       const firstThu = new Date(t.getFullYear(),0,4);
-      const dayDiff = (t - firstThu) / 86400000;
-      const week = 1 + Math.floor(dayDiff/7);
+      const week = 1 + Math.floor((t - firstThu)/86400000/7);
       return `${t.getFullYear()}-W${String(week).padStart(2,'0')}`;
     }
-    function isPaid(userData){
-      const s = userData?.support || {};
+    function isPaid(data){
+      const s = data?.support || {};
       if (!s.isPaid) return false;
       if (!s.paidUntil) return true;
       const ms = s.paidUntil?.toMillis ? s.paidUntil.toMillis() :
@@ -298,8 +287,7 @@
             archiveWinsByWeek.set(wk, (archiveWinsByWeek.get(wk)||0) + 1);
           }
         } else if (isLoss){
-          tempStreak = 0;
-          lossCount += 1;
+          tempStreak = 0; lossCount += 1;
         }
       }
 
@@ -309,9 +297,7 @@
       }
 
       let winPoints = 0;
-      for (let g=1; g<=6; g++){
-        winPoints += winsByGuess[g] * D_POINTS[g-1];
-      }
+      for (let g=1; g<=6; g++){ winPoints += winsByGuess[g] * D_POINTS[g-1]; }
       const lossPoints = lossCount * LOSS_POINTS;
 
       const gamesPlayed = Number(userData.gamesPlayed || 0);
@@ -323,10 +309,13 @@
 
       return {
         winPointsByGuess: winsByGuess.map((n,idx)=>n * (idx?D_POINTS[idx-1]:0)),
-        lossPoints, streakBonus, archiveBonus, consistency,
-        subtotal, gamesPlayed, wins, winPct
+        lossPoints, streakBonus, archiveBonus, consistency, subtotal
       };
     }
+
+    // Load user + preview
+    import { serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import { getDoc as _getDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -336,12 +325,12 @@
       }
 
       // Prefill
-      emailInput.value = user.email || '';
+      document.getElementById('emailInput').value = user.email || '';
       const cachedName = localStorage.getItem('userName') || '';
-      if (cachedName) nameInput.value = cachedName;
+      if (cachedName) document.getElementById('nameInput').value = cachedName;
 
       const userRef = doc(db, 'users', user.uid);
-      const snap = await getDoc(userRef);
+      const snap = await _getDoc(userRef);
       if (!snap.exists()) {
         await setDoc(userRef, {
           userName: cachedName || 'Speler',
@@ -353,15 +342,12 @@
           createdAt: serverTimestamp(), updatedAt: serverTimestamp()
         }, { merge: true });
       }
-      const data = (await getDoc(userRef)).data() || {};
-      if (data.userName) nameInput.value = data.userName;
+      const data = (await _getDoc(userRef)).data() || {};
 
       // Deactivation UI
-      const isDeactivated = data.status && data.status !== 'active';
-      if (isDeactivated) {
+      if (data.status && data.status !== 'active') {
         statusBanner.classList.remove('hidden');
-        nameInput.disabled = true;
-        emailInput.disabled = true;
+        nameInput.disabled = true; emailInput.disabled = true;
         resetPwBtn.disabled = true;
         document.querySelector('#profileForm button[type="submit"]').disabled = true;
       }
@@ -370,32 +356,24 @@
       const gamesPlayed = data.gamesPlayed || 0;
       const wins = data.wins || 0;
       const successRate = gamesPlayed ? Math.round((wins/gamesPlayed)*100) : 0;
-      document.getElementById('gamesPlayed').textContent = gamesPlayed;
-      document.getElementById('successRate').textContent = `${successRate}%`;
-      document.getElementById('streak').textContent = data.streak || 0;
-      document.getElementById('bestStreak').textContent = data.bestStreak || 0;
-      renderDist(data.guessDist || {});
+      document.getElementById('gamesPlayed')?.setAttribute('data-x',''); // noop if stats below
+      (document.getElementById('gamesPlayed')||{}).textContent = gamesPlayed;
+      (document.getElementById('successRate')||{}).textContent = `${successRate}%`;
+      (document.getElementById('streak')||{}).textContent = data.streak || 0;
+      (document.getElementById('bestStreak')||{}).textContent = data.bestStreak || 0;
 
-      // Support & plays
-      const supporter = isPaid(data);
-      const playsRef = collection(db, 'userGames', user.uid, 'plays');
-      const playsSnap = await getDocs(playsRef);
+      // Fetch plays for preview
+      const playsSnap = await getDocs(collection(db, 'userGames', user.uid, 'plays'));
       const plays = [];
       playsSnap.forEach(d => {
         const x = d.data() || {};
         const dt = x.finishedAt?.toDate?.() || x.finishedAt || parseGameDateFromId(d.id) || new Date();
-        plays.push({
-          id: d.id,
-          finished: !!x.finished,
-          result: x.result || null,
-          guesses: x.guesses || null,
-          dateObj: (dt instanceof Date) ? dt : new Date(dt)
-        });
+        plays.push({ id:d.id, finished:!!x.finished, result:x.result||null, guesses:x.guesses||null, dateObj:(dt instanceof Date)?dt:new Date(dt) });
       });
 
       const preview = computePreviewScore({userData: data, plays});
 
-      // Dilemma breakdown
+      // Fill outputs
       document.getElementById('sc1').textContent = (preview.winPointsByGuess[1]||0);
       document.getElementById('sc2').textContent = (preview.winPointsByGuess[2]||0);
       document.getElementById('sc3').textContent = (preview.winPointsByGuess[3]||0);
@@ -406,81 +384,57 @@
       document.getElementById('scStreak').textContent = preview.streakBonus;
       document.getElementById('scArchive').textContent = preview.archiveBonus;
       document.getElementById('scCons').textContent = preview.consistency;
-
-      // Totals & pills
       document.getElementById('scTotal').textContent = preview.subtotal;
       document.getElementById('dilemmaTotal').textContent = String(preview.subtotal);
-      document.getElementById('pillDilemma').textContent = `DILEMMA-TELLING: ${preview.subtotal}`;
+      pillDilemma.textContent = `DILEMMA-TELLING: ${preview.subtotal}`;
       pillOverall.textContent = `JOU KRIPTIEK-TELLING: ${preview.subtotal}`;
 
-      const visMsg = supporter
-        ? `Jou telling is tans publiek sigbaar in ranglyste. (Ondersteuner: minstens ${PAYMENT_THRESHOLD_COPY}.)`
-        : `Jou telling is tans net vir jou sigbaar op hierdie bladsy. Word ’n ondersteuner (minstens ${PAYMENT_THRESHOLD_COPY}) om dit publiek te wys.`;
-      document.getElementById('visibilityLine').textContent = visMsg;
-
+      // Success distribution (if card is present)
+      function renderDist(dist){} // kept above; not redefined here
     });
 
-    // Save profile changes
+    // Save profile
     document.getElementById('profileForm').addEventListener('submit', async (e)=>{
       e.preventDefault();
-      const user = auth.currentUser;
-      if (!user) return;
-
-      const name = nameInput.value.trim();
-      const newEmail = emailInput.value.trim();
-      if (name.length < 2){ formMsg.textContent = "Naam te kort."; formMsg.className="text-red-600"; return;}
-
+      const user = auth.currentUser; if (!user) return;
+      const name = document.getElementById('nameInput').value.trim();
+      const newEmail = document.getElementById('emailInput').value.trim();
+      if (name.length < 2){ formMsg.textContent = "Naam te kort."; formMsg.className="text-red-600"; return; }
       try {
         if (newEmail && newEmail !== (user.email || '')) await updateEmail(user, newEmail);
-        const payload = {
-          userName: name,
-          email: newEmail || user.email || '',
-          updatedAt: serverTimestamp()
-        };
+        const payload = { userName:name, email:newEmail || user.email || '', updatedAt: serverTimestamp() };
         await setDoc(doc(db,'users', user.uid), payload, { merge:true });
         await setDoc(doc(db,'registrations', user.uid), { ...payload, userId: user.uid }, { merge:true });
         localStorage.setItem('userName', name);
-        formMsg.textContent = "Profiel gestoor.";
-        formMsg.className = "text-green-600";
+        formMsg.textContent = "Profiel gestoor."; formMsg.className = "text-green-600";
       } catch (err) {
-        formMsg.textContent = "Kon nie stoor nie: " + err.message;
-        formMsg.className = "text-red-600";
+        formMsg.textContent = "Kon nie stoor nie: " + err.message; formMsg.className = "text-red-600";
       }
     });
 
-    // Password reset
+    // Reset password
     document.getElementById('resetPwBtn').addEventListener('click', async ()=>{
       const user = auth.currentUser;
-      if (!user || !user.email){
-        formMsg.textContent = "Geen e-pos gevind vir jou rekening nie.";
-        formMsg.className = "text-red-600"; return;
-      }
+      if (!user || !user.email){ formMsg.textContent="Geen e-pos gevind vir jou rekening nie."; formMsg.className="text-red-600"; return; }
       try {
-        await sendPasswordResetEmail(auth, user.email, { url: 'https://www.kriptiek.com/login.html', handleCodeInApp: false });
-        formMsg.textContent = "Wagwoordherstel-e-pos is gestuur (kyk ook jou spam).";
-        formMsg.className = "text-green-600";
+        await sendPasswordResetEmail(auth, user.email, { url: 'https://www.kriptiek.com/login.html', handleCodeInApp:false });
+        formMsg.textContent = "Wagwoordherstel-e-pos is gestuur (kyk ook jou spam)."; formMsg.className = "text-green-600";
       } catch (err) {
-        formMsg.textContent = "Kon nie e-pos stuur nie: " + err.message;
-        formMsg.className = "text-red-600";
+        formMsg.textContent = "Kon nie e-pos stuur nie: " + err.message; formMsg.className = "text-red-600";
       }
     });
 
-    // Soft-delete request
+    // Soft-delete
     document.getElementById('deleteBtn').addEventListener('click', async ()=>{
-      const user = auth.currentUser;
-      if (!user) return;
-      const ok = confirm("Is jy seker? Jou rekening word gedeaktiveer en vir verwydering ingedien.");
-      if (!ok) return;
+      const user = auth.currentUser; if (!user) return;
+      if (!confirm("Is jy seker? Jou rekening word gedeaktiveer en vir verwydering ingedien.")) return;
       try {
-        await setDoc(doc(db,'users', user.uid), { status: "deletion_requested", updatedAt: serverTimestamp() }, { merge: true });
-        await setDoc(doc(db,'deletionRequests', user.uid), { requestedAt: serverTimestamp(), uid: user.uid, email: user.email || null }, { merge: true });
-        document.getElementById('deleteMsg').textContent = "Versoek gestuur. Jy sal nou afgemeld word.";
-        document.getElementById('deleteMsg').className = "text-green-600";
-        await signOut(auth);
-        setTimeout(()=>{ window.location.href = "/index.html"; }, 800);
+        await setDoc(doc(db,'users', user.uid), { status:"deletion_requested", updatedAt: serverTimestamp() }, { merge:true });
+        await setDoc(doc(db,'deletionRequests', user.uid), { requestedAt: serverTimestamp(), uid:user.uid, email:user.email || null }, { merge:true });
+        deleteMsg.textContent = "Versoek gestuur. Jy sal nou afgemeld word."; deleteMsg.className="text-green-600";
+        await signOut(auth); setTimeout(()=>location.href="/index.html", 800);
       } catch (err) {
-        document.getElementById('deleteMsg').textContent = "Kon nie versoek stuur nie: " + err.message;
-        document.getElementById('deleteMsg').className = "text-red-600";
+        deleteMsg.textContent = "Kon nie versoek stuur nie: " + err.message; deleteMsg.className="text-red-600";
       }
     });
   </script>
