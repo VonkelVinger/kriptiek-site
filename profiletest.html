@@ -18,7 +18,7 @@
 
     /* Badges */
     .badge { padding:6px 12px; border-radius:9999px; font-size:12px; font-weight:700; }
-    .badge-emerald { background:#16a34a; color:#fff; } /* bright green, always prominent */
+    .badge-emerald { background:#16a34a; color:#fff; } /* bright green */
 
     /* Bars for dist */
     .stat { display:grid; grid-template-columns:auto 1fr auto; gap:.5rem .75rem; align-items:center; }
@@ -41,7 +41,7 @@
 
     /* Section headers */
     .section-title { color:#1e3a8a; font-weight:700; letter-spacing:.02em; }
-    .section-title.big { font-size:1.375rem; }  /* ~text-2xl on Tailwind base */
+    .section-title.big { font-size:1.375rem; }
     .section-title.smol { font-size:1.05rem; text-transform:uppercase; }
 
     /* Coming soon placeholder */
@@ -51,7 +51,10 @@
 <body class="bg-gray-100 min-h-screen flex flex-col">
   <header class="bg-white shadow p-4 text-center">
     <h1 class="section-title big">JOU KRIPTIEK-PROFIEL</h1>
-    <p class="text-xs text-gray-500 mt-1">Hier kan jy sien wat jou betaal-status is, jou wagwoord verander, jou rekening verwyder, of sien wat jou Dilemma-telling is (die ander volg later).</p>
+    <p class="text-xs text-gray-500 mt-1">
+      Hier bestuur jy jou profiel, wagwoord en status. Kyk ook hoe jou <strong>Dilemma-telling</strong> bereken word.
+      <em>(Blitstiek en Slimstiek volg binnekort.)</em>
+    </p>
   </header>
 
   <main class="flex-grow p-4">
@@ -75,12 +78,14 @@
             <label class="block text-sm font-semibold text-gray-700">E-posadres</label>
             <input id="emailInput" type="email" required
                    class="mt-1 w-full border border-gray-300 rounded p-2"/>
-            <p class="text-xs text-gray-500 mt-1">Let wel: Jou e-posadres word nie geverifieer nie, maar jy sal dit nodig kry as jy jou wagwoord verloor het of navrae oor jou rekening het.</p>
+            <p class="text-xs text-gray-500 mt-1">
+              <strong>Let wel:</strong> Jou e-pos word nie geverifieer nie, maar jy het dit nodig vir wagwoordherstel of navrae oor jou rekening.
+            </p>
           </div>
 
           <!-- Single, prominent supporter badge (bright green) -->
           <div class="flex items-center gap-2 text-sm">
-            <span class="text-gray-600">Jou status:</span>
+            <span class="text-gray-600">Status:</span>
             <span id="supporterBadgeInline" class="badge badge-emerald">Nie-betalende ondersteuner</span>
           </div>
 
@@ -104,9 +109,8 @@
         <section class="bg-white shadow rounded-xl p-5 flex flex-col flex-1 mt-6">
           <h3 class="text-lg font-bold mb-2">Verwyder my rekening</h3>
           <p class="text-sm text-gray-600 mb-3">
-            Kliek op die rooi knoppie onder om te vra dat jou rekening <span class="font-semibold">gedeaktiveer word.</span>
-            Dit sal ’n verwyderingsversoek indien, waarna jou toegang onmiddellik geblokkeer sal word.
-            Die laaste stap word op die bediener gedoen.
+            Klik hieronder om te vra dat jou rekening <span class="font-semibold">gedeaktiveer</span> word.
+            Jou toegang word dan onmiddellik geblokkeer en die laaste verwyderingsstap gebeur op die bediener.
           </p>
           <div class="mt-auto">
             <button id="deleteBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
@@ -136,17 +140,23 @@
           <!-- Summary row -->
           <div class="mini mb-4">
             <div class="text-2xl font-bold mono" id="dilemmaTotal">0</div>
-            <div class="text-xs subtle" id="visibilityLine">Soos bereken op: —</div>
+            <div class="text-xs subtle" id="visibilityLine">Laas bereken: —</div>
           </div>
 
+          <!-- Explainer -->
+          <h4 class="font-semibold mb-2">Wat beteken die Dilemma-telling?</h4>
+          <p class="text-sm text-gray-700 mb-4">
+            Jou telling meet konsekwente prestasie oor tyd. Punte kom hoofsaaklik uit <strong>hoe vinnig jy oplos</strong> (in hoeveel raaie),
+            <strong>hoe gereeld jy wen</strong>, en <strong>lopies</strong> (opeenvolgende oorwinnings). Daar is ook ’n <strong>argief-bonus</strong> vir ouer spele wat jy inhaal,
+            en ’n <strong>konsistensie-bonus</strong> vir ’n hoë wenkoers. Betalende ondersteuners kry <strong>+10%</strong> op nuwe punte vanaf die lanseerdatum.
+            ’n <strong>Top-10-bonus</strong> (+10) geld vir spelers wat teen 23:59 SAST in die dag se finale Top-10 eindig.
+          </p>
+
           <!-- Ontleding -->
-          <h4 class="font-semibold mb-2">Wat is jou Dilemma-telling en hoe word dit bereken?</h4>
-          <h4 class="font-semibold mb-2">Jou Dilemma-telling dui jou sukses oor tyd aan. Kyk onder vir die volledige uiteensetting, maar dit neem faktore in berekening soos hoveel Dilemmas jy al gespeel het, hoeveel raaiskote jy elke keer nodig gehad het, hoeveel kere jy dit opeenvolgend kon oplos, en hoeveel kere jy die daaglikse Top-10 gehaal het. Jy kry ook 'n ekstra 10% punte as jy amptelik 'n betalende ondersteuner van Kriptiek is, met ander woorde jy het in die voorafgaande 30 dae 'n skenking van minstens $2 aan ons gedoen. </h4>
-            
-          
+          <h4 class="font-semibold mb-2">Ontleding</h4>
           <div class="ana-grid text-sm">
             <div class="ana-head">Komponent</div>
-            <div class="ana-head ana-num">Aantal / Reël</div>
+            <div class="ana-head ana-num">Aantal × reël</div>
             <div class="ana-head ana-num">Punte</div>
 
             <div>Dilemma in 1 raai opgelos (1 × 150)</div> <div id="c1"  class="ana-num mono">0 × 150</div> <div id="sc1"  class="ana-num mono">0</div>
@@ -156,29 +166,16 @@
             <div>Dilemma in 5 raaie opgelos (5 × 105)</div> <div id="c5"  class="ana-num mono">0 × 105</div> <div id="sc5"  class="ana-num mono">0</div>
             <div>Dilemma in 6 raaie opgelos (6 × 100)</div> <div id="c6"  class="ana-num mono">0 × 100</div> <div id="sc6"  class="ana-num mono">0</div>
 
-            <div>Het Dilemma gespeel, maar kon dit nie oplos nie </div> <div id="cL" class="ana-num mono">0 × 20</div> <div id="scL" class="ana-num mono">0</div>
-            <div>Bonus vir opeenvolgende Dilemmas opgelos (+5 × min(lopie, 5) per dag)</div> <div id="cStreak"   class="ana-num mono">—</div> <div id="scStreak"   class="ana-num mono">0</div>
-            <div>Bonus vir Dilemmas uit die argief opgelos (+15 per oplossing; maksimum van +60/weke)</div> <div id="cArchive" class="ana-num mono">—</div> <div id="scArchive" class="ana-num mono">0</div>
-            <div>Bonus vir konsekwentheid (⌊(wen% − 50)/5⌋)</div> <div id="cCons" class="ana-num mono">—</div> <div id="scCons" class="ana-num mono">0</div>
+            <div>Gespeel maar nie opgelos nie</div> <div id="cL" class="ana-num mono">0 × 20</div> <div id="scL" class="ana-num mono">0</div>
+            <div>Lopie-bonus <span class="subtle">( +5 × min(lopie, 5) per dag )</span></div> <div id="cStreak"   class="ana-num mono">—</div> <div id="scStreak"   class="ana-num mono">0</div>
+            <div>Argief-bonus <span class="subtle">( +15 per oplossing; kap +60 per week )</span></div> <div id="cArchive" class="ana-num mono">—</div> <div id="scArchive" class="ana-num mono">0</div>
+            <div>Konsistensie <span class="subtle">( ⌊(wen% − 50)/5⌋ )</span></div> <div id="cCons" class="ana-num mono">—</div> <div id="scCons" class="ana-num mono">0</div>
 
             <div class="ana-total">
-              <span>Totaal sonder bonus as 'n betalende ondersteuner en 'n moontlike posisie teen die einde van vandag in die Top-10)</span>
+              <span>Totaal (sonder ondersteuner- en Top-10-bonusse)</span>
               <span id="scTotal" class="mono">0</span>
             </div>
           </div>
-
-          <details class="mt-4">
-            <summary class="cursor-pointer text-sm text-blue-700">Hoe ons tel (kliek om oop te maak)</summary>
-            <div class="text-sm text-gray-700 mt-2 space-y-2">
-              <p><strong>Wenpunte:</strong> 1 raai=150; 2=135; 3=120; 4=110; 5=105; 6=100.</p>
-              <p><strong>Verliespunte:</strong> +20 as jy speel maar nie raai nie.</p>
-              <p><strong>Streek-bonus:</strong> +5 per agtereenvolgende oorwinning (kap op 5/dag).</p>
-              <p><strong>Argief-bonus:</strong> +15 vir elke ouer spel wat jy vandag inhaal; kap +60 per kalenderweek.</p>
-              <p><strong>Konsistensie:</strong> +1 vir elke 5% bo 50% wenkoers.</p>
-              <p><strong>Betaal-bonus:</strong> Ondersteuners kry +10% op nuwe punte vanaf die lanseerdatum. (Nie in hierdie voorskou ingesluit nie.)</p>
-              <p><strong>Top-10 bonus:</strong> +10 vir spelers in die finale top-10 van die dag (vasgestel 23:59 SAST). (Nie terugwerkend bereken in hierdie voorskou nie.)</p>
-            </div>
-          </details>
         </div>
       </section>
 
@@ -536,7 +533,7 @@
         await setDoc(doc(db,'deletionRequests', user.uid), { requestedAt: serverTimestamp(), uid:user.uid, email:user.email || null }, { merge:true });
         deleteMsg.textContent = "Versoek gestuur. Jy sal nou afgemeld word.";
         deleteMsg.className = "text-sm mt-2 text-green-600";
-        deleteMsg.classList.remove('hidden');a
+        deleteMsg.classList.remove('hidden');
         await signOut(auth);
         setTimeout(()=>{ window.location.href = "/index.html"; }, 800);
       } catch (err) {
