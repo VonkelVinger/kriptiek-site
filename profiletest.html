@@ -11,18 +11,34 @@
   <style>
     body { font-family: 'Montserrat', sans-serif; }
     .mono { font-variant-numeric: tabular-nums; }
-    .stat { display:grid; grid-template-columns:auto 1fr auto; gap:.5rem .75rem; align-items:center; }
-    .bar { height: 22px; background:#1d4ed8; border-radius:4px; transition:width .4s ease; }
 
     /* Pills */
     .pill { display:inline-block; padding:8px 18px; border-radius:9999px; font-weight:700; font-size:14px; line-height:20px; }
     .pill-blue { background:#1e3a8a; color:#fff; }
 
-    /* KV list */
-    .kv { display:grid; grid-template-columns: 1fr auto; gap:.25rem .75rem; }
-    .kv div:nth-child(odd){ color:#374151; }
-    .kv div:nth-child(even){ text-align:right; font-variant-numeric: tabular-nums; }
-    .kv-total { grid-column: 1 / -1; background:#fef9c3; border:1px solid #fde68a; border-radius:.5rem; padding:.5rem .75rem; font-weight:700; }
+    /* Badges */
+    .badge { padding:4px 10px; border-radius:9999px; font-size:12px; font-weight:700; }
+    .badge-green { background:#059669; color:#fff; }
+    .badge-gray { background:#e5e7eb; color:#374151; }
+
+    /* Bars for dist */
+    .stat { display:grid; grid-template-columns:auto 1fr auto; gap:.5rem .75rem; align-items:center; }
+    .bar { height: 22px; background:#1d4ed8; border-radius:4px; transition:width .4s ease; }
+
+    /* Game block wrapper (so we can add Blitstiek/Slimstiek later) */
+    .game-block { background:#fff; border-radius: .75rem; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
+    .game-block .gb-head { padding: 14px 20px; border-bottom: 1px solid #e5e7eb; display:flex; align-items:center; justify-content:space-between; }
+    .game-block .gb-body { padding: 16px 20px; }
+    .subtle { color:#6b7280; }
+
+    /* Mini cards inside a block */
+    .mini { background:#f9fafb; border:1px solid #e5e7eb; border-radius:.5rem; padding:12px; }
+
+    /* Three-column analyser table */
+    .ana-grid { display:grid; grid-template-columns: 7fr 3fr 2fr; gap:.25rem .75rem; align-items:center; }
+    .ana-head { color:#6b7280; font-size:12px; }
+    .ana-num { text-align:right; }
+    .ana-total { grid-column:1 / -1; display:flex; justify-content:space-between; align-items:center; background:#fef9c3; border:1px solid #fde68a; border-radius:.5rem; padding:.5rem .75rem; font-weight:700; margin-top:.25rem; }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -32,11 +48,15 @@
   </header>
 
   <main class="flex-grow p-4">
-    <!-- Left: big profile card. Right: small pill card on top + big delete card below. -->
+    <!-- SECTION 1: General profile (left) + overall pill + delete (right) -->
     <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-6 items-stretch">
       <!-- LEFT: Profile card -->
       <section class="bg-white shadow rounded-xl p-5 flex flex-col h-full">
-        <h2 class="text-lg font-bold mb-1">Profiel</h2>
+        <div class="flex items-center justify-between mb-1">
+          <h2 class="text-lg font-bold">Profiel</h2>
+          <!-- Prominent Ondersteuner-status -->
+          <span id="supporterBadgeTop" class="badge badge-gray whitespace-nowrap">Ondersteuner: onbekend</span>
+        </div>
 
         <p id="statusBanner" class="hidden text-sm mb-3 px-3 py-2 rounded bg-yellow-50 text-yellow-800">
           Jou rekening is gemerk vir verwydering. Kontak ons as dit ’n fout is.
@@ -55,6 +75,12 @@
             <p class="text-xs text-gray-500 mt-1">Let wel: Jou e-posadres word nie geverifieer nie, maar jy sal dit nodig kry as jy jou wagwoord verloor het of navrae oor jou rekening het.</p>
           </div>
 
+        <!-- Status line under form (mirrors the top badge; stays subtle) -->
+        <div class="flex items-center gap-2 text-sm subtle">
+          <span>Jou status:</span>
+          <span id="supporterBadgeInline" class="badge badge-gray">Ondersteuner: onbekend</span>
+        </div>
+
           <!-- Action row pinned to the bottom -->
           <div class="mt-auto flex flex-wrap items-center gap-2">
             <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded">BÊRE</button>
@@ -62,19 +88,16 @@
               VRA NUWE WAGWOORD
             </button>
           </div>
-          <!-- Keep hidden unless we actually have a message, so it doesn't break alignment -->
           <p id="formMsg" class="text-sm mt-2 hidden"></p>
         </form>
       </section>
 
-      <!-- RIGHT: column with small pill card + big delete card -->
+      <!-- RIGHT: column with small KRIPTIEK pill + delete -->
       <div class="flex flex-col h-full">
-        <!-- Small KRIPTIEK pill card -->
         <section class="bg-white shadow rounded-xl p-5 flex items-center justify-center">
           <span id="pillOverall" class="pill pill-blue whitespace-nowrap">JOU KRIPTIEK-TELLING: 0</span>
         </section>
 
-        <!-- Delete card fills remaining height; button sits on the same baseline as left buttons -->
         <section class="bg-white shadow rounded-xl p-5 flex flex-col flex-1 mt-6">
           <h3 class="text-lg font-bold mb-2">Verwyder my rekening</h3>
           <p class="text-sm text-gray-600 mb-3">
@@ -86,85 +109,100 @@
             <button id="deleteBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
               VERWYDER MY REKENING
             </button>
-            <!-- Also hidden by default, to avoid baseline drift -->
             <p id="deleteMsg" class="text-sm mt-2 hidden"></p>
           </div>
         </section>
       </div>
     </div>
 
-    <!-- Dilemma section -->
+    <!-- SECTION 2: Dilemma-telling (summary + analysis + stats) -->
     <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-6 mt-6">
-      <section class="bg-white shadow rounded-xl p-5">
-        <div class="flex items-center justify-between mb-2">
-          <h2 class="text-lg font-bold">Jou Dilemma-telling (BETA)</h2>
-          <div class="flex items-center gap-2">
-            <span id="paidBadge" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">Ondersteuner: onbekend</span>
-            <span id="pillDilemma" class="pill pill-blue whitespace-nowrap">DILEMMA-TELLING: 0</span>
+      <!-- LEFT: Game block - Dilemma -->
+      <section class="game-block dilemma">
+        <div class="gb-head">
+          <div class="flex items-center gap-3">
+            <h2 class="text-lg font-bold">Jou Dilemma-telling <span class="text-xs subtle">(BETA)</span></h2>
+            <span id="supporterBadgeD" class="badge badge-gray hidden">Nie-betalende ondersteuner</span>
           </div>
+          <span id="pillDilemma" class="pill pill-blue whitespace-nowrap">DILEMMA-TELLING: 0</span>
         </div>
 
-        <div class="bg-gray-50 rounded p-3 mb-4">
-          <div class="text-2xl font-bold mono" id="dilemmaTotal">0</div>
-          <div class="text-xs text-gray-500" id="visibilityLine">—</div>
-        </div>
-
-        <h3 class="font-semibold mb-2">Ontleding</h3>
-        <div class="kv text-sm">
-          <div>Wenpunte (1 raai × 150)</div> <div id="sc1">0</div>
-          <div>Wenpunte (2 raai × 135)</div> <div id="sc2">0</div>
-          <div>Wenpunte (3 raai × 120)</div> <div id="sc3">0</div>
-          <div>Wenpunte (4 raai × 110)</div> <div id="sc4">0</div>
-          <div>Wenpunte (5 raai × 105)</div> <div id="sc5">0</div>
-          <div>Wenpunte (6 raai × 100)</div> <div id="sc6">0</div>
-          <div>Verliespunte (gespeel maar verloor)</div> <div id="scL">0</div>
-          <div>Streek-bonus (+5 × min(lopie,5))</div> <div id="scStreak">0</div>
-          <div>Argief-bonus (+15 per oorwinning, kap +60/weke)</div> <div id="scArchive">0</div>
-          <div>Konsistensie (⌊(wen% − 50)/5⌋)</div> <div id="scCons">0</div>
-          <div class="kv-total mt-1">
-            <span class="mr-2">Totaal (sonder betaal-bonus en Top-10)</span>
-            <span class="float-right mono" id="scTotal">0</span>
+        <div class="gb-body">
+          <!-- Summary row -->
+          <div class="mini mb-4">
+            <div class="text-2xl font-bold mono" id="dilemmaTotal">0</div>
+            <div class="text-xs subtle" id="visibilityLine">Laas bereken: —</div>
           </div>
-        </div>
 
-        <details class="mt-4">
-          <summary class="cursor-pointer text-sm text-blue-700">Hoe ons tel (kliek om oop te maak)</summary>
-          <div class="text-sm text-gray-700 mt-2 space-y-2">
-            <p><strong>Wenpunte:</strong> 1 raai=150; 2=135; 3=120; 4=110; 5=105; 6=100.</p>
-            <p><strong>Verliespunte:</strong> +20 as jy speel maar nie raai nie.</p>
-            <p><strong>Streek-bonus:</strong> +5 per agtereenvolgende oorwinning (kap op 5/dag).</p>
-            <p><strong>Argief-bonus:</strong> +15 vir elke ouer spel wat jy vandag inhaal; kap +60 per kalenderweek.</p>
-            <p><strong>Konsistensie:</strong> +1 vir elke 5% bo 50% wenkoers.</p>
-            <p><strong>Betaal-bonus:</strong> Ondersteuners kry +10% op nuwe punte vanaf die lanseerdatum. (Nie in hierdie voorskou ingesluit nie.)</p>
-            <p><strong>Top-10 bonus:</strong> +10 vir spelers in die finale top-10 van die dag (vasgestel 23:59 SAST). (Nie terugwerkend bereken in hierdie voorskou nie.)</p>
-            <p class="text-gray-600">Om as ’n <strong>betalende ondersteuner</strong> te kwalifiseer: <strong>$2 per maand</strong> (rollende 30 dae).</p>
+          <!-- Ontleding -->
+          <h3 class="font-semibold mb-2">Ontleding</h3>
+          <div class="ana-grid text-sm">
+            <div class="ana-head">Komponent</div>
+            <div class="ana-head ana-num">Aantal / Reël</div>
+            <div class="ana-head ana-num">Punte</div>
+
+            <div>Wenpunte (1 raai × 150)</div> <div id="c1"  class="ana-num mono">0 × 150</div> <div id="sc1"  class="ana-num mono">0</div>
+            <div>Wenpunte (2 raai × 135)</div> <div id="c2"  class="ana-num mono">0 × 135</div> <div id="sc2"  class="ana-num mono">0</div>
+            <div>Wenpunte (3 raai × 120)</div> <div id="c3"  class="ana-num mono">0 × 120</div> <div id="sc3"  class="ana-num mono">0</div>
+            <div>Wenpunte (4 raai × 110)</div> <div id="c4"  class="ana-num mono">0 × 110</div> <div id="sc4"  class="ana-num mono">0</div>
+            <div>Wenpunte (5 raai × 105)</div> <div id="c5"  class="ana-num mono">0 × 105</div> <div id="sc5"  class="ana-num mono">0</div>
+            <div>Wenpunte (6 raai × 100)</div> <div id="c6"  class="ana-num mono">0 × 100</div> <div id="sc6"  class="ana-num mono">0</div>
+
+            <div>Verliespunte (gespeel maar verloor)</div> <div id="cL" class="ana-num mono">0 × 20</div> <div id="scL" class="ana-num mono">0</div>
+            <div>Streek-bonus (+5 × min(lopie, 5) per dag)</div> <div id="cStreak"   class="ana-num mono">—</div> <div id="scStreak"   class="ana-num mono">0</div>
+            <div>Argief-bonus (+15 per oorwinning; kap +60/weke)</div> <div id="cArchive" class="ana-num mono">—</div> <div id="scArchive" class="ana-num mono">0</div>
+            <div>Konsistensie (⌊(wen% − 50)/5⌋)</div> <div id="cCons" class="ana-num mono">—</div> <div id="scCons" class="ana-num mono">0</div>
+
+            <div class="ana-total">
+              <span>Totaal (sonder betaal-bonus en Top-10)</span>
+              <span id="scTotal" class="mono">0</span>
+            </div>
           </div>
-        </details>
+
+          <details class="mt-4">
+            <summary class="cursor-pointer text-sm text-blue-700">Hoe ons tel (kliek om oop te maak)</summary>
+            <div class="text-sm text-gray-700 mt-2 space-y-2">
+              <p><strong>Wenpunte:</strong> 1 raai=150; 2=135; 3=120; 4=110; 5=105; 6=100.</p>
+              <p><strong>Verliespunte:</strong> +20 as jy speel maar nie raai nie.</p>
+              <p><strong>Streek-bonus:</strong> +5 per agtereenvolgende oorwinning (kap op 5/dag).</p>
+              <p><strong>Argief-bonus:</strong> +15 vir elke ouer spel wat jy vandag inhaal; kap +60 per kalenderweek.</p>
+              <p><strong>Konsistensie:</strong> +1 vir elke 5% bo 50% wenkoers.</p>
+              <p><strong>Betaal-bonus:</strong> Ondersteuners kry +10% op nuwe punte vanaf die lanseerdatum. (Nie in hierdie voorskou ingesluit nie.)</p>
+              <p><strong>Top-10 bonus:</strong> +10 vir spelers in die finale top-10 van die dag (vasgestel 23:59 SAST). (Nie terugwerkend bereken in hierdie voorskou nie.)</p>
+              <p class="text-gray-600">Om as ’n <strong>betalende ondersteuner</strong> te kwalifiseer: <strong>$2 per maand</strong> (rollende 30 dae).</p>
+            </div>
+          </details>
+        </div>
       </section>
 
-      <section class="bg-white shadow rounded-xl p-5">
-        <h2 class="text-lg font-bold mb-4">Jou Dilemma-statistiek</h2>
-        <div class="grid grid-cols-2 gap-3 text-center mb-4">
-          <div class="bg-gray-50 rounded p-3">
-            <div class="text-2xl font-bold mono" id="gamesPlayed">0</div>
-            <div class="text-xs text-gray-500">Dilemmas gespeel</div>
-          </div>
-          <div class="bg-gray-50 rounded p-3">
-            <div class="text-2xl font-bold mono" id="successRate">0%</div>
-            <div class="text-xs text-gray-500">Sukseskoers</div>
-          </div>
-          <div class="bg-gray-50 rounded p-3">
-            <div class="text-2xl font-bold mono" id="streak">0</div>
-            <div class="text-xs text-gray-500">Huidige lopie</div>
-          </div>
-          <div class="bg-gray-50 rounded p-3">
-            <div class="text-2xl font-bold mono" id="bestStreak">0</div>
-            <div class="text-xs text-gray-500">Beste lopie</div>
-          </div>
+      <!-- RIGHT: Stats card (kept, restyled to match) -->
+      <section class="game-block">
+        <div class="gb-head">
+          <h2 class="text-lg font-bold">Jou Dilemma-statistiek</h2>
         </div>
+        <div class="gb-body">
+          <div class="grid grid-cols-2 gap-3 text-center mb-4">
+            <div class="mini">
+              <div class="text-2xl font-bold mono" id="gamesPlayed">0</div>
+              <div class="text-xs subtle">Dilemmas gespeel</div>
+            </div>
+            <div class="mini">
+              <div class="text-2xl font-bold mono" id="successRate">0%</div>
+              <div class="text-xs subtle">Sukseskoers</div>
+            </div>
+            <div class="mini">
+              <div class="text-2xl font-bold mono" id="streak">0</div>
+              <div class="text-xs subtle">Huidige lopie</div>
+            </div>
+            <div class="mini">
+              <div class="text-2xl font-bold mono" id="bestStreak">0</div>
+              <div class="text-xs subtle">Beste lopie</div>
+            </div>
+          </div>
 
-        <h3 class="font-semibold mb-2">Suksesverdeling</h3>
-        <div id="distList" class="space-y-2"></div>
+          <h3 class="font-semibold mb-2">Suksesverdeling</h3>
+          <div id="distList" class="space-y-2"></div>
+        </div>
       </section>
     </div>
   </main>
@@ -178,7 +216,6 @@
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
-
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, updateEmail, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
@@ -201,9 +238,13 @@
     const nameInput = document.getElementById('nameInput');
     const emailInput = document.getElementById('emailInput');
     const resetPwBtn = document.getElementById('resetPwBtn');
-    const formMsg = document.getElementById('formMsg');  // hidden by default
-    const deleteMsg = document.getElementById('deleteMsg'); // hidden by default
+    const formMsg = document.getElementById('formMsg');
+    const deleteMsg = document.getElementById('deleteMsg');
     const statusBanner = document.getElementById('statusBanner');
+
+    const supporterBadgeTop = document.getElementById('supporterBadgeTop');
+    const supporterBadgeInline = document.getElementById('supporterBadgeInline');
+    const supporterBadgeD = document.getElementById('supporterBadgeD');
 
     const pillDilemma = document.getElementById('pillDilemma');
     const pillOverall  = document.getElementById('pillOverall');
@@ -214,6 +255,8 @@
     const STREAK_UNIT = 5;
     const ARCHIVE_UNIT = 15;
     const ARCHIVE_WEEKLY_CAP = 60;
+
+    const fmt = (n)=> (typeof n === 'number') ? n.toLocaleString('af-ZA') : String(n);
 
     function parseGameDateFromId(id){
       try{
@@ -232,12 +275,12 @@
       const firstThu = new Date(t.getFullYear(),0,4);
       return `${t.getFullYear()}-W${String(1 + Math.floor((t - firstThu)/86400000/7)).padStart(2,'0')}`;
     }
+
     function computePreviewScore({userData, plays}) {
       const dist = userData.guessDist || {};
-      const winsByGuess = [0,0,0,0,0,0,0];
-      for (let i=1;i<=6;i++) winsByGuess[i] = Number(dist[String(i)]||0);
+      const winsByGuessCounts = [0,0,0,0,0,0,0];
+      for (let i=1;i<=6;i++) winsByGuessCounts[i] = Number(dist[String(i)]||0);
 
-      // chronological
       const sorted = [...plays].sort((a,b)=>{
         const ad=a.dateObj?.getTime()||0, bd=b.dateObj?.getTime()||0;
         return ad===bd ? (a.id||'').localeCompare(b.id||'') : ad-bd;
@@ -248,8 +291,9 @@
       const archiveWinsByWeek = new Map();
 
       for (const p of sorted){
-        const isWin = (p.result==='win') || (!!p.guesses && p.finished);
+        const isWin  = (p.result==='win') || (!!p.guesses && p.finished);
         const isLoss = !isWin && p.finished;
+
         if (isWin){
           tempStreak += 1;
           streakBonus += STREAK_UNIT * Math.min(tempStreak, 5);
@@ -264,13 +308,19 @@
         }
       }
 
-      let archiveBonus = 0;
-      for (const [,count] of archiveWinsByWeek.entries()){
-        archiveBonus += Math.min(count * ARCHIVE_UNIT, ARCHIVE_WEEKLY_CAP);
+      let archiveBonus = 0, archiveExpl = [];
+      for (const [wk,count] of archiveWinsByWeek.entries()){
+        const add = Math.min(count * ARCHIVE_UNIT, ARCHIVE_WEEKLY_CAP);
+        archiveBonus += add;
+        archiveExpl.push(`${count} win${count===1?'':'s'} in ${wk} → +${add}`);
       }
 
-      let winPoints = 0;
-      for (let g=1; g<=6; g++) winPoints += winsByGuess[g] * D_POINTS[g-1];
+      let winPoints = 0, winByGuessPts = [];
+      for (let g=1; g<=6; g++){
+        const pts = winsByGuessCounts[g] * D_POINTS[g-1];
+        winByGuessPts[g] = pts;
+        winPoints += pts;
+      }
 
       const lossPoints = lossCount * LOSS_POINTS;
 
@@ -282,9 +332,43 @@
       const subtotal = winPoints + lossPoints + streakBonus + archiveBonus + consistency;
 
       return {
-        winByGuessPts: winsByGuess.map((n,idx)=>n * (idx?D_POINTS[idx-1]:0)),
-        lossPoints, streakBonus, archiveBonus, consistency, subtotal
+        winsByGuessCounts, winByGuessPts,
+        lossCount, lossPoints,
+        streakBonus,
+        archiveBonus, archiveExpl,
+        consistency, winPct,
+        subtotal
       };
+    }
+
+    function setSupporterBadges({active, label}){
+      const clsOn  = 'badge-green', clsOff = 'badge-gray';
+      const nodes = [supporterBadgeTop, supporterBadgeInline, supporterBadgeD];
+      nodes.forEach(n=>{
+        if (!n) return;
+        n.textContent = active ? 'Betalende ondersteuner' : 'Nie-betalende ondersteuner';
+        n.classList.remove(active ? clsOff : clsOn);
+        n.classList.add(active ? clsOn : clsOff);
+        n.classList.remove('hidden');
+      });
+    }
+
+    function isSupporterActive(userDoc){
+      // Support either of these fields:
+      // - supporterUntil: Firestore Timestamp / Date in the future
+      // - supporterUsd30d: number > 0 (rolling 30d)
+      // - supporterActive: boolean (explicit)
+      const now = new Date();
+      const u = userDoc || {};
+      if (typeof u.supporterActive === 'boolean') return u.supporterActive;
+
+      let until = null;
+      if (u.supporterUntil?.toDate) until = u.supporterUntil.toDate();
+      else if (u.supporterUntil instanceof Date) until = u.supporterUntil;
+
+      if (until && until > now) return true;
+      if (typeof u.supporterUsd30d === 'number' && u.supporterUsd30d > 0) return true;
+      return false;
     }
 
     onAuthStateChanged(auth, async (user) => {
@@ -308,6 +392,7 @@
           email: user.email || '',
           gamesPlayed: 0, wins: 0, streak: 0, bestStreak: 0,
           guessDist: { "1":0, "2":0, "3":0, "4":0, "5":0, "6":0 },
+          supporterActive: false,
           status: "active",
           createdAt: serverTimestamp(), updatedAt: serverTimestamp()
         }, { merge: true });
@@ -320,6 +405,9 @@
         nameInput.disabled = true; emailInput.disabled = true; resetPwBtn.disabled = true;
         document.querySelector('#profileForm button[type="submit"]').disabled = true;
       }
+
+      // Supporter status (top + section badges)
+      setSupporterBadges({ active: isSupporterActive(data) });
 
       // Stats (if present)
       const gamesPlayed = data.gamesPlayed || 0;
@@ -344,25 +432,34 @@
 
       const preview = computePreviewScore({userData: data, plays});
 
-      // Fill breakdown + totals
-      document.getElementById('sc1').textContent = (preview.winByGuessPts[1]||0);
-      document.getElementById('sc2').textContent = (preview.winByGuessPts[2]||0);
-      document.getElementById('sc3').textContent = (preview.winByGuessPts[3]||0);
-      document.getElementById('sc4').textContent = (preview.winByGuessPts[4]||0);
-      document.getElementById('sc5').textContent = (preview.winByGuessPts[5]||0);
-      document.getElementById('sc6').textContent = (preview.winByGuessPts[6]||0);
-      document.getElementById('scL').textContent = preview.lossPoints;
-      document.getElementById('scStreak').textContent = preview.streakBonus;
-      document.getElementById('scArchive').textContent = preview.archiveBonus;
-      document.getElementById('scCons').textContent = preview.consistency;
-      document.getElementById('scTotal').textContent = preview.subtotal;
-      document.getElementById('dilemmaTotal').textContent = String(preview.subtotal);
+      // Fill breakdown + totals (+ counts column)
+      for (let g=1; g<=6; g++){
+        const count = preview.winsByGuessCounts[g] || 0;
+        document.getElementById(`c${g}`).textContent  = `${fmt(count)} × ${D_POINTS[g-1]}`;
+        document.getElementById(`sc${g}`).textContent = fmt(preview.winByGuessPts[g] || 0);
+      }
+      document.getElementById('cL').textContent       = `${fmt(preview.lossCount)} × ${LOSS_POINTS}`;
+      document.getElementById('scL').textContent      = fmt(preview.lossPoints);
+      document.getElementById('cStreak').textContent  = preview.streakBonus ? 'som van dagbonusse' : '—';
+      document.getElementById('scStreak').textContent = fmt(preview.streakBonus);
+      document.getElementById('cArchive').textContent = preview.archiveBonus ? (preview.archiveExpl[0] || '—') : '—';
+      document.getElementById('scArchive').textContent = fmt(preview.archiveBonus);
+      document.getElementById('cCons').textContent    = `${fmt(preview.winPct)}% wenkoers`;
+      document.getElementById('scCons').textContent   = fmt(preview.consistency);
 
-      // Pills (wider, no truncation)
-      pillDilemma.textContent = `DILEMMA-TELLING: ${preview.subtotal}`;
-      pillOverall.textContent  = `JOU KRIPTIEK-TELLING: ${preview.subtotal}`;
+      document.getElementById('scTotal').textContent  = fmt(preview.subtotal);
+      document.getElementById('dilemmaTotal').textContent = fmt(preview.subtotal);
 
-      // Success distribution (if the card exists)
+      // Pills
+      pillDilemma.textContent = `DILEMMA-TELLING: ${fmt(preview.subtotal)}`;
+      pillOverall.textContent  = `JOU KRIPTIEK-TELLING: ${fmt(preview.subtotal)}`;
+
+      // Last computed line
+      const now = new Date();
+      document.getElementById('visibilityLine').textContent =
+        `Laas bereken: ${now.toLocaleDateString('af-ZA')} ${now.toLocaleTimeString('af-ZA', {hour:'2-digit', minute:'2-digit'})}`;
+
+      // Success distribution
       function renderDist(dist) {
         const container = document.getElementById('distList');
         if (!container) return;
@@ -376,7 +473,7 @@
           row.innerHTML = `
             <div class="text-sm text-gray-600 w-5">${i}</div>
             <div class="w-full"><div class="bar" style="width:${Math.max(pct, 5)}%"></div></div>
-            <div class="text-sm text-gray-600 text-right mono w-10">${n}</div>
+            <div class="text-sm text-gray-600 text-right mono w-10">${fmt(n)}</div>
           `;
           container.appendChild(row);
         }
