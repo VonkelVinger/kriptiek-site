@@ -38,6 +38,7 @@
     .ana-head { color:#6b7280; font-size:12px; }
     .ana-num { text-align:right; }
     .ana-total { grid-column:1 / -1; display:flex; justify-content:space-between; align-items:center; background:#fef9c3; border:1px solid #fde68a; border-radius:.5rem; padding:.5rem .75rem; font-weight:700; margin-top:.25rem; }
+    .ana-sub { grid-column:1 / -1; display:flex; justify-content:space-between; align-items:center; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:.5rem; padding:.5rem .75rem; font-weight:600; margin:.25rem 0; }
 
     /* Section headers */
     .section-title { color:#1e3a8a; font-weight:700; letter-spacing:.02em; }
@@ -146,11 +147,12 @@
           <!-- Explainer -->
           <h4 class="font-semibold mb-2">Wat beteken die Dilemma-telling?</h4>
           <p class="text-sm text-gray-700 mb-4">
-  Jou telling meet jou konsekwente Dilemma-prestasie oor tyd. Jy verdien hoofsaaklik punte <strong>hoe min raaiskote jy nodig het om dit op te los</strong>,
-  <strong>hoe gereeld jy dit wel oplos</strong>, en <strong>lopies van opeenvolgende oplossings.</strong> Daar is ook ’n <strong>argief-bonus</strong> vir ouer Dilemmas wat jy suksesvol kon oplos,
-  en ’n <strong>bonus vir ’n hoë wenkoers.</strong> Betalende ondersteuners kry ook <strong>10% ekstra</strong> vir nuwe punte wat hulle aanteken.
-  Daar is ook ’n <strong>Top-10-bonus van 10 punte</strong> vir spelers wat aan die einde van die dag op die Top-10-lys is.
-</p>
+            Jou telling meet jou konsekwente Dilemma-prestasie oor tyd. Jy verdien hoofsaaklik punte op grond van
+            <strong>hoe min raaiskote jy nodig het om op te los</strong>, <strong>hoe gereeld jy oplos</strong>, en
+            <strong>lopies van opeenvolgende oplossings</strong>. Daar is ook ’n <strong>argief-bonus</strong> vir ouer Dilemmas wat jy inhaal,
+            en ’n <strong>bonus vir ’n hoë wenkoers</strong>. Betalende ondersteuners kry <strong>10% ekstra</strong> vir nuwe punte.
+            Daar is ook ’n <strong>Top-10-bonus van 10 punte</strong> vir spelers wat aan die einde van die dag op die Top-10-lys is.
+          </p>
 
           <!-- Ontleding -->
           <h4 class="font-semibold mb-2">Ontleding</h4>
@@ -171,8 +173,16 @@
             <div>Argief-bonus <span class="subtle">( +15 per oplossing; kap +60 per week )</span></div> <div id="cArchive" class="ana-num mono">—</div> <div id="scArchive" class="ana-num mono">0</div>
             <div>Konsistensie <span class="subtle">( ⌊(wen% − 50)/5⌋ )</span></div> <div id="cCons" class="ana-num mono">—</div> <div id="scCons" class="ana-num mono">0</div>
 
+            <!-- Subtotal & bonuses -->
+            <div class="ana-sub">
+              <span>Subtotaal</span>
+              <span id="scSubtotal" class="mono">0</span>
+            </div>
+            <div>Ondersteuner-bonus <span class="subtle">( +10% )</span></div> <div id="cSupp" class="ana-num mono">—</div> <div id="scSupp" class="ana-num mono">0</div>
+            <div>Top-10-bonus <span class="subtle">( +10 × dae in Top-10 )</span></div> <div id="cTop10" class="ana-num mono">0 × 10</div> <div id="scTop10" class="ana-num mono">0</div>
+
             <div class="ana-total">
-              <span>Totaal (sonder ondersteuner- en Top-10-bonusse)</span>
+              <span>Totaal</span>
               <span id="scTotal" class="mono">0</span>
             </div>
           </div>
@@ -241,6 +251,7 @@
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, updateEmail, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
@@ -353,7 +364,7 @@
       const winPct = gamesPlayed ? Math.round((wins/gamesPlayed)*100) : 0;
       const consistency = Math.max(0, Math.floor((winPct - 50)/5));
 
-      const subtotal = winPoints + lossPoints + streakBonus + archiveBonus + consistency;
+      const subtotalBase = winPoints + lossPoints + streakBonus + archiveBonus + consistency;
 
       return {
         winsByGuessCounts, winByGuessPts,
@@ -361,13 +372,12 @@
         streakBonus,
         archiveBonus, archiveExpl,
         consistency, winPct,
-        subtotal
+        subtotal: subtotalBase
       };
     }
 
     function setSupporterBadgeText({active}){
       supporterBadgeInline.textContent = active ? 'Betalende ondersteuner' : 'Nie-betalende ondersteuner';
-      // stays bright green per request (no color change)
     }
 
     function isSupporterActive(userDoc){
@@ -406,6 +416,7 @@
           gamesPlayed: 0, wins: 0, streak: 0, bestStreak: 0,
           guessDist: { "1":0, "2":0, "3":0, "4":0, "5":0, "6":0 },
           supporterActive: false,
+          top10Count: 0,
           status: "active",
           createdAt: serverTimestamp(), updatedAt: serverTimestamp()
         }, { merge: true });
@@ -419,8 +430,9 @@
         document.querySelector('#profileForm button[type="submit"]').disabled = true;
       }
 
-      // Supporter status (single, green badge text switch)
-      setSupporterBadgeText({ active: isSupporterActive(data) });
+      // Supporter badge text
+      const supporterActive = isSupporterActive(data);
+      setSupporterBadgeText({ active: supporterActive });
 
       // Stats (if present)
       const gamesPlayed = data.gamesPlayed || 0;
@@ -445,7 +457,13 @@
 
       const preview = computePreviewScore({userData: data, plays});
 
-      // Fill breakdown + totals (+ counts column)
+      // --- Bonuses now included ---
+      const supporterBonus = supporterActive ? Math.round(preview.subtotal * 0.10) : 0;
+      const top10Count = Number(data.top10Count || 0);
+      const top10Bonus = top10Count * 10;
+      const finalTotal = preview.subtotal + supporterBonus + top10Bonus;
+
+      // Fill breakdown + counts
       for (let g=1; g<=6; g++){
         const count = preview.winsByGuessCounts[g] || 0;
         document.getElementById(`c${g}`).textContent  = `${fmt(count)} × ${D_POINTS[g-1]}`;
@@ -460,12 +478,18 @@
       document.getElementById('cCons').textContent    = `${fmt(preview.winPct)}% wenkoers`;
       document.getElementById('scCons').textContent   = fmt(preview.consistency);
 
-      document.getElementById('scTotal').textContent  = fmt(preview.subtotal);
-      document.getElementById('dilemmaTotal').textContent = fmt(preview.subtotal);
+      // Subtotal and bonuses
+      document.getElementById('scSubtotal').textContent = fmt(preview.subtotal);
+      document.getElementById('cSupp').textContent = supporterActive ? '+10% op subtotaal' : '—';
+      document.getElementById('scSupp').textContent = fmt(supporterBonus);
+      document.getElementById('cTop10').textContent = `${fmt(top10Count)} × 10`;
+      document.getElementById('scTop10').textContent = fmt(top10Bonus);
 
-      // Pills
-      pillDilemma.textContent = `DILEMMA-TELLING: ${fmt(preview.subtotal)}`;
-      pillOverall.textContent  = `JOU KRIPTIEK-TELLING: ${fmt(preview.subtotal)}`;
+      // Final totals & pills
+      document.getElementById('scTotal').textContent  = fmt(finalTotal);
+      document.getElementById('dilemmaTotal').textContent = fmt(finalTotal);
+      pillDilemma.textContent = `DILEMMA-TELLING: ${fmt(finalTotal)}`;
+      pillOverall.textContent  = `JOU KRIPTIEK-TELLING: ${fmt(finalTotal)}`;
 
       // Last computed line
       const now = new Date();
