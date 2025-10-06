@@ -17,15 +17,14 @@
     .pill-blue { background:#1e3a8a; color:#fff; }
 
     /* Badges */
-    .badge { padding:4px 10px; border-radius:9999px; font-size:12px; font-weight:700; }
-    .badge-green { background:#059669; color:#fff; }
-    .badge-gray { background:#e5e7eb; color:#374151; }
+    .badge { padding:6px 12px; border-radius:9999px; font-size:12px; font-weight:700; }
+    .badge-emerald { background:#16a34a; color:#fff; } /* bright green, always prominent */
 
     /* Bars for dist */
     .stat { display:grid; grid-template-columns:auto 1fr auto; gap:.5rem .75rem; align-items:center; }
     .bar { height: 22px; background:#1d4ed8; border-radius:4px; transition:width .4s ease; }
 
-    /* Game block wrapper (so we can add Blitstiek/Slimstiek later) */
+    /* Game block wrapper */
     .game-block { background:#fff; border-radius: .75rem; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
     .game-block .gb-head { padding: 14px 20px; border-bottom: 1px solid #e5e7eb; display:flex; align-items:center; justify-content:space-between; }
     .game-block .gb-body { padding: 16px 20px; }
@@ -39,11 +38,19 @@
     .ana-head { color:#6b7280; font-size:12px; }
     .ana-num { text-align:right; }
     .ana-total { grid-column:1 / -1; display:flex; justify-content:space-between; align-items:center; background:#fef9c3; border:1px solid #fde68a; border-radius:.5rem; padding:.5rem .75rem; font-weight:700; margin-top:.25rem; }
+
+    /* Section headers */
+    .section-title { color:#1e3a8a; font-weight:700; letter-spacing:.02em; }
+    .section-title.big { font-size:1.375rem; }  /* ~text-2xl on Tailwind base */
+    .section-title.smol { font-size:1.05rem; text-transform:uppercase; }
+
+    /* Coming soon placeholder */
+    .soon { display:flex; align-items:center; justify-content:center; min-height:110px; border:2px dashed #e5e7eb; border-radius:.75rem; color:#9ca3af; font-weight:700; letter-spacing:.06em; }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
   <header class="bg-white shadow p-4 text-center">
-    <h1 class="text-xl font-bold text-[#1e3a8a]">Jou Kriptiek-profiel (TOETS)</h1>
+    <h1 class="section-title big">JOU KRIPTIEK-PROFIEL</h1>
     <p class="text-xs text-gray-500 mt-1">Hierdie blad wys ’n voorskou van die Dilemma-telling. Geen skrywes word gedoen nie.</p>
   </header>
 
@@ -52,11 +59,7 @@
     <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-6 items-stretch">
       <!-- LEFT: Profile card -->
       <section class="bg-white shadow rounded-xl p-5 flex flex-col h-full">
-        <div class="flex items-center justify-between mb-1">
-          <h2 class="text-lg font-bold">Profiel</h2>
-          <!-- Prominent Ondersteuner-status -->
-          <span id="supporterBadgeTop" class="badge badge-gray whitespace-nowrap">Ondersteuner: onbekend</span>
-        </div>
+        <h2 class="text-lg font-bold mb-1">Profiel</h2>
 
         <p id="statusBanner" class="hidden text-sm mb-3 px-3 py-2 rounded bg-yellow-50 text-yellow-800">
           Jou rekening is gemerk vir verwydering. Kontak ons as dit ’n fout is.
@@ -75,11 +78,11 @@
             <p class="text-xs text-gray-500 mt-1">Let wel: Jou e-posadres word nie geverifieer nie, maar jy sal dit nodig kry as jy jou wagwoord verloor het of navrae oor jou rekening het.</p>
           </div>
 
-        <!-- Status line under form (mirrors the top badge; stays subtle) -->
-        <div class="flex items-center gap-2 text-sm subtle">
-          <span>Jou status:</span>
-          <span id="supporterBadgeInline" class="badge badge-gray">Ondersteuner: onbekend</span>
-        </div>
+          <!-- Single, prominent supporter badge (bright green) -->
+          <div class="flex items-center gap-2 text-sm">
+            <span class="text-gray-600">Jou status:</span>
+            <span id="supporterBadgeInline" class="badge badge-emerald">Nie-betalende ondersteuner</span>
+          </div>
 
           <!-- Action row pinned to the bottom -->
           <div class="mt-auto flex flex-wrap items-center gap-2">
@@ -92,7 +95,7 @@
         </form>
       </section>
 
-      <!-- RIGHT: column with small KRIPTIEK pill + delete -->
+      <!-- RIGHT: overall pill + delete -->
       <div class="flex flex-col h-full">
         <section class="bg-white shadow rounded-xl p-5 flex items-center justify-center">
           <span id="pillOverall" class="pill pill-blue whitespace-nowrap">JOU KRIPTIEK-TELLING: 0</span>
@@ -115,15 +118,17 @@
       </div>
     </div>
 
+    <!-- Section 2 heading spanning both columns -->
+    <div class="max-w-5xl mx-auto mt-8">
+      <h2 class="section-title smol px-1">JOU DILEMMA-STATISTIEK</h2>
+    </div>
+
     <!-- SECTION 2: Dilemma-telling (summary + analysis + stats) -->
-    <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-6 mt-6">
+    <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-6 mt-2">
       <!-- LEFT: Game block - Dilemma -->
       <section class="game-block dilemma">
         <div class="gb-head">
-          <div class="flex items-center gap-3">
-            <h2 class="text-lg font-bold">Jou Dilemma-telling <span class="text-xs subtle">(BETA)</span></h2>
-            <span id="supporterBadgeD" class="badge badge-gray hidden">Nie-betalende ondersteuner</span>
-          </div>
+          <h3 class="text-lg font-bold">Jou Dilemma-telling <span class="text-xs subtle">(BETA)</span></h3>
           <span id="pillDilemma" class="pill pill-blue whitespace-nowrap">DILEMMA-TELLING: 0</span>
         </div>
 
@@ -135,7 +140,7 @@
           </div>
 
           <!-- Ontleding -->
-          <h3 class="font-semibold mb-2">Ontleding</h3>
+          <h4 class="font-semibold mb-2">Ontleding</h4>
           <div class="ana-grid text-sm">
             <div class="ana-head">Komponent</div>
             <div class="ana-head ana-num">Aantal / Reël</div>
@@ -169,16 +174,15 @@
               <p><strong>Konsistensie:</strong> +1 vir elke 5% bo 50% wenkoers.</p>
               <p><strong>Betaal-bonus:</strong> Ondersteuners kry +10% op nuwe punte vanaf die lanseerdatum. (Nie in hierdie voorskou ingesluit nie.)</p>
               <p><strong>Top-10 bonus:</strong> +10 vir spelers in die finale top-10 van die dag (vasgestel 23:59 SAST). (Nie terugwerkend bereken in hierdie voorskou nie.)</p>
-              <p class="text-gray-600">Om as ’n <strong>betalende ondersteuner</strong> te kwalifiseer: <strong>$2 per maand</strong> (rollende 30 dae).</p>
             </div>
           </details>
         </div>
       </section>
 
-      <!-- RIGHT: Stats card (kept, restyled to match) -->
+      <!-- RIGHT: Stats card -->
       <section class="game-block">
         <div class="gb-head">
-          <h2 class="text-lg font-bold">Jou Dilemma-statistiek</h2>
+          <h3 class="text-lg font-bold">Jou Dilemma-statistiek</h3>
         </div>
         <div class="gb-body">
           <div class="grid grid-cols-2 gap-3 text-center mb-4">
@@ -200,8 +204,29 @@
             </div>
           </div>
 
-          <h3 class="font-semibold mb-2">Suksesverdeling</h3>
+          <h4 class="font-semibold mb-2">Suksesverdeling</h4>
           <div id="distList" class="space-y-2"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Placeholder row for future blocks -->
+    <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-6 mt-6">
+      <section class="game-block">
+        <div class="gb-head">
+          <h3 class="text-lg font-bold">Blitstiek-telling</h3>
+        </div>
+        <div class="gb-body">
+          <div class="soon">BINNEKORT</div>
+        </div>
+      </section>
+
+      <section class="game-block">
+        <div class="gb-head">
+          <h3 class="text-lg font-bold">Slimstiek-telling</h3>
+        </div>
+        <div class="gb-body">
+          <div class="soon">BINNEKORT</div>
         </div>
       </section>
     </div>
@@ -242,9 +267,7 @@
     const deleteMsg = document.getElementById('deleteMsg');
     const statusBanner = document.getElementById('statusBanner');
 
-    const supporterBadgeTop = document.getElementById('supporterBadgeTop');
     const supporterBadgeInline = document.getElementById('supporterBadgeInline');
-    const supporterBadgeD = document.getElementById('supporterBadgeD');
 
     const pillDilemma = document.getElementById('pillDilemma');
     const pillOverall  = document.getElementById('pillOverall');
@@ -297,6 +320,7 @@
         if (isWin){
           tempStreak += 1;
           streakBonus += STREAK_UNIT * Math.min(tempStreak, 5);
+
           const gKey = `${p.dateObj.getFullYear()}-${String(p.dateObj.getMonth()+1).padStart(2,'0')}-${String(p.dateObj.getDate()).padStart(2,'0')}`;
           if (gKey < tKey){
             const wk = weekKey(p.dateObj);
@@ -341,23 +365,12 @@
       };
     }
 
-    function setSupporterBadges({active, label}){
-      const clsOn  = 'badge-green', clsOff = 'badge-gray';
-      const nodes = [supporterBadgeTop, supporterBadgeInline, supporterBadgeD];
-      nodes.forEach(n=>{
-        if (!n) return;
-        n.textContent = active ? 'Betalende ondersteuner' : 'Nie-betalende ondersteuner';
-        n.classList.remove(active ? clsOff : clsOn);
-        n.classList.add(active ? clsOn : clsOff);
-        n.classList.remove('hidden');
-      });
+    function setSupporterBadgeText({active}){
+      supporterBadgeInline.textContent = active ? 'Betalende ondersteuner' : 'Nie-betalende ondersteuner';
+      // stays bright green per request (no color change)
     }
 
     function isSupporterActive(userDoc){
-      // Support either of these fields:
-      // - supporterUntil: Firestore Timestamp / Date in the future
-      // - supporterUsd30d: number > 0 (rolling 30d)
-      // - supporterActive: boolean (explicit)
       const now = new Date();
       const u = userDoc || {};
       if (typeof u.supporterActive === 'boolean') return u.supporterActive;
@@ -406,8 +419,8 @@
         document.querySelector('#profileForm button[type="submit"]').disabled = true;
       }
 
-      // Supporter status (top + section badges)
-      setSupporterBadges({ active: isSupporterActive(data) });
+      // Supporter status (single, green badge text switch)
+      setSupporterBadgeText({ active: isSupporterActive(data) });
 
       // Stats (if present)
       const gamesPlayed = data.gamesPlayed || 0;
@@ -458,27 +471,6 @@
       const now = new Date();
       document.getElementById('visibilityLine').textContent =
         `Laas bereken: ${now.toLocaleDateString('af-ZA')} ${now.toLocaleTimeString('af-ZA', {hour:'2-digit', minute:'2-digit'})}`;
-
-      // Success distribution
-      function renderDist(dist) {
-        const container = document.getElementById('distList');
-        if (!container) return;
-        container.innerHTML = "";
-        const totalWins = Object.values(dist || {}).reduce((a,b)=>a+(b||0),0) || 0;
-        for (let i=1;i<=6;i++){
-          const n = (dist && dist[String(i)]) || 0;
-          const pct = totalWins ? Math.round((n/totalWins)*100) : 0;
-          const row = document.createElement('div');
-          row.className = "stat";
-          row.innerHTML = `
-            <div class="text-sm text-gray-600 w-5">${i}</div>
-            <div class="w-full"><div class="bar" style="width:${Math.max(pct, 5)}%"></div></div>
-            <div class="text-sm text-gray-600 text-right mono w-10">${fmt(n)}</div>
-          `;
-          container.appendChild(row);
-        }
-      }
-      renderDist(data.guessDist || {});
     });
 
     // Save profile
@@ -541,7 +533,7 @@
         await setDoc(doc(db,'deletionRequests', user.uid), { requestedAt: serverTimestamp(), uid:user.uid, email:user.email || null }, { merge:true });
         deleteMsg.textContent = "Versoek gestuur. Jy sal nou afgemeld word.";
         deleteMsg.className = "text-sm mt-2 text-green-600";
-        deleteMsg.classList.remove('hidden');
+        deleteMsg.classList.remove('hidden');a
         await signOut(auth);
         setTimeout(()=>{ window.location.href = "/index.html"; }, 800);
       } catch (err) {
