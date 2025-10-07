@@ -63,13 +63,13 @@
   .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
 
   /* Buttons / pills */
-  .kbtn{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.6rem 1rem; border-radius:.9rem; background:#1d4ed8; color:#fff; font-weight:800; box-shadow:0 10px 24px rgba(29,78,216,.35); }
+  .kbtn{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.65rem 1rem; border-radius:.9rem; background:#1d4ed8; color:#fff; font-weight:800; box-shadow:0 10px 24px rgba(29,78,216,.35); }
   .kbtn:hover{ background:#1e40af; }
   .kbtn-red{ background:#dc2626; } .kbtn-red:hover{ background:#b91c1c; }
 
-  .pill { display:inline-flex; align-items:center; gap:.5rem; padding:.55rem 1rem; border-radius:999px; font-weight:800; color:#fff; white-space:nowrap; line-height:1.1; }
-  .pill-sm { font-size:.85rem; padding:.42rem .85rem; }
-  .pill-lg { font-size:1.05rem; }
+  .pill { display:inline-flex; align-items:center; gap:.6rem; padding:.6rem 1.1rem; border-radius:999px; font-weight:800; color:#fff; white-space:nowrap; line-height:1.15; }
+  .pill-sm { font-size:.95rem; padding:.55rem 1rem; }
+  .pill-lg { font-size:1.15rem; padding:.75rem 1.25rem; }   /* larger, more capsule-like */
   .pill-blue { background:linear-gradient(90deg,#1d4ed8,#1e40af); }
   .pill-orange { background:#f97316; }      /* Dilemma orange */
   .pill-green { background:#10b981; }       /* Blitstiek green */
@@ -89,10 +89,10 @@
 
   /* Supporter banner (left card) */
   .supporter-banner{ display:flex; align-items:center; justify-content:center; width:100%;
-    background:#16a34a; color:#fff; font-weight:800; padding:.55rem 1rem; border-radius:999px; }
+    background:#16a34a; color:#fff; font-weight:800; padding:.6rem 1rem; border-radius:999px; }
 
   /* Equal bottoms: give both top cards a shared min height */
-  .top-card { min-height: 340px; }
+  .top-card { min-height: 360px; }
 </style>
 </head>
 
@@ -127,7 +127,7 @@
   <main class="flex-grow p-4 pb-16">
     <!-- Profile + overall -->
     <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 items-start">
-      <!-- LEFT: Profile (now also hosts Delete button in action row) -->
+      <!-- LEFT: Profile (buttons include Delete) -->
       <section class="card p-5 md:p-6 top-card">
         <div class="supporter-banner mb-4">
           <span id="supporterBannerTxt">Nie-betalende ondersteuner</span>
@@ -164,22 +164,22 @@
         </form>
       </section>
 
-      <!-- RIGHT: Blue parent pill, then stacked children pills, then full-width explainer -->
+      <!-- RIGHT: Blue parent pill, then stacked children pills (content-width), then full-width explainer -->
       <section class="card p-5 md:p-6 top-card">
-        <!-- Parent pill -->
-        <div class="mb-3">
+        <!-- Parent pill (larger) -->
+        <div class="mb-4">
           <span id="pillOverall" class="pill pill-lg pill-blue">JOU KRIPTIEK-TELLING: 0</span>
         </div>
 
-        <!-- Children pills (subordinate) -->
-        <div class="flex flex-col gap-2 mb-4">
-          <span id="pillDilemmaLive" class="pill pill-sm pill-orange">DILEMMA-TELLING: 0</span>
-          <span class="pill pill-sm pill-green">BLITSTIEK-TELLING: BINNEKORT</span>
-          <span class="pill pill-sm pill-green-dark">SLIMSTIEK-TELLING: BINNEKORT</span>
+        <!-- Children pills (content width, bigger, spaced) -->
+        <div class="flex flex-col gap-3 mb-5 items-start">
+          <span id="pillDilemmaLive" class="pill pill-lg pill-orange self-start">DILEMMA-TELLING: 0</span>
+          <span class="pill pill-lg pill-green self-start">BLITSTIEK-TELLING: BINNEKORT</span>
+          <span class="pill pill-lg pill-green-dark self-start">SLIMSTIEK-TELLING: BINNEKORT</span>
         </div>
 
         <!-- Full-width explainer -->
-        <h3 class="text-2xl font-extrabold text-slate-900 mb-1">Hoe werk die Kriptiek-telling?</h3>
+        <h3 class="text-2xl md:text-[1.7rem] font-extrabold text-slate-900 mb-1">Hoe werk die Kriptiek-telling?</h3>
         <p class="text-sm text-slate-600">
           Plaaslike verduideliking volg hier. Hierdie area beskryf kortliks hoe jou totale telling saamgestel word.
         </p>
@@ -369,7 +369,7 @@
         return;
       }
 
-      // Prefill + ensure user doc
+      // Ensure doc and prefill
       const userRef = doc(db,'users', user.uid);
       const snap = await getDoc(userRef);
       if (!snap.exists()) {
@@ -385,7 +385,6 @@
       }
       const data = (await getDoc(userRef)).data() || {};
 
-      // Prefill form fields
       nameInput.value = data.userName || (localStorage.getItem('userName')||'');
       emailInput.value = data.email || user.email || '';
 
@@ -411,14 +410,14 @@
       return false;
     }
 
-    // ---- Simplified scoring (+10% from streak >= 5)
+    /* ---- Simplified scoring (+10% when streak >= 5) ---- */
     const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
     const STREAK_THRESHOLD = 5;
     const STREAK_MULTIPLIER = 1.10;
 
     function zaDay(ts){
       const d = new Date(ts);
-      const u = new Date(d.getTime() + 2*60*60*1000); // UTC+2, no DST
+      const u = new Date(d.getTime() + 2*60*60*1000); // UTC+2
       return u.toISOString().slice(0,10);
     }
 
@@ -573,7 +572,7 @@
       }
     });
 
-    // Soft-delete (now triggered by left action row button)
+    // Soft-delete (left action row button)
     document.getElementById('deleteBtn').addEventListener('click', async ()=>{
       const user = auth.currentUser; if (!user) return;
       if (!confirm("Is jy seker? Jou rekening word gedeaktiveer en vir verwydering ingedien.")) return;
