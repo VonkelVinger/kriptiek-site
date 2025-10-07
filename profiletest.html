@@ -18,34 +18,34 @@
 
     /* Badges */
     .badge { padding:6px 12px; border-radius:9999px; font-size:12px; font-weight:700; }
-    .badge-emerald { background:#16a34a; color:#fff; } /* bright green */
+    .badge-emerald { background:#16a34a; color:#fff; }
 
     /* Bars for dist */
     .stat { display:grid; grid-template-columns:auto 1fr auto; gap:.5rem .75rem; align-items:center; }
-    .bar { height: 22px; background:#1d4ed8; border-radius:4px; transition:width .4s ease; }
+    .bar { height:22px; background:#1d4ed8; border-radius:4px; transition:width .4s ease; }
 
-    /* Game block wrapper */
-    .game-block { background:#fff; border-radius: .75rem; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
-    .game-block .gb-head { padding: 14px 20px; border-bottom: 1px solid #e5e7eb; display:flex; align-items:center; justify-content:space-between; }
-    .game-block .gb-body { padding: 16px 20px; }
+    /* Blocks */
+    .game-block { background:#fff; border-radius:.75rem; box-shadow:0 1px 2px rgba(0,0,0,.05); }
+    .game-block .gb-head { padding:14px 20px; border-bottom:1px solid #e5e7eb; display:flex; align-items:center; justify-content:space-between; }
+    .game-block .gb-body { padding:16px 20px; }
     .subtle { color:#6b7280; }
 
-    /* Mini cards inside a block */
+    /* Mini cards */
     .mini { background:#f9fafb; border:1px solid #e5e7eb; border-radius:.5rem; padding:12px; }
 
-    /* Three-column analyser table */
-    .ana-grid { display:grid; grid-template-columns: 7fr 3fr 2fr; gap:.25rem .75rem; align-items:center; }
+    /* Analyser */
+    .ana-grid { display:grid; grid-template-columns:7fr 3fr 2fr; gap:.25rem .75rem; align-items:center; }
     .ana-head { color:#6b7280; font-size:12px; }
     .ana-num { text-align:right; }
     .ana-sub { grid-column:1 / -1; display:flex; justify-content:space-between; align-items:center; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:.5rem; padding:.5rem .75rem; font-weight:600; margin:.25rem 0; }
     .ana-total { grid-column:1 / -1; display:flex; justify-content:space-between; align-items:center; background:#fef9c3; border:1px solid #fde68a; border-radius:.5rem; padding:.5rem .75rem; font-weight:700; margin-top:.25rem; }
 
-    /* Section headers */
+    /* Section titles */
     .section-title { color:#1e3a8a; font-weight:700; letter-spacing:.02em; }
     .section-title.big { font-size:1.375rem; }
     .section-title.smol { font-size:1.05rem; text-transform:uppercase; }
 
-    /* Coming soon placeholder */
+    /* Coming soon */
     .soon { display:flex; align-items:center; justify-content:center; min-height:110px; border:2px dashed #e5e7eb; border-radius:.75rem; color:#9ca3af; font-weight:700; letter-spacing:.06em; }
   </style>
 </head>
@@ -59,9 +59,9 @@
   </header>
 
   <main class="flex-grow p-4">
-    <!-- SECTION 1: General profile (left) + overall pill + delete (right) -->
+    <!-- SECTION 1 -->
     <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-6 items-stretch">
-      <!-- LEFT: Profile card -->
+      <!-- Profile -->
       <section class="bg-white shadow rounded-xl p-5 flex flex-col h-full">
         <h2 class="text-lg font-bold mb-1">Profiel</h2>
 
@@ -84,13 +84,11 @@
             </p>
           </div>
 
-          <!-- Single, prominent supporter badge (bright green) -->
           <div class="flex items-center gap-2 text-sm">
             <span class="text-gray-600">Jou betaal-status:</span>
             <span id="supporterBadgeInline" class="badge badge-emerald">Nie-betalende ondersteuner</span>
           </div>
 
-          <!-- Action row pinned to the bottom -->
           <div class="mt-auto flex flex-wrap items-center gap-2">
             <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded">BÊRE</button>
             <button id="resetPwBtn" type="button" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
@@ -101,7 +99,7 @@
         </form>
       </section>
 
-      <!-- RIGHT: overall pill + delete -->
+      <!-- Pill + Delete -->
       <div class="flex flex-col h-full">
         <section class="bg-white shadow rounded-xl p-5 flex items-center justify-center">
           <span id="pillOverall" class="pill pill-blue whitespace-nowrap">JOU KRIPTIEK-TELLING: 0</span>
@@ -123,14 +121,14 @@
       </div>
     </div>
 
-    <!-- Section 2 heading spanning both columns -->
+    <!-- SECTION 2 heading -->
     <div class="max-w-5xl mx-auto mt-8">
       <h2 class="section-title smol px-1">JOU DILEMMA-STATISTIEK</h2>
     </div>
 
-    <!-- SECTION 2: Dilemma-telling (summary + analysis + stats) -->
+    <!-- SECTION 2 blocks -->
     <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-6 mt-2">
-      <!-- LEFT: Game block - Dilemma -->
+      <!-- Dilemma block -->
       <section class="game-block dilemma">
         <div class="gb-head">
           <h3 class="text-lg font-bold">Jou Dilemma-telling <span class="text-xs subtle">(BETA)</span></h3>
@@ -138,13 +136,11 @@
         </div>
 
         <div class="gb-body">
-          <!-- Summary row -->
           <div class="mini mb-4">
             <div class="text-2xl font-bold mono" id="dilemmaTotal">0</div>
             <div class="text-xs subtle" id="visibilityLine">Laas bereken: —</div>
           </div>
 
-          <!-- Explainer -->
           <h4 class="font-semibold mb-2">Wat beteken die Dilemma-telling?</h4>
           <p class="text-sm text-gray-700 mb-4">
             Jou telling meet jou konsekwente Dilemma-prestasie oor tyd. Jy verdien hoofsaaklik punte op grond van
@@ -153,7 +149,6 @@
             en ’n <strong>bonus vir ’n hoë wenkoers</strong>. Betalende ondersteuners kry <strong>10% ekstra</strong> vir nuwe punte.
           </p>
 
-          <!-- Ontleding -->
           <h4 class="font-semibold mb-2">Ontleding</h4>
           <div class="ana-grid text-sm">
             <div class="ana-head">Komponent</div>
@@ -168,11 +163,10 @@
             <div>Dilemma in 6 raaie opgelos (6 × 100)</div> <div id="c6"  class="ana-num mono">0 × 100</div> <div id="sc6"  class="ana-num mono">0</div>
 
             <div>Gespeel maar nie opgelos nie</div> <div id="cL" class="ana-num mono">0 × 20</div> <div id="scL" class="ana-num mono">0</div>
-            <div>Lopie-bonus <span class="subtle">( +5 × min(lopie, 5) per dag )</span></div> <div id="cStreak"   class="ana-num mono">—</div> <div id="scStreak"   class="ana-num mono">0</div>
+            <div>Lopie-bonus <span class="subtle">( +5 × min(lopie, 5) per dag )</span></div> <div id="cStreak" class="ana-num mono">—</div> <div id="scStreak" class="ana-num mono">0</div>
             <div>Argief-bonus <span class="subtle">( +15 per oplossing; kap +60 per week )</span></div> <div id="cArchive" class="ana-num mono">—</div> <div id="scArchive" class="ana-num mono">0</div>
             <div>Konsistensie <span class="subtle">( ⌊(wen% − 50)/5⌋ )</span></div> <div id="cCons" class="ana-num mono">—</div> <div id="scCons" class="ana-num mono">0</div>
 
-            <!-- Subtotal & supporter bonus (Top-10 removed; manual is invisible here) -->
             <div class="ana-sub">
               <span>Subtotaal</span>
               <span id="scSubtotal" class="mono">0</span>
@@ -187,7 +181,7 @@
         </div>
       </section>
 
-      <!-- RIGHT: Stats card -->
+      <!-- Stats -->
       <section class="game-block">
         <div class="gb-head">
           <h3 class="text-lg font-bold">Jou Dilemma-statistiek</h3>
@@ -218,7 +212,7 @@
       </section>
     </div>
 
-    <!-- NEW: Spesiale punte card (separate block, only if awards exist) -->
+    <!-- Spesiale punte card (only if awards exist) -->
     <div id="specialPointsWrap" class="max-w-5xl mx-auto mt-6 hidden">
       <section class="game-block">
         <div class="gb-head">
@@ -227,31 +221,22 @@
         </div>
         <div class="gb-body">
           <ul id="specialPointsList" class="text-sm text-gray-700 space-y-2"></ul>
-          <p class="text-xs subtle mt-3" id="specialPointsNote">
+          <p class="text-xs subtle mt-3">
             Hierdie toekennings word by jou totaal ingereken, maar nie in die ontleding hierbo uitgespesifiseer nie.
           </p>
         </div>
       </section>
     </div>
 
-    <!-- Placeholder row for future blocks -->
+    <!-- Placeholders -->
     <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-6 mt-6">
       <section class="game-block">
-        <div class="gb-head">
-          <h3 class="text-lg font-bold">Blitstiek-telling</h3>
-        </div>
-        <div class="gb-body">
-          <div class="soon">BINNEKORT</div>
-        </div>
+        <div class="gb-head"><h3 class="text-lg font-bold">Blitstiek-telling</h3></div>
+        <div class="gb-body"><div class="soon">BINNEKORT</div></div>
       </section>
-
       <section class="game-block">
-        <div class="gb-head">
-          <h3 class="text-lg font-bold">Slimstiek-telling</h3>
-        </div>
-        <div class="gb-body">
-          <div class="soon">BINNEKORT</div>
-        </div>
+        <div class="gb-head"><h3 class="text-lg font-bold">Slimstiek-telling</h3></div>
+        <div class="gb-body"><div class="soon">BINNEKORT</div></div>
       </section>
     </div>
   </main>
@@ -300,7 +285,7 @@
     const specialList = document.getElementById('specialPointsList');
     const specialSummary = document.getElementById('specialPointsSummary');
 
-    // Scoring preview config
+    // Config
     const D_POINTS = [150,135,120,110,105,100];
     const LOSS_POINTS = 20;
     const STREAK_UNIT = 5;
@@ -309,16 +294,15 @@
 
     const fmt = (n)=> (typeof n === 'number') ? n.toLocaleString('af-ZA') : String(n);
     const fmtDate = (d)=>{
-      try {
-        return new Intl.DateTimeFormat('af-ZA',{year:'numeric', month:'short', day:'2-digit'}).format(d);
-      } catch { return d.toISOString().split('T')[0]; }
+      try { return new Intl.DateTimeFormat('af-ZA',{year:'numeric',month:'short',day:'2-digit'}).format(d); }
+      catch { return d.toISOString().split('T')[0]; }
     };
 
     function parseGameDateFromId(id){
       try{
         const dstr = id.startsWith("Game") ? id.slice(4) : id;
         const [y,m,d] = dstr.split("-").map(n=>parseInt(n,10));
-        return new Date(y, (m-1), d, 12, 0, 0);
+        return new Date(y,(m-1),d,12,0,0);
       }catch{ return null; }
     }
     function todayKey(){
@@ -357,7 +341,7 @@
           const gKey = `${p.dateObj.getFullYear()}-${String(p.dateObj.getMonth()+1).padStart(2,'0')}-${String(p.dateObj.getDate()).padStart(2,'0')}`;
           if (gKey < tKey){
             const wk = weekKey(p.dateObj);
-            archiveWinsByWeek.set(wk, (archiveWinsByWeek.get(wk)||0) + 1);
+            archiveWinsByWeek.set(wk,(archiveWinsByWeek.get(wk)||0)+1);
           }
         } else if (isLoss){
           tempStreak = 0;
@@ -386,59 +370,41 @@
 
       const subtotal = winPoints + lossPoints + streakBonus + archiveBonus + consistency;
 
-      return {
-        winsByGuessCounts, winByGuessPts,
-        lossCount, lossPoints,
-        streakBonus, archiveBonus,
-        consistency, winPct,
-        subtotal
-      };
+      return { winsByGuessCounts, winByGuessPts, lossCount, lossPoints, streakBonus, archiveBonus, consistency, winPct, subtotal };
     }
 
     function setSupporterBadgeText({active}){
       supporterBadgeInline.textContent = active ? 'Betalende ondersteuner' : 'Nie-betalende ondersteuner';
     }
-
     function isSupporterActive(userDoc){
       const now = new Date();
       const u = userDoc || {};
       if (typeof u.supporterActive === 'boolean') return u.supporterActive;
-
       let until = null;
       if (u.supporterUntil?.toDate) until = u.supporterUntil.toDate();
       else if (u.supporterUntil instanceof Date) until = u.supporterUntil;
-
       if (until && until > now) return true;
       if (typeof u.supporterUsd30d === 'number' && u.supporterUsd30d > 0) return true;
       return false;
     }
 
-    // Helper: build YYYY-MM-DD keys for last N days (for awards lookup)
-    function lastNDaysKeys(n=30){
-      const out = [];
-      const t = new Date();
-      for (let i=0;i<n;i++){
-        const d = new Date(t); d.setDate(t.getDate()-i);
-        out.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
-      }
+    function lastNDaysKeys(n=60){
+      const out=[]; const t=new Date();
+      for(let i=0;i<n;i++){ const d=new Date(t); d.setDate(t.getDate()-i);
+        out.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`); }
       return out;
     }
 
-    async function fetchManualAwards(uid, days=30){
+    async function fetchManualAwards(uid, days=60){
       const awards = [];
-      const dateKeys = lastNDaysKeys(days);
-      for (const dk of dateKeys){
-        const userDayRef = doc(db, 'dailyScores', dk, 'users', uid);
-        const snap = await getDoc(userDayRef);
-        if (!snap.exists()) continue;
-
-        // sum on doc (manualTotal) + items list in subcollection /manualAwards
-        const manualTotal = Number(snap.data()?.manualTotal || 0);
-        // list (optional)
-        try {
-          const sub = await getDocs(collection(db, 'dailyScores', dk, 'users', uid, 'manualAwards'));
+      for (const dk of lastNDaysKeys(days)){
+        const userDayRef = doc(db,'dailyScores',dk,'users',uid);
+        const daySnap = await getDoc(userDayRef);
+        if (!daySnap.exists()) continue;
+        try{
+          const sub = await getDocs(collection(db,'dailyScores',dk,'users',uid,'manualAwards'));
           sub.forEach(aDoc=>{
-            const x = aDoc.data() || {};
+            const x=aDoc.data()||{};
             awards.push({
               dateKey: dk,
               label: x.label || 'Spesiale toekenning',
@@ -446,12 +412,11 @@
               createdAt: x.createdAt?.toDate?.() || null
             });
           });
-        } catch(e) { /* subcollection may not exist; ignore */ }
+        }catch{}
       }
-      // Sort newest first
       awards.sort((a,b)=>{
-        const ad = a.createdAt ? a.createdAt.getTime() : Date.parse(a.dateKey);
-        const bd = b.createdAt ? b.createdAt.getTime() : Date.parse(b.dateKey);
+        const ad=a.createdAt ? a.createdAt.getTime() : Date.parse(a.dateKey);
+        const bd=b.createdAt ? b.createdAt.getTime() : Date.parse(b.dateKey);
         return bd - ad;
       });
       return awards;
@@ -465,25 +430,25 @@
       }
 
       // Prefill
-      emailInput.value = user.email || '';
-      const cachedName = localStorage.getItem('userName') || '';
-      if (cachedName) nameInput.value = cachedName;
-
-      // Ensure user doc exists
-      const userRef = doc(db, 'users', user.uid);
-      const snap = await getDoc(userRef);
-      if (!snap.exists()) {
+      const userRef = doc(db,'users',user.uid);
+      const firstSnap = await getDoc(userRef);
+      if (!firstSnap.exists()) {
         await setDoc(userRef, {
-          userName: cachedName || 'Speler',
+          userName: localStorage.getItem('userName') || 'Speler',
           email: user.email || '',
-          gamesPlayed: 0, wins: 0, streak: 0, bestStreak: 0,
-          guessDist: { "1":0, "2":0, "3":0, "4":0, "5":0, "6":0 },
-          supporterActive: false,
-          status: "active",
+          gamesPlayed:0, wins:0, streak:0, bestStreak:0,
+          guessDist:{ "1":0,"2":0,"3":0,"4":0,"5":0,"6":0 },
+          supporterActive:false, status:"active",
           createdAt: serverTimestamp(), updatedAt: serverTimestamp()
-        }, { merge: true });
+        }, { merge:true });
       }
-      const data = (await getDoc(userRef)).data() || {};
+      const snap = await getDoc(userRef);
+      const data = snap.data() || {};
+
+      // Prefill inputs
+      document.getElementById('emailInput').value = user.email || '';
+      const cachedName = localStorage.getItem('userName') || data.userName || '';
+      if (cachedName) document.getElementById('nameInput').value = cachedName;
 
       // Deactivation UI
       if (data.status && data.status !== 'active') {
@@ -492,61 +457,54 @@
         document.querySelector('#profileForm button[type="submit"]').disabled = true;
       }
 
-      // Supporter status (single, green badge text switch)
+      // Supporter badge
       const supporterActive = isSupporterActive(data);
       setSupporterBadgeText({ active: supporterActive });
 
-      // Stats (if present)
-      const gamesPlayed = data.gamesPlayed || 0;
+      // Stats
+      document.getElementById('gamesPlayed').textContent = data.gamesPlayed || 0;
       const wins = data.wins || 0;
-      const successRate = gamesPlayed ? Math.round((wins/gamesPlayed)*100) : 0;
-      const gpEl = document.getElementById('gamesPlayed');
-      if (gpEl) {
-        gpEl.textContent = gamesPlayed;
-        document.getElementById('successRate').textContent = `${successRate}%`;
-        document.getElementById('streak').textContent = data.streak || 0;
-        document.getElementById('bestStreak').textContent = data.bestStreak || 0;
-      }
+      const gp = data.gamesPlayed || 0;
+      document.getElementById('successRate').textContent = gp ? `${Math.round((wins/gp)*100)}%` : '0%';
+      document.getElementById('streak').textContent = data.streak || 0;
+      document.getElementById('bestStreak').textContent = data.bestStreak || 0;
 
-      // Plays for preview (client-side calc as fallback)
-      const playsSnap = await getDocs(collection(db, 'userGames', user.uid, 'plays'));
-      const plays = [];
-      playsSnap.forEach(d => {
-        const x = d.data() || {};
-        const dt = x.finishedAt?.toDate?.() || x.finishedAt || parseGameDateFromId(d.id) || new Date();
+      // Fetch plays (for preview)
+      const playsSnap = await getDocs(collection(db,'userGames',user.uid,'plays'));
+      const plays=[];
+      playsSnap.forEach(d=>{
+        const x=d.data()||{};
+        const dt=x.finishedAt?.toDate?.()||x.finishedAt||parseGameDateFromId(d.id)||new Date();
         plays.push({ id:d.id, finished:!!x.finished, result:x.result||null, guesses:x.guesses||null, dateObj:(dt instanceof Date)?dt:new Date(dt) });
       });
 
-      // Server totals (preferred if available)
-      const totals = data?.totals?.dilemma || null;
-
-      // Manual awards list (for the “Spesiale punte” card)
-      const awards = await fetchManualAwards(user.uid, 60); // last ~2 months
+      // Awards list & sum
+      const awards = await fetchManualAwards(user.uid, 60);
       const manualListSum = awards.reduce((s,a)=> s + (a.points||0), 0);
 
-      // Base subtotal (client preview)
-      const preview = computePreviewScore({userData: data, plays});
+      // --- Compute preview first ---
+      const preview = computePreviewScore({ userData:data, plays });
       const supporterBonusPreview = supporterActive ? Math.round(preview.subtotal * 0.10) : 0;
+      const previewFinal = preview.subtotal + supporterBonusPreview + manualListSum;
 
-      // Decide what to display:
-      // Prefer server totals; else fallback to preview + supporter + manual list sum
-      let finalTotal = 0, subtotalShown = 0, supporterShown = 0, manualShown = 0;
-      if (totals && (typeof totals.total === 'number')) {
+      // Prefer server totals ONLY if clearly set and > 0
+      const totals = data?.totals?.dilemma || null;
+      let finalTotal = previewFinal;
+      let subtotalShown = preview.subtotal;
+      let supporterShown = supporterBonusPreview;
+      let manualShown = manualListSum;
+
+      if (totals && typeof totals.total === 'number' && totals.total > 0) {
         const baseAuto      = Number(totals.baseAuto || totals.base || 0);
         const supporterAuto = Number(totals.supporterAuto || totals.supporter || 0);
         const manual        = Number(totals.manual || 0);
-        finalTotal   = Number(totals.total || (baseAuto + supporterAuto + manual));
+        finalTotal   = Number(totals.total);
         subtotalShown = baseAuto;
         supporterShown = supporterAuto;
-        manualShown = manual;
-      } else {
-        subtotalShown = preview.subtotal;
-        supporterShown = supporterBonusPreview;
-        manualShown = manualListSum; // approximate until server totals exist
-        finalTotal = subtotalShown + supporterShown + manualShown;
+        manualShown    = manual;
       }
 
-      // Fill analyser rows
+      // Fill analyser
       for (let g=1; g<=6; g++){
         const count = preview.winsByGuessCounts[g] || 0;
         document.getElementById(`c${g}`).textContent  = `${fmt(count)} × ${D_POINTS[g-1]}`;
@@ -561,17 +519,16 @@
       document.getElementById('cCons').textContent    = `${fmt(preview.winPct)}% wenkoers`;
       document.getElementById('scCons').textContent   = fmt(preview.consistency);
 
-      // Subtotal + supporter + final (manual remains invisible in the analyser grid)
       document.getElementById('scSubtotal').textContent = fmt(subtotalShown);
       document.getElementById('cSupp').textContent = supporterShown ? '+10% op subtotaal' : '—';
       document.getElementById('scSupp').textContent = fmt(supporterShown);
 
-      document.getElementById('scTotal').textContent  = fmt(finalTotal);
+      document.getElementById('scTotal').textContent = fmt(finalTotal);
       document.getElementById('dilemmaTotal').textContent = fmt(finalTotal);
       pillDilemma.textContent = `DILEMMA-TELLING: ${fmt(finalTotal)}`;
-      pillOverall.textContent  = `JOU KRIPTIEK-TELLING: ${fmt(finalTotal)}`;
+      pillOverall.textContent = `JOU KRIPTIEK-TELLING: ${fmt(finalTotal)}`;
 
-      // Spesiale punte card (visible only if any awards)
+      // Spesiale punte card
       if ((manualShown && manualShown !== 0) || awards.length){
         specialWrap.classList.remove('hidden');
         specialSummary.textContent = `Totaal: ${fmt(manualShown)} punte`;
@@ -592,10 +549,10 @@
         }
       }
 
-      // Last computed line
+      // Timestamp
       const now = new Date();
       document.getElementById('visibilityLine').textContent =
-        `Laas bereken: ${now.toLocaleDateString('af-ZA')} ${now.toLocaleTimeString('af-ZA', {hour:'2-digit', minute:'2-digit'})}`;
+        `Laas bereken: ${now.toLocaleDateString('af-ZA')} ${now.toLocaleTimeString('af-ZA',{hour:'2-digit',minute:'2-digit'})}`;
     });
 
     // Save profile
@@ -603,15 +560,12 @@
       e.preventDefault();
       const user = auth.currentUser; if (!user) return;
 
-      const name = nameInput.value.trim();
-      const newEmail = emailInput.value.trim();
+      const name = document.getElementById('nameInput').value.trim();
+      const newEmail = document.getElementById('emailInput').value.trim();
       if (name.length < 2){
         formMsg.textContent = "Naam te kort.";
-        formMsg.className = "text-sm mt-2 text-red-600";
-        formMsg.classList.remove('hidden');
-        return;
+        formMsg.className = "text-sm mt-2 text-red-600"; formMsg.classList.remove('hidden'); return;
       }
-
       try {
         if (newEmail && newEmail !== (user.email || '')) await updateEmail(user, newEmail);
         const payload = { userName:name, email:newEmail || user.email || '', updatedAt: serverTimestamp() };
@@ -619,12 +573,10 @@
         await setDoc(doc(db,'registrations', user.uid), { ...payload, userId: user.uid }, { merge:true });
         localStorage.setItem('userName', name);
         formMsg.textContent = "Profiel gestoor.";
-        formMsg.className = "text-sm mt-2 text-green-600";
-        formMsg.classList.remove('hidden');
+        formMsg.className = "text-sm mt-2 text-green-600"; formMsg.classList.remove('hidden');
       } catch (err) {
         formMsg.textContent = "Kon nie stoor nie: " + err.message;
-        formMsg.className = "text-sm mt-2 text-red-600";
-        formMsg.classList.remove('hidden');
+        formMsg.className = "text-sm mt-2 text-red-600"; formMsg.classList.remove('hidden');
       }
     });
 
@@ -633,19 +585,15 @@
       const user = auth.currentUser;
       if (!user || !user.email){
         formMsg.textContent = "Geen e-pos gevind vir jou rekening nie.";
-        formMsg.className = "text-sm mt-2 text-red-600";
-        formMsg.classList.remove('hidden');
-        return;
+        formMsg.className = "text-sm mt-2 text-red-600"; formMsg.classList.remove('hidden'); return;
       }
       try {
         await sendPasswordResetEmail(auth, user.email, { url: 'https://www.kriptiek.com/login.html', handleCodeInApp: false });
         formMsg.textContent = "Wagwoordherstel-e-pos is gestuur (kyk ook jou spam).";
-        formMsg.className = "text-sm mt-2 text-green-600";
-        formMsg.classList.remove('hidden');
+        formMsg.className = "text-sm mt-2 text-green-600"; formMsg.classList.remove('hidden');
       } catch (err) {
         formMsg.textContent = "Kon nie e-pos stuur nie: " + err.message;
-        formMsg.className = "text-sm mt-2 text-red-600";
-        formMsg.classList.remove('hidden');
+        formMsg.className = "text-sm mt-2 text-red-600"; formMsg.classList.remove('hidden');
       }
     });
 
@@ -657,14 +605,12 @@
         await setDoc(doc(db,'users', user.uid), { status:"deletion_requested", updatedAt: serverTimestamp() }, { merge:true });
         await setDoc(doc(db,'deletionRequests', user.uid), { requestedAt: serverTimestamp(), uid:user.uid, email:user.email || null }, { merge:true });
         deleteMsg.textContent = "Versoek gestuur. Jy sal nou afgemeld word.";
-        deleteMsg.className = "text-sm mt-2 text-green-600";
-        deleteMsg.classList.remove('hidden');
+        deleteMsg.className = "text-sm mt-2 text-green-600"; deleteMsg.classList.remove('hidden');
         await signOut(auth);
         setTimeout(()=>{ window.location.href = "/index.html"; }, 800);
       } catch (err) {
         deleteMsg.textContent = "Kon nie versoek stuur nie: " + err.message;
-        deleteMsg.className = "text-sm mt-2 text-red-600";
-        deleteMsg.classList.remove('hidden');
+        deleteMsg.className = "text-sm mt-2 text-red-600"; deleteMsg.classList.remove('hidden');
       }
     });
   </script>
