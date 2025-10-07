@@ -61,7 +61,6 @@
   @keyframes bgFloat{ 0%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } 100%{ transform:translateY(0); } }
   .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
 
-  .section-title{ color:#1e3a8a; font-weight:700; letter-spacing:.02em; }
   .mini{ background:#f8fafc; border:1px solid #e5e7eb; border-radius:.75rem; padding:12px; text-align:center; }
   .card{ background:#fff; border-radius:1rem; box-shadow:0 8px 18px rgba(0,0,0,.08); }
   .kbtn{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.55rem .9rem; border-radius:.9rem; background:#1d4ed8; color:#fff; font-weight:800; box-shadow:0 10px 24px rgba(29,78,216,.35); }
@@ -75,9 +74,10 @@
   .good{ color:#065f46; } .bad{ color:#991b1b; }
 
   /* Pills */
-  .pill { display:inline-block; padding:.5rem 1rem; border-radius:999px; font-weight:800; color:#fff; }
+  .pill { display:inline-block; padding:.5rem 1rem; border-radius:999px; font-weight:800; color:#fff;
+          white-space:nowrap; line-height:1.1; }
   .pill-blue { background:linear-gradient(90deg,#1d4ed8,#1e40af); }
-  .pill-orange { background:#f97316; }      /* Dilemma orange (matches Tuis vibe) */
+  .pill-orange { background:#f97316; }      /* Dilemma orange */
   .pill-green { background:#10b981; }       /* Blitstiek green */
   .pill-green-dark { background:#065f46; }  /* Blitstiek dark green */
 </style>
@@ -104,7 +104,6 @@
   <!-- Auth row: keep only "Meld aan" (no "Meld af") -->
   <div class="max-w-6xl mx-auto px-4 pt-3 flex items-center justify-end gap-3">
     <button id="btnLogin" class="kbtn">Meld aan</button>
-    <!-- removed logout button per request -->
   </div>
 
   <!-- Welcome-back line (shown when signed in) -->
@@ -152,17 +151,8 @@
         </form>
       </section>
 
-      <!-- RIGHT: Overall + supporter status moved to header space + stacked pills -->
+      <!-- RIGHT: Overall + stacked pills (tidied; no duplicate supporter strip) -->
       <section class="card p-5 md:p-6">
-        <!-- Header row: shows supporter status (moved here) -->
-        <div class="mb-3 flex items-center gap-2 text-sm">
-          <span class="text-gray-600">Jou betaal-status:</span>
-          <span id="supporterBadgeHeader" class="px-2.5 py-1 rounded-full text-white font-bold" style="background:#16a34a">
-            Nie-betalende ondersteuner
-          </span>
-        </div>
-
-        <!-- Two-column: left (blue pill + text + delete), right (3 stacked pills) -->
         <div class="grid md:grid-cols-2 gap-4">
           <!-- Left column -->
           <div>
@@ -170,7 +160,6 @@
               <span id="pillOverall" class="pill pill-blue">JOU KRIPTIEK-TELLING: 0</span>
             </div>
 
-            <!-- Placeholder explainer (you’ll replace copy later) -->
             <div class="mt-3">
               <h3 class="text-sm font-bold text-slate-800">Hoe werk die Kriptiek-telling?</h3>
               <p class="text-sm text-slate-600">
@@ -188,7 +177,7 @@
             </div>
           </div>
 
-          <!-- Right column: 3 vertical pills -->
+          <!-- Right column: 3 vertical one-line pills -->
           <div class="flex flex-col gap-3 items-start">
             <span id="pillDilemmaLive" class="pill pill-orange">DILEMMA-TELLING: 0</span>
             <span class="pill pill-green">BLITSTIEK-TELLING: BINNEKORT</span>
@@ -354,7 +343,6 @@
     const nameInput = $('nameInput'), emailInput = $('emailInput'), resetPwBtn = $('resetPwBtn');
     const formMsg = $('formMsg'), deleteMsg = $('deleteMsg'), statusBanner = $('statusBanner');
     const supporterBadgeInline = $('supporterBadgeInline');
-    const supporterBadgeHeader = $('supporterBadgeHeader');
 
     const pillOverall = $('pillOverall');
     const pillDilemmaLive = $('pillDilemmaLive');
@@ -417,9 +405,7 @@
     });
 
     function setSupporterBadgeText(active){
-      const txt = active ? 'Betalende ondersteuner' : 'Nie-betalende ondersteuner';
-      supporterBadgeInline.textContent = txt;
-      supporterBadgeHeader.textContent = txt;
+      supporterBadgeInline.textContent = active ? 'Betalende ondersteuner' : 'Nie-betalende ondersteuner';
     }
     function isSupporterActive(u){
       const now = new Date();
@@ -530,11 +516,11 @@
       }).join('');
 
       // Totals + pills + streak UI
-      totalPointsEl.textContent = total.toLocaleString('af-ZA');
-      subtotalCell.textContent = subtotal.toLocaleString('af-ZA');
-      lopieBonusCell.textContent = bonus.toLocaleString('af-ZA');
-      totalCell.textContent = total.toLocaleString('af-ZA');
-      multiplierLabel.textContent = `×${mult.toFixed(2)}`;
+      $('totalPoints').textContent = total.toLocaleString('af-ZA');
+      $('subtotalCell').textContent = subtotal.toLocaleString('af-ZA');
+      $('lopieBonusCell').textContent = bonus.toLocaleString('af-ZA');
+      $('totalCell').textContent = total.toLocaleString('af-ZA');
+      $('multiplierLabel').textContent = `×${mult.toFixed(2)}`;
       if(mult>1){ $('streakChip').classList.remove('hidden'); $('lopieMeta').textContent=`${cur} op ’n ry`; }
       else{ $('streakChip').classList.add('hidden'); $('lopieMeta').textContent=`${cur} (geen bonus)`; }
       $('calcTime').textContent = new Date().toLocaleString('af-ZA');
@@ -604,7 +590,6 @@
         deleteMsg.textContent = "Versoek gestuur. Jy sal nou afgemeld word.";
         deleteMsg.className = "text-sm mt-2 text-green-600";
         deleteMsg.classList.remove('hidden');
-        // no explicit signOut button per your request
         setTimeout(()=>{ window.location.href = "/index.html"; }, 800);
       }catch(err){
         deleteMsg.textContent = "Kon nie versoek stuur nie: " + err.message;
