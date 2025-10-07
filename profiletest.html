@@ -395,24 +395,32 @@
       return out;
     }
 
+    // SAFE awards fetch: swallow permission errors and return []
     async function fetchManualAwards(uid, days=60){
       const awards = [];
       for (const dk of lastNDaysKeys(days)){
-        const userDayRef = doc(db,'dailyScores',dk,'users',uid);
-        const daySnap = await getDoc(userDayRef);
-        if (!daySnap.exists()) continue;
-        try{
-          const sub = await getDocs(collection(db,'dailyScores',dk,'users',uid,'manualAwards'));
-          sub.forEach(aDoc=>{
-            const x=aDoc.data()||{};
-            awards.push({
-              dateKey: dk,
-              label: x.label || 'Spesiale toekenning',
-              points: Number(x.points || 0),
-              createdAt: x.createdAt?.toDate?.() || null
+        try {
+          const userDayRef = doc(db,'dailyScores',dk,'users',uid);
+          const daySnap = await getDoc(userDayRef);       // may throw if rules deny
+          if (!daySnap.exists()) continue;
+
+          try {
+            const sub = await getDocs(collection(db,'dailyScores',dk,'users',uid,'manualAwards'));
+            sub.forEach(aDoc=>{
+              const x=aDoc.data()||{};
+              awards.push({
+                dateKey: dk,
+                label: x.label || 'Spesiale toekenning',
+                points: Number(x.points || 0),
+                createdAt: x.createdAt?.toDate?.() || null
+              });
             });
-          });
-        }catch{}
+          } catch (_) { /* subcollection may not exist or be denied; ignore */ }
+
+        } catch (_) {
+          // no permission or missing collection — ignore and continue
+          continue;
+        }
       }
       awards.sort((a,b)=>{
         const ad=a.createdAt ? a.createdAt.getTime() : Date.parse(a.dateKey);
@@ -429,7 +437,7 @@
         return;
       }
 
-      // Prefill
+      // Prefill + ensure doc exists
       const userRef = doc(db,'users',user.uid);
       const firstSnap = await getDoc(userRef);
       if (!firstSnap.exists()) {
@@ -478,11 +486,12 @@
         plays.push({ id:d.id, finished:!!x.finished, result:x.result||null, guesses:x.guesses||null, dateObj:(dt instanceof Date)?dt:new Date(dt) });
       });
 
-      // Awards list & sum
-      const awards = await fetchManualAwards(user.uid, 60);
+      // Awards list & sum — protected against permission errors
+      let awards = [];
+      try { awards = await fetchManualAwards(user.uid, 60); } catch (_) { awards = []; }
       const manualListSum = awards.reduce((s,a)=> s + (a.points||0), 0);
 
-      // --- Compute preview first ---
+      // Compute preview first
       const preview = computePreviewScore({ userData:data, plays });
       const supporterBonusPreview = supporterActive ? Math.round(preview.subtotal * 0.10) : 0;
       const previewFinal = preview.subtotal + supporterBonusPreview + manualListSum;
