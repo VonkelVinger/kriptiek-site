@@ -15,7 +15,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>My Profiel – Kriptiek</title>
 
-<!-- Favicons (same set as index) -->
+<!-- Favicons -->
 <link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=3">
 <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png?v=3">
@@ -59,13 +59,26 @@
     opacity: 0.5; z-index: 1; pointer-events: none; animation: bgFloat 30s linear infinite;
   }
   @keyframes bgFloat{ 0%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } 100%{ transform:translateY(0); } }
+
   .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
 
-  .mini{ background:#f8fafc; border:1px solid #e5e7eb; border-radius:.75rem; padding:12px; text-align:center; }
-  .card{ background:#fff; border-radius:1rem; box-shadow:0 8px 18px rgba(0,0,0,.08); }
+  /* Buttons / pills */
   .kbtn{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.55rem .9rem; border-radius:.9rem; background:#1d4ed8; color:#fff; font-weight:800; box-shadow:0 10px 24px rgba(29,78,216,.35); }
   .kbtn:hover{ background:#1e40af; }
 
+  .pill { display:inline-flex; align-items:center; gap:.5rem; padding:.55rem 1rem; border-radius:999px; font-weight:800; color:#fff; white-space:nowrap; line-height:1.1; }
+  .pill-sm { font-size:.85rem; padding:.42rem .85rem; }
+  .pill-lg { font-size:1.05rem; }
+  .pill-blue { background:linear-gradient(90deg,#1d4ed8,#1e40af); }
+  .pill-orange { background:#f97316; }      /* Dilemma orange */
+  .pill-green { background:#10b981; }       /* Blitstiek green */
+  .pill-green-dark { background:#065f46; }  /* Blitstiek dark green */
+
+  /* Cards / mini */
+  .card{ background:#fff; border-radius:1rem; box-shadow:0 8px 18px rgba(0,0,0,.08); }
+  .mini{ background:#f8fafc; border:1px solid #e5e7eb; border-radius:.75rem; padding:12px; text-align:center; }
+
+  /* Table & bars (unchanged) */
   .table{ width:100%; border-collapse:separate; border-spacing:0; }
   .table th,.table td{ padding:.6rem .75rem; border-bottom:1px solid #e5e7eb; }
   .table th{ text-align:left; font-weight:700; color:#334155; background:#f8fafc; position:sticky; top:0; }
@@ -73,14 +86,9 @@
   .bar{ height:14px; background:linear-gradient(90deg,#1d4ed8,#1e40af); border-radius:7px; }
   .good{ color:#065f46; } .bad{ color:#991b1b; }
 
-  /* Pills */
-  .pill { display:inline-flex; align-items:center; gap:.5rem; padding:.5rem 1rem; border-radius:999px; font-weight:800; color:#fff;
-          white-space:nowrap; line-height:1.1; }
-  .pill-sm { font-size:.85rem; padding:.4rem .85rem; }
-  .pill-blue { background:linear-gradient(90deg,#1d4ed8,#1e40af); }
-  .pill-orange { background:#f97316; }      /* Dilemma orange */
-  .pill-green { background:#10b981; }       /* Blitstiek green */
-  .pill-green-dark { background:#065f46; }  /* Blitstiek dark green */
+  /* Supporter banner (left card) */
+  .supporter-banner{ display:flex; align-items:center; justify-content:center; width:100%;
+    background:#16a34a; color:#fff; font-weight:800; padding:.55rem 1rem; border-radius:999px; }
 </style>
 </head>
 
@@ -107,16 +115,20 @@
     <button id="btnLogin" class="kbtn">Meld aan</button>
   </div>
 
-  <!-- Welcome-back line (shown when signed in) -->
+  <!-- Welcome-back line -->
   <div id="welcomeLine" class="max-w-6xl mx-auto px-4 pt-2 text-center text-2xl font-bold text-[#1e3a8a] hidden">
     WELKOM TERUG, <span id="wbName">GEBRUIKER</span>
   </div>
 
   <main class="flex-grow p-4 pb-16">
     <!-- Profile + overall -->
-    <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-4 items-stretch">
+    <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 items-start">
       <!-- LEFT: Profile -->
       <section class="card p-5 md:p-6">
+        <div class="supporter-banner mb-4">
+          <span id="supporterBannerTxt">Nie-betalende ondersteuner</span>
+        </div>
+
         <h2 class="text-lg font-bold mb-2">Profiel</h2>
         <p id="statusBanner" class="hidden text-sm mb-3 px-3 py-2 rounded bg-yellow-50 text-yellow-800">
           Jou rekening is gemerk vir verwydering. Kontak ons as dit ’n fout is.
@@ -137,13 +149,6 @@
             </p>
           </div>
 
-          <div class="flex items-center gap-2 text-sm">
-            <span class="text-gray-600">Jou betaal-status:</span>
-            <span id="supporterBadgeInline" class="px-2.5 py-1 rounded-full text-white font-bold" style="background:#16a34a">
-              Nie-betalende ondersteuner
-            </span>
-          </div>
-
           <div class="flex flex-wrap items-center gap-2">
             <button type="submit" class="kbtn">BÊRE</button>
             <button id="resetPwBtn" type="button" class="kbtn bg-slate-800 hover:bg-slate-900">VRA NUWE WAGWOORD</button>
@@ -152,22 +157,22 @@
         </form>
       </section>
 
-      <!-- RIGHT: Compact hierarchy (blue parent pill + 3 subordinate pills to its right) -->
+      <!-- RIGHT: Blue parent pill, then stacked children pills, then explainer & delete -->
       <section class="card p-5 md:p-6">
-        <!-- First row: blue pill (parent) + stacked small pills (children) -->
-        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
-          <span id="pillOverall" class="pill pill-blue">JOU KRIPTIEK-TELLING: 0</span>
-
-          <!-- Subordinate pills: never overlap, single-line, smaller -->
-          <div class="flex flex-col gap-2 md:items-end">
-            <span id="pillDilemmaLive" class="pill pill-sm pill-orange">DILEMMA-TELLING: 0</span>
-            <span class="pill pill-sm pill-green">BLITSTIEK-TELLING: BINNEKORT</span>
-            <span class="pill pill-sm pill-green-dark">SLIMSTIEK-TELLING: BINNEKORT</span>
-          </div>
+        <!-- Parent pill -->
+        <div class="mb-3">
+          <span id="pillOverall" class="pill pill-lg pill-blue">JOU KRIPTIEK-TELLING: 0</span>
         </div>
 
-        <!-- Second row: explainer + delete, space-efficient -->
-        <div class="grid md:grid-cols-2 gap-4 mt-4">
+        <!-- Children pills (subordinate) -->
+        <div class="flex flex-col gap-2 mb-4">
+          <span id="pillDilemmaLive" class="pill pill-sm pill-orange">DILEMMA-TELLING: 0</span>
+          <span class="pill pill-sm pill-green">BLITSTIEK-TELLING: BINNEKORT</span>
+          <span class="pill pill-sm pill-green-dark">SLIMSTIEK-TELLING: BINNEKORT</span>
+        </div>
+
+        <!-- Explainer + Delete -->
+        <div class="grid md:grid-cols-2 gap-4">
           <div>
             <h3 class="text-sm font-bold text-slate-800">Hoe werk die Kriptiek-telling?</h3>
             <p class="text-sm text-slate-600">
@@ -187,7 +192,7 @@
     </div>
 
     <!-- DILEMMA -->
-    <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-4 mt-6">
+    <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 mt-6">
       <!-- Scoring -->
       <section class="card p-5 md:p-6">
         <div class="flex items-center justify-between mb-3">
@@ -265,8 +270,8 @@
       </section>
     </div>
 
-    <!-- Placeholders for future games (unchanged) -->
-    <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-4 mt-6">
+    <!-- Placeholders for future games -->
+    <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 mt-6">
       <section class="card p-5 md:p-6">
         <h2 class="text-lg font-bold text-slate-900">Blitstiek-telling</h2>
         <div class="mt-3 border-2 border-dashed rounded-xl text-slate-400 font-bold flex items-center justify-center h-28">BINNEKORT</div>
@@ -278,7 +283,7 @@
     </div>
   </main>
 
-  <!-- Footer copied from index.html -->
+  <!-- Footer (from index) -->
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
     &copy; 2025 Kriptiek. Alle regte voorbehou. |
     <a href="/profile.html" class="underline">My profiel</a> |
@@ -290,7 +295,7 @@
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
 
-  <!-- Header background letter grid (same as index) -->
+  <!-- Header background letter grid -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const backgroundCrossword = document.getElementById('backgroundCrossword');
@@ -341,7 +346,7 @@
 
     const nameInput = $('nameInput'), emailInput = $('emailInput'), resetPwBtn = $('resetPwBtn');
     const formMsg = $('formMsg'), deleteMsg = $('deleteMsg'), statusBanner = $('statusBanner');
-    const supporterBadgeInline = $('supporterBadgeInline');
+    const supporterBannerTxt = $('supporterBannerTxt');
 
     const pillOverall = $('pillOverall');
     const pillDilemmaLive = $('pillDilemmaLive');
@@ -358,7 +363,6 @@
 
     onAuthStateChanged(auth, async (user)=>{
       btnLogin.classList.toggle('hidden', !!user);
-      if (hint) hint.textContent = user ? 'Data gelaai vanaf Firestore.' : 'Aanmeld nodig om data te laai.';
 
       if (user){
         const storedName = (localStorage.getItem('userName') || '').trim();
@@ -367,20 +371,15 @@
         welcomeLine.classList.remove('hidden');
       } else {
         welcomeLine.classList.add('hidden');
+        return;
       }
 
-      if (!user) return;
-
       // Prefill + ensure user doc
-      emailInput.value = user.email || '';
-      const cachedName = localStorage.getItem('userName') || '';
-      if (cachedName) nameInput.value = cachedName;
-
       const userRef = doc(db,'users', user.uid);
       const snap = await getDoc(userRef);
       if (!snap.exists()) {
         await setDoc(userRef, {
-          userName: cachedName || 'Speler',
+          userName: (localStorage.getItem('userName')||'Speler'),
           email: user.email || '',
           gamesPlayed: 0, wins: 0, streak: 0, bestStreak: 0,
           guessDist: { "1":0, "2":0, "3":0, "4":0, "5":0, "6":0 },
@@ -391,20 +390,21 @@
       }
       const data = (await getDoc(userRef)).data() || {};
 
+      // Prefill form fields
+      nameInput.value = data.userName || (localStorage.getItem('userName')||'');
+      emailInput.value = data.email || user.email || '';
+
       if (data.status && data.status !== 'active') {
         statusBanner.classList.remove('hidden');
         nameInput.disabled = true; emailInput.disabled = true; resetPwBtn.disabled = true;
         document.querySelector('#profileForm button[type="submit"]').disabled = true;
       }
-      const active = isSupporterActive(data);
-      setSupporterBadgeText(active);
+
+      supporterBannerTxt.textContent = isSupporterActive(data) ? 'Betalende ondersteuner' : 'Nie-betalende ondersteuner';
 
       await loadDilemma();
     });
 
-    function setSupporterBadgeText(active){
-      supporterBadgeInline.textContent = active ? 'Betalende ondersteuner' : 'Nie-betalende ondersteuner';
-    }
     function isSupporterActive(u){
       const now = new Date();
       if (typeof u.supporterActive === 'boolean') return u.supporterActive;
@@ -428,7 +428,7 @@
     }
 
     async function loadDilemma(){
-      const uid = auth.currentUser.uid;
+      const uid = (await getAuth().currentUser).uid;
       const playsSnap = await getDocs(collection(db,'userGames',uid,'plays'));
 
       const map = new Map();
@@ -481,11 +481,11 @@
       const bonus = Math.round(subtotal*(mult-1));
       const total = subtotal + bonus;
 
-      // Render table and stats
-      $('playedStat').textContent = totalPlayed;
-      $('winrateStat').textContent = `${winrate}%`;
-      $('curStreak').textContent = cur;
-      $('bestStreak').textContent = best;
+      // Stats & breakdown
+      playedStat.textContent = totalPlayed;
+      winrateStat.textContent = `${winrate}%`;
+      curStreakEl.textContent = cur;
+      bestStreakEl.textContent = best;
 
       const rows=[
         {label:`Dilemmas in 1 raai opgelos (1 × ${BASE_POINTS[1]})`, qty:dist[1], rule:`1 × ${BASE_POINTS[1]}`, pts:dist[1]*BASE_POINTS[1]},
@@ -514,14 +514,14 @@
       }).join('');
 
       // Totals + pills + streak UI
-      $('totalPoints').textContent = total.toLocaleString('af-ZA');
-      $('subtotalCell').textContent = subtotal.toLocaleString('af-ZA');
-      $('lopieBonusCell').textContent = bonus.toLocaleString('af-ZA');
-      $('totalCell').textContent = total.toLocaleString('af-ZA');
-      $('multiplierLabel').textContent = `×${mult.toFixed(2)}`;
-      if(mult>1){ $('streakChip').classList.remove('hidden'); $('lopieMeta').textContent=`${cur} op ’n ry`; }
-      else{ $('streakChip').classList.add('hidden'); $('lopieMeta').textContent=`${cur} (geen bonus)`; }
-      $('calcTime').textContent = new Date().toLocaleString('af-ZA');
+      totalPointsEl.textContent = total.toLocaleString('af-ZA');
+      subtotalCell.textContent = subtotal.toLocaleString('af-ZA');
+      lopieBonusCell.textContent = bonus.toLocaleString('af-ZA');
+      totalCell.textContent = total.toLocaleString('af-ZA');
+      multiplierLabel.textContent = `×${mult.toFixed(2)}`;
+      if(mult>1){ streakChip.classList.remove('hidden'); lopieMeta.textContent=`${cur} op ’n ry`; }
+      else{ streakChip.classList.add('hidden'); lopieMeta.textContent=`${cur} (geen bonus)`; }
+      calcTime.textContent = new Date().toLocaleString('af-ZA');
 
       pillOverall.textContent = `JOU KRIPTIEK-TELLING: ${total.toLocaleString('af-ZA')}`;
       pillDilemmaLive.textContent = `DILEMMA-TELLING: ${total.toLocaleString('af-ZA')}`;
@@ -530,7 +530,7 @@
     // Save profile
     document.getElementById('profileForm').addEventListener('submit', async (e)=>{
       e.preventDefault();
-      const user = auth.currentUser; if (!user) return;
+      const authInst = getAuth(); const user = authInst.currentUser; if (!user) return;
 
       const name = nameInput.value.trim();
       const newEmail = emailInput.value.trim();
@@ -559,7 +559,8 @@
 
     // Reset password
     resetPwBtn.addEventListener('click', async ()=>{
-      const user = auth.currentUser;
+      const authInst = getAuth();
+      const user = authInst.currentUser;
       if (!user || !user.email){
         formMsg.textContent = "Geen e-pos gevind vir jou rekening nie.";
         formMsg.className = "text-sm mt-2 text-red-600";
@@ -567,7 +568,7 @@
         return;
       }
       try{
-        await sendPasswordResetEmail(auth, user.email, { url: 'https://www.kriptiek.com/login.html', handleCodeInApp: false });
+        await sendPasswordResetEmail(authInst, user.email, { url: 'https://www.kriptiek.com/login.html', handleCodeInApp: false });
         formMsg.textContent = "Wagwoordherstel-e-pos is gestuur (kyk ook jou spam).";
         formMsg.className = "text-sm mt-2 text-green-600";
         formMsg.classList.remove('hidden');
@@ -580,7 +581,7 @@
 
     // Soft-delete
     document.getElementById('deleteBtn').addEventListener('click', async ()=>{
-      const user = auth.currentUser; if (!user) return;
+      const authInst = getAuth(); const user = authInst.currentUser; if (!user) return;
       if (!confirm("Is jy seker? Jou rekening word gedeaktiveer en vir verwydering ingedien.")) return;
       try{
         await setDoc(doc(db,'users', user.uid), { status:"deletion_requested", updatedAt: serverTimestamp() }, { merge:true });
