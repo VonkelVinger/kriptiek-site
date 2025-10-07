@@ -115,12 +115,7 @@
     </div>
   </header>
 
-  <!-- Auth row (TEST: inert) -->
-  <div class="max-w-6xl mx-auto px-4 pt-3 flex items-center justify-end gap-3">
-    <button id="btnLogin" class="kbtn" type="button" aria-label="Meld aan (toets)">Meld aan</button>
-  </div>
-
-  <!-- Welcome-back line (TEST: mocked) -->
+  <!-- Welcome-back line -->
   <div id="welcomeLine" class="max-w-6xl mx-auto px-4 pt-2 text-center text-2xl font-bold text-[#1e3a8a]">
     WELKOM TERUG, <span id="wbName">GEBRUIKER</span>
   </div>
@@ -131,7 +126,7 @@
       <!-- LEFT: Profile -->
       <section class="card p-5 md:p-6 top-card">
         <div class="supporter-banner mb-4">
-          <span id="supporterBannerTxt">Nie-ondersteuner</span>
+          <span id="supporterBannerTxt">Nie-betalende ondersteuner</span>
         </div>
 
         <h2 class="text-lg font-bold mb-2">Profiel</h2>
@@ -179,9 +174,9 @@
 
         <h3 class="text-2xl md:text-[1.7rem] font-extrabold text-slate-900 mb-1">Hoe werk die Kriptiek-telling?</h3>
         <p class="text-sm text-slate-600">
-          Jou Kriptiek-telling is tans dieselfde as jou Dilemma-telling, wat daagliks aanpas afhangende van hoe goed jy speel.
-          Later sal Blitstiek en Slimstiek ook bykom. Jy kry ook ’n 10%-bonus as jy ’n betalende ondersteuner van Kriptiek is (laaste 30 dae).
-          Kyk onder hoe jou Dilemma-telling opgebou word.
+          Jou Kriptiek-telling is op die oomblik nog dieselfde as jou Dilemma-telling, wat elke dag aanpas afhangende van hoe goed jy speel.
+          Later sal ons ook begin met ’n Slimstiek-telling en ’n Blitstiek-telling. Kyk onder hoe jou telling vir Dilemma saamgestel word.
+          Jy kry ook bonuspunte as jy ’n betalende ondersteuner van Kriptiek is. Kyk links onder presies hoe jou telling bereken word.
         </p>
       </section>
     </div>
@@ -212,7 +207,7 @@
           Hoe minder raaiskote jy nodig het, hoe meer punte kry jy. Daar is ook bonuspunte as jy
           <strong>vyf of meer Dilemmas opeenvolgend kan oplos</strong>, asook ’n
           <strong>10%-bonus vir betalende ondersteuners in die afgelope 30 dae</strong>.
-          Jy kan met ouer Dilemmas punte verdien, maar elkeen net een keer speel.
+          Jy kan ook met ouer Dilemmas punte verdien, maar jy kan elkeen net een keer speel.
         </p>
 
         <div class="overflow-auto max-h-[420px] rounded-xl border border-slate-200">
@@ -280,7 +275,7 @@
   <!-- Footer -->
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
     &copy; 2025 Kriptiek. Alle regte voorbehou. |
-    <a href="/profiletest.html" class="underline">My profiel (toets)</a> |
+    <a href="/profile.html" class="underline">My profiel</a> |
     <a href="/forum.html" class="underline">Gesels saam</a> |
     <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
     <a href="/terms.html" class="underline">Voorwaardes</a> |
@@ -324,10 +319,8 @@
   <script>
     // ====== MOCK DATA (adjust freely) ======
     const MOCK_SUPPORTER_ACTIVE = false; // toggle to true to see the 10% supporter bonus
-    // Array of plays; one per date. { date: 'YYYY-MM-DD', win: boolean, guesses: 1..6 }
+    // Plays per date. { date: 'YYYY-MM-DD', win: boolean, guesses: 1..6 }
     const MOCK_PLAYS = [
-      // a small streak to demo behaviour (today minus n days)
-      // Feel free to add duplicates or fails to see the distribution respond.
       { date: offsetDay(-6), win: true,  guesses: 3 },
       { date: offsetDay(-5), win: true,  guesses: 4 },
       { date: offsetDay(-4), win: true,  guesses: 2 },
@@ -362,12 +355,12 @@
 
     // Init (mocked user)
     wbName.textContent = 'GEBRUIKER';
-    supporterBannerTxt.textContent = MOCK_SUPPORTER_ACTIVE ? 'Betalende ondersteuner' : 'Nie-ondersteuner';
+    supporterBannerTxt.textContent = MOCK_SUPPORTER_ACTIVE ? 'Betalende ondersteuner' : 'Nie-betalende ondersteuner';
 
     // Compute and render once
     computeAndRender(MOCK_PLAYS, MOCK_SUPPORTER_ACTIVE);
 
-    // Refresh button just re-runs with same data for now
+    // Refresh button re-runs with same data
     btnRefresh.addEventListener('click', ()=> computeAndRender(MOCK_PLAYS, MOCK_SUPPORTER_ACTIVE));
 
     // Form buttons (local no-ops for TEST)
@@ -450,15 +443,15 @@
       curStreakEl.textContent = cur;
       bestStreakEl.textContent = best;
 
-      // breakdown rows (consistent: qty × per-bucket)
+      // breakdown rows (qty × per-bucket)
       const rows=[
         {label:`In 1 raaiskoot opgelos`, qty:dist[1], per:BASE_POINTS[1]},
-        {label:`In 2 raaiskote opgelos`, qty:dist[2], per:BASE_POINTS[2]},
-        {label:`In 3 raaiskote opgelos`, qty:dist[3], per:BASE_POINTS[3]},
-        {label:`In 4 raaiskote opgelos`, qty:dist[4], per:BASE_POINTS[4]},
-        {label:`In 5 raaiskote opgelos`, qty:dist[5], per:BASE_POINTS[5]},
-        {label:`In 6 raaiskote opgelos`, qty:dist[6], per:BASE_POINTS[6]},
-        {label:`Onopgelos`,            qty:dist.fail, per:BASE_POINTS.fail},
+        {label:`In 2 raaiskote opgelos`,  qty:dist[2], per:BASE_POINTS[2]},
+        {label:`In 3 raaiskote opgelos`,  qty:dist[3], per:BASE_POINTS[3]},
+        {label:`In 4 raaiskote opgelos`,  qty:dist[4], per:BASE_POINTS[4]},
+        {label:`In 5 raaiskote opgelos`,  qty:dist[5], per:BASE_POINTS[5]},
+        {label:`In 6 raaiskote opgelos`,  qty:dist[6], per:BASE_POINTS[6]},
+        {label:`Onopgelos`,               qty:dist.fail, per:BASE_POINTS.fail},
       ];
       breakdownBody.innerHTML = rows.map(r=>{
         const pts = r.qty * r.per;
