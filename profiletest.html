@@ -29,7 +29,7 @@
   body { font-family: 'Montserrat', sans-serif; }
   .mono{ font-variant-numeric: tabular-nums; }
 
-  /* --- Header/logo (from index.html) --- */
+  /* --- Header/logo (same as index.html) --- */
   .logo-container {
     position: relative; display: flex; justify-content: center; align-items: center;
     width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
@@ -63,8 +63,9 @@
   .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
 
   /* Buttons / pills */
-  .kbtn{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.55rem .9rem; border-radius:.9rem; background:#1d4ed8; color:#fff; font-weight:800; box-shadow:0 10px 24px rgba(29,78,216,.35); }
+  .kbtn{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.6rem 1rem; border-radius:.9rem; background:#1d4ed8; color:#fff; font-weight:800; box-shadow:0 10px 24px rgba(29,78,216,.35); }
   .kbtn:hover{ background:#1e40af; }
+  .kbtn-red{ background:#dc2626; } .kbtn-red:hover{ background:#b91c1c; }
 
   .pill { display:inline-flex; align-items:center; gap:.5rem; padding:.55rem 1rem; border-radius:999px; font-weight:800; color:#fff; white-space:nowrap; line-height:1.1; }
   .pill-sm { font-size:.85rem; padding:.42rem .85rem; }
@@ -74,11 +75,11 @@
   .pill-green { background:#10b981; }       /* Blitstiek green */
   .pill-green-dark { background:#065f46; }  /* Blitstiek dark green */
 
-  /* Cards / mini */
+  /* Cards */
   .card{ background:#fff; border-radius:1rem; box-shadow:0 8px 18px rgba(0,0,0,.08); }
   .mini{ background:#f8fafc; border:1px solid #e5e7eb; border-radius:.75rem; padding:12px; text-align:center; }
 
-  /* Table & bars (unchanged) */
+  /* Table & bars */
   .table{ width:100%; border-collapse:separate; border-spacing:0; }
   .table th,.table td{ padding:.6rem .75rem; border-bottom:1px solid #e5e7eb; }
   .table th{ text-align:left; font-weight:700; color:#334155; background:#f8fafc; position:sticky; top:0; }
@@ -89,11 +90,14 @@
   /* Supporter banner (left card) */
   .supporter-banner{ display:flex; align-items:center; justify-content:center; width:100%;
     background:#16a34a; color:#fff; font-weight:800; padding:.55rem 1rem; border-radius:999px; }
+
+  /* Equal bottoms: give both top cards a shared min height */
+  .top-card { min-height: 340px; }
 </style>
 </head>
 
 <body class="bg-gray-100 min-h-screen flex flex-col">
-  <!-- Header copied from index.html -->
+  <!-- Header -->
   <header class="bg-white shadow p-4">
     <div class="logo-container">
       <div id="backgroundCrossword" class="background-crossword"></div>
@@ -110,7 +114,7 @@
     </div>
   </header>
 
-  <!-- Auth row: keep only "Meld aan" (no "Meld af") -->
+  <!-- Auth row: only "Meld aan" -->
   <div class="max-w-6xl mx-auto px-4 pt-3 flex items-center justify-end gap-3">
     <button id="btnLogin" class="kbtn">Meld aan</button>
   </div>
@@ -123,8 +127,8 @@
   <main class="flex-grow p-4 pb-16">
     <!-- Profile + overall -->
     <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 items-start">
-      <!-- LEFT: Profile -->
-      <section class="card p-5 md:p-6">
+      <!-- LEFT: Profile (now also hosts Delete button in action row) -->
+      <section class="card p-5 md:p-6 top-card">
         <div class="supporter-banner mb-4">
           <span id="supporterBannerTxt">Nie-betalende ondersteuner</span>
         </div>
@@ -149,16 +153,19 @@
             </p>
           </div>
 
+          <!-- Action row: Save + Reset + Delete -->
           <div class="flex flex-wrap items-center gap-2">
             <button type="submit" class="kbtn">BÊRE</button>
             <button id="resetPwBtn" type="button" class="kbtn bg-slate-800 hover:bg-slate-900">VRA NUWE WAGWOORD</button>
+            <button id="deleteBtn" type="button" class="kbtn kbtn-red">VERWYDER MY REKENING</button>
           </div>
           <p id="formMsg" class="text-sm mt-2 hidden"></p>
+          <p id="deleteMsg" class="text-sm mt-2 hidden"></p>
         </form>
       </section>
 
-      <!-- RIGHT: Blue parent pill, then stacked children pills, then explainer & delete -->
-      <section class="card p-5 md:p-6">
+      <!-- RIGHT: Blue parent pill, then stacked children pills, then full-width explainer -->
+      <section class="card p-5 md:p-6 top-card">
         <!-- Parent pill -->
         <div class="mb-3">
           <span id="pillOverall" class="pill pill-lg pill-blue">JOU KRIPTIEK-TELLING: 0</span>
@@ -171,23 +178,11 @@
           <span class="pill pill-sm pill-green-dark">SLIMSTIEK-TELLING: BINNEKORT</span>
         </div>
 
-        <!-- Explainer + Delete -->
-        <div class="grid md:grid-cols-2 gap-4">
-          <div>
-            <h3 class="text-sm font-bold text-slate-800">Hoe werk die Kriptiek-telling?</h3>
-            <p class="text-sm text-slate-600">
-              Plaaslike verduideliking volg hier. Hierdie area beskryf kortliks hoe jou totale telling saamgestel word.
-            </p>
-          </div>
-          <div>
-            <h4 class="text-base font-bold mb-1">Verwyder my rekening</h4>
-            <p class="text-sm text-gray-600 mb-3">
-              Klik hieronder om te vra dat jou rekening <span class="font-semibold">gedeaktiveer</span> word.
-            </p>
-            <button id="deleteBtn" class="kbtn bg-red-600 hover:bg-red-700">VERWYDER MY REKENING</button>
-            <p id="deleteMsg" class="text-sm mt-2 hidden"></p>
-          </div>
-        </div>
+        <!-- Full-width explainer -->
+        <h3 class="text-2xl font-extrabold text-slate-900 mb-1">Hoe werk die Kriptiek-telling?</h3>
+        <p class="text-sm text-slate-600">
+          Plaaslike verduideliking volg hier. Hierdie area beskryf kortliks hoe jou totale telling saamgestel word.
+        </p>
       </section>
     </div>
 
@@ -283,7 +278,7 @@
     </div>
   </main>
 
-  <!-- Footer (from index) -->
+  <!-- Footer -->
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
     &copy; 2025 Kriptiek. Alle regte voorbehou. |
     <a href="/profile.html" class="underline">My profiel</a> |
@@ -322,7 +317,7 @@
   <!-- Firebase + Page Logic -->
   <script type="module">
     import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, updateEmail, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, updateEmail, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -530,7 +525,7 @@
     // Save profile
     document.getElementById('profileForm').addEventListener('submit', async (e)=>{
       e.preventDefault();
-      const authInst = getAuth(); const user = authInst.currentUser; if (!user) return;
+      const user = auth.currentUser; if (!user) return;
 
       const name = nameInput.value.trim();
       const newEmail = emailInput.value.trim();
@@ -559,8 +554,7 @@
 
     // Reset password
     resetPwBtn.addEventListener('click', async ()=>{
-      const authInst = getAuth();
-      const user = authInst.currentUser;
+      const user = auth.currentUser;
       if (!user || !user.email){
         formMsg.textContent = "Geen e-pos gevind vir jou rekening nie.";
         formMsg.className = "text-sm mt-2 text-red-600";
@@ -568,7 +562,7 @@
         return;
       }
       try{
-        await sendPasswordResetEmail(authInst, user.email, { url: 'https://www.kriptiek.com/login.html', handleCodeInApp: false });
+        await sendPasswordResetEmail(auth, user.email, { url: 'https://www.kriptiek.com/login.html', handleCodeInApp: false });
         formMsg.textContent = "Wagwoordherstel-e-pos is gestuur (kyk ook jou spam).";
         formMsg.className = "text-sm mt-2 text-green-600";
         formMsg.classList.remove('hidden');
@@ -579,9 +573,9 @@
       }
     });
 
-    // Soft-delete
+    // Soft-delete (now triggered by left action row button)
     document.getElementById('deleteBtn').addEventListener('click', async ()=>{
-      const authInst = getAuth(); const user = authInst.currentUser; if (!user) return;
+      const user = auth.currentUser; if (!user) return;
       if (!confirm("Is jy seker? Jou rekening word gedeaktiveer en vir verwydering ingedien.")) return;
       try{
         await setDoc(doc(db,'users', user.uid), { status:"deletion_requested", updatedAt: serverTimestamp() }, { merge:true });
@@ -589,6 +583,7 @@
         deleteMsg.textContent = "Versoek gestuur. Jy sal nou afgemeld word.";
         deleteMsg.className = "text-sm mt-2 text-green-600";
         deleteMsg.classList.remove('hidden');
+        await signOut(auth);
         setTimeout(()=>{ window.location.href = "/index.html"; }, 800);
       }catch(err){
         deleteMsg.textContent = "Kon nie versoek stuur nie: " + err.message;
