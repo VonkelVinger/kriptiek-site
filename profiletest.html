@@ -37,8 +37,8 @@
     .ana-grid { display:grid; grid-template-columns: 7fr 3fr 2fr; gap:.25rem .75rem; align-items:center; }
     .ana-head { color:#6b7280; font-size:12px; }
     .ana-num { text-align:right; }
-    .ana-total { grid-column:1 / -1; display:flex; justify-content:space-between; align-items:center; background:#fef9c3; border:1px solid #fde68a; border-radius:.5rem; padding:.5rem .75rem; font-weight:700; margin-top:.25rem; }
     .ana-sub { grid-column:1 / -1; display:flex; justify-content:space-between; align-items:center; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:.5rem; padding:.5rem .75rem; font-weight:600; margin:.25rem 0; }
+    .ana-total { grid-column:1 / -1; display:flex; justify-content:space-between; align-items:center; background:#fef9c3; border:1px solid #fde68a; border-radius:.5rem; padding:.5rem .75rem; font-weight:700; margin-top:.25rem; }
 
     /* Section headers */
     .section-title { color:#1e3a8a; font-weight:700; letter-spacing:.02em; }
@@ -148,10 +148,9 @@
           <h4 class="font-semibold mb-2">Wat beteken die Dilemma-telling?</h4>
           <p class="text-sm text-gray-700 mb-4">
             Jou telling meet jou konsekwente Dilemma-prestasie oor tyd. Jy verdien hoofsaaklik punte op grond van
-            <strong>hoe min raaiskote jy nodig het om elke Dilemma op te los</strong>, <strong>hoe gereeld jy hulle oplos</strong>, en
-            <strong>lopies van opeenvolgende oplossings</strong>. Daar is ook ’n <strong>argief-bonus</strong> vir ouer Dilemmas wat jy suksesvol oplos,
+            <strong>hoe min raaiskote jy nodig het om op te los</strong>, <strong>hoe gereeld jy oplos</strong>, en
+            <strong>lopies van opeenvolgende oplossings</strong>. Daar is ook ’n <strong>argief-bonus</strong> vir ouer Dilemmas wat jy inhaal,
             en ’n <strong>bonus vir ’n hoë wenkoers</strong>. Betalende ondersteuners kry <strong>10% ekstra</strong> vir nuwe punte.
-            Daar is ook ’n <strong>Top-10-bonus van 10 punte</strong> vir spelers wat aan die einde van die dag op die Top-10-lys is.
           </p>
 
           <!-- Ontleding -->
@@ -173,13 +172,12 @@
             <div>Argief-bonus <span class="subtle">( +15 per oplossing; kap +60 per week )</span></div> <div id="cArchive" class="ana-num mono">—</div> <div id="scArchive" class="ana-num mono">0</div>
             <div>Konsistensie <span class="subtle">( ⌊(wen% − 50)/5⌋ )</span></div> <div id="cCons" class="ana-num mono">—</div> <div id="scCons" class="ana-num mono">0</div>
 
-            <!-- Subtotal & bonuses -->
+            <!-- Subtotal & supporter bonus (Top-10 removed; manual is invisible here) -->
             <div class="ana-sub">
               <span>Subtotaal</span>
               <span id="scSubtotal" class="mono">0</span>
             </div>
             <div>Ondersteuner-bonus <span class="subtle">( +10% )</span></div> <div id="cSupp" class="ana-num mono">—</div> <div id="scSupp" class="ana-num mono">0</div>
-            <div>Top-10-bonus <span class="subtle">( +10 × dae in Top-10 )</span></div> <div id="cTop10" class="ana-num mono">0 × 10</div> <div id="scTop10" class="ana-num mono">0</div>
 
             <div class="ana-total">
               <span>Totaal</span>
@@ -216,6 +214,22 @@
 
           <h4 class="font-semibold mb-2">Suksesverdeling</h4>
           <div id="distList" class="space-y-2"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- NEW: Spesiale punte card (separate block, only if awards exist) -->
+    <div id="specialPointsWrap" class="max-w-5xl mx-auto mt-6 hidden">
+      <section class="game-block">
+        <div class="gb-head">
+          <h3 class="text-lg font-bold">Spesiale punte</h3>
+          <span class="text-xs subtle" id="specialPointsSummary">—</span>
+        </div>
+        <div class="gb-body">
+          <ul id="specialPointsList" class="text-sm text-gray-700 space-y-2"></ul>
+          <p class="text-xs subtle mt-3" id="specialPointsNote">
+            Hierdie toekennings word by jou totaal ingereken, maar nie in die ontleding hierbo uitgespesifiseer nie.
+          </p>
         </div>
       </section>
     </div>
@@ -277,11 +291,14 @@
     const formMsg = document.getElementById('formMsg');
     const deleteMsg = document.getElementById('deleteMsg');
     const statusBanner = document.getElementById('statusBanner');
-
     const supporterBadgeInline = document.getElementById('supporterBadgeInline');
 
     const pillDilemma = document.getElementById('pillDilemma');
     const pillOverall  = document.getElementById('pillOverall');
+
+    const specialWrap = document.getElementById('specialPointsWrap');
+    const specialList = document.getElementById('specialPointsList');
+    const specialSummary = document.getElementById('specialPointsSummary');
 
     // Scoring preview config
     const D_POINTS = [150,135,120,110,105,100];
@@ -291,6 +308,11 @@
     const ARCHIVE_WEEKLY_CAP = 60;
 
     const fmt = (n)=> (typeof n === 'number') ? n.toLocaleString('af-ZA') : String(n);
+    const fmtDate = (d)=>{
+      try {
+        return new Intl.DateTimeFormat('af-ZA',{year:'numeric', month:'short', day:'2-digit'}).format(d);
+      } catch { return d.toISOString().split('T')[0]; }
+    };
 
     function parseGameDateFromId(id){
       try{
@@ -343,11 +365,9 @@
         }
       }
 
-      let archiveBonus = 0, archiveExpl = [];
-      for (const [wk,count] of archiveWinsByWeek.entries()){
-        const add = Math.min(count * ARCHIVE_UNIT, ARCHIVE_WEEKLY_CAP);
-        archiveBonus += add;
-        archiveExpl.push(`${count} win${count===1?'':'s'} in ${wk} → +${add}`);
+      let archiveBonus = 0;
+      for (const [,count] of archiveWinsByWeek.entries()){
+        archiveBonus += Math.min(count * ARCHIVE_UNIT, ARCHIVE_WEEKLY_CAP);
       }
 
       let winPoints = 0, winByGuessPts = [];
@@ -364,15 +384,14 @@
       const winPct = gamesPlayed ? Math.round((wins/gamesPlayed)*100) : 0;
       const consistency = Math.max(0, Math.floor((winPct - 50)/5));
 
-      const subtotalBase = winPoints + lossPoints + streakBonus + archiveBonus + consistency;
+      const subtotal = winPoints + lossPoints + streakBonus + archiveBonus + consistency;
 
       return {
         winsByGuessCounts, winByGuessPts,
         lossCount, lossPoints,
-        streakBonus,
-        archiveBonus, archiveExpl,
+        streakBonus, archiveBonus,
         consistency, winPct,
-        subtotal: subtotalBase
+        subtotal
       };
     }
 
@@ -392,6 +411,50 @@
       if (until && until > now) return true;
       if (typeof u.supporterUsd30d === 'number' && u.supporterUsd30d > 0) return true;
       return false;
+    }
+
+    // Helper: build YYYY-MM-DD keys for last N days (for awards lookup)
+    function lastNDaysKeys(n=30){
+      const out = [];
+      const t = new Date();
+      for (let i=0;i<n;i++){
+        const d = new Date(t); d.setDate(t.getDate()-i);
+        out.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
+      }
+      return out;
+    }
+
+    async function fetchManualAwards(uid, days=30){
+      const awards = [];
+      const dateKeys = lastNDaysKeys(days);
+      for (const dk of dateKeys){
+        const userDayRef = doc(db, 'dailyScores', dk, 'users', uid);
+        const snap = await getDoc(userDayRef);
+        if (!snap.exists()) continue;
+
+        // sum on doc (manualTotal) + items list in subcollection /manualAwards
+        const manualTotal = Number(snap.data()?.manualTotal || 0);
+        // list (optional)
+        try {
+          const sub = await getDocs(collection(db, 'dailyScores', dk, 'users', uid, 'manualAwards'));
+          sub.forEach(aDoc=>{
+            const x = aDoc.data() || {};
+            awards.push({
+              dateKey: dk,
+              label: x.label || 'Spesiale toekenning',
+              points: Number(x.points || 0),
+              createdAt: x.createdAt?.toDate?.() || null
+            });
+          });
+        } catch(e) { /* subcollection may not exist; ignore */ }
+      }
+      // Sort newest first
+      awards.sort((a,b)=>{
+        const ad = a.createdAt ? a.createdAt.getTime() : Date.parse(a.dateKey);
+        const bd = b.createdAt ? b.createdAt.getTime() : Date.parse(b.dateKey);
+        return bd - ad;
+      });
+      return awards;
     }
 
     onAuthStateChanged(auth, async (user) => {
@@ -416,7 +479,6 @@
           gamesPlayed: 0, wins: 0, streak: 0, bestStreak: 0,
           guessDist: { "1":0, "2":0, "3":0, "4":0, "5":0, "6":0 },
           supporterActive: false,
-          top10Count: 0,
           status: "active",
           createdAt: serverTimestamp(), updatedAt: serverTimestamp()
         }, { merge: true });
@@ -430,7 +492,7 @@
         document.querySelector('#profileForm button[type="submit"]').disabled = true;
       }
 
-      // Supporter badge text
+      // Supporter status (single, green badge text switch)
       const supporterActive = isSupporterActive(data);
       setSupporterBadgeText({ active: supporterActive });
 
@@ -446,7 +508,7 @@
         document.getElementById('bestStreak').textContent = data.bestStreak || 0;
       }
 
-      // Plays for preview
+      // Plays for preview (client-side calc as fallback)
       const playsSnap = await getDocs(collection(db, 'userGames', user.uid, 'plays'));
       const plays = [];
       playsSnap.forEach(d => {
@@ -455,15 +517,36 @@
         plays.push({ id:d.id, finished:!!x.finished, result:x.result||null, guesses:x.guesses||null, dateObj:(dt instanceof Date)?dt:new Date(dt) });
       });
 
+      // Server totals (preferred if available)
+      const totals = data?.totals?.dilemma || null;
+
+      // Manual awards list (for the “Spesiale punte” card)
+      const awards = await fetchManualAwards(user.uid, 60); // last ~2 months
+      const manualListSum = awards.reduce((s,a)=> s + (a.points||0), 0);
+
+      // Base subtotal (client preview)
       const preview = computePreviewScore({userData: data, plays});
+      const supporterBonusPreview = supporterActive ? Math.round(preview.subtotal * 0.10) : 0;
 
-      // --- Bonuses now included ---
-      const supporterBonus = supporterActive ? Math.round(preview.subtotal * 0.10) : 0;
-      const top10Count = Number(data.top10Count || 0);
-      const top10Bonus = top10Count * 10;
-      const finalTotal = preview.subtotal + supporterBonus + top10Bonus;
+      // Decide what to display:
+      // Prefer server totals; else fallback to preview + supporter + manual list sum
+      let finalTotal = 0, subtotalShown = 0, supporterShown = 0, manualShown = 0;
+      if (totals && (typeof totals.total === 'number')) {
+        const baseAuto      = Number(totals.baseAuto || totals.base || 0);
+        const supporterAuto = Number(totals.supporterAuto || totals.supporter || 0);
+        const manual        = Number(totals.manual || 0);
+        finalTotal   = Number(totals.total || (baseAuto + supporterAuto + manual));
+        subtotalShown = baseAuto;
+        supporterShown = supporterAuto;
+        manualShown = manual;
+      } else {
+        subtotalShown = preview.subtotal;
+        supporterShown = supporterBonusPreview;
+        manualShown = manualListSum; // approximate until server totals exist
+        finalTotal = subtotalShown + supporterShown + manualShown;
+      }
 
-      // Fill breakdown + counts
+      // Fill analyser rows
       for (let g=1; g<=6; g++){
         const count = preview.winsByGuessCounts[g] || 0;
         document.getElementById(`c${g}`).textContent  = `${fmt(count)} × ${D_POINTS[g-1]}`;
@@ -473,23 +556,41 @@
       document.getElementById('scL').textContent      = fmt(preview.lossPoints);
       document.getElementById('cStreak').textContent  = preview.streakBonus ? 'som van dagbonusse' : '—';
       document.getElementById('scStreak').textContent = fmt(preview.streakBonus);
-      document.getElementById('cArchive').textContent = preview.archiveBonus ? (preview.archiveExpl[0] || '—') : '—';
+      document.getElementById('cArchive').textContent = preview.archiveBonus ? 'weeklikse som' : '—';
       document.getElementById('scArchive').textContent = fmt(preview.archiveBonus);
       document.getElementById('cCons').textContent    = `${fmt(preview.winPct)}% wenkoers`;
       document.getElementById('scCons').textContent   = fmt(preview.consistency);
 
-      // Subtotal and bonuses
-      document.getElementById('scSubtotal').textContent = fmt(preview.subtotal);
-      document.getElementById('cSupp').textContent = supporterActive ? '+10% op subtotaal' : '—';
-      document.getElementById('scSupp').textContent = fmt(supporterBonus);
-      document.getElementById('cTop10').textContent = `${fmt(top10Count)} × 10`;
-      document.getElementById('scTop10').textContent = fmt(top10Bonus);
+      // Subtotal + supporter + final (manual remains invisible in the analyser grid)
+      document.getElementById('scSubtotal').textContent = fmt(subtotalShown);
+      document.getElementById('cSupp').textContent = supporterShown ? '+10% op subtotaal' : '—';
+      document.getElementById('scSupp').textContent = fmt(supporterShown);
 
-      // Final totals & pills
       document.getElementById('scTotal').textContent  = fmt(finalTotal);
       document.getElementById('dilemmaTotal').textContent = fmt(finalTotal);
       pillDilemma.textContent = `DILEMMA-TELLING: ${fmt(finalTotal)}`;
       pillOverall.textContent  = `JOU KRIPTIEK-TELLING: ${fmt(finalTotal)}`;
+
+      // Spesiale punte card (visible only if any awards)
+      if ((manualShown && manualShown !== 0) || awards.length){
+        specialWrap.classList.remove('hidden');
+        specialSummary.textContent = `Totaal: ${fmt(manualShown)} punte`;
+        specialList.innerHTML = "";
+        const maxShow = Math.min(awards.length, 8);
+        for (let i=0; i<maxShow; i++){
+          const a = awards[i];
+          const d = a.createdAt ? a.createdAt : new Date(a.dateKey);
+          const li = document.createElement('li');
+          li.innerHTML = `<span class="mono">${fmtDate(d)}</span> — ${a.label} <span class="mono font-semibold">+${fmt(a.points||0)}</span>`;
+          specialList.appendChild(li);
+        }
+        if (awards.length > maxShow){
+          const more = document.createElement('li');
+          more.className = "text-xs subtle";
+          more.textContent = `…en ${awards.length - maxShow} meer toekennings`;
+          specialList.appendChild(more);
+        }
+      }
 
       // Last computed line
       const now = new Date();
