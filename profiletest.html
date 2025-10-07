@@ -67,13 +67,25 @@
   .kbtn:hover{ background:#1e40af; }
   .kbtn-red{ background:#dc2626; } .kbtn-red:hover{ background:#b91c1c; }
 
-  .pill { display:inline-flex; align-items:center; gap:.6rem; padding:.6rem 1.1rem; border-radius:999px; font-weight:800; color:#fff; white-space:nowrap; line-height:1.15; }
+  .pill { display:inline-flex; align-items:center; gap:.6rem; padding:.6rem 1.1rem; border-radius:999px; font-weight:800; color:#fff; white-space:nowrap; line-height:1.15;
+          box-shadow: 0 6px 14px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.25); }
   .pill-sm { font-size:.95rem; padding:.55rem 1rem; }
   .pill-lg { font-size:1.15rem; padding:.75rem 1.25rem; }   /* larger, more capsule-like */
-  .pill-blue { background:linear-gradient(90deg,#1d4ed8,#1e40af); }
-  .pill-orange { background:#f97316; }      /* Dilemma orange */
-  .pill-green { background:#10b981; }       /* Blitstiek green */
-  .pill-green-dark { background:#065f46; }  /* Blitstiek dark green */
+
+  .pill-blue {
+    background:linear-gradient(90deg,#1d4ed8,#1e40af);
+  }
+
+  /* >>> Updated to match your tiles <<< */
+  .pill-orange {
+    background: linear-gradient(180deg, #FB7A12 0%, #D65A0A 100%);
+  }
+  .pill-green {
+    background: linear-gradient(180deg, #22C55E 0%, #0EA55B 100%);
+  }
+  .pill-green-dark {
+    background: linear-gradient(180deg, #0F766E 0%, #065F46 100%);
+  }
 
   /* Cards */
   .card{ background:#fff; border-radius:1rem; box-shadow:0 8px 18px rgba(0,0,0,.08); }
@@ -127,7 +139,7 @@
   <main class="flex-grow p-4 pb-16">
     <!-- Profile + overall -->
     <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 items-start">
-      <!-- LEFT: Profile (buttons include Delete) -->
+      <!-- LEFT: Profile -->
       <section class="card p-5 md:p-6 top-card">
         <div class="supporter-banner mb-4">
           <span id="supporterBannerTxt">Nie-betalende ondersteuner</span>
@@ -153,7 +165,7 @@
             </p>
           </div>
 
-          <!-- Action row: Save + Reset + Delete -->
+          <!-- Action row -->
           <div class="flex flex-wrap items-center gap-2">
             <button type="submit" class="kbtn">BÊRE</button>
             <button id="resetPwBtn" type="button" class="kbtn bg-slate-800 hover:bg-slate-900">VRA NUWE WAGWOORD</button>
@@ -164,21 +176,18 @@
         </form>
       </section>
 
-      <!-- RIGHT: Blue parent pill, then stacked children pills (content-width), then full-width explainer -->
+      <!-- RIGHT: Pills + explainer -->
       <section class="card p-5 md:p-6 top-card">
-        <!-- Parent pill (larger) -->
         <div class="mb-4">
           <span id="pillOverall" class="pill pill-lg pill-blue">JOU KRIPTIEK-TELLING: 0</span>
         </div>
 
-        <!-- Children pills (content width, bigger, spaced) -->
         <div class="flex flex-col gap-3 mb-5 items-start">
           <span id="pillDilemmaLive" class="pill pill-lg pill-orange self-start">DILEMMA-TELLING: 0</span>
           <span class="pill pill-lg pill-green self-start">BLITSTIEK-TELLING: BINNEKORT</span>
           <span class="pill pill-lg pill-green-dark self-start">SLIMSTIEK-TELLING: BINNEKORT</span>
         </div>
 
-        <!-- Full-width explainer -->
         <h3 class="text-2xl md:text-[1.7rem] font-extrabold text-slate-900 mb-1">Hoe werk die Kriptiek-telling?</h3>
         <p class="text-sm text-slate-600">
           Plaaslike verduideliking volg hier. Hierdie area beskryf kortliks hoe jou totale telling saamgestel word.
@@ -188,7 +197,6 @@
 
     <!-- DILEMMA -->
     <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 mt-6">
-      <!-- Scoring -->
       <section class="card p-5 md:p-6">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-xl font-extrabold text-slate-900">DILEMMA-telling</h2>
@@ -245,7 +253,6 @@
         </div>
       </section>
 
-      <!-- Stats -->
       <section class="card p-5 md:p-6">
         <h2 class="text-xl font-extrabold text-slate-900 mb-3">Jou Dilemma-statistiek</h2>
         <div class="grid grid-cols-4 gap-2 mb-4">
@@ -314,7 +321,7 @@
     });
   </script>
 
-  <!-- Firebase + Page Logic -->
+  <!-- Firebase + Page Logic (unchanged) -->
   <script type="module">
     import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, updateEmail, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
@@ -476,10 +483,10 @@
       const total = subtotal + bonus;
 
       // Stats & breakdown
-      playedStat.textContent = totalPlayed;
-      winrateStat.textContent = `${winrate}%`;
-      curStreakEl.textContent = cur;
-      bestStreakEl.textContent = best;
+      document.getElementById('playedStat').textContent = totalPlayed;
+      document.getElementById('winrateStat').textContent = `${winrate}%`;
+      document.getElementById('curStreak').textContent = cur;
+      document.getElementById('bestStreak').textContent = best;
 
       const rows=[
         {label:`Dilemmas in 1 raai opgelos (1 × ${BASE_POINTS[1]})`, qty:dist[1], rule:`1 × ${BASE_POINTS[1]}`, pts:dist[1]*BASE_POINTS[1]},
@@ -490,7 +497,7 @@
         {label:`Dilemmas in 6 raaie opgelos (6 × ${BASE_POINTS[6]})`, qty:dist[6], rule:`6 × ${BASE_POINTS[6]}`, pts:dist[6]*BASE_POINTS[6]},
         {label:`Dilemmas onopgelos (${BASE_POINTS.fail})`, qty:dist.fail, rule:`${dist.fail} × ${BASE_POINTS.fail}`, pts:dist.fail*BASE_POINTS.fail}
       ];
-      breakdownBody.innerHTML = rows.map(r=>`
+      document.getElementById('breakdownBody').innerHTML = rows.map(r=>`
         <tr>
           <td>${r.label}</td>
           <td class="text-right mono">${r.qty}</td>
@@ -502,20 +509,22 @@
       // Distribution bars
       const pairs=[['1',dist[1]],['2',dist[2]],['3',dist[3]],['4',dist[4]],['5',dist[5]],['6',dist[6]],['X',dist.fail]];
       const maxv=Math.max(1,...pairs.map(p=>p[1]));
-      distWrap.innerHTML=pairs.map(([lb,val])=>{
+      document.getElementById('distWrap').innerHTML=pairs.map(([lb,val])=>{
         const w=Math.max(6,Math.round((val/maxv)*100));
         return `<div class="barRow"><div class="text-xs font-bold text-slate-500">${lb}</div><div class="bar" style="width:${w}%"></div><div class="mono text-sm font-extrabold">${val}</div></div>`;
       }).join('');
 
       // Totals + pills + streak UI
-      totalPointsEl.textContent = total.toLocaleString('af-ZA');
-      subtotalCell.textContent = subtotal.toLocaleString('af-ZA');
-      lopieBonusCell.textContent = bonus.toLocaleString('af-ZA');
-      totalCell.textContent = total.toLocaleString('af-ZA');
-      multiplierLabel.textContent = `×${mult.toFixed(2)}`;
-      if(mult>1){ streakChip.classList.remove('hidden'); lopieMeta.textContent=`${cur} op ’n ry`; }
-      else{ streakChip.classList.add('hidden'); lopieMeta.textContent=`${cur} (geen bonus)`; }
-      calcTime.textContent = new Date().toLocaleString('af-ZA');
+      document.getElementById('totalPoints').textContent = total.toLocaleString('af-ZA');
+      document.getElementById('subtotalCell').textContent = subtotal.toLocaleString('af-ZA');
+      document.getElementById('lopieBonusCell').textContent = bonus.toLocaleString('af-ZA');
+      document.getElementById('totalCell').textContent = total.toLocaleString('af-ZA');
+      document.getElementById('multiplierLabel').textContent = `×${mult.toFixed(2)}`;
+      const chip = document.getElementById('streakChip');
+      const meta = document.getElementById('lopieMeta');
+      if(mult>1){ chip.classList.remove('hidden'); meta.textContent=`${cur} op ’n ry`; }
+      else{ chip.classList.add('hidden'); meta.textContent=`${cur} (geen bonus)`; }
+      document.getElementById('calcTime').textContent = new Date().toLocaleString('af-ZA');
 
       pillOverall.textContent = `JOU KRIPTIEK-TELLING: ${total.toLocaleString('af-ZA')}`;
       pillDilemmaLive.textContent = `DILEMMA-TELLING: ${total.toLocaleString('af-ZA')}`;
@@ -524,10 +533,13 @@
     // Save profile
     document.getElementById('profileForm').addEventListener('submit', async (e)=>{
       e.preventDefault();
+      const auth = (await import('https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js')).getAuth();
       const user = auth.currentUser; if (!user) return;
 
-      const name = nameInput.value.trim();
-      const newEmail = emailInput.value.trim();
+      const name = document.getElementById('nameInput').value.trim();
+      const newEmail = document.getElementById('emailInput').value.trim();
+      const formMsg = document.getElementById('formMsg');
+
       if (name.length < 2){
         formMsg.textContent = "Naam te kort.";
         formMsg.className = "text-sm mt-2 text-red-600";
@@ -536,10 +548,11 @@
       }
 
       try{
+        const { updateEmail } = await import('https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js');
         if (newEmail && newEmail !== (user.email || '')) await updateEmail(user, newEmail);
-        const payload = { userName:name, email:newEmail || user.email || '', updatedAt: serverTimestamp() };
-        await setDoc(doc(db,'users', user.uid), payload, { merge:true });
-        await setDoc(doc(db,'registrations', user.uid), { ...payload, userId: user.uid }, { merge:true });
+        const { setDoc, doc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js');
+        await setDoc(doc(db,'users', user.uid), { userName:name, email:newEmail || user.email || '', updatedAt: serverTimestamp() }, { merge:true });
+        await setDoc(doc(db,'registrations', user.uid), { userName:name, email:newEmail || user.email || '', userId:user.uid }, { merge:true });
         localStorage.setItem('userName', name);
         formMsg.textContent = "Profiel gestoor.";
         formMsg.className = "text-sm mt-2 text-green-600";
@@ -552,8 +565,11 @@
     });
 
     // Reset password
-    resetPwBtn.addEventListener('click', async ()=>{
+    document.getElementById('resetPwBtn').addEventListener('click', async ()=>{
+      const { getAuth, sendPasswordResetEmail } = await import('https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js');
+      const auth = getAuth();
       const user = auth.currentUser;
+      const formMsg = document.getElementById('formMsg');
       if (!user || !user.email){
         formMsg.textContent = "Geen e-pos gevind vir jou rekening nie.";
         formMsg.className = "text-sm mt-2 text-red-600";
@@ -572,22 +588,26 @@
       }
     });
 
-    // Soft-delete (left action row button)
+    // Soft-delete
     document.getElementById('deleteBtn').addEventListener('click', async ()=>{
-      const user = auth.currentUser; if (!user) return;
+      const { getAuth, signOut } = await import('https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js');
+      const auth = getAuth(); const user = auth.currentUser; if (!user) return;
       if (!confirm("Is jy seker? Jou rekening word gedeaktiveer en vir verwydering ingedien.")) return;
       try{
+        const { setDoc, doc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js');
         await setDoc(doc(db,'users', user.uid), { status:"deletion_requested", updatedAt: serverTimestamp() }, { merge:true });
         await setDoc(doc(db,'deletionRequests', user.uid), { requestedAt: serverTimestamp(), uid:user.uid, email:user.email || null }, { merge:true });
-        deleteMsg.textContent = "Versoek gestuur. Jy sal nou afgemeld word.";
-        deleteMsg.className = "text-sm mt-2 text-green-600";
-        deleteMsg.classList.remove('hidden');
+        const msg = document.getElementById('deleteMsg');
+        msg.textContent = "Versoek gestuur. Jy sal nou afgemeld word.";
+        msg.className = "text-sm mt-2 text-green-600";
+        msg.classList.remove('hidden');
         await signOut(auth);
         setTimeout(()=>{ window.location.href = "/index.html"; }, 800);
       }catch(err){
-        deleteMsg.textContent = "Kon nie versoek stuur nie: " + err.message;
-        deleteMsg.className = "text-sm mt-2 text-red-600";
-        deleteMsg.classList.remove('hidden');
+        const msg = document.getElementById('deleteMsg');
+        msg.textContent = "Kon nie versoek stuur nie: " + err.message;
+        msg.className = "text-sm mt-2 text-red-600";
+        msg.classList.remove('hidden');
       }
     });
   </script>
