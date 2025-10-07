@@ -74,8 +74,9 @@
   .good{ color:#065f46; } .bad{ color:#991b1b; }
 
   /* Pills */
-  .pill { display:inline-block; padding:.5rem 1rem; border-radius:999px; font-weight:800; color:#fff;
+  .pill { display:inline-flex; align-items:center; gap:.5rem; padding:.5rem 1rem; border-radius:999px; font-weight:800; color:#fff;
           white-space:nowrap; line-height:1.1; }
+  .pill-sm { font-size:.85rem; padding:.4rem .85rem; }
   .pill-blue { background:linear-gradient(90deg,#1d4ed8,#1e40af); }
   .pill-orange { background:#f97316; }      /* Dilemma orange */
   .pill-green { background:#10b981; }       /* Blitstiek green */
@@ -151,37 +152,35 @@
         </form>
       </section>
 
-      <!-- RIGHT: Overall + stacked pills (tidied; no duplicate supporter strip) -->
+      <!-- RIGHT: Compact hierarchy (blue parent pill + 3 subordinate pills to its right) -->
       <section class="card p-5 md:p-6">
-        <div class="grid md:grid-cols-2 gap-4">
-          <!-- Left column -->
-          <div>
-            <div>
-              <span id="pillOverall" class="pill pill-blue">JOU KRIPTIEK-TELLING: 0</span>
-            </div>
+        <!-- First row: blue pill (parent) + stacked small pills (children) -->
+        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+          <span id="pillOverall" class="pill pill-blue">JOU KRIPTIEK-TELLING: 0</span>
 
-            <div class="mt-3">
-              <h3 class="text-sm font-bold text-slate-800">Hoe werk die Kriptiek-telling?</h3>
-              <p class="text-sm text-slate-600">
-                Plaaslike verduideliking volg hier. Hierdie area beskryf kortliks hoe jou totale telling saamgestel word.
-              </p>
-            </div>
-
-            <div class="mt-4">
-              <h4 class="text-lg font-bold mb-2">Verwyder my rekening</h4>
-              <p class="text-sm text-gray-600 mb-3">
-                Klik hieronder om te vra dat jou rekening <span class="font-semibold">gedeaktiveer</span> word.
-              </p>
-              <button id="deleteBtn" class="kbtn bg-red-600 hover:bg-red-700">VERWYDER MY REKENING</button>
-              <p id="deleteMsg" class="text-sm mt-2 hidden"></p>
-            </div>
+          <!-- Subordinate pills: never overlap, single-line, smaller -->
+          <div class="flex flex-col gap-2 md:items-end">
+            <span id="pillDilemmaLive" class="pill pill-sm pill-orange">DILEMMA-TELLING: 0</span>
+            <span class="pill pill-sm pill-green">BLITSTIEK-TELLING: BINNEKORT</span>
+            <span class="pill pill-sm pill-green-dark">SLIMSTIEK-TELLING: BINNEKORT</span>
           </div>
+        </div>
 
-          <!-- Right column: 3 vertical one-line pills -->
-          <div class="flex flex-col gap-3 items-start">
-            <span id="pillDilemmaLive" class="pill pill-orange">DILEMMA-TELLING: 0</span>
-            <span class="pill pill-green">BLITSTIEK-TELLING: BINNEKORT</span>
-            <span class="pill pill-green-dark">SLIMSTIEK-TELLING: BINNEKORT</span>
+        <!-- Second row: explainer + delete, space-efficient -->
+        <div class="grid md:grid-cols-2 gap-4 mt-4">
+          <div>
+            <h3 class="text-sm font-bold text-slate-800">Hoe werk die Kriptiek-telling?</h3>
+            <p class="text-sm text-slate-600">
+              Plaaslike verduideliking volg hier. Hierdie area beskryf kortliks hoe jou totale telling saamgestel word.
+            </p>
+          </div>
+          <div>
+            <h4 class="text-base font-bold mb-1">Verwyder my rekening</h4>
+            <p class="text-sm text-gray-600 mb-3">
+              Klik hieronder om te vra dat jou rekening <span class="font-semibold">gedeaktiveer</span> word.
+            </p>
+            <button id="deleteBtn" class="kbtn bg-red-600 hover:bg-red-700">VERWYDER MY REKENING</button>
+            <p id="deleteMsg" class="text-sm mt-2 hidden"></p>
           </div>
         </div>
       </section>
@@ -361,7 +360,6 @@
       btnLogin.classList.toggle('hidden', !!user);
       if (hint) hint.textContent = user ? 'Data gelaai vanaf Firestore.' : 'Aanmeld nodig om data te laai.';
 
-      // Welcome line
       if (user){
         const storedName = (localStorage.getItem('userName') || '').trim();
         const fallback = (user.email || '').split('@')[0] || 'gebruiker';
