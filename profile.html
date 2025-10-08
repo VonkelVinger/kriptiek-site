@@ -22,7 +22,7 @@
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=3">
 <link rel="manifest" href="/assets/site.webmanifest?v=3">
 
-<!-- Tailwind (consider compiling for prod) -->
+<!-- Tailwind -->
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
 <style>
@@ -58,6 +58,7 @@
   }
   @keyframes bgFloat{ 0%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } 100%{ transform:translateY(0); } }
   @media (prefers-reduced-motion: reduce){ .background-crossword{ animation:none; } }
+
   .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
 
   .kbtn{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.65rem 1rem; border-radius:.9rem; background:#1d4ed8; color:#fff; font-weight:800; box-shadow:0 10px 24px rgba(29,78,216,.25); }
@@ -241,30 +242,35 @@
     <a href="/about.html" class="underline px-1.5">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline px-1.5">Kontak ons</a>
   </footer>
-  <!-- Firebase v9 (modular) -->
+
+  <!-- Firebase v11.9.1 -->
   <script type="module">
-    // TODO: your Firebase config
+    // ---- Firebase config (same as login.html) ----
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      appId: "YOUR_APP_ID",
+      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+      authDomain: "kriptiek-c9ea2.firebaseapp.com",
+      projectId: "kriptiek-c9ea2",
+      storageBucket: "kriptiek-c9ea2.appspot.com",
+      messagingSenderId: "620450620939",
+      appId: "1:620450620939:web:e93a18ac23b53b33db890e"
     };
 
     // --- Firebase imports ---
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import {
       getAuth, onAuthStateChanged, sendPasswordResetEmail,
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+      setPersistence, browserLocalPersistence
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
     import {
       getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp,
       collection, getDocs, query, orderBy, limit
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
     // Init
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
+    try { await setPersistence(auth, browserLocalPersistence); } catch {}
 
     // ---- UI refs ----
     const $ = id => document.getElementById(id);
@@ -282,12 +288,12 @@
     const totalPointsEl = $('totalPoints'), pillOverall = $('pillOverall'), pillDilemmaLive = $('pillDilemmaLive');
     const streakChip = $('streakChip'), multiplierLabel = $('multiplierLabel'), calcTime = $('calcTime');
 
-    // Points constants (same as your test)
+    // Points constants
     const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
     const STREAK_THRESHOLD = 5; const STREAK_MULTIPLIER = 1.10; const SUPPORTER_MULTIPLIER = 1.10;
     const fmt = n => (typeof n === 'number' ? n.toLocaleString('af-ZA') : n);
 
-    // Header background letters (unchanged)
+    // Header background letters
     (function headerBG(){
       const backgroundCrossword = document.getElementById('backgroundCrossword');
       const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -317,7 +323,7 @@
     // --- Auth gate + load ---
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        location.href = "/login";
+        location.href = "/login.html"; // fixed path
         return;
       }
       wbName.textContent = user.displayName || 'GEBRUIKER';
@@ -328,10 +334,10 @@
       const profile = usnap.exists() ? usnap.data() : {};
 
       // Set form values
-      nameInput.value = profile.name || user.displayName || '';
+      nameInput.value = profile.name || profile.userName || user.displayName || '';
       emailInput.value = user.email || profile.email || '';
 
-      // Supporter: treat supporterActive if true OR supporterUntil in the future
+      // Supporter: supporterActive true OR supporterUntil in future
       const now = new Date();
       const supporterActive =
         !!profile.supporterActive ||
@@ -341,14 +347,13 @@
         ? 'Dankie dat jy ’n ondersteuner is!'
         : 'Word ’n betalende ondersteuner';
 
-      // Load plays (limit to recent 365 for speed—adjust as needed)
+      // Load plays (users/{uid}/dilemmaPlays)
       const plays = [];
       const playsCol = collection(db, "users", user.uid, "dilemmaPlays");
       const q = query(playsCol, orderBy("date", "asc"), limit(365));
       const qs = await getDocs(q);
       qs.forEach(docSnap => {
         const d = docSnap.data();
-        // Expected shape: { date:'YYYY-MM-DD', win:boolean, guesses:number }
         if (d?.date) plays.push({ date: d.date, win: !!d.win, guesses: Number(d.guesses || 0) });
       });
 
@@ -361,7 +366,7 @@
         try{
           await setDoc(uref, {
             name: nameInput.value.trim().slice(0,40),
-            email: user.email, // source of truth
+            email: user.email,
             updatedAt: serverTimestamp()
           }, { merge: true });
           formMsg.textContent = "Profiel gestoor.";
@@ -374,7 +379,7 @@
         }
       });
 
-      // Password reset (uses current user email)
+      // Password reset
       $('resetPwBtn').addEventListener('click', async ()=>{
         try{
           await sendPasswordResetEmail(auth, user.email);
@@ -388,7 +393,7 @@
         }
       });
 
-      // Delete (soft request—actual deletion should be server-side)
+      // Delete (soft request)
       $('deleteBtn').addEventListener('click', async ()=>{
         if (!confirm("Is jy seker? Jou rekening sal gedeaktiveer word.")) return;
         try{
@@ -406,9 +411,8 @@
 
     function showError(msg){ errBanner.textContent = msg; errBanner.classList.remove('hidden'); }
 
-    // ---- Scoring (extended to show manual bonus row) ----
+    // ---- Scoring (with manual bonus row) ----
     function computeAndRender(plays, supporterActive, manualBonus=0, manualNote=''){
-      // Build date map
       const dates = [...new Set(plays.map(p=>p.date))].sort();
       const byDate = new Map();
       dates.forEach(d=>{
@@ -416,7 +420,6 @@
         byDate.set(d, p?.win === true);
       });
 
-      // Streaks
       let cur=0, best=0, prev=null;
       for(const d of dates){
         const consec = prev && (new Date(d) - new Date(prev) === 24*60*60*1000);
@@ -425,7 +428,6 @@
         prev=d;
       }
 
-      // Distribution
       const dist = {1:0,2:0,3:0,4:0,5:0,6:0,fail:0};
       for(const p of plays){
         if(p.win===true){
@@ -436,13 +438,13 @@
         }
       }
 
-      // Base subtotal
+      const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
       const subtotal =
         dist[1]*BASE_POINTS[1] + dist[2]*BASE_POINTS[2] + dist[3]*BASE_POINTS[3] +
         dist[4]*BASE_POINTS[4] + dist[5]*BASE_POINTS[5] + dist[6]*BASE_POINTS[6] +
         dist.fail*BASE_POINTS.fail;
 
-      // Bonuses
+      const STREAK_THRESHOLD = 5, STREAK_MULTIPLIER = 1.10, SUPPORTER_MULTIPLIER = 1.10;
       const streakMult = cur>=STREAK_THRESHOLD ? STREAK_MULTIPLIER : 1;
       const supporterMult = supporterActive ? SUPPORTER_MULTIPLIER : 1;
       const streakBonus = Math.round(subtotal * (streakMult - 1));
@@ -450,18 +452,17 @@
       const manual = Math.round(Number(manualBonus||0));
       const total = subtotal + streakBonus + supporterBonus + manual;
 
-      // Stats
       const totalPlayed = plays.length;
       const wins = plays.filter(p=>p.win===true).length;
       const winrate = totalPlayed ? Math.round((wins/totalPlayed)*100) : 0;
 
-      // Render stats
-      playedStat.textContent = totalPlayed;
-      winrateStat.textContent = `${winrate}%`;
-      curStreakEl.textContent = cur;
-      bestStreakEl.textContent = best;
+      const fmt = n => (typeof n === 'number' ? n.toLocaleString('af-ZA') : n);
 
-      // Breakdown rows
+      document.getElementById('playedStat').textContent = totalPlayed;
+      document.getElementById('winrateStat').textContent = `${winrate}%`;
+      document.getElementById('curStreak').textContent = cur;
+      document.getElementById('bestStreak').textContent = best;
+
       const rows=[
         {label:`In 1 raaiskoot opgelos`, qty:dist[1], per:BASE_POINTS[1]},
         {label:`In 2 raaiskote opgelos`,  qty:dist[2], per:BASE_POINTS[2]},
@@ -481,7 +482,6 @@
         </tr>`;
       }).join('');
 
-      // Distribution bars
       const pairs=[['1',dist[1]],['2',dist[2]],['3',dist[3]],['4',dist[4]],['5',dist[5]],['6',dist[6]],['X',dist.fail]];
       const maxv=Math.max(1,...pairs.map(p=>p[1]));
       distWrap.innerHTML=pairs.map(([lb,val])=>{
@@ -489,7 +489,6 @@
         return `<div class="barRow"><div class="text-xs font-bold text-slate-500">${lb}</div><div class="bar" style="width:${w}%"></div><div class="mono text-sm font-extrabold">${fmt(val)}</div></div>`;
       }).join('');
 
-      // Footer cells
       subtotalCell.textContent    = fmt(subtotal);
       document.getElementById('lopieBonusCell').textContent = fmt(streakBonus);
       document.getElementById('supporterBonusCell').textContent = fmt(supporterBonus);
@@ -504,7 +503,6 @@
 
       totalCell.textContent = fmt(total);
 
-      // Meta labels (tidy)
       if (streakMult > 1) {
         streakChip.classList.remove('hidden');
         lopieMeta.innerHTML = `Lopie: ${cur} op ’n ry <span class="text-slate-400">(×${STREAK_MULTIPLIER.toFixed(2)})</span>`;
@@ -514,11 +512,9 @@
       }
       supporterMeta.textContent = supporterActive ? `×${SUPPORTER_MULTIPLIER.toFixed(2)}` : 'Geen';
 
-      // Combined multiplier label
       const combinedMult = streakMult * supporterMult;
       multiplierLabel.textContent = `×${combinedMult.toFixed(2)}`;
 
-      // Pills + timestamp
       calcTime.textContent = new Date().toLocaleString('af-ZA');
       totalPointsEl.textContent   = fmt(total);
       pillOverall.textContent     = `JOU KRIPTIEK-TELLING: ${fmt(total)}`;
