@@ -59,6 +59,7 @@
     opacity: 0.5; z-index: 1; pointer-events: none; animation: bgFloat 30s linear infinite;
   }
   @keyframes bgFloat{ 0%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } 100%{ transform:translateY(0); } }
+  @media (prefers-reduced-motion: reduce){ .background-crossword{ animation:none; } }
 
   .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
 
@@ -85,18 +86,19 @@
   .table{ width:100%; border-collapse:separate; border-spacing:0; }
   .table th,.table td{ padding:.6rem .75rem; border-bottom:1px solid #e5e7eb; }
   .table th{ text-align:left; font-weight:700; color:#334155; background:#f8fafc; position:sticky; top:0; }
+
   .barRow{ display:grid; grid-template-columns:1.5rem 1fr auto; gap:.5rem; align-items:center; }
   .bar{ height:14px; background:linear-gradient(90deg,#1d4ed8,#1e40af); border-radius:7px; }
 
-  /* Supporter banner */
+  /* Supporter banner (now a link) */
   .supporter-banner{ display:flex; align-items:center; justify-content:center; width:100%;
-    background: linear-gradient(180deg, #22C55E 0%, #0EA55B 100%); color:#fff; font-weight:800; padding:.6rem 1rem; border-radius:999px; }
+    background: linear-gradient(180deg, #22C55E 0%, #0EA55B 100%); color:#fff; font-weight:800; padding:.6rem 1rem; border-radius:999px; text-decoration:none; }
 
   /* Equal tops */
-  .top-card { min-height: 360px; }
+  .top-card { min-height:320px; }
+  @media (max-width: 640px){ .top-card{ min-height:unset; } }
 </style>
 </head>
-
 <body class="bg-gray-100 min-h-screen flex flex-col">
   <!-- Header -->
   <header class="bg-white shadow p-4">
@@ -125,51 +127,56 @@
     <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 items-start">
       <!-- LEFT: Profile -->
       <section class="card p-5 md:p-6 top-card">
-        <div class="supporter-banner mb-4">
+        <!-- Supporter banner now links to BMaC -->
+        <a href="https://buymeacoffee.com/kriptiek" target="_blank" rel="noopener" class="supporter-banner mb-4" role="button" aria-label="Word ’n ondersteuner op Buy Me a Coffee">
           <span id="supporterBannerTxt">Nie-betalende ondersteuner</span>
-        </div>
+        </a>
 
         <h2 class="text-lg font-bold mb-2">Profiel</h2>
-        <p id="statusBanner" class="hidden text-sm mb-3 px-3 py-2 rounded bg-yellow-50 text-yellow-800" aria-live="polite">
+
+        <!-- generic error banner (hidden by default) -->
+        <p id="errBanner" class="hidden text-sm mb-3 px-3 py-2 rounded bg-red-50 text-red-800" role="alert"></p>
+
+        <p id="statusBanner" class="hidden text-sm mb-3 px-3 py-2 rounded bg-yellow-50 text-yellow-800" aria-live="polite" role="status">
           Jou rekening is gemerk vir verwydering. Kontak ons as dit ’n fout is.
         </p>
 
-        <form id="profileForm" class="space-y-4">
+        <form id="profileForm" class="space-y-4" novalidate>
           <div>
-            <label class="block text-sm font-semibold text-gray-700">Naam (kan ’n skuilnaam wees)</label>
+            <label for="nameInput" class="block text-sm font-semibold text-gray-700">Naam (kan ’n skuilnaam wees)</label>
             <input id="nameInput" type="text" minlength="2" maxlength="40" required
                    class="mt-1 w-full border border-gray-300 rounded p-2" value="Speler"/>
           </div>
           <div>
-            <label class="block text-sm font-semibold text-gray-700">E-posadres</label>
-            <input id="emailInput" type="email" required
+            <label for="emailInput" class="block text-sm font-semibold text-gray-700">E-posadres</label>
+            <input id="emailInput" type="email" required aria-describedby="emailHelp"
                    class="mt-1 w-full border border-gray-300 rounded p-2" value="speler@example.com"/>
-            <p class="text-xs text-gray-500 mt-1">
+            <p id="emailHelp" class="text-xs text-gray-500 mt-1">
               <strong>Let wel:</strong> Jou e-pos word nie geverifieer nie, maar jy het dit nodig vir wagwoordherstel of navrae oor jou rekening.
             </p>
           </div>
 
           <!-- Action row -->
           <div class="flex flex-wrap items-center gap-2">
-            <button type="submit" class="kbtn">BÊRE</button>
+            <button type="submit" class="kbtn" id="saveBtn">BÊRE</button>
             <button id="resetPwBtn" type="button" class="kbtn bg-slate-800 hover:bg-slate-900">VRA NUWE WAGWOORD</button>
             <button id="deleteBtn" type="button" class="kbtn kbtn-red">VERWYDER MY REKENING</button>
           </div>
-          <p id="formMsg" class="text-sm mt-2 hidden" aria-live="polite"></p>
-          <p id="deleteMsg" class="text-sm mt-2 hidden" aria-live="polite"></p>
+          <p id="formMsg" class="text-sm mt-2 hidden" aria-live="polite" role="status"></p>
+          <p id="deleteMsg" class="text-sm mt-2 hidden" aria-live="polite" role="status"></p>
         </form>
       </section>
 
       <!-- RIGHT: Pills + explainer -->
       <section class="card p-5 md:p-6 top-card">
         <div class="mb-4">
-          <span id="pillOverall" class="pill pill-lg pill-blue" aria-live="polite">JOU KRIPTIEK-TELLING: 0</span>
+          <span id="pillOverall" class="pill pill-lg pill-blue" role="status" aria-live="polite">JOU KRIPTIEK-TELLING: 0</span>
         </div>
 
-        <div class="flex flex-wrap gap-2 mb-5 items-start">
-          <span id="pillDilemmaLive" class="pill pill-lg pill-orange">JOU DILEMMA-TELLING: 0</span>
-          <span class="pill pill-lg pill-green">JOU BLITSTIEK-TELLING: BINNEKORT</span>
-          <span class="pill pill-lg pill-green-dark">JOU SLIMSTIEK-TELLING: BINNEKORT</span>
+        <div class="flex flex-wrap gap-2 mb-6 items-start">
+          <span id="pillDilemmaLive" class="pill pill-lg pill-orange" role="status" aria-live="polite">JOU DILEMMA-TELLING: 0</span>
+          <span class="pill pill-lg pill-green" aria-label="Jou Blitstiek-telling kom binnekort">JOU BLITSTIEK-TELLING: BINNEKORT</span>
+          <span class="pill pill-lg pill-green-dark" aria-label="Jou Slimstiek-telling kom binnekort">JOU SLIMSTIEK-TELLING: BINNEKORT</span>
         </div>
 
         <h3 class="text-2xl md:text-[1.7rem] font-extrabold text-slate-900 mb-1">Hoe werk die Kriptiek-telling?</h3>
@@ -210,7 +217,7 @@
           Jy kan ook met ouer Dilemmas punte verdien, maar jy kan elkeen net een keer speel.
         </p>
 
-        <div class="overflow-auto max-h-[420px] rounded-xl border border-slate-200">
+        <div class="overflow-auto max-h-[420px] rounded-xl border border-slate-200 bg-white">
           <table class="table text-sm w-full">
             <thead>
               <tr>
@@ -275,15 +282,14 @@
   <!-- Footer -->
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
     &copy; 2025 Kriptiek. Alle regte voorbehou. |
-    <a href="/profile.html" class="underline">My profiel</a> |
-    <a href="/forum.html" class="underline">Gesels saam</a> |
-    <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
-    <a href="/terms.html" class="underline">Voorwaardes</a> |
-    <a href="/faq.html" class="underline">Gereelde vrae</a> |
-    <a href="/about.html" class="underline">Oor Kriptiek</a> |
-    <a href="/contact.html" class="underline">Kontak ons</a>
+    <a href="/profile.html" class="underline px-1.5">My profiel</a> |
+    <a href="/forum.html" class="underline px-1.5">Gesels saam</a> |
+    <a href="/privacy.html" class="underline px-1.5">Privaatheidsbeleid</a> |
+    <a href="/terms.html" class="underline px-1.5">Voorwaardes</a> |
+    <a href="/faq.html" class="underline px-1.5">Gereelde vrae</a> |
+    <a href="/about.html" class="underline px-1.5">Oor Kriptiek</a> |
+    <a href="/contact.html" class="underline px-1.5">Kontak ons</a>
   </footer>
-
   <!-- Header background letter grid -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -352,6 +358,7 @@
     const streakChip = $('streakChip'), multiplierLabel = $('multiplierLabel'), calcTime = $('calcTime'), lopieMeta = $('lopieMeta');
     const pillOverall = $('pillOverall'), pillDilemmaLive = $('pillDilemmaLive');
     const formMsg = $('formMsg'), deleteMsg = $('deleteMsg');
+    const errBanner = $('errBanner');
 
     // Init (mocked user)
     wbName.textContent = 'GEBRUIKER';
@@ -363,26 +370,50 @@
     // Refresh button re-runs with same data
     btnRefresh.addEventListener('click', ()=> computeAndRender(MOCK_PLAYS, MOCK_SUPPORTER_ACTIVE));
 
+    // Helper: busy state wrapper + GA4 event
+    function withBusy(btn, fn, gaEventName){
+      return async () => {
+        if (btn) { btn.disabled = true; btn.setAttribute('aria-busy','true'); }
+        try {
+          await fn();
+          if (gaEventName) gtag('event', gaEventName);
+        } catch (e){
+          console.error(e);
+          showError('Iets het skeefgeloop (TOETS).');
+        } finally {
+          if (btn) { btn.disabled = false; btn.removeAttribute('aria-busy'); }
+        }
+      };
+    }
+
+    function showError(msg){
+      errBanner.textContent = msg;
+      errBanner.classList.remove('hidden');
+    }
+
     // Form buttons (local no-ops for TEST)
-    $('profileForm').addEventListener('submit', (e)=>{
+    $('profileForm').addEventListener('submit', e=>{
       e.preventDefault();
-      formMsg.textContent = "Profiel (TOETS) gestoor — niks is werklik verander nie.";
-      formMsg.className = "text-sm mt-2 text-green-600";
-      formMsg.classList.remove('hidden');
+      const submitBtn = $('saveBtn');
+      withBusy(submitBtn, async ()=>{
+        formMsg.textContent = "Profiel (TOETS) gestoor — niks is werklik verander nie.";
+        formMsg.className = "text-sm mt-2 text-green-600";
+        formMsg.classList.remove('hidden');
+      }, 'update_profile_test')();
     });
 
-    $('resetPwBtn').addEventListener('click', ()=>{
+    $('resetPwBtn').addEventListener('click', withBusy($('resetPwBtn'), async ()=>{
       formMsg.textContent = "Wagwoordherstel (TOETS): Geen e-pos gestuur in hierdie toetsweergawe.";
       formMsg.className = "text-sm mt-2 text-green-600";
       formMsg.classList.remove('hidden');
-    });
+    }, 'password_reset_test'));
 
-    $('deleteBtn').addEventListener('click', ()=>{
+    $('deleteBtn').addEventListener('click', withBusy($('deleteBtn'), async ()=>{
       if (!confirm("Is jy seker? (TOETS) Jou rekening sou gedeaktiveer word.")) return;
       deleteMsg.textContent = "Versoek (TOETS) sou gestuur word. Geen werklike veranderinge is gemaak nie.";
       deleteMsg.className = "text-sm mt-2 text-green-600";
       deleteMsg.classList.remove('hidden');
-    });
+    }, 'delete_account_request_test'));
 
     // ---- Helpers ----
     function offsetDay(delta){
@@ -398,7 +429,7 @@
       const byDate = new Map();
       dates.forEach(d=>{
         const p = plays.find(x=>x.date===d);
-        byDate.set(d, !!p.win);
+        byDate.set(d, p && p.win === true);
       });
 
       // streaks (current & best)
@@ -413,7 +444,7 @@
       // distribution
       const dist = {1:0,2:0,3:0,4:0,5:0,6:0,fail:0};
       for(const p of plays){
-        if(p.win){
+        if(p.win===true){
           const g = Math.min(Math.max(1,p.guesses||6),6);
           dist[g] += 1;
         } else {
@@ -434,7 +465,7 @@
 
       // stats
       const totalPlayed = plays.length;
-      const wins = plays.filter(p=>p.win).length;
+      const wins = plays.filter(p=>p.win===true).length;
       const winrate = totalPlayed ? Math.round((wins/totalPlayed)*100) : 0;
 
       // render stats
@@ -443,7 +474,7 @@
       curStreakEl.textContent = cur;
       bestStreakEl.textContent = best;
 
-      // breakdown rows (qty × per-bucket)
+      // breakdown rows
       const rows=[
         {label:`In 1 raaiskoot opgelos`, qty:dist[1], per:BASE_POINTS[1]},
         {label:`In 2 raaiskote opgelos`,  qty:dist[2], per:BASE_POINTS[2]},
@@ -463,7 +494,7 @@
         </tr>`;
       }).join('');
 
-      // distribution bars (0 shows 0 width)
+      // distribution bars
       const pairs=[['1',dist[1]],['2',dist[2]],['3',dist[3]],['4',dist[4]],['5',dist[5]],['6',dist[6]],['X',dist.fail]];
       const maxv=Math.max(1,...pairs.map(p=>p[1]));
       distWrap.innerHTML=pairs.map(([lb,val])=>{
@@ -478,9 +509,8 @@
       totalCell.textContent     = fmt(total);
       multiplierLabel.textContent = `×${combinedMult.toFixed(2)}`;
 
-      const chip = streakChip;
-      if(streakMult>1){ chip.classList.remove('hidden'); lopieMeta.textContent=`Lopie: ${cur} op ’n ry`; }
-      else{ chip.classList.add('hidden'); lopieMeta.textContent=`Geen lopie-bonus (lopie: ${cur})`; }
+      if(streakMult>1){ streakChip.classList.remove('hidden'); lopieMeta.textContent=`Lopie: ${cur} op ’n ry`; }
+      else{ streakChip.classList.add('hidden'); lopieMeta.textContent=`Geen lopie-bonus (lopie: ${cur})`; }
 
       $('calcTime').textContent = new Date().toLocaleString('af-ZA');
 
