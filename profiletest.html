@@ -198,10 +198,24 @@
             </thead>
             <tbody id="breakdownBody"></tbody>
             <tfoot>
-              <tr><td class="font-bold">Subtotaal</td><td></td><td></td><td class="text-right font-extrabold mono" id="subtotalCell">0</td></tr>
-              <tr><td class="font-bold">Lopie-bonus</td><td></td><td class="text-right" id="lopieMeta">—</td><td class="text-right font-extrabold mono" id="lopieBonusCell">0</td></tr>
-              <tr><td class="font-bold">Ondersteuner-bonus</td><td></td><td class="text-right" id="supporterMeta">—</td><td class="text-right font-extrabold mono" id="supporterBonusCell">0</td></tr>
-              <tr><td class="font-extrabold text-slate-900">Totaal</td><td></td><td></td><td class="text-right font-extrabold mono text-indigo-900" id="totalCell">0</td></tr>
+              <tr>
+                <td class="font-bold">Subtotaal</td><td></td><td></td>
+                <td class="text-right font-extrabold mono" id="subtotalCell">0</td>
+              </tr>
+              <tr>
+                <td class="font-bold">Lopie-bonus</td><td></td>
+                <td class="text-right whitespace-nowrap" id="lopieMeta">—</td>
+                <td class="text-right font-extrabold mono" id="lopieBonusCell">0</td>
+              </tr>
+              <tr>
+                <td class="font-bold">Ondersteuner-bonus</td><td></td>
+                <td class="text-right whitespace-nowrap" id="supporterMeta">—</td>
+                <td class="text-right font-extrabold mono" id="supporterBonusCell">0</td>
+              </tr>
+              <tr>
+                <td class="font-extrabold text-slate-900">Totaal</td><td></td><td></td>
+                <td class="text-right font-extrabold mono text-indigo-900" id="totalCell">0</td>
+              </tr>
             </tfoot>
           </table>
         </div>
@@ -249,6 +263,7 @@
     <a href="/about.html" class="underline px-1.5">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline px-1.5">Kontak ons</a>
   </footer>
+
   <!-- Header background letter grid -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -435,17 +450,21 @@
       document.getElementById('supporterBonusCell').textContent = fmt(supporterBonus);
       totalCell.textContent       = fmt(total);
 
-    if (streakMult > 1) {
-  streakChip.classList.remove('hidden');
-  lopieMeta.textContent = `Lopie: ${cur} op ’n ry (×${STREAK_MULTIPLIER.toFixed(2)})`;
-} else {
-  streakChip.classList.add('hidden');
-  lopieMeta.textContent = `Geen (huidige lopie: ${cur})`;
-}
+      // Meta labels (tidy, non-wrapping)
+      if (streakMult > 1) {
+        streakChip.classList.remove('hidden');
+        lopieMeta.innerHTML = `Lopie: ${cur} op ’n ry <span class="text-slate-400">(×${STREAK_MULTIPLIER.toFixed(2)})</span>`;
+      } else {
+        streakChip.classList.add('hidden');
+        lopieMeta.innerHTML = `Geen <span class="text-slate-400">(huidige lopie: ${cur})</span>`;
+      }
+      document.getElementById('supporterMeta').textContent = supporterActive
+        ? `×${SUPPORTER_MULTIPLIER.toFixed(2)}`
+        : 'Geen';
 
-document.getElementById('supporterMeta').textContent = supporterActive
-  ? `×${SUPPORTER_MULTIPLIER.toFixed(2)}`
-  : 'Geen';
+      // Combined multiplier label
+      const combinedMult = streakMult * supporterMult;
+      multiplierLabel.textContent = `×${combinedMult.toFixed(2)}`;
 
       calcTime.textContent = new Date().toLocaleString('af-ZA');
       pillOverall.textContent     = `JOU KRIPTIEK-TELLING: ${fmt(total)}`;
