@@ -242,7 +242,7 @@
     <a href="/contact.html" class="underline px-1.5">Kontak ons</a>
   </footer>
 
-  <!-- Firebase v11 (same as login.html) -->
+  <!-- Firebase v11 -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import {
@@ -253,7 +253,7 @@
       collection, getDocs, query, orderBy, limit
     } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
-    // Config (copied from login.html)
+    // --- Firebase config (same project as login.html) ---
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
       authDomain: "kriptiek-c9ea2.firebaseapp.com",
@@ -284,7 +284,7 @@
     const totalPointsEl = $('totalPoints'), pillOverall = $('pillOverall'), pillDilemmaLive = $('pillDilemmaLive');
     const streakChip = $('streakChip'), multiplierLabel = $('multiplierLabel'), calcTime = $('calcTime');
 
-    // Points constants (same as your test)
+    // Points constants
     const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
     const STREAK_THRESHOLD = 5; const STREAK_MULTIPLIER = 1.10; const SUPPORTER_MULTIPLIER = 1.10;
     const fmt = n => (typeof n === 'number' ? n.toLocaleString('af-ZA') : n);
@@ -316,43 +316,65 @@
       });
     })();
 
-    // Helper: graceful error
-    function showError(msg){ errBanner.textContent = msg; errBanner.classList.remove('hidden'); }
+    // ====== Robust date normalizer + plays loader ======
+    function normalizeDate(v, fallbackId="") {
+      try {
+        if (!v && fallbackId) v = fallbackId;
+        if (!v) return null;
 
-    // Load plays with fallback (new path first, then legacy)
+        if (typeof v === "object" && v.toDate && typeof v.toDate === "function") {
+          const d = v.toDate();
+          return new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString().slice(0,10);
+        }
+        if (v instanceof Date) {
+          return new Date(v.getFullYear(), v.getMonth(), v.getDate()).toISOString().slice(0,10);
+        }
+        const s = String(v);
+        const m = s.match(/\d{4}-\d{2}-\d{2}/);
+        if (m) return m[0];
+        if (typeof v === "number") {
+          const ms = (v > 1e12) ? v : v * 1000;
+          return new Date(new Date(ms).toISOString().slice(0,10)).toISOString().slice(0,10);
+        }
+      } catch(_) {}
+      return null;
+    }
+
     async function loadDilemmaPlays(uid) {
       const out = [];
 
-      // Try NEW: users/{uid}/dilemmaPlays (sorted by date)
+      // New path
       try {
         const colNew = collection(db, "users", uid, "dilemmaPlays");
         const qsNew  = await getDocs(query(colNew, orderBy("date", "asc"), limit(365)));
         qsNew.forEach(s => {
           const d = s.data() || {};
-          if (d.date && typeof d.win === 'boolean') {
-            out.push({ date: String(d.date), win: !!d.win, guesses: Number(d.guesses || 0) });
-          }
+          const date = normalizeDate(d.date, s.id);
+          const win  = (typeof d.win === 'boolean') ? d.win : null;
+          const guesses = Number(d.guesses ?? 0);
+          if (date && win !== null) out.push({ date, win, guesses });
         });
       } catch(e){ console.warn("New plays read failed:", e); }
 
-      if (out.length > 0) return out;
+      if (out.length > 0) {
+        const map = new Map();
+        out.forEach(p => map.set(p.date, p));
+        return [...map.values()].sort((a,b)=> a.date.localeCompare(b.date));
+      }
 
-      // Fallback: OLD legacy path userGames/{uid}/plays (unsorted)
+      // Legacy fallback
       try {
         const colOld = collection(db, "userGames", uid, "plays");
         const qsOld  = await getDocs(colOld);
         qsOld.forEach(s => {
           const d = s.data() || {};
-          const date    = d.date || s.id || null;     // some old docs used date as id
-          const win     = (typeof d.win === 'boolean') ? d.win : (d.solved === true);
-          const guesses = (d.guesses ?? d.tries ?? d.attempts ?? 0);
-          if (date && typeof win === 'boolean') {
-            out.push({ date: String(date).slice(0,10), win, guesses: Number(guesses || 0) });
-          }
+          const date    = normalizeDate(d.date, s.id);
+          const win     = (typeof d.win === 'boolean') ? d.win : (d.solved === true ? true : (d.solved === false ? false : null));
+          const guesses = Number(d.guesses ?? d.tries ?? d.attempts ?? 0);
+          if (date && win !== null) out.push({ date, win, guesses });
         });
       } catch(e){ console.warn("Legacy plays read failed:", e); }
 
-      // Dedup by date, keep last
       const map = new Map();
       out.forEach(p => map.set(p.date, p));
       return [...map.values()].sort((a,b)=> a.date.localeCompare(b.date));
@@ -360,94 +382,88 @@
 
     // --- Auth gate + load ---
     onAuthStateChanged(auth, async (user) => {
-      if (!user) { location.href = "/login.html"; return; }
-
-      try {
-        // Load profile
-        const uref = doc(db, "users", user.uid);
-        const usnap = await getDoc(uref);
-        const profile = usnap.exists() ? usnap.data() : {};
-
-        // Welcome name AFTER profile loaded
-        wbName.textContent = (profile.name || user.displayName || 'GEBRUIKER');
-
-        // Set form values
-        nameInput.value  = profile.name || user.displayName || '';
-        emailInput.value = user.email || profile.email || '';
-
-        // Supporter: active flag or future until-date
-        const now = new Date();
-        const supporterActive =
-          !!profile.supporterActive ||
-          (profile.supporterUntil && new Date(profile.supporterUntil) > now);
-
-        supporterBannerTxt.textContent = supporterActive
-          ? 'Dankie dat jy ’n ondersteuner is!'
-          : 'Word ’n betalende ondersteuner';
-
-        // Load plays (new path, fallback to old)
-        const plays = await loadDilemmaPlays(user.uid);
-
-        // Compute + render (manual bonus support)
-        computeAndRender(plays, supporterActive, profile.manualBonus || 0, profile.manualBonusNote || '');
-
-        // Save profile (name only; email is from Auth)
-        $('profileForm').addEventListener('submit', async (e)=>{
-          e.preventDefault();
-          try{
-            await setDoc(uref, {
-              name: nameInput.value.trim().slice(0,40),
-              email: user.email,
-              updatedAt: serverTimestamp()
-            }, { merge: true });
-            formMsg.textContent = "Profiel gestoor.";
-            formMsg.className = "text-sm mt-2 text-green-600";
-            formMsg.classList.remove('hidden');
-            gtag('event','profile_update');
-          }catch(err){
-            console.error(err);
-            showError('Kon nie jou profiel stoor nie.');
-          }
-        });
-
-        // Password reset
-        $('resetPwBtn').addEventListener('click', async ()=>{
-          try{
-            await sendPasswordResetEmail(auth, user.email);
-            formMsg.textContent = "Skakel vir wagwoordherstel is gestuur na jou e-pos.";
-            formMsg.className = "text-sm mt-2 text-green-600";
-            formMsg.classList.remove('hidden');
-            gtag('event','password_reset_request');
-          }catch(err){
-            console.error(err);
-            showError('Kon nie wagwoordherstel stuur nie.');
-          }
-        });
-
-        // Delete (soft)
-        $('deleteBtn').addEventListener('click', async ()=>{
-          if (!confirm("Is jy seker? Jou rekening sal gedeaktiveer word.")) return;
-          try{
-            await updateDoc(uref, { deleteRequestedAt: serverTimestamp() });
-            deleteMsg.textContent = "Jou versoek is aangeteken. Ons sal opvolg.";
-            deleteMsg.className = "text-sm mt-2 text-green-600";
-            deleteMsg.classList.remove('hidden');
-            gtag('event','account_delete_request');
-          }catch(err){
-            console.error(err);
-            showError('Kon nie die verwyderingsversoek aanteken nie.');
-          }
-        });
-
-      } catch (e) {
-        console.error(e);
-        showError("Kon nie jou profiel laai nie.");
+      if (!user) {
+        // remember desired redirect and go to login
+        try { localStorage.setItem("redirectAfterLogin", "/profile.html"); } catch {}
+        location.href = "/login.html";
+        return;
       }
+      wbName.textContent = user.displayName || 'GEBRUIKER';
+
+      const uref = doc(db, "users", user.uid);
+      const usnap = await getDoc(uref);
+      const profile = usnap.exists() ? usnap.data() : {};
+
+      nameInput.value = profile.name || user.displayName || '';
+      emailInput.value = user.email || profile.email || '';
+
+      // supporter status
+      const now = new Date();
+      const supporterActive = !!profile.supporterActive ||
+                              (profile.supporterUntil && new Date(profile.supporterUntil) > now);
+      supporterBannerTxt.textContent = supporterActive
+        ? 'Dankie dat jy ’n ondersteuner is!'
+        : 'Word ’n betalende ondersteuner';
+
+      // Load plays using robust loader
+      const plays = await loadDilemmaPlays(user.uid);
+
+      // Compute + render; include manual bonus if present
+      computeAndRender(plays, supporterActive, profile.manualBonus || 0, profile.manualBonusNote || '');
+
+      // Save profile (name only; email is from Auth)
+      $('profileForm').addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        try{
+          await setDoc(uref, {
+            name: nameInput.value.trim().slice(0,40),
+            email: user.email, // source of truth
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+          formMsg.textContent = "Profiel gestoor.";
+          formMsg.className = "text-sm mt-2 text-green-600";
+          formMsg.classList.remove('hidden');
+          gtag('event','profile_update');
+        }catch(err){
+          console.error(err);
+          showError('Kon nie jou profiel stoor nie.');
+        }
+      });
+
+      // Password reset (uses current user email)
+      $('resetPwBtn').addEventListener('click', async ()=>{
+        try{
+          await sendPasswordResetEmail(auth, user.email);
+          formMsg.textContent = "Skakel vir wagwoordherstel is gestuur na jou e-pos.";
+          formMsg.className = "text-sm mt-2 text-green-600";
+          formMsg.classList.remove('hidden');
+          gtag('event','password_reset_request');
+        }catch(err){
+          console.error(err);
+          showError('Kon nie wagwoordherstel stuur nie.');
+        }
+      });
+
+      // Delete (soft request—actual deletion should be server-side)
+      $('deleteBtn').addEventListener('click', async ()=>{
+        if (!confirm("Is jy seker? Jou rekening sal gedeaktiveer word.")) return;
+        try{
+          await updateDoc(uref, { deleteRequestedAt: serverTimestamp() });
+          deleteMsg.textContent = "Jou versoek is aangeteken. Ons sal opvolg.";
+          deleteMsg.className = "text-sm mt-2 text-green-600";
+          deleteMsg.classList.remove('hidden');
+          gtag('event','account_delete_request');
+        }catch(err){
+          console.error(err);
+          showError('Kon nie die verwyderingsversoek aanteken nie.');
+        }
+      });
     });
 
-    // ---- Scoring (extended to show manual bonus row) ----
+    function showError(msg){ errBanner.textContent = msg; errBanner.classList.remove('hidden'); }
+
+    // ---- Scoring (unchanged, shows manual bonus row) ----
     function computeAndRender(plays, supporterActive, manualBonus=0, manualNote=''){
-      // Build date map
       const dates = [...new Set(plays.map(p=>p.date))].sort();
       const byDate = new Map();
       dates.forEach(d=>{
@@ -455,7 +471,6 @@
         byDate.set(d, p?.win === true);
       });
 
-      // Streaks
       let cur=0, best=0, prev=null;
       for(const d of dates){
         const consec = prev && (new Date(d) - new Date(prev) === 24*60*60*1000);
@@ -464,7 +479,6 @@
         prev=d;
       }
 
-      // Distribution
       const dist = {1:0,2:0,3:0,4:0,5:0,6:0,fail:0};
       for(const p of plays){
         if(p.win===true){
@@ -475,13 +489,11 @@
         }
       }
 
-      // Base subtotal
       const subtotal =
         dist[1]*BASE_POINTS[1] + dist[2]*BASE_POINTS[2] + dist[3]*BASE_POINTS[3] +
         dist[4]*BASE_POINTS[4] + dist[5]*BASE_POINTS[5] + dist[6]*BASE_POINTS[6] +
         dist.fail*BASE_POINTS.fail;
 
-      // Bonuses
       const streakMult = cur>=STREAK_THRESHOLD ? STREAK_MULTIPLIER : 1;
       const supporterMult = supporterActive ? SUPPORTER_MULTIPLIER : 1;
       const streakBonus = Math.round(subtotal * (streakMult - 1));
@@ -489,18 +501,15 @@
       const manual = Math.round(Number(manualBonus||0));
       const total = subtotal + streakBonus + supporterBonus + manual;
 
-      // Stats
       const totalPlayed = plays.length;
       const wins = plays.filter(p=>p.win===true).length;
       const winrate = totalPlayed ? Math.round((wins/totalPlayed)*100) : 0;
 
-      // Render stats
       playedStat.textContent = totalPlayed;
       winrateStat.textContent = `${winrate}%`;
       curStreakEl.textContent = cur;
       bestStreakEl.textContent = best;
 
-      // Breakdown rows
       const rows=[
         {label:`In 1 raaiskoot opgelos`, qty:dist[1], per:BASE_POINTS[1]},
         {label:`In 2 raaiskote opgelos`,  qty:dist[2], per:BASE_POINTS[2]},
@@ -520,7 +529,6 @@
         </tr>`;
       }).join('');
 
-      // Distribution bars
       const pairs=[['1',dist[1]],['2',dist[2]],['3',dist[3]],['4',dist[4]],['5',dist[5]],['6',dist[6]],['X',dist.fail]];
       const maxv=Math.max(1,...pairs.map(p=>p[1]));
       distWrap.innerHTML=pairs.map(([lb,val])=>{
@@ -528,7 +536,6 @@
         return `<div class="barRow"><div class="text-xs font-bold text-slate-500">${lb}</div><div class="bar" style="width:${w}%"></div><div class="mono text-sm font-extrabold">${fmt(val)}</div></div>`;
       }).join('');
 
-      // Footer cells
       subtotalCell.textContent    = fmt(subtotal);
       document.getElementById('lopieBonusCell').textContent = fmt(streakBonus);
       document.getElementById('supporterBonusCell').textContent = fmt(supporterBonus);
@@ -543,7 +550,6 @@
 
       totalCell.textContent = fmt(total);
 
-      // Meta labels (tidy)
       if (streakMult > 1) {
         streakChip.classList.remove('hidden');
         lopieMeta.innerHTML = `Lopie: ${cur} op ’n ry <span class="text-slate-400">(×${STREAK_MULTIPLIER.toFixed(2)})</span>`;
@@ -553,11 +559,9 @@
       }
       supporterMeta.textContent = supporterActive ? `×${SUPPORTER_MULTIPLIER.toFixed(2)}` : 'Geen';
 
-      // Combined multiplier label
       const combinedMult = streakMult * supporterMult;
       multiplierLabel.textContent = `×${combinedMult.toFixed(2)}`;
 
-      // Pills + timestamp
       calcTime.textContent = new Date().toLocaleString('af-ZA');
       totalPointsEl.textContent   = fmt(total);
       pillOverall.textContent     = `JOU KRIPTIEK-TELLING: ${fmt(total)}`;
