@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="af">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9V4CMP1FP"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date()); gtag('config', 'G-S9V4CMP1FP');
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gebruiker-admin – Kriptiek</title>
+
+  <!-- Favicons -->
+  <link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=3">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png?v=3">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=3">
+  <link rel="manifest" href="/assets/site.webmanifest?v=3">
+
+  <!-- Styles -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Montserrat', sans-serif; }
+    .mono{ font-variant-numeric: tabular-nums; }
+
+    .logo-container {
+      position: relative; display: flex; justify-content: center; align-items: center;
+      width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
+      isolation: isolate;
+    }
+    .logo-container::before{
+      content:""; position:absolute; inset:-2px; border-radius:1rem;
+      background:conic-gradient(from 180deg at 50% 50%, #1e3a8a, #334155, #1e3a8a);
+      animation:spin 14s linear infinite; z-index:0; padding:2px;
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+    }
+    @keyframes spin{ to{ transform:rotate(1turn); } }
+    @media (prefers-reduced-motion: reduce){ .logo-container::before{ animation:none; } }
+
+    .crossword-grid { display: grid; grid-template-columns: repeat(8, minmax(40px, 1fr)); gap: 4px; position: relative; z-index: 10; }
+    .letter-box {
+      width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
+      background-color: #374151; color: white; font-size: 1.8rem; font-weight: bold; border: 2px solid #1f2937; border-radius: 0.375rem;
+      text-transform: uppercase; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    }
+    .flipped-k { transform: scaleX(-1); }
+
+    .background-crossword {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
+      opacity: 0.5; z-index: 1; pointer-events: none;
+    }
+    .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
+
+    .kbtn{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.65rem 1rem; border-radius:.9rem; background:#1d4ed8; color:#fff; font-weight:800; box-shadow:0 10px 24px rgba(29,78,216,.25); }
+    .kbtn:hover{ background:#1e40af; }
+    .kbtn-ghost{ background:#e5e7eb; color:#111827; }
+    .kbtn-ghost:hover{ background:#d1d5db; }
+
+    .card{ background:#fff; border-radius:1rem; box-shadow:0 8px 18px rgba(0,0,0,.08); }
+    .pill { display:inline-flex; align-items:center; gap:.5rem; padding:.5rem .9rem; border-radius:999px; font-weight:800; color:#fff; }
+    .pill-green { background: linear-gradient(180deg, #22C55E 0%, #0EA55B 100%); }
+    .pill-red { background: linear-gradient(180deg, #ef4444 0%, #b91c1c 100%); }
+  </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex flex-col">
+  <!-- Header -->
+  <header class="bg-white shadow p-4">
+    <div class="logo-container">
+      <div id="backgroundCrossword" class="background-crossword"></div>
+      <div class="crossword-grid">
+        <div class="letter-box flipped-k">K</div><div class="letter-box flipped-k">R</div><div class="letter-box">I</div>
+        <div class="letter-box flipped-k">P</div><div class="letter-box">T</div><div class="letter-box">I</div>
+        <div class="letter-box flipped-k">E</div><div class="letter-box">K</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow p-4">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="text-2xl font-extrabold text-slate-900">Gebruiker-admin</h1>
+        <div class="flex items-center gap-2">
+          <span id="adminPill" class="pill pill-red hidden">Geen admin-regte</span>
+          <button id="logoutBtn" class="kbtn-ghost rounded-lg px-3 py-1.5">Teken uit</button>
+        </div>
+      </div>
+
+      <!-- Alerts -->
+      <div id="alertBox" class="hidden mb-4 rounded-lg border px-3 py-2 text-sm"></div>
+
+      <!-- Search -->
+      <section class="card p-5 md:p-6 mb-6">
+        <h2 class="text-lg font-bold mb-3">Soek gebruiker per e-pos</h2>
+        <form id="searchForm" class="flex flex-col gap-3 md:flex-row md:items-end">
+          <label class="flex-1">
+            <span class="block text-sm font-semibold text-gray-700">E-posadres</span>
+            <input id="searchEmail" type="email" required class="mt-1 w-full border border-gray-300 rounded p-2" placeholder="bv. speler@example.com" />
+          </label>
+          <button id="searchBtn" class="kbtn rounded-lg" type="submit">Soek</button>
+        </form>
+        <p class="text-xs text-slate-500 mt-2">Soek in <code>users</code>; as niks gevind word nie, val terug na <code>registrations</code>.</p>
+      </section>
+
+      <!-- Result -->
+      <section id="resultCard" class="card p-5 md:p-6 hidden">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-bold">Gebruikersprofiel</h3>
+          <div id="supporterStatusPill" class="pill hidden"></div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4 mt-4">
+          <div>
+            <div class="text-xs text-slate-500">UID</div>
+            <div id="uidOut" class="mono font-bold">—</div>
+          </div>
+          <div>
+            <div class="text-xs text-slate-500">Naam</div>
+            <div id="nameOut" class="font-bold">—</div>
+          </div>
+          <div>
+            <div class="text-xs text-slate-500">E-pos</div>
+            <div id="emailOut" class="mono">—</div>
+          </div>
+          <div>
+            <div class="text-xs text-slate-500">Laaste aanmelding</div>
+            <div id="lastLoginOut" class="mono">—</div>
+          </div>
+        </div>
+
+        <hr class="my-5"/>
+
+        <form id="editForm" class="grid md:grid-cols-2 gap-4">
+          <div class="col-span-2">
+            <label class="flex items-center gap-2">
+              <input id="supporterActive" type="checkbox" class="h-4 w-4">
+              <span class="text-sm font-semibold">Ondersteuner aktief</span>
+            </label>
+            <p class="text-xs text-slate-500 mt-1">As hierdie aan is, kry die gebruiker die 10%-bonus (selfs sonder 'n datum hieronder).</p>
+          </div>
+
+          <label class="block">
+            <span class="text-sm font-semibold">Ondersteuner tot en met</span>
+            <input id="supporterUntil" type="date" class="mt-1 w-full border border-gray-300 rounded p-2" />
+            <div class="flex gap-2 mt-2">
+              <button type="button" data-add-days="30" class="kbtn-ghost px-3 py-1.5 rounded-lg text-sm">+30 dae</button>
+              <button type="button" data-add-days="90" class="kbtn-ghost px-3 py-1.5 rounded-lg text-sm">+90 dae</button>
+              <button type="button" id="clearUntil" class="kbtn-ghost px-3 py-1.5 rounded-lg text-sm">Vee datum uit</button>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">As die datum in die toekoms is, tel dit ook as 'aktief'.</p>
+          </label>
+
+          <label class="block">
+            <span class="text-sm font-semibold">Handmatige bonus (getal)</span>
+            <input id="manualBonus" type="number" step="1" class="mt-1 w-full border border-gray-300 rounded p-2 mono" placeholder="bv. 100" />
+            <p class="text-xs text-slate-500 mt-1">Kan negatief of positief wees. Wys as 'Handmatige bonus' in profiel.</p>
+          </label>
+
+          <label class="block md:col-span-2">
+            <span class="text-sm font-semibold">Nota oor handmatige bonus</span>
+            <input id="manualBonusNote" type="text" maxlength="140" class="mt-1 w-full border border-gray-300 rounded p-2" placeholder="Opsioneel: rede / nota (max 140)" />
+          </label>
+
+          <div class="md:col-span-2 flex items-center gap-2 mt-2">
+            <button id="saveBtn" type="submit" class="kbtn rounded-lg">Stoor veranderinge</button>
+            <button id="resetBtn" type="button" class="kbtn-ghost rounded-lg">Laai oorspronklik</button>
+          </div>
+          <p id="saveMsg" class="text-sm mt-2 hidden" aria-live="polite"></p>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
+    &copy; 2025 Kriptiek. Alle regte voorbehou. |
+    <a href="/profile.html" class="underline px-1.5">My profiel</a> |
+    <a href="/forum.html" class="underline px-1.5">Gesels saam</a> |
+    <a href="/privacy.html" class="underline px-1.5">Privaatheidsbeleid</a> |
+    <a href="/terms.html" class="underline px-1.5">Voorwaardes</a> |
+    <a href="/faq.html" class="underline px-1.5">Gereelde vrae</a> |
+    <a href="/about.html" class="underline px-1.5">Oor Kriptiek</a> |
+    <a href="/contact.html" class="underline px-1.5">Kontak ons</a>
+  </footer>
+
+  <!-- Firebase + logic -->
+  <script type="module">
+    // Firebase 11.9.1 (same series as login.html)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import {
+      getAuth, onAuthStateChanged, getIdTokenResult, signOut
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, query, where, getDocs, limit
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+      authDomain: "kriptiek-c9ea2.firebaseapp.com",
+      projectId: "kriptiek-c9ea2",
+      storageBucket: "kriptiek-c9ea2.appspot.com",
+      messagingSenderId: "620450620939",
+      appId: "1:620450620939:web:e93a18ac23b53b33db890e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    // --- UI helpers ---
+    const $ = (id)=>document.getElementById(id);
+    const showAlert = (msg, kind="info")=>{
+      const box = $("alertBox");
+      box.classList.remove("hidden");
+      box.innerHTML = msg;
+      box.className = "mb-4 rounded-lg border px-3 py-2 text-sm " + (
+        kind==="ok" ? "border-green-300 bg-green-50 text-green-800"
+        : kind==="error" ? "border-red-300 bg-red-50 text-red-800"
+        : "border-blue-300 bg-blue-50 text-blue-800"
+      );
+    };
+    const hideAlert = ()=>{ $("alertBox").classList.add("hidden"); };
+
+    // --- Auth gate ---
+    const HARDCODED_ADMIN_UID = "jI7f0Wk4MqfPq7p69vjl8OlJUvS2"; // in your rules
+
+    onAuthStateChanged(auth, async (user)=>{
+      if (!user) {
+        try { localStorage.setItem("redirectAfterLogin", "/useradmin.html"); } catch {}
+        window.location.href = "/login.html";
+        return;
+      }
+      // Claims
+      let isAdmin = false;
+      try{
+        const token = await getIdTokenResult(user, true);
+        isAdmin = !!token.claims?.admin || user.uid === HARDCODED_ADMIN_UID;
+      }catch{}
+
+      if (!isAdmin) {
+        $("adminPill").classList.remove("hidden");
+        showAlert("Jy het nie admin-regte nie. Meld aan met ’n admin-rekening.", "error");
+        // Optionally redirect:
+        setTimeout(()=>{ window.location.href="/index.html"; }, 2200);
+        return;
+      } else {
+        hideAlert();
+      }
+    });
+
+    // Logout
+    $("logoutBtn").addEventListener("click", async ()=>{
+      try { await signOut(auth); } finally {
+        try { localStorage.clear(); sessionStorage.clear(); } catch {}
+        window.location.href = "/login.html?new=1";
+      }
+    });
+
+    // Background letters (simple)
+    (function headerBG(){
+      const el = document.getElementById('backgroundCrossword');
+      if (!el) return;
+      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      function rand() { return letters[Math.floor(Math.random()*letters.length)]; }
+      function draw() {
+        el.innerHTML = '';
+        const numRows = Math.ceil(el.offsetHeight / 30);
+        const numCols = Math.ceil(el.offsetWidth / 30);
+        const total = (numRows * numCols) || 300;
+        for (let i=0;i<total;i++){ const d=document.createElement('div'); d.className='bg-letter-box'; d.textContent=rand(); el.appendChild(d); }
+      }
+      window.addEventListener('load', draw);
+      window.addEventListener('resize', ()=>{ clearTimeout(window.__bgT); window.__bgT=setTimeout(draw,120); });
+    })();
+
+    // --- Search + Edit state ---
+    let loaded = null; // { uid, email, name, lastLogin, profile:{...}, ref: docRef }
+
+    $("searchForm").addEventListener("submit", async (e)=>{
+      e.preventDefault(); hideAlert();
+      $("resultCard").classList.add("hidden");
+      loaded = null;
+
+      const email = $("searchEmail").value.trim().toLowerCase();
+      if (!email) { showAlert("Voer ’n geldige e-posadres in.", "error"); return; }
+
+      $("searchBtn").disabled = true;
+
+      try{
+        // 1) lookup in users by email
+        let uid = null, name = "", lastLogin = null, profile = null;
+
+        const usersCol = collection(db, "users");
+        let snap = await getDocs(query(usersCol, where("email","==", email), limit(5)));
+        if (!snap.empty) {
+          const first = snap.docs[0];
+          uid = first.id;
+          profile = first.data() || {};
+          name = profile.name || profile.userName || "";
+          lastLogin = profile.lastLogin || null;
+        }
+
+        // 2) fallback to registrations
+        if (!uid) {
+          const regsCol = collection(db, "registrations");
+          const rs = await getDocs(query(regsCol, where("email","==", email), limit(5)));
+          if (!rs.empty) {
+            const first = rs.docs[0];
+            uid = first.id;
+            const rdata = first.data() || {};
+            name = rdata.userName || rdata.name || "";
+            // try to fetch users/{uid} now (may not exist yet)
+            const uref = doc(db, "users", uid);
+            const udoc = await getDoc(uref);
+            if (udoc.exists()) {
+              profile = udoc.data() || {};
+              lastLogin = profile.lastLogin || null;
+            } else {
+              profile = {}; // will create on save if needed
+            }
+          }
+        }
+
+        if (!uid) {
+          showAlert("Geen gebruiker met dié e-pos gevind nie.", "error");
+          return;
+        }
+
+        // Prepare UI
+        loaded = {
+          uid,
+          email,
+          name,
+          lastLogin,
+          profile,
+          ref: doc(db, "users", uid)
+        };
+        renderLoaded();
+        $("resultCard").classList.remove("hidden");
+        gtag('event','admin_user_lookup');
+      }catch(err){
+        console.error(err);
+        showAlert("Fout tydens soek. Probeer weer.", "error");
+      } finally {
+        $("searchBtn").disabled = false;
+      }
+    });
+
+    function renderLoaded(){
+      if (!loaded) return;
+      const { uid, email, name, lastLogin, profile } = loaded;
+
+      $("uidOut").textContent = uid || "—";
+      $("emailOut").textContent = email || "—";
+      $("nameOut").textContent = name || profile?.name || profile?.userName || "—";
+      $("lastLoginOut").textContent = lastLogin?.toDate ? lastLogin.toDate().toLocaleString('af-ZA') : (lastLogin||"—");
+
+      // Fields
+      const supporterActive = !!profile?.supporterActive;
+      const supporterUntilStr = profile?.supporterUntil ? toYMD(profile.supporterUntil) : "";
+      const manualBonus = Number(profile?.manualBonus || 0);
+      const manualBonusNote = profile?.manualBonusNote || "";
+
+      $("supporterActive").checked = supporterActive;
+      $("supporterUntil").value = supporterUntilStr;
+      $("manualBonus").value = (manualBonus || 0);
+      $("manualBonusNote").value = manualBonusNote;
+
+      // Pill
+      const pill = $("supporterStatusPill");
+      const now = new Date();
+      const activeByDate = supporterUntilStr ? new Date(supporterUntilStr+"T12:00:00") > now : false;
+      const isActive = supporterActive || activeByDate;
+      pill.classList.remove("hidden");
+      pill.className = "pill " + (isActive ? "pill-green" : "pill-red");
+      pill.textContent = isActive ? "Ondersteuner: aktief" : "Ondersteuner: nie aktief";
+    }
+
+    // Quick date helpers
+    function toYMD(input){
+      // Accept Date, Timestamp, or string
+      try{
+        if (!input) return "";
+        if (typeof input === "string") {
+          // Try parse
+          const d = new Date(input);
+          if (isFinite(d)) return d.toISOString().slice(0,10);
+          // If already YYYY-MM-DD
+          if (/^\d{4}-\d{2}-\d{2}$/.test(input)) return input;
+        }
+        if (input?.toDate) { return input.toDate().toISOString().slice(0,10); }
+        const d = (input instanceof Date) ? input : new Date(input);
+        return isFinite(d) ? d.toISOString().slice(0,10) : "";
+      }catch{return "";}
+    }
+    function addDaysToInput(days){
+      const el = $("supporterUntil");
+      const base = el.value ? new Date(el.value+"T12:00:00") : new Date();
+      base.setDate(base.getDate()+days);
+      el.value = base.toISOString().slice(0,10);
+    }
+
+    document.querySelectorAll('[data-add-days]').forEach(btn=>{
+      btn.addEventListener('click', ()=> addDaysToInput(Number(btn.dataset.addDays||0)));
+    });
+    $("clearUntil").addEventListener('click', ()=> $("supporterUntil").value="");
+
+    // Save + Reset
+    $("editForm").addEventListener("submit", async (e)=>{
+      e.preventDefault(); if (!loaded) return;
+      hideAlert();
+      const btn = $("saveBtn"); btn.disabled = true;
+
+      try{
+        const patch = {
+          supporterActive: $("supporterActive").checked,
+          updatedAt: serverTimestamp()
+        };
+
+        const ymd = $("supporterUntil").value.trim();
+        if (ymd) patch.supporterUntil = ymd; else patch.supporterUntil = null;
+
+        const manual = Number($("manualBonus").value || 0);
+        patch.manualBonus = isFinite(manual) ? Math.round(manual) : 0;
+
+        const note = $("manualBonusNote").value.trim();
+        patch.manualBonusNote = note || null;
+
+        // Ensure user doc exists (merge:true covers both)
+        await setDoc(loaded.ref, {
+          email: loaded.email || null,
+          name: loaded.name || null,
+          ...patch
+        }, { merge:true });
+
+        // Update local copy + re-render
+        loaded.profile = { ...(loaded.profile||{}), ...patch };
+        renderLoaded();
+
+        const msg = $("saveMsg");
+        msg.textContent = "Veranderinge gestoor.";
+        msg.className = "text-sm mt-2 text-green-600";
+        msg.classList.remove("hidden");
+
+        gtag('event','admin_user_save');
+      }catch(err){
+        console.error(err);
+        showAlert("Kon nie stoor nie. Kyk jou Firestore-regte of probeer weer.", "error");
+      }finally{
+        btn.disabled = false;
+      }
+    });
+
+    $("resetBtn").addEventListener("click", ()=> renderLoaded());
+  </script>
+</body>
+</html>
