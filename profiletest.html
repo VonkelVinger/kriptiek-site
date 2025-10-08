@@ -526,3 +526,358 @@
   </script>
 </body>
 </html>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+  <header class="bg-white shadow p-4">
+    <div class="logo-container">
+      <div id="backgroundCrossword" class="background-crossword"></div>
+      <div class="crossword-grid">
+        <div class="letter-box flipped-k">K</div><div class="letter-box flipped-k">R</div><div class="letter-box">I</div>
+        <div class="letter-box flipped-k">P</div><div class="letter-box">T</div><div class="letter-box">I</div>
+        <div class="letter-box flipped-k">E</div><div class="letter-box">K</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="max-w-6xl mx-auto px-4 pt-2 text-center text-2xl font-bold text-[#1e3a8a]">
+    WELKOM TERUG, <span id="wbName">GEBRUIKER</span>
+  </div>
+
+  <main class="flex-grow p-4 pb-16">
+    <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 items-start">
+      <!-- LEFT -->
+      <section class="card p-5 md:p-6 top-card">
+        <a href="https://buymeacoffee.com/kriptiek" target="_blank" rel="noopener" class="supporter-banner mb-4" aria-label="Word ’n ondersteuner (Buy Me a Coffee)">
+          <span id="supporterBannerTxt">Nie-betalende ondersteuner</span>
+        </a>
+
+        <h2 class="text-lg font-bold mb-2">Profiel</h2>
+        <p id="errBanner" class="hidden text-sm mb-3 px-3 py-2 rounded bg-red-50 text-red-800" role="alert"></p>
+
+        <form id="profileForm" class="space-y-4" novalidate>
+          <div>
+            <label for="nameInput" class="block text-sm font-semibold text-gray-700">Naam (kan ’n skuilnaam wees)</label>
+            <input id="nameInput" type="text" minlength="2" maxlength="40" required class="mt-1 w-full border border-gray-300 rounded p-2" value="Speler"/>
+          </div>
+          <div>
+            <label for="emailInput" class="block text-sm font-semibold text-gray-700">E-posadres</label>
+            <input id="emailInput" type="email" required aria-describedby="emailHelp" class="mt-1 w-full border border-gray-300 rounded p-2" value="speler@example.com"/>
+            <p id="emailHelp" class="text-xs text-gray-500 mt-1"><strong>Let wel:</strong> Jou e-pos word nie geverifieer nie, maar jy het dit nodig vir wagwoordherstel of navrae oor jou rekening.</p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="submit" class="kbtn" id="saveBtn">BÊRE</button>
+            <button id="resetPwBtn" type="button" class="kbtn bg-slate-800 hover:bg-slate-900">VRA NUWE WAGWOORD</button>
+            <button id="deleteBtn" type="button" class="kbtn kbtn-red">VERWYDER MY REKENING</button>
+          </div>
+          <p id="formMsg" class="text-sm mt-2 hidden" aria-live="polite" role="status"></p>
+          <p id="deleteMsg" class="text-sm mt-2 hidden" aria-live="polite" role="status"></p>
+        </form>
+      </section>
+
+      <!-- RIGHT -->
+      <section class="card p-5 md:p-6 top-card">
+        <div class="mb-4"><span id="pillOverall" class="pill pill-lg pill-blue" role="status">JOU KRIPTIEK-TELLING: 0</span></div>
+        <div class="flex flex-wrap gap-2 mb-6 items-start">
+          <span id="pillDilemmaLive" class="pill pill-lg pill-orange" role="status">JOU DILEMMA-TELLING: 0</span>
+          <span class="pill pill-lg pill-green">JOU BLITSTIEK-TELLING: BINNEKORT</span>
+          <span class="pill pill-lg pill-green-dark">JOU SLIMSTIEK-TELLING: BINNEKORT</span>
+        </div>
+        <h3 class="text-2xl md:text-[1.7rem] font-extrabold text-slate-900 mb-1">Hoe werk die Kriptiek-telling?</h3>
+        <p class="text-sm text-slate-600">
+          Jou Kriptiek-telling is die som van jou tellings vir Dilemma, Slimstiek en Blitstiek, maar tans is nog net eersgenoemde geaktiveer.
+          Vir eers is jou Kriptiek-telling dus dieselfde as jou Dilemma-telling. Later sal Slimstiek, Blitstiek en ander speletjies ook bykom.
+          En onthou, jy kry ook 10% ekstra by al jou punte as jy Kriptiek met $2 per maand of meer ondersteun.
+        </p>
+      </section>
+    </div>
+
+    <!-- DILEMMA -->
+    <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 mt-6">
+      <section class="card p-5 md:p-6">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xl font-extrabold text-slate-900">Jou Dilemma-telling</h2>
+          <span id="streakChip" class="hidden px-2.5 py-1 rounded-full font-bold text-indigo-900" style="background:#e0e7ff">+10% lopie</span>
+        </div>
+
+        <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-4">
+          <div class="text-sm text-indigo-900/80">Laas bereken op: <span id="calcTime" class="mono">—</span></div>
+          <div class="mt-2 flex items-end gap-4">
+            <div>
+              <div class="text-4xl md:text-5xl font-extrabold mono text-indigo-900" id="totalPoints">0</div>
+              <div class="text-xs uppercase tracking-wide text-indigo-900/70">Totale DILEMMA-telling</div>
+            </div>
+            <div class="ml-auto text-right">
+              <div class="text-xs text-indigo-900/70">Vermenigvuldiger</div>
+              <div class="text-xl font-extrabold mono" id="multiplierLabel">×1.00</div>
+            </div>
+          </div>
+        </div>
+
+        <p class="text-sm leading-6 text-slate-600 mb-4">
+          Hoe minder raaiskote jy nodig het, hoe meer punte kry jy. Daar is ook bonuspunte as jy
+          <strong>vyf of meer Dilemmas opeenvolgend kan oplos</strong>, asook ’n
+          <strong>10%-bonus vir betalende ondersteuners in die afgelope 30 dae</strong>.
+        </p>
+
+        <div class="overflow-auto max-h-[420px] rounded-xl border border-slate-200 bg-white">
+          <table class="table text-sm w-full">
+            <thead>
+              <tr><th>Komponent</th><th class="text-right">Aantal</th><th class="text-right">Reël</th><th class="text-right">Punte</th></tr>
+            </thead>
+            <tbody id="breakdownBody"></tbody>
+            <tfoot>
+              <tr><td class="font-bold">Subtotaal</td><td></td><td></td><td class="text-right font-extrabold mono" id="subtotalCell">0</td></tr>
+              <tr><td class="font-bold">Lopie-bonus</td><td></td><td class="text-right" id="lopieMeta">—</td><td class="text-right font-extrabold mono" id="lopieBonusCell">0</td></tr>
+              <tr><td class="font-bold">Ondersteuner-bonus</td><td></td><td class="text-right" id="supporterMeta">—</td><td class="text-right font-extrabold mono" id="supporterBonusCell">0</td></tr>
+              <tr><td class="font-extrabold text-slate-900">Totaal</td><td></td><td></td><td class="text-right font-extrabold mono text-indigo-900" id="totalCell">0</td></tr>
+            </tfoot>
+          </table>
+        </div>
+      </section>
+
+      <section class="card p-5 md:p-6">
+        <h2 class="text-xl font-extrabold text-slate-900 mb-3">Jou Dilemma-statistiek</h2>
+        <div class="grid grid-cols-4 gap-2 mb-4">
+          <div class="mini"><div id="playedStat" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Dilemmas gespeel</div></div>
+          <div class="mini"><div id="winrateStat" class="text-3xl font-extrabold mono">0%</div><div class="text-xs text-slate-500 mt-1">Sukseskoers</div></div>
+          <div class="mini"><div id="curStreak" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Huidige lopie</div></div>
+          <div class="mini"><div id="bestStreak" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Beste lopie</div></div>
+        </div>
+
+        <h3 class="text-sm font-bold text-slate-700 mb-2">Suksesverdeling</h3>
+        <div id="distWrap" class="space-y-2"></div>
+
+        <div class="mt-5 flex items-center gap-2">
+          <button id="btnRefresh" class="kbtn" type="button">Herlaai (toetsdata)</button>
+          <span id="hint" class="text-xs text-slate-500">Hierdie blad is ’n TOETS-weergawe (geen Firestore).</span>
+        </div>
+      </section>
+    </div>
+
+    <!-- Future games -->
+    <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 mt-6">
+      <section class="card p-5 md:p-6">
+        <h2 class="text-lg font-bold text-slate-900">Blitstiek-telling</h2>
+        <div class="mt-3 border-2 border-dashed rounded-xl text-slate-400 font-bold flex items-center justify-center h-28">BINNEKORT</div>
+      </section>
+      <section class="card p-5 md:p-6">
+        <h2 class="text-lg font-bold text-slate-900">Slimstiek-telling</h2>
+        <div class="mt-3 border-2 border-dashed rounded-xl text-slate-400 font-bold flex items-center justify-center h-28">BINNEKORT</div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
+    &copy; 2025 Kriptiek. Alle regte voorbehou. |
+    <a href="/profile.html" class="underline px-1.5">My profiel</a> |
+    <a href="/forum.html" class="underline px-1.5">Gesels saam</a> |
+    <a href="/privacy.html" class="underline px-1.5">Privaatheidsbeleid</a> |
+    <a href="/terms.html" class="underline px-1.5">Voorwaardes</a> |
+    <a href="/faq.html" class="underline px-1.5">Gereelde vrae</a> |
+    <a href="/about.html" class="underline px-1.5">Oor Kriptiek</a> |
+    <a href="/contact.html" class="underline px-1.5">Kontak ons</a>
+  </footer>
+  <!-- Header background letter grid -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const backgroundCrossword = document.getElementById('backgroundCrossword');
+      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const rand = n => Math.floor(Math.random()*n);
+      function getRandomLetter(){ return letters[rand(letters.length)]; }
+
+      function generateBackgroundGrid() {
+        if (!backgroundCrossword) return;
+        backgroundCrossword.innerHTML = '';
+        const numRows = Math.ceil(backgroundCrossword.offsetHeight / 30);
+        const numCols = Math.ceil(backgroundCrossword.offsetWidth / 30);
+        const totalCells = (numRows * numCols) || 300;
+        for (let i = 0; i < totalCells; i++) {
+          const bg = document.createElement('div');
+          bg.className = 'bg-letter-box';
+          bg.textContent = getRandomLetter();
+          backgroundCrossword.appendChild(bg);
+        }
+      }
+      generateBackgroundGrid();
+
+      let gridTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(gridTimer);
+        gridTimer = setTimeout(generateBackgroundGrid, 150);
+      });
+    });
+  </script>
+
+  <!-- TEST PAGE LOGIC (no Firestore) -->
+  <script>
+    // ====== MOCK DATA ======
+    const MOCK_SUPPORTER_ACTIVE = false; // toggle to true to preview supporter bonus
+    const MOCK_PLAYS = [
+      { date: offsetDay(-6), win: true,  guesses: 3 },
+      { date: offsetDay(-5), win: true,  guesses: 4 },
+      { date: offsetDay(-4), win: true,  guesses: 2 },
+      { date: offsetDay(-3), win: true,  guesses: 4 },
+      { date: offsetDay(-2), win: true,  guesses: 3 },
+      { date: offsetDay(-1), win: false, guesses: 0 },
+      { date: offsetDay(0),  win: true,  guesses: 5 },
+    ];
+    // =======================
+
+    const fmt = n => (typeof n === 'number' ? n.toLocaleString('af-ZA') : n);
+
+    const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
+    const STREAK_THRESHOLD = 5;
+    const STREAK_MULTIPLIER = 1.10;
+    const SUPPORTER_MULTIPLIER = 1.10;
+
+    const $ = id => document.getElementById(id);
+    const supporterBannerTxt = $('supporterBannerTxt');
+    const wbName = $('wbName');
+    const btnRefresh = $('btnRefresh');
+
+    const totalPointsEl = $('totalPoints'), subtotalCell = $('subtotalCell'), totalCell = $('totalCell');
+    const breakdownBody = $('breakdownBody'), distWrap = $('distWrap');
+    const playedStat = $('playedStat'), winrateStat = $('winrateStat'), curStreakEl = $('curStreak'), bestStreakEl = $('bestStreak');
+    const streakChip = $('streakChip'), multiplierLabel = $('multiplierLabel'), calcTime = $('calcTime'), lopieMeta = $('lopieMeta');
+    const pillOverall = $('pillOverall'), pillDilemmaLive = $('pillDilemmaLive');
+    const formMsg = $('formMsg'), deleteMsg = $('deleteMsg');
+    const errBanner = $('errBanner');
+
+    wbName.textContent = 'GEBRUIKER';
+    supporterBannerTxt.textContent = MOCK_SUPPORTER_ACTIVE ? 'Betalende ondersteuner' : 'Nie-betalende ondersteuner';
+
+    computeAndRender(MOCK_PLAYS, MOCK_SUPPORTER_ACTIVE);
+    if (btnRefresh) btnRefresh.addEventListener('click', ()=> computeAndRender(MOCK_PLAYS, MOCK_SUPPORTER_ACTIVE));
+
+    function withBusy(btn, fn, gaEventName){
+      return async () => {
+        if (btn) { btn.disabled = true; btn.setAttribute('aria-busy','true'); }
+        try { await fn(); if (gaEventName) gtag('event', gaEventName); }
+        catch(e){ console.error(e); showError('Iets het skeefgeloop (TOETS).'); }
+        finally { if (btn) { btn.disabled=false; btn.removeAttribute('aria-busy'); } }
+      };
+    }
+    function showError(msg){ errBanner.textContent = msg; errBanner.classList.remove('hidden'); }
+
+    $('profileForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      withBusy($('saveBtn'), async ()=>{
+        formMsg.textContent = "Profiel (TOETS) gestoor — niks is werklik verander nie.";
+        formMsg.className = "text-sm mt-2 text-green-600";
+        formMsg.classList.remove('hidden');
+      }, 'update_profile_test')();
+    });
+    $('resetPwBtn').addEventListener('click', withBusy($('resetPwBtn'), async ()=>{
+      formMsg.textContent = "Wagwoordherstel (TOETS): Geen e-pos gestuur in hierdie toetsweergawe.";
+      formMsg.className = "text-sm mt-2 text-green-600";
+      formMsg.classList.remove('hidden');
+    }, 'password_reset_test'));
+    $('deleteBtn').addEventListener('click', withBusy($('deleteBtn'), async ()=>{
+      if (!confirm("Is jy seker? (TOETS) Jou rekening sou gedeaktiveer word.")) return;
+      deleteMsg.textContent = "Versoek (TOETS) sou gestuur word. Geen werklike veranderinge is gemaak nie.";
+      deleteMsg.className = "text-sm mt-2 text-green-600";
+      deleteMsg.classList.remove('hidden');
+    }, 'delete_account_request_test'));
+
+    function offsetDay(delta){
+      const d = new Date();
+      d.setHours(12,0,0,0);
+      d.setDate(d.getDate()+delta);
+      return d.toISOString().slice(0,10);
+    }
+
+    function computeAndRender(plays, supporterActive){
+      const dates = [...new Set(plays.map(p=>p.date))].sort();
+      const byDate = new Map();
+      dates.forEach(d=>{
+        const p = plays.find(x=>x.date===d);
+        byDate.set(d, p && p.win === true);
+      });
+
+      let cur=0, best=0, prev=null;
+      for(const d of dates){
+        const consec = prev && (new Date(d) - new Date(prev) === 24*60*60*1000);
+        if(!consec) cur=0;
+        if(byDate.get(d)===true){ cur++; best=Math.max(best,cur); } else { cur=0; }
+        prev=d;
+      }
+
+      const dist = {1:0,2:0,3:0,4:0,5:0,6:0,fail:0};
+      for(const p of plays){
+        if(p.win===true){
+          const g = Math.min(Math.max(1,p.guesses||6),6);
+          dist[g] += 1;
+        } else {
+          dist.fail += 1;
+        }
+      }
+
+      const subtotal =
+        dist[1]*BASE_POINTS[1] + dist[2]*BASE_POINTS[2] + dist[3]*BASE_POINTS[3] +
+        dist[4]*BASE_POINTS[4] + dist[5]*BASE_POINTS[5] + dist[6]*BASE_POINTS[6] +
+        dist.fail*BASE_POINTS.fail;
+
+      const streakMult = cur>=STREAK_THRESHOLD ? STREAK_MULTIPLIER : 1;
+      const supporterMult = supporterActive ? SUPPORTER_MULTIPLIER : 1;
+      const streakBonus = Math.round(subtotal * (streakMult - 1));
+      const supporterBonus = Math.round((subtotal + streakBonus) * (supporterMult - 1));
+      const total = subtotal + streakBonus + supporterBonus;
+
+      const totalPlayed = plays.length;
+      const wins = plays.filter(p=>p.win===true).length;
+      const winrate = totalPlayed ? Math.round((wins/totalPlayed)*100) : 0;
+
+      playedStat.textContent = totalPlayed;
+      winrateStat.textContent = `${winrate}%`;
+      curStreakEl.textContent = cur;
+      bestStreakEl.textContent = best;
+
+      const rows=[
+        {label:`In 1 raaiskoot opgelos`, qty:dist[1], per:BASE_POINTS[1]},
+        {label:`In 2 raaiskote opgelos`,  qty:dist[2], per:BASE_POINTS[2]},
+        {label:`In 3 raaiskote opgelos`,  qty:dist[3], per:BASE_POINTS[3]},
+        {label:`In 4 raaiskote opgelos`,  qty:dist[4], per:BASE_POINTS[4]},
+        {label:`In 5 raaiskote opgelos`,  qty:dist[5], per:BASE_POINTS[5]},
+        {label:`In 6 raaiskote opgelos`,  qty:dist[6], per:BASE_POINTS[6]},
+        {label:`Onopgelos`,               qty:dist.fail, per:BASE_POINTS.fail},
+      ];
+      breakdownBody.innerHTML = rows.map(r=>{
+        const pts = r.qty * r.per;
+        return `<tr>
+          <td>${r.label}</td>
+          <td class="text-right mono">${fmt(r.qty)}</td>
+          <td class="text-right mono">${fmt(r.qty)} × ${fmt(r.per)}</td>
+          <td class="text-right mono ${pts>=0?'text-emerald-700':'text-red-700'}">${fmt(pts)}</td>
+        </tr>`;
+      }).join('');
+
+      const pairs=[['1',dist[1]],['2',dist[2]],['3',dist[3]],['4',dist[4]],['5',dist[5]],['6',dist[6]],['X',dist.fail]];
+      const maxv=Math.max(1,...pairs.map(p=>p[1]));
+      distWrap.innerHTML=pairs.map(([lb,val])=>{
+        const w = val === 0 ? 0 : Math.max(6, Math.round((val/maxv)*100));
+        return `<div class="barRow"><div class="text-xs font-bold text-slate-500">${lb}</div><div class="bar" style="width:${w}%"></div><div class="mono text-sm font-extrabold">${fmt(val)}</div></div>`;
+      }).join('');
+
+      subtotalCell.textContent    = fmt(subtotal);
+      document.getElementById('lopieBonusCell').textContent = fmt(streakBonus);
+      document.getElementById('supporterBonusCell').textContent = fmt(supporterBonus);
+      totalCell.textContent       = fmt(total);
+
+      if(streakMult>1){ streakChip.classList.remove('hidden'); lopieMeta.textContent=`Lopie: ${cur} op ’n ry (×${STREAK_MULTIPLIER.toFixed(2)})`; }
+      else{ streakChip.classList.add('hidden'); lopieMeta.textContent=`Geen lopie-bonus (lopie: ${cur})`; }
+
+      document.getElementById('supporterMeta').textContent = supporterActive
+        ? `Ondersteuner aktief (×${SUPPORTER_MULTIPLIER.toFixed(2)})`
+        : 'Geen ondersteuner-bonus';
+
+      const combinedMult = streakMult * supporterMult;
+      document.getElementById('multiplierLabel').textContent = `×${combinedMult.toFixed(2)}`;
+
+      calcTime.textContent = new Date().toLocaleString('af-ZA');
+      pillOverall.textContent     = `JOU KRIPTIEK-TELLING: ${fmt(total)}`;
+      pillDilemmaLive.textContent = `JOU DILEMMA-TELLING: ${fmt(total)}`;
+      totalPointsEl.textContent   = fmt(total);
+    }
+  </script>
+</body>
+</html>
