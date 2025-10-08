@@ -435,15 +435,17 @@
       document.getElementById('supporterBonusCell').textContent = fmt(supporterBonus);
       totalCell.textContent       = fmt(total);
 
-      if(streakMult>1){ streakChip.classList.remove('hidden'); lopieMeta.textContent=`Lopie: ${cur} op ’n ry (×${STREAK_MULTIPLIER.toFixed(2)})`; }
-      else{ streakChip.classList.add('hidden'); lopieMeta.textContent=`Geen lopie-bonus (lopie: ${cur})`; }
+    if (streakMult > 1) {
+  streakChip.classList.remove('hidden');
+  lopieMeta.textContent = `Lopie: ${cur} op ’n ry (×${STREAK_MULTIPLIER.toFixed(2)})`;
+} else {
+  streakChip.classList.add('hidden');
+  lopieMeta.textContent = `Geen (huidige lopie: ${cur})`;
+}
 
-      document.getElementById('supporterMeta').textContent = supporterActive
-        ? `Ondersteuner aktief (×${SUPPORTER_MULTIPLIER.toFixed(2)})`
-        : 'Geen ondersteuner-bonus';
-
-      const combinedMult = streakMult * supporterMult;
-      document.getElementById('multiplierLabel').textContent = `×${combinedMult.toFixed(2)}`;
+document.getElementById('supporterMeta').textContent = supporterActive
+  ? `×${SUPPORTER_MULTIPLIER.toFixed(2)}`
+  : 'Geen';
 
       calcTime.textContent = new Date().toLocaleString('af-ZA');
       pillOverall.textContent     = `JOU KRIPTIEK-TELLING: ${fmt(total)}`;
