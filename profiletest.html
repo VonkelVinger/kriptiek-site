@@ -213,7 +213,7 @@
         <p class="text-sm leading-6 text-slate-600 mb-4">
           Hoe minder raaiskote jy nodig het, hoe meer punte kry jy. Daar is ook bonuspunte as jy
           <strong>vyf of meer Dilemmas opeenvolgend kan oplos</strong>, asook ’n
-          <strong>10%-bonus vir betalende ondersteuners in die afgelope 30 dae</strong>.
+          <strong>10%-bonus vir betalende ondersteuners oor die afgelope 30 dae</strong>.
           Jy kan ook met ouer Dilemmas punte verdien, maar jy kan elkeen net een keer speel.
         </p>
 
@@ -516,7 +516,7 @@
       multiplierLabel.textContent = `×${combinedMult.toFixed(2)}`;
 
       if(streakMult>1){ streakChip.classList.remove('hidden'); lopieMeta.textContent=`Lopie: ${cur} op ’n ry`; }
-      else{ streakChip.classList.add('hidden'); lopieMeta.textContent=`Geen lopie-bonus (lopie: ${cur})`; }
+      else{ streakChip.classList.add('hidden'); lopieMeta.textContent=`Geen (huidig lopie: ${cur})`; }
 
       $('calcTime').textContent = new Date().toLocaleString('af-ZA');
 
