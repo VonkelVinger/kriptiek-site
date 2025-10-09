@@ -15,77 +15,47 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>My Profiel – Kriptiek</title>
 
-<!-- Favicons -->
 <link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=3">
 <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png?v=3">
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=3">
 <link rel="manifest" href="/assets/site.webmanifest?v=3">
 
-<!-- Tailwind (consider compiling for prod) -->
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
 <style>
   body { font-family: 'Montserrat', sans-serif; }
   .mono{ font-variant-numeric: tabular-nums; }
-  .logo-container {
-    position: relative; display: flex; justify-content: center; align-items: center;
-    width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
-    isolation: isolate;
-  }
-  .logo-container::before{
-    content:""; position:absolute; inset:-2px; border-radius:1rem;
-    background:conic-gradient(from 180deg at 50% 50%, #1e3a8a, #334155, #1e3a8a);
-    animation:spin 14s linear infinite; z-index:0; padding:2px;
-    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor; mask-composite: exclude;
-  }
-  @keyframes spin{ to{ transform:rotate(1turn); } }
-  @media (prefers-reduced-motion: reduce){ .logo-container::before{ animation:none; } }
-
-  .crossword-grid { display: grid; grid-template-columns: repeat(8, minmax(40px, 1fr)); gap: 4px; position: relative; z-index: 10; }
-  .letter-box {
-    width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
-    background-color: #374151; color: white; font-size: 1.8rem; font-weight: bold; border: 2px solid #1f2937; border-radius: 0.375rem;
-    text-transform: uppercase; box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
-  }
-  .flipped-k { transform: scaleX(-1); }
-
-  .background-crossword {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
-    opacity: 0.5; z-index: 1; pointer-events: none; animation: bgFloat 30s linear infinite;
-  }
-  @keyframes bgFloat{ 0%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } 100%{ transform:translateY(0); } }
-  @media (prefers-reduced-motion: reduce){ .background-crossword{ animation:none; } }
-  .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
-
-  .kbtn{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.65rem 1rem; border-radius:.9rem; background:#1d4ed8; color:#fff; font-weight:800; box-shadow:0 10px 24px rgba(29,78,216,.25); }
-  .kbtn:hover{ background:#1e40af; }
-  .kbtn-red{ background:#dc2626; } .kbtn-red:hover{ background:#b91c1c; }
-
-  .pill { display:inline-flex; align-items:center; gap:.6rem; padding:.6rem 1.1rem; border-radius:999px; font-weight:800; color:#fff; white-space:nowrap; line-height:1.15;
-          box-shadow: 0 6px 14px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.25); }
-  .pill-lg { font-size:1.15rem; padding:.75rem 1.25rem; }
-  .pill-blue { background:linear-gradient(90deg,#1d4ed8,#1e40af); }
-  .pill-orange { background: linear-gradient(180deg, #FB7A12 0%, #D65A0A 100%); }
-  .pill-green { background: linear-gradient(180deg, #22C55E 0%, #0EA55B 100%); }
-  .pill-green-dark { background: linear-gradient(180deg, #0F766E 0%, #065F46 100%); }
-
-  .card{ background:#fff; border-radius:1rem; box-shadow:0 8px 18px rgba(0,0,0,.08); }
-  .mini{ background:#f8fafc; border:1px solid #e5e7eb; border-radius:.75rem; padding:12px; text-align:center; }
-
-  .table{ width:100%; border-collapse:separate; border-spacing:0; }
-  .table th,.table td{ padding:.6rem .75rem; border-bottom:1px solid #e5e7eb; }
-  .table th{ text-align:left; font-weight:700; color:#334155; background:#f8fafc; position:sticky; top:0; }
-  .barRow{ display:grid; grid-template-columns:1.5rem 1fr auto; gap:.5rem; align-items:center; }
-  .bar{ height:14px; background:linear-gradient(90deg,#1d4ed8,#1e40af); border-radius:7px; }
-
-  .supporter-banner{ display:flex; align-items:center; justify-content:center; width:100%;
-    background: linear-gradient(180deg, #22C55E 0%, #0EA55B 100%); color:#fff; font-weight:800; padding:.6rem 1rem; border-radius:999px; text-decoration:none; }
-
-  .top-card { min-height:320px; }
-  @media (max-width: 640px){ .top-card{ min-height:unset; } }
+  .logo-container{position:relative;display:flex;justify-content:center;align-items:center;width:fit-content;margin:1rem auto;padding:1rem;border-radius:1rem;background:#fff;overflow:hidden;isolation:isolate}
+  .logo-container::before{content:"";position:absolute;inset:-2px;border-radius:1rem;background:conic-gradient(from 180deg at 50% 50%, #1e3a8a,#334155,#1e3a8a);animation:spin 14s linear infinite;z-index:0;padding:2px;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+  @keyframes spin{to{transform:rotate(1turn)}}
+  @media (prefers-reduced-motion: reduce){.logo-container::before{animation:none}}
+  .crossword-grid{display:grid;grid-template-columns:repeat(8,minmax(40px,1fr));gap:4px;position:relative;z-index:10}
+  .letter-box{width:50px;height:50px;display:flex;justify-content:center;align-items:center;background:#374151;color:#fff;font-size:1.8rem;font-weight:700;border:2px solid #1f2937;border-radius:.375rem;text-transform:uppercase;box-shadow:inset 0 0 5px rgba(0,0,0,.2)}
+  .flipped-k{transform:scaleX(-1)}
+  .background-crossword{position:absolute;top:0;left:0;width:100%;height:100%;display:grid;grid-template-columns:repeat(auto-fill,minmax(30px,1fr));grid-template-rows:repeat(auto-fill,minmax(30px,1fr));opacity:.5;z-index:1;pointer-events:none;animation:bgFloat 30s linear infinite}
+  @keyframes bgFloat{0%{transform:translateY(0)}50%{transform:translateY(-12px)}100%{transform:translateY(0)}}
+  @media (prefers-reduced-motion: reduce){.background-crossword{animation:none}}
+  .bg-letter-box{display:flex;justify-content:center;align-items:center;font-size:1.1rem;font-weight:700;color:#9ca3af;border:1px solid #e5e7eb;background:transparent;user-select:none}
+  .kbtn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.65rem 1rem;border-radius:.9rem;background:#1d4ed8;color:#fff;font-weight:800;box-shadow:0 10px 24px rgba(29,78,216,.25)}
+  .kbtn:hover{background:#1e40af}
+  .kbtn-red{background:#dc2626}.kbtn-red:hover{background:#b91c1c}
+  .pill{display:inline-flex;align-items:center;gap:.6rem;padding:.6rem 1.1rem;border-radius:999px;font-weight:800;color:#fff;white-space:nowrap;line-height:1.15;box-shadow:0 6px 14px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.25)}
+  .pill-lg{font-size:1.15rem;padding:.75rem 1.25rem}
+  .pill-blue{background:linear-gradient(90deg,#1d4ed8,#1e40af)}
+  .pill-orange{background:linear-gradient(180deg,#FB7A12 0%,#D65A0A 100%)}
+  .pill-green{background:linear-gradient(180deg,#22C55E 0%,#0EA55B 100%)}
+  .pill-green-dark{background:linear-gradient(180deg,#0F766E 0%,#065F46 100%)}
+  .card{background:#fff;border-radius:1rem;box-shadow:0 8px 18px rgba(0,0,0,.08)}
+  .mini{background:#f8fafc;border:1px solid #e5e7eb;border-radius:.75rem;padding:12px;text-align:center}
+  .table{width:100%;border-collapse:separate;border-spacing:0}
+  .table th,.table td{padding:.6rem .75rem;border-bottom:1px solid #e5e7eb}
+  .table th{text-align:left;font-weight:700;color:#334155;background:#f8fafc;position:sticky;top:0}
+  .barRow{display:grid;grid-template-columns:1.5rem 1fr auto;gap:.5rem;align-items:center}
+  .bar{height:14px;background:linear-gradient(90deg,#1d4ed8,#1e40af);border-radius:7px}
+  .supporter-banner{display:flex;align-items:center;justify-content:center;width:100%;background:linear-gradient(180deg,#22C55E 0%,#0EA55B 100%);color:#fff;font-weight:800;padding:.6rem 1rem;border-radius:999px;text-decoration:none}
+  .top-card{min-height:320px}
+  @media (max-width:640px){.top-card{min-height:unset}}
 </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -106,7 +76,7 @@
 
   <main class="flex-grow p-4 pb-16">
     <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 items-start">
-      <!-- LEFT: Profile + Supporter -->
+      <!-- LEFT -->
       <section class="card p-5 md:p-6 top-card">
         <a href="https://buymeacoffee.com/kriptiek" target="_blank" rel="noopener" class="supporter-banner mb-4" aria-label="Word ’n ondersteuner (Buy Me a Coffee)">
           <span id="supporterBannerTxt">Word ’n betalende ondersteuner</span>
@@ -136,7 +106,7 @@
         </form>
       </section>
 
-      <!-- RIGHT: Scores -->
+      <!-- RIGHT -->
       <section class="card p-5 md:p-6 top-card">
         <div class="mb-4"><span id="pillOverall" class="pill pill-lg pill-blue" role="status">JOU KRIPTIEK-TELLING: 0</span></div>
         <div class="flex flex-wrap gap-2 mb-6 items-start">
@@ -245,15 +215,14 @@
   <!-- Firebase v11 -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import {
-      getAuth, onAuthStateChanged, sendPasswordResetEmail
-    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
     import {
       getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp,
-      collection, getDocs, query, orderBy, limit
+      collection, getDocs, query, orderBy, limit,
+      // NEW: collection-group fallback
+      collectionGroup, where, documentId
     } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
-    // --- Firebase config (same project as login.html) ---
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
       authDomain: "kriptiek-c9ea2.firebaseapp.com",
@@ -263,12 +232,10 @@
       appId: "1:620450620939:web:e93a18ac23b53b33db890e"
     };
 
-    // Init
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
-    // ---- UI refs ----
     const $ = id => document.getElementById(id);
     const wbName = $('wbName');
     const nameInput = $('nameInput');
@@ -284,12 +251,10 @@
     const totalPointsEl = $('totalPoints'), pillOverall = $('pillOverall'), pillDilemmaLive = $('pillDilemmaLive');
     const streakChip = $('streakChip'), multiplierLabel = $('multiplierLabel'), calcTime = $('calcTime');
 
-    // Points constants
     const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
-    const STREAK_THRESHOLD = 5; const STREAK_MULTIPLIER = 1.10; const SUPPORTER_MULTIPLIER = 1.10;
+    const STREAK_THRESHOLD = 5, STREAK_MULTIPLIER = 1.10, SUPPORTER_MULTIPLIER = 1.10;
     const fmt = n => (typeof n === 'number' ? n.toLocaleString('af-ZA') : n);
 
-    // Header background letters (unchanged)
     (function headerBG(){
       const backgroundCrossword = document.getElementById('backgroundCrossword');
       const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -316,12 +281,10 @@
       });
     })();
 
-    // ====== Robust date normalizer + plays loader ======
     function normalizeDate(v, fallbackId="") {
       try {
         if (!v && fallbackId) v = fallbackId;
         if (!v) return null;
-
         if (typeof v === "object" && v.toDate && typeof v.toDate === "function") {
           const d = v.toDate();
           return new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString().slice(0,10);
@@ -356,13 +319,13 @@
         });
       } catch(e){ console.warn("New plays read failed:", e); }
 
+      // If we got some, return unique
       if (out.length > 0) {
-        const map = new Map();
-        out.forEach(p => map.set(p.date, p));
+        const map = new Map(); out.forEach(p => map.set(p.date, p));
         return [...map.values()].sort((a,b)=> a.date.localeCompare(b.date));
       }
 
-      // Legacy fallback
+      // Legacy fallback (/userGames/{uid}/plays)
       try {
         const colOld = collection(db, "userGames", uid, "plays");
         const qsOld  = await getDocs(colOld);
@@ -375,15 +338,35 @@
         });
       } catch(e){ console.warn("Legacy plays read failed:", e); }
 
-      const map = new Map();
-      out.forEach(p => map.set(p.date, p));
+      if (out.length > 0) {
+        const map = new Map(); out.forEach(p => map.set(p.date, p));
+        return [...map.values()].sort((a,b)=> a.date.localeCompare(b.date));
+      }
+
+      // NEW: Collection-group fallback across all /games/*/leaderboard/{uid}
+      try {
+        const cg = query(collectionGroup(db, "leaderboard"), where(documentId(), "==", uid), limit(365));
+        const qs = await getDocs(cg);
+        qs.forEach(s => {
+          // parent: /games/{gameId}/leaderboard
+          const gameDoc = s.ref.parent.parent; // DocumentReference of /games/{gameId}
+          const gameId  = gameDoc ? gameDoc.id : "";
+          const d = s.data() || {};
+          // try fields, otherwise derive from gameId
+          const date = normalizeDate(d.date || d.day || d.gameDate, gameId);
+          // If a leaderboard row exists for the user, we can assume a "win" (played & solved), unless field says otherwise
+          const win = (typeof d.win === 'boolean') ? d.win : true;
+          const guesses = Number(d.guesses ?? d.tries ?? d.attempts ?? 0);
+          if (date && win !== null) out.push({ date, win, guesses });
+        });
+      } catch(e){ console.warn("Collection-group fallback failed (index needed?):", e); }
+
+      const map = new Map(); out.forEach(p => map.set(p.date, p));
       return [...map.values()].sort((a,b)=> a.date.localeCompare(b.date));
     }
 
-    // --- Auth gate + load ---
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        // remember desired redirect and go to login
         try { localStorage.setItem("redirectAfterLogin", "/profile.html"); } catch {}
         location.href = "/login.html";
         return;
@@ -397,7 +380,6 @@
       nameInput.value = profile.name || user.displayName || '';
       emailInput.value = user.email || profile.email || '';
 
-      // supporter status
       const now = new Date();
       const supporterActive = !!profile.supporterActive ||
                               (profile.supporterUntil && new Date(profile.supporterUntil) > now);
@@ -405,19 +387,16 @@
         ? 'Dankie dat jy ’n ondersteuner is!'
         : 'Word ’n betalende ondersteuner';
 
-      // Load plays using robust loader
       const plays = await loadDilemmaPlays(user.uid);
 
-      // Compute + render; include manual bonus if present
       computeAndRender(plays, supporterActive, profile.manualBonus || 0, profile.manualBonusNote || '');
 
-      // Save profile (name only; email is from Auth)
-      $('profileForm').addEventListener('submit', async (e)=>{
+      document.getElementById('profileForm').addEventListener('submit', async (e)=>{
         e.preventDefault();
         try{
           await setDoc(uref, {
             name: nameInput.value.trim().slice(0,40),
-            email: user.email, // source of truth
+            email: user.email,
             updatedAt: serverTimestamp()
           }, { merge: true });
           formMsg.textContent = "Profiel gestoor.";
@@ -430,8 +409,7 @@
         }
       });
 
-      // Password reset (uses current user email)
-      $('resetPwBtn').addEventListener('click', async ()=>{
+      document.getElementById('resetPwBtn').addEventListener('click', async ()=>{
         try{
           await sendPasswordResetEmail(auth, user.email);
           formMsg.textContent = "Skakel vir wagwoordherstel is gestuur na jou e-pos.";
@@ -444,8 +422,7 @@
         }
       });
 
-      // Delete (soft request—actual deletion should be server-side)
-      $('deleteBtn').addEventListener('click', async ()=>{
+      document.getElementById('deleteBtn').addEventListener('click', async ()=>{
         if (!confirm("Is jy seker? Jou rekening sal gedeaktiveer word.")) return;
         try{
           await updateDoc(uref, { deleteRequestedAt: serverTimestamp() });
@@ -462,7 +439,6 @@
 
     function showError(msg){ errBanner.textContent = msg; errBanner.classList.remove('hidden'); }
 
-    // ---- Scoring (unchanged, shows manual bonus row) ----
     function computeAndRender(plays, supporterActive, manualBonus=0, manualNote=''){
       const dates = [...new Set(plays.map(p=>p.date))].sort();
       const byDate = new Map();
