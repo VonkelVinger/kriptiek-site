@@ -234,18 +234,6 @@
         <div id="distWrap" class="space-y-2"></div>
       </section>
     </div>
-
-    <!-- Future games -->
-    <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 mt-6">
-      <section class="card p-5 md:p-6">
-        <h2 class="text-lg font-bold text-slate-900">Blitstiek-telling</h2>
-        <div class="mt-3 border-2 border-dashed rounded-xl text-slate-400 font-bold flex items-center justify-center h-28">BINNEKORT</div>
-      </section>
-      <section class="card p-5 md:p-6">
-        <h2 class="text-lg font-bold text-slate-900">Slimstiek-telling</h2>
-        <div class="mt-3 border-2 border-dashed rounded-xl text-slate-400 font-bold flex items-center justify-center h-28">BINNEKORT</div>
-      </section>
-    </div>
   </main>
 
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
@@ -290,30 +278,29 @@
     });
   </script>
 
-  <!-- Load real Firebase config (do not inline secrets) -->
-  <script src="/assets/firebase-config.js"></script>
-
-  <!-- LIVE: Firebase Auth + Firestore integration -->
+  <!-- LIVE: Firebase Auth + Firestore integration (v11.9.1 to match index.html) -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import {
       getAuth, onAuthStateChanged, updateEmail, updateProfile,
       sendPasswordResetEmail, deleteUser
-    } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
     import {
       getFirestore, doc, getDoc, setDoc, updateDoc,
       collection, query, orderBy, limit, getDocs, serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
-    // Use config injected by /assets/firebase-config.js
-    const firebaseConfig = window.FIREBASE_CONFIG;
-    if (!firebaseConfig) {
-      console.error("Missing FIREBASE_CONFIG");
-      alert("Kon nie Firebase laai nie (konfigurasie ontbreek).");
-      throw new Error("Missing FIREBASE_CONFIG");
-    }
+    // Same config as index.html
+    const firebaseConfig = {
+      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+      authDomain: "kriptiek-c9ea2.firebaseapp.com",
+      projectId: "kriptiek-c9ea2",
+      storageBucket: "kriptiek-c9ea2.appspot.com",
+      messagingSenderId: "620450620939",
+      appId: "1:620450620939:web:e93a18ac23b53b33db890e"
+    };
 
-    // ---- constants (match your test formulas) ----
+    // ---- constants (match your scoring) ----
     const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
     const STREAK_THRESHOLD = 5;
     const STREAK_MULTIPLIER = 1.10;
@@ -440,7 +427,7 @@
       $("deleteBtn").addEventListener("click", async () => {
         if (!confirm("Is jy seker? Jou rekening sal verwyder word.")) return;
         try {
-          await deleteUser(user);
+          await deleteUser(user); // may require recent login
           deleteMsg.textContent = "Rekening verwyder.";
           deleteMsg.className = "text-sm mt-2 text-green-600";
           deleteMsg.classList.remove("hidden");
