@@ -230,10 +230,10 @@
     </div>
   </div>
 </div>
-<!-- MAIN GAME MODULE -->
+
 <script type="module">
-import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-import { getFirestore, doc, getDoc, collection, setDoc, getDocs, serverTimestamp, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+import { getFirestore, doc, getDoc, collection, setDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
 /* ---- Firebase config ---- */
@@ -246,7 +246,7 @@ const firebaseConfig = {
   appId: "1:620450620939:web:e93a18ac23b53b33db890e"
 };
 
-const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 const auth = getAuth(app);
 
@@ -255,6 +255,8 @@ const gameGrid = document.getElementById("game-grid");
 const keyboard = document.getElementById("keyboard");
 const modal = document.getElementById("resultModal");
 const resultMsg = document.getElementById("resultMessage");
+const shareBtn = document.getElementById("modalShareBtn");
+const closeBtn = document.getElementById("closeModalBtn");
 const leaderboardList = document.getElementById("leaderboardList");
 const playerNameEl = document.getElementById("playerName");
 const statusLine = document.getElementById("statusLine");
@@ -294,12 +296,17 @@ const progressKey = `dilemma-${gameId}-progress`;
 /* URLs for sharing */
 const SHARE_URL = "https://www.kriptiek.com/dilemmagame.html"; // canonical page
 const SHARE_TEXT_URL = (() => {
+  // per-game link in the message text, with tiny cache-buster for WhatsApp chats
   const u = new URL(SHARE_URL);
   u.searchParams.set('gameId', gameId);
   u.searchParams.set('wa', 'v6');
   return u.toString();
 })();
 
+function altIdIfOldFormat(id) {
+  const m = id.match(/^Game(\d{4}-\d{2}-\d{2})$/);
+  return m ? m[1] : null;
+}
 playerNameEl.textContent = displayName;
 
 /* ---- If not signed in ---- */
@@ -513,59 +520,6 @@ function restoreLocalProgress() {
   } catch {}
 }
 
-/* ---- Dilemma total (for snapshotting to leaderboard) ---- */
-const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
-const STREAK_THRESHOLD = 5;
-const STREAK_MULTIPLIER = 1.10;
-const SUPPORTER_MULTIPLIER = 1.10;
-
-async function computeDilemmaTotal(uid){
-  const usnap = await getDoc(doc(db, "users", uid));
-  let supporterActive = false;
-  if (usnap.exists()) {
-    const d = usnap.data();
-    if (d?.supporterActive === true) supporterActive = true;
-    if (d?.supporterUntil?.toMillis && d.supporterUntil.toMillis() > Date.now()) supporterActive = true;
-  }
-
-  const qy = query(collection(db, "userGames", uid, "plays"), orderBy("finishedAt","desc"), limit(200));
-  const snap = await getDocs(qy);
-
-  const byDate = new Map();
-  snap.forEach(ds=>{
-    const d = ds.data();
-    const date = ds.id.replace(/^Game/,"");
-    byDate.set(date, { win: d?.result === "win" || d?.finished === true, guesses: Number(d?.guesses || 0) });
-  });
-
-  const dates = Array.from(byDate.keys()).sort();
-  let cur=0, prev=null;
-  for(const d of dates){
-    const consec = prev && (new Date(d) - new Date(prev) === 24*60*60*1000);
-    if (!consec) cur = 0;
-    const p = byDate.get(d);
-    if (p?.win) cur++; else cur = 0;
-    prev = d;
-  }
-
-  const dist = {1:0,2:0,3:0,4:0,5:0,6:0,fail:0};
-  for (const p of byDate.values()){
-    if (p.win){ const g = Math.min(Math.max(1, p.guesses || 6), 6); dist[g]++; }
-    else { dist.fail++; }
-  }
-
-  const subtotal =
-    dist[1]*BASE_POINTS[1] + dist[2]*BASE_POINTS[2] + dist[3]*BASE_POINTS[3] +
-    dist[4]*BASE_POINTS[4] + dist[5]*BASE_POINTS[5] + dist[6]*BASE_POINTS[6] +
-    dist.fail*BASE_POINTS.fail;
-
-  const streakMult = cur >= STREAK_THRESHOLD ? STREAK_MULTIPLIER : 1;
-  const supporterMult = supporterActive ? SUPPORTER_MULTIPLIER : 1;
-  const streakBonus = Math.round(subtotal * (streakMult - 1));
-  const supporterBonus = Math.round((subtotal + streakBonus) * (supporterMult - 1));
-  return subtotal + streakBonus + supporterBonus;
-}
-
 /* ---- Leaderboard: submit, ensure, load ---- */
 async function submitScore(guessCount, didWin) {
   if (!currentUid) return;
@@ -612,13 +566,6 @@ async function submitScore(guessCount, didWin) {
     console.warn("User stats update failed (non-fatal):", e);
   }
 
-  let totalScore = 0;
-  try {
-    totalScore = await computeDilemmaTotal(currentUid);
-  } catch (e) {
-    console.warn("Could not compute dilemma total:", e);
-  }
-
   try {
     await setDoc(
       doc(db, "games", gameId, "leaderboard", currentUid),
@@ -627,22 +574,13 @@ async function submitScore(guessCount, didWin) {
         guesses: Math.trunc(Number(guessCount)),
         ...(successRate == null ? {} : { successRate }),
         date: serverTimestamp(),
-        createdAtMs: Date.now(),
-        dilemmaScoreAtPlay: Number(totalScore) || 0
+        createdAtMs: Date.now()
       },
       { merge: true }
     );
   } catch (e) {
     console.error("Kon nie leierbord-ry stoor nie:", e);
   }
-
-  try {
-    await setDoc(
-      doc(db, "users", currentUid),
-      { dilemmaScore: Number(totalScore) || 0, kScore: Number(totalScore) || 0, scoreUpdatedAt: serverTimestamp() },
-      { merge: true }
-    );
-  } catch {}
 }
 
 async function ensureLeaderboardRow(summary) {
@@ -666,41 +604,26 @@ async function ensureLeaderboardRow(summary) {
       }
     } catch {}
 
-    let totalScore = 0;
-    try { totalScore = await computeDilemmaTotal(currentUid); } catch {}
-
     const payload = {
       userName: displayName,
       guesses: Math.trunc(Number(guessCount)),
       date: serverTimestamp(),
       createdAtMs: Date.now(),
-      ...(sr == null ? {} : { successRate: sr }),
-      dilemmaScoreAtPlay: Number(totalScore) || 0
+      ...(sr == null ? {} : { successRate: sr })
     };
 
     await setDoc(rowRef, payload, { merge: true });
-
-    try {
-      await setDoc(
-        doc(db, "users", currentUid),
-        { dilemmaScore: Number(totalScore) || 0, kScore: Number(totalScore) || 0, scoreUpdatedAt: serverTimestamp() },
-        { merge: true }
-      );
-    } catch {}
-
     await loadLeaderboard();
   } catch (e) {
     console.warn("ensureLeaderboardRow failed:", e);
   }
 }
 
-/* ---- FIXED loadLeaderboard(): pill for everyone + pill right-aligned ---- */
 async function loadLeaderboard() {
   try {
     const snap = await getDocs(collection(db, "games", gameId, "leaderboard"));
     const entries = [];
     const needSR = [];
-    const needScore = [];
 
     snap.forEach(d => {
       const v = d.data() || {};
@@ -709,79 +632,31 @@ async function loadLeaderboard() {
 
       const name = (typeof v.userName === "string" && v.userName.trim()) ? v.userName.trim() : "Onbekend";
       const ts = v.date?.seconds ? v.date.seconds * 1000 : (typeof v.createdAtMs === "number" ? v.createdAtMs : 0);
+      const srVal = Number.isFinite(Number(v.successRate)) ? Math.trunc(Number(v.successRate)) : null;
 
-      const srVal    = Number.isFinite(Number(v.successRate)) ? Math.trunc(Number(v.successRate)) : null;
-      const scoreVal = Number.isFinite(Number(v.dilemmaScoreAtPlay)) ? Number(v.dilemmaScoreAtPlay) : null;
-
-      entries.push({ uid: d.id, name, guesses: guessesNum, when: ts, sr: srVal, score: scoreVal });
+      const entry = { uid: d.id, name, guesses: guessesNum, when: ts, sr: srVal };
+      entries.push(entry);
       if (srVal == null) needSR.push(d.id);
-      if (scoreVal == null) needScore.push(d.id);
     });
 
-    /* Fill missing successRate from users/{uid} */
     if (needSR.length) {
-      const results = await Promise.allSettled(needSR.map(uid => getDoc(doc(db, "users", uid))));
-      results.forEach((res, i) => {
-        if (res.status !== "fulfilled") return;
-        const s = res.value;
-        if (!s.exists()) return;
-        const u = s.data() || {};
-        const gp = Number(u.gamesPlayed || 0);
-        const w  = Number(u.wins || 0);
-        const sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
-        const ent = entries.find(e => e.uid === needSR[i]);
-        if (ent) ent.sr = sr;
-      });
-    }
-
-    /* Fill/back-fill missing dilemmaScoreAtPlay */
-    if (needScore.length) {
-      const userDocs = await Promise.allSettled(needScore.map(uid => getDoc(doc(db, "users", uid))));
-      const toCompute = [];
-      userDocs.forEach((res, i) => {
-        const uid = needScore[i];
-        const ent = entries.find(e => e.uid === uid);
-        if (!ent) return;
-        if (res.status === "fulfilled" && res.value.exists()) {
-          const u = res.value.data() || {};
-          const k = Number(u.dilemmaScore);
-          if (Number.isFinite(k)) {
-            ent.score = k;
-          } else {
-            toCompute.push(uid);
-          }
-        } else {
-          toCompute.push(uid);
-        }
-      });
-
-      if (toCompute.length) {
-        const computed = await Promise.allSettled(toCompute.map(uid => computeDilemmaTotal(uid)));
-        computed.forEach((res, i) => {
-          const uid = toCompute[i];
-          const ent = entries.find(e => e.uid === uid);
-          if (!ent) return;
-          if (res.status === "fulfilled" && Number.isFinite(res.value)) {
-            ent.score = Number(res.value);
-          }
+      try {
+        const results = await Promise.allSettled(
+          needSR.map(uid => getDoc(doc(db, "users", uid)))
+        );
+        results.forEach((res, i) => {
+          if (res.status !== "fulfilled") return;
+          const snap = res.value;
+          if (!snap.exists()) return;
+          const u = snap.data() || {};
+          const gp = Number(u.gamesPlayed || 0);
+          const w  = Number(u.wins || 0);
+          const sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
+          const ent = entries.find(e => e.uid === needSR[i]);
+          if (ent) ent.sr = sr;
         });
-      }
-
-      /* Snapshot back to leaderboard for next time */
-      await Promise.allSettled(
-        entries
-          .filter(e => Number.isFinite(e.score))
-          .map(e =>
-            setDoc(
-              doc(db, "games", gameId, "leaderboard", e.uid),
-              { dilemmaScoreAtPlay: Number(e.score) },
-              { merge: true }
-            )
-          )
-      );
+      } catch {}
     }
-
-    const fmt = (n)=> typeof n === 'number' ? n.toLocaleString('af-ZA') : n;
 
     leaderboardList.innerHTML = "";
     if (!entries.length) {
@@ -790,25 +665,12 @@ async function loadLeaderboard() {
     }
 
     entries.sort((a, b) => (a.guesses - b.guesses) || (a.when - b.when));
-
     entries.forEach((e, idx) => {
       const li = document.createElement("li");
-      li.className = "flex items-center justify-between gap-2 py-0.5";
-      if (idx === 0) li.classList.add("font-bold","bg-green-100");
-
-      const left = document.createElement("span");
+      if (idx === 0) li.className = "font-bold bg-green-100";
       const guessLabel = e.guesses === 1 ? 'raai' : 'raaie';
       const rateText = Number.isFinite(e.sr) ? ` (${e.sr}%)` : '';
-      left.innerHTML = `<strong>${e.name}${rateText}</strong>: ${fmt(e.guesses)} ${guessLabel}`;
-
-      const right = document.createElement("span");
-      if (Number.isFinite(e.score)) {
-        right.className = "inline-flex items-center px-2 py-0.5 rounded-full text-white text-[12px] font-bold bg-gradient-to-b from-orange-500 to-orange-700";
-        right.textContent = fmt(e.score);
-      }
-
-      li.appendChild(left);
-      if (right.textContent) li.appendChild(right);
+      li.innerHTML = `<strong>${e.name}${rateText}</strong>: ${e.guesses} ${guessLabel}`;
       leaderboardList.appendChild(li);
     });
   } catch (err) {
@@ -817,11 +679,11 @@ async function loadLeaderboard() {
   }
 }
 
-/* ---- Share: bottom + modal ---- */
+/* ---- Share: bottom + modal, each with its own dropdown ---- */
 let lastSummary = null;
 
 function shareTextFromSummary(summary) {
-  const link = SHARE_TEXT_URL;
+  const link = SHARE_TEXT_URL; // per-game link with cache-buster
   if (!summary) return `Kom speel vandag se DILEMMA op Kriptiek: ${link}`;
   if (summary.didWin) {
     const woord = summary.guesses === 1 ? 'raaiskoot' : 'raaiskote';
@@ -909,7 +771,6 @@ async function gameFailed() {
 }
 
 /* ---- Modal + keyboard ---- */
-const closeBtn = document.getElementById("closeModalBtn");
 closeBtn.onclick = () => { modal.style.display = "none"; };
 document.addEventListener("keydown", e => {
   if (e.key === "Enter") handleEnter();
@@ -967,10 +828,8 @@ onAuthStateChanged(auth, async (user) => {
   if (barR) barR.classList.remove('hidden');
 
   const shareBtnModal = document.getElementById("modalShareBtn");
-  const mMenu = document.getElementById("shareMenuModal");
   wireShareDropdown(shareBtnModal, mMenu);
   bindMenuActions(mMenu, { waBtn: mWA, copyBtn: mCopy, sysBtn: mSys });
-
   wireShareDropdown(tileShareBtn, pMenu);
   bindMenuActions(pMenu, { waBtn: pWA, copyBtn: pCopy, sysBtn: pSys });
 
@@ -1007,12 +866,22 @@ onAuthStateChanged(auth, async (user) => {
     disableGame();
   }
 
-  await loadLeaderboard();<!-- DILEMMA SCORE PILL (inline on the game page) -->
+  await loadLeaderboard();
+});
+</script>
+
+<!-- DILEMMA SCORE PILL (inline on the game page) -->
 <script type="module">
   import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, collection, query, orderBy, limit, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+  import {
+    getAuth, onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, updateDoc,
+    collection, query, orderBy, limit, getDocs, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
+  // --- same config/version as index.html ---
   const firebaseConfig = {
     apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
     authDomain: "kriptiek-c9ea2.firebaseapp.com",
@@ -1026,16 +895,20 @@ onAuthStateChanged(auth, async (user) => {
   const auth = getAuth(app);
   const db = getFirestore(app);
 
+  // --- scoring constants (match profile.html) ---
   const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
   const STREAK_THRESHOLD = 5;
   const STREAK_MULTIPLIER = 1.10;
-  const SUPPORTER_MULTIPLIER = 1.10;
+  const SUPPORTER_MULTIPLIER = 1.10; // applied if supporterActive/supporterUntil
 
+  // Insert pill into the page (tries to sit in your header meta)
   function mountPill() {
     const pill = document.createElement("span");
     pill.id = "pillDilemmaInline";
-    pill.className = "inline-flex items-center gap-2 px-3.5 py-2 rounded-full font-extrabold text-white bg-gradient-to-b from-orange-500 to-orange-700 shadow";
+    pill.className = "inline-flex items-center gap-2 px-3.5 py-2 rounded-full font-extrabold text-white " +
+                     "bg-gradient-to-b from-orange-500 to-orange-700 shadow";
     pill.textContent = "JOU DILEMMA-TELLING: —";
+    // Try a few common anchors; fall back under header
     const anchors = [
       document.getElementById("game-meta"),
       document.querySelector("#hudRight"),
@@ -1056,7 +929,9 @@ onAuthStateChanged(auth, async (user) => {
 
   function fmt(n){ return typeof n === "number" ? n.toLocaleString("af-ZA") : n; }
 
+  // Compute Dilemma score exactly like profile.html (using last ~200 plays)
   async function computeDilemmaTotal(uid) {
+    // supporter flag from users/{uid}
     const uref = doc(db, "users", uid);
     const usnap = await getDoc(uref);
     let supporterActive = false;
@@ -1066,26 +941,35 @@ onAuthStateChanged(auth, async (user) => {
       if (d?.supporterUntil?.toMillis && d.supporterUntil.toMillis() > Date.now()) supporterActive = true;
     }
 
-    const qy = query(collection(db, "userGames", uid, "plays"), orderBy("finishedAt", "desc"), limit(200));
+    const playsRef = collection(db, "userGames", uid, "plays");
+    const qy = query(playsRef, orderBy("finishedAt", "desc"), limit(200));
     const snap = await getDocs(qy);
 
+    // de-dupe by date (last entry wins)
     const byDate = new Map();
     snap.forEach(ds => {
       const d = ds.data();
-      const date = ds.id.replace(/^Game/, "");
-      byDate.set(date, { win: d?.result === "win" || d?.finished === true, guesses: Number(d?.guesses || 0) });
+      const gameId = ds.id;            // e.g. "GameYYYY-MM-DD"
+      const date = gameId.replace(/^Game/, "");
+      byDate.set(date, {
+        date,
+        win: d?.result === "win" || d?.finished === true,
+        guesses: Number(d?.guesses || 0)
+      });
     });
 
     const dates = Array.from(byDate.keys()).sort();
-    let cur=0, prev=null;
+    // streak calc (calendar-consecutive wins)
+    let cur=0, best=0, prev=null;
     for (const d of dates) {
       const consec = prev && (new Date(d) - new Date(prev) === 24*60*60*1000);
       if (!consec) cur=0;
       const p = byDate.get(d);
-      if (p?.win) cur++; else cur=0;
+      if (p?.win) { cur++; best=Math.max(best,cur); } else { cur=0; }
       prev=d;
     }
 
+    // distribution
     const dist = {1:0,2:0,3:0,4:0,5:0,6:0,fail:0};
     for (const p of byDate.values()) {
       if (p.win) {
@@ -1105,7 +989,9 @@ onAuthStateChanged(auth, async (user) => {
     const supporterMult = supporterActive ? SUPPORTER_MULTIPLIER : 1;
     const streakBonus = Math.round(subtotal * (streakMult - 1));
     const supporterBonus = Math.round((subtotal + streakBonus) * (supporterMult - 1));
-    return subtotal + streakBonus + supporterBonus;
+    const total = subtotal + streakBonus + supporterBonus;
+
+    return { total, supporterActive };
   }
 
   async function persistIfChanged(uid, value) {
@@ -1115,7 +1001,7 @@ onAuthStateChanged(auth, async (user) => {
     if (prev !== value) {
       await setDoc(uref, {
         dilemmaScore: value,
-        kScore: value,
+        kScore: value,              // for now: Kriptiek-telling == Dilemma only
         scoreUpdatedAt: serverTimestamp()
       }, { merge: true });
     }
@@ -1125,13 +1011,16 @@ onAuthStateChanged(auth, async (user) => {
 
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
+      // If not signed in, show a neutral hint instead of a number
       pillEl.textContent = "Meld aan om jou Dilemma-telling te sien";
       pillEl.classList.add("opacity-80");
       return;
     }
     try {
-      const total = await computeDilemmaTotal(user.uid);
+      const { total } = await computeDilemmaTotal(user.uid);
       pillEl.textContent = `JOU DILEMMA-TELLING: ${fmt(total)}`;
+
+      // Optional: persist for leaderboard consumption
       await persistIfChanged(user.uid, total);
     } catch (e) {
       console.error(e);
@@ -1141,9 +1030,15 @@ onAuthStateChanged(auth, async (user) => {
   });
 </script>
 
-<!-- BuyMeACoffee CTA above leaderboard -->
+
+
+
+  
+</body>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  // Find the "Vandag se bestes:" heading or the leaderboard wrapper
   const target =
     Array.from(document.querySelectorAll('h1,h2,h3,h4,section,div'))
       .find(el => /Vandag se bestes/i.test(el.textContent.trim()))
@@ -1152,6 +1047,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (!target || !target.parentElement) return;
 
+  // Build CTA (full width of the same container)
   const wrap = document.createElement('div');
   wrap.className = 'my-4';
   wrap.innerHTML = `
@@ -1170,7 +1066,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+  
 </html>
-
-});
-</script>
