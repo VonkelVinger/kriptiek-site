@@ -76,7 +76,7 @@
   }
   .share-menu-local button:hover{ background:#f3f4f6; }
 
-  /* ---- Action bars (match Blitstiek look) ---- */
+  /* ---- Action bars ---- */
   .action-grid{
     display:grid;
     grid-template-columns:repeat(3,1fr);
@@ -690,7 +690,7 @@ async function ensureLeaderboardRow(summary) {
   }
 }
 
-/* ---- FIXED loadLeaderboard(): pill for everyone + pill right-aligned ---- */
+/* ---- loadLeaderboard(): pill for everyone + right-aligned ---- */
 async function loadLeaderboard() {
   try {
     const snap = await getDocs(collection(db, "games", gameId, "leaderboard"));
@@ -730,7 +730,7 @@ async function loadLeaderboard() {
       });
     }
 
-    /* Fill/back-fill missing dilemmaScoreAtPlay */
+    /* Fill/back-fill missing dilemmaScoreAtPlay gradually */
     if (needScore.length) {
       const userDocs = await Promise.allSettled(needScore.map(uid => getDoc(doc(db, "users", uid))));
       const toCompute = [];
@@ -1064,7 +1064,8 @@ onAuthStateChanged(auth, async (user) => {
       if (d?.supporterUntil?.toMillis && d.supporterUntil.toMillis() > Date.now()) supporterActive = true;
     }
 
-    const qy = query(collection(db, "userGames", uid, "plays"), orderBy("finishedAt", "desc"), limit(200));
+    const playsRef = collection(db, "userGames", uid, "plays");
+    const qy = query(playsRef, orderBy("finishedAt", "desc"), limit(200));
     const snap = await getDocs(qy);
 
     const byDate = new Map();
@@ -1130,7 +1131,7 @@ onAuthStateChanged(auth, async (user) => {
     try {
       const total = await computeDilemmaTotal(user.uid);
       pillEl.textContent = `JOU DILEMMA-TELLING: ${fmt(total)}`;
-      await persistIfChanged(user.uid, total);
+      await persistIfChanged(user.uid, total);   /* ✅ permanent fix */
     } catch (e) {
       console.error(e);
       pillEl.textContent = "Dilemma-telling: —";
