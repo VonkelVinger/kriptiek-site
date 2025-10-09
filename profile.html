@@ -13,7 +13,7 @@
 
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>My Profiel – Kriptiek (TOETS)</title>
+<title>My Profiel – Kriptiek</title>
 
 <!-- Favicons -->
 <link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
@@ -232,11 +232,6 @@
 
         <h3 class="text-sm font-bold text-slate-700 mb-2">Suksesverdeling</h3>
         <div id="distWrap" class="space-y-2"></div>
-
-        <div class="mt-5 flex items-center gap-2">
-          <button id="btnRefresh" class="kbtn" type="button">Herlaai (toetsdata)</button>
-          <span id="hint" class="text-xs text-slate-500">Hierdie blad is ’n TOETS-weergawe (geen Firestore).</span>
-        </div>
       </section>
     </div>
 
@@ -294,317 +289,298 @@
       });
     });
   </script>
-<!-- LIVE: Firebase Auth + Firestore integration -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-  import {
-    getAuth, onAuthStateChanged, updateEmail, updateProfile,
-    sendPasswordResetEmail, deleteUser
-  } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
-  import {
-    getFirestore, doc, getDoc, setDoc, updateDoc,
-    collection, query, orderBy, limit, getDocs, serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
-  // TODO: replace with your production config
-  const firebaseConfig = {
-    apiKey: "YOUR_KEY",
-    authDomain: "YOUR_APP.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_APP.appspot.com",
-    messagingSenderId: "SENDER_ID",
-    appId: "APP_ID",
-  };
+  <!-- Load real Firebase config (do not inline secrets) -->
+  <script src="/assets/firebase-config.js"></script>
 
-  // ---- constants (match your test formulas) ----
-  const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
-  const STREAK_THRESHOLD = 5;
-  const STREAK_MULTIPLIER = 1.10;
-  const SUPPORTER_MULTIPLIER = 1.10;
+  <!-- LIVE: Firebase Auth + Firestore integration -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import {
+      getAuth, onAuthStateChanged, updateEmail, updateProfile,
+      sendPasswordResetEmail, deleteUser
+    } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc, setDoc, updateDoc,
+      collection, query, orderBy, limit, getDocs, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
-  // ---- helpers / DOM ----
-  const $ = (id) => document.getElementById(id);
-  const fmt = (n) => (typeof n === "number" ? n.toLocaleString("af-ZA") : n);
-
-  const wbName = $("wbName");
-  const supporterBannerTxt = $("supporterBannerTxt");
-  const errBanner = $("errBanner");
-  const formMsg = $("formMsg");
-  const deleteMsg = $("deleteMsg");
-
-  const totalPointsEl = $("totalPoints"), subtotalCell = $("subtotalCell"), totalCell = $("totalCell");
-  const breakdownBody = $("breakdownBody"), distWrap = $("distWrap");
-  const playedStat = $("playedStat"), winrateStat = $("winrateStat");
-  const curStreakEl = $("curStreak"), bestStreakEl = $("bestStreak");
-  const streakChip = $("streakChip"), multiplierLabel = $("multiplierLabel"), calcTime = $("calcTime");
-  const lopieMeta = $("lopieMeta"), supporterMeta = $("supporterMeta");
-  const pillOverall = $("pillOverall"), pillDilemmaLive = $("pillDilemmaLive");
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-
-  // -------- gate: must be signed in --------
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      const ret = encodeURIComponent("/profile.html");
-      window.location.href = `/login.html?return=${ret}`;
-      return;
-    }
-    try {
-      await hydrateProfile(user);
-      await loadAndRenderDilemma(user.uid);
-      wireFormHandlers(user);
-    } catch (e) {
-      console.error(e);
-      showError("Kon nie data laai nie. Probeer asb. weer.");
-    }
-  });
-
-  function showError(msg) {
-    errBanner.textContent = msg;
-    errBanner.classList.remove("hidden");
-  }
-
-  // -------- profile load/write --------
-  async function hydrateProfile(user) {
-    // users/{uid}
-    const uref = doc(db, "users", user.uid);
-    const snap = await getDoc(uref);
-
-    let userName = user.displayName || "Gebruiker";
-    let supporterActive = false;
-
-    if (snap.exists()) {
-      const d = snap.data();
-      if (d?.userName) userName = d.userName;
-      // Supporter: either boolean or future "supporterUntil"
-      if (d?.supporterActive === true) supporterActive = true;
-      if (d?.supporterUntil?.toMillis && d.supporterUntil.toMillis() > Date.now()) supporterActive = true;
-    } else {
-      // first-time: create skeleton doc (match baseline fields)
-      await setDoc(uref, {
-        userName: userName,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      }, { merge: true });
+    // Use config injected by /assets/firebase-config.js
+    const firebaseConfig = window.FIREBASE_CONFIG;
+    if (!firebaseConfig) {
+      console.error("Missing FIREBASE_CONFIG");
+      alert("Kon nie Firebase laai nie (konfigurasie ontbreek).");
+      throw new Error("Missing FIREBASE_CONFIG");
     }
 
-    // Welcome, banner, inputs
-    wbName.textContent = (userName || "GEBRUIKER").toUpperCase();
-    supporterBannerTxt.textContent = supporterActive ? "Betalende ondersteuner" : "Nie-betalende ondersteuner";
+    // ---- constants (match your test formulas) ----
+    const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
+    const STREAK_THRESHOLD = 5;
+    const STREAK_MULTIPLIER = 1.10;
+    const SUPPORTER_MULTIPLIER = 1.10;
 
-    $("nameInput").value = userName || "";
-    $("emailInput").value = user.email || "";
-  }
+    // ---- helpers / DOM ----
+    const $ = (id) => document.getElementById(id);
+    const fmt = (n) => (typeof n === "number" ? n.toLocaleString("af-ZA") : n);
 
-  function wireFormHandlers(user) {
-    $("profileForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const name = $("nameInput").value.trim().slice(0, 40);
-      const email = $("emailInput").value.trim();
+    const wbName = $("wbName");
+    const supporterBannerTxt = $("supporterBannerTxt");
+    const errBanner = $("errBanner");
+    const formMsg = $("formMsg");
+    const deleteMsg = $("deleteMsg");
 
+    const totalPointsEl = $("totalPoints"), subtotalCell = $("subtotalCell"), totalCell = $("totalCell");
+    const breakdownBody = $("breakdownBody"), distWrap = $("distWrap");
+    const playedStat = $("playedStat"), winrateStat = $("winrateStat");
+    const curStreakEl = $("curStreak"), bestStreakEl = $("bestStreak");
+    const streakChip = $("streakChip"), multiplierLabel = $("multiplierLabel"), calcTime = $("calcTime");
+    const lopieMeta = $("lopieMeta"), supporterMeta = $("supporterMeta");
+    const pillOverall = $("pillOverall"), pillDilemmaLive = $("pillDilemmaLive");
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // -------- gate: must be signed in --------
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        const ret = encodeURIComponent("/profile.html");
+        window.location.href = `/login.html?return=${ret}`;
+        return;
+      }
       try {
-        // Update display name (Auth + users/{uid})
-        if (name && name !== (user.displayName || "")) {
-          await updateProfile(user, { displayName: name });
-          await updateDoc(doc(db, "users", user.uid), {
-            userName: name,
-            updatedAt: serverTimestamp(),
-          });
-        }
-
-        // Update email (may require recent login)
-        if (email && email !== (user.email || "")) {
-          await updateEmail(user, email);
-        }
-
-        formMsg.textContent = "Profiel gestoor.";
-        formMsg.className = "text-sm mt-2 text-green-600";
-        formMsg.classList.remove("hidden");
-      } catch (err) {
-        console.error(err);
-        let m = "Kon nie jou profiel opdateer nie.";
-        if (String(err.code || "").includes("requires-recent-login")) {
-          m = "Vir sekuriteit: Meld asseblief weer aan om jou e-pos te kan verander.";
-        }
-        formMsg.textContent = m;
-        formMsg.className = "text-sm mt-2 text-red-600";
-        formMsg.classList.remove("hidden");
+        await hydrateProfile(user);
+        await loadAndRenderDilemma(user.uid);
+        wireFormHandlers(user);
+      } catch (e) {
+        console.error(e);
+        showError("Kon nie data laai nie. Probeer asb. weer.");
       }
     });
 
-    $("resetPwBtn").addEventListener("click", async () => {
-      try {
-        await sendPasswordResetEmail(auth, user.email);
-        formMsg.textContent = "’n Wagwoordherstel-skakel is per e-pos gestuur.";
-        formMsg.className = "text-sm mt-2 text-green-600";
-        formMsg.classList.remove("hidden");
-      } catch (err) {
-        console.error(err);
-        formMsg.textContent = "Kon nie wagwoordherstel stuur nie.";
-        formMsg.className = "text-sm mt-2 text-red-600";
-        formMsg.classList.remove("hidden");
-      }
-    });
-
-    $("deleteBtn").addEventListener("click", async () => {
-      if (!confirm("Is jy seker? Jou rekening sal verwyder word.")) return;
-      try {
-        await deleteUser(user); // may require recent login
-        deleteMsg.textContent = "Rekening verwyder.";
-        deleteMsg.className = "text-sm mt-2 text-green-600";
-        deleteMsg.classList.remove("hidden");
-        setTimeout(() => (window.location.href = "/"), 800);
-      } catch (err) {
-        console.error(err);
-        let m = "Kon nie jou rekening verwyder nie.";
-        if (String(err.code || "").includes("requires-recent-login")) {
-          m = "Vir sekuriteit: Meld asseblief weer aan en probeer dan weer.";
-        }
-        deleteMsg.textContent = m;
-        deleteMsg.className = "text-sm mt-2 text-red-600";
-        deleteMsg.classList.remove("hidden");
-      }
-    });
-  }
-
-  // -------- Dilemma data: compute and render --------
-  async function loadAndRenderDilemma(uid) {
-    // Prefer cheap aggregate in users/{uid}, else compute from plays
-    const uref = doc(db, "users", uid);
-    const uSnap = await getDoc(uref);
-
-    let supporterActive = false;
-    if (uSnap.exists()) {
-      const d = uSnap.data();
-      if (d?.supporterActive === true) supporterActive = true;
-      if (d?.supporterUntil?.toMillis && d.supporterUntil.toMillis() > Date.now()) supporterActive = true;
+    function showError(msg) {
+      errBanner.textContent = msg;
+      errBanner.classList.remove("hidden");
     }
 
-    // Pull last ~200 plays to compute (keeps it fast, enough for streaks & distribution)
-    const playsRef = collection(db, "userGames", uid, "plays");
-    const q = query(playsRef, orderBy("finishedAt", "desc"), limit(200));
-    const snap = await getDocs(q);
+    // -------- profile load/write --------
+    async function hydrateProfile(user) {
+      const uref = doc(db, "users", user.uid);
+      const snap = await getDoc(uref);
 
-    const plays = [];
-    snap.forEach((docSnap) => {
-      const d = docSnap.data();
-      // Expected fields per baseline: finished (bool), result ("win"/"fail"), guesses (int), finishedAt (ts)
-      const gameId = docSnap.id; // "GameYYYY-MM-DD"
-      const date = gameId.replace(/^Game/, ""); // "YYYY-MM-DD" fallback
-      plays.push({
-        date,
-        win: d?.result === "win" || d?.finished === true,
-        guesses: Number(d?.guesses || 0),
-      });
-    });
+      let userName = user.displayName || "Gebruiker";
+      let supporterActive = false;
 
-    computeAndRender(plays, supporterActive);
-  }
-
-  function computeAndRender(plays, supporterActive) {
-    // Deduplicate by date (last occurrence wins)
-    const byDate = new Map();
-    plays.slice().reverse().forEach((p) => byDate.set(p.date, p));
-
-    const dates = Array.from(byDate.keys()).sort();
-    // streaks (current & best), only counting consecutive calendar wins
-    let cur = 0, best = 0, prev = null;
-    for (const d of dates) {
-      const consec = prev && (new Date(d) - new Date(prev) === 24 * 60 * 60 * 1000);
-      if (!consec) cur = 0;
-      const p = byDate.get(d);
-      if (p?.win) { cur++; best = Math.max(best, cur); } else { cur = 0; }
-      prev = d;
-    }
-
-    // distribution
-    const dist = { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, fail:0 };
-    for (const p of byDate.values()) {
-      if (p.win) {
-        const g = Math.min(Math.max(1, p.guesses || 6), 6);
-        dist[g] += 1;
+      if (snap.exists()) {
+        const d = snap.data();
+        if (d?.userName) userName = d.userName;
+        if (d?.supporterActive === true) supporterActive = true;
+        if (d?.supporterUntil?.toMillis && d.supporterUntil.toMillis() > Date.now()) supporterActive = true;
       } else {
-        dist.fail += 1;
+        await setDoc(uref, {
+          userName: userName,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
       }
+
+      wbName.textContent = (userName || "GEBRUIKER").toUpperCase();
+      supporterBannerTxt.textContent = supporterActive ? "Betalende ondersteuner" : "Nie-betalende ondersteuner";
+
+      $("nameInput").value = userName || "";
+      $("emailInput").value = user.email || "";
     }
 
-    const subtotal =
-      dist[1]*BASE_POINTS[1] + dist[2]*BASE_POINTS[2] + dist[3]*BASE_POINTS[3] +
-      dist[4]*BASE_POINTS[4] + dist[5]*BASE_POINTS[5] + dist[6]*BASE_POINTS[6] +
-      dist.fail*BASE_POINTS.fail;
+    function wireFormHandlers(user) {
+      $("profileForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const name = $("nameInput").value.trim().slice(0, 40);
+        const email = $("emailInput").value.trim();
 
-    const streakMult = cur >= STREAK_THRESHOLD ? STREAK_MULTIPLIER : 1;
-    const supporterMult = supporterActive ? SUPPORTER_MULTIPLIER : 1;
-    const streakBonus = Math.round(subtotal * (streakMult - 1));
-    const supporterBonus = Math.round((subtotal + streakBonus) * (supporterMult - 1));
-    const total = subtotal + streakBonus + supporterBonus;
+        try {
+          if (name && name !== (user.displayName || "")) {
+            await updateProfile(user, { displayName: name });
+            await updateDoc(doc(db, "users", user.uid), {
+              userName: name,
+              updatedAt: serverTimestamp(),
+            });
+          }
+          if (email && email !== (user.email || "")) {
+            await updateEmail(user, email);
+          }
+          formMsg.textContent = "Profiel gestoor.";
+          formMsg.className = "text-sm mt-2 text-green-600";
+          formMsg.classList.remove("hidden");
+        } catch (err) {
+          console.error(err);
+          let m = "Kon nie jou profiel opdateer nie.";
+          if (String(err.code || "").includes("requires-recent-login")) {
+            m = "Vir sekuriteit: Meld asseblief weer aan om jou e-pos te kan verander.";
+          }
+          formMsg.textContent = m;
+          formMsg.className = "text-sm mt-2 text-red-600";
+          formMsg.classList.remove("hidden");
+        }
+      });
 
-    // Stats
-    const totalPlayed = dates.length;
-    const wins = totalPlayed - dist.fail;
-    const winrate = totalPlayed ? Math.round((wins / totalPlayed) * 100) : 0;
+      $("resetPwBtn").addEventListener("click", async () => {
+        try {
+          await sendPasswordResetEmail(auth, user.email);
+          formMsg.textContent = "’n Wagwoordherstel-skakel is per e-pos gestuur.";
+          formMsg.className = "text-sm mt-2 text-green-600";
+          formMsg.classList.remove("hidden");
+        } catch (err) {
+          console.error(err);
+          formMsg.textContent = "Kon nie wagwoordherstel stuur nie.";
+          formMsg.className = "text-sm mt-2 text-red-600";
+          formMsg.classList.remove("hidden");
+        }
+      });
 
-    // Render — top stats
-    playedStat.textContent = totalPlayed;
-    winrateStat.textContent = `${winrate}%`;
-    curStreakEl.textContent = cur;
-    bestStreakEl.textContent = best;
-
-    // Breakdown table
-    const rows = [
-      {label: `In 1 raaiskoot opgelos`, qty: dist[1], per: BASE_POINTS[1]},
-      {label: `In 2 raaiskote opgelos`,  qty: dist[2], per: BASE_POINTS[2]},
-      {label: `In 3 raaiskote opgelos`,  qty: dist[3], per: BASE_POINTS[3]},
-      {label: `In 4 raaiskote opgelos`,  qty: dist[4], per: BASE_POINTS[4]},
-      {label: `In 5 raaiskote opgelos`,  qty: dist[5], per: BASE_POINTS[5]},
-      {label: `In 6 raaiskote opgelos`,  qty: dist[6], per: BASE_POINTS[6]},
-      {label: `Onopgelos`,               qty: dist.fail, per: BASE_POINTS.fail},
-    ];
-    breakdownBody.innerHTML = rows.map(r => {
-      const pts = r.qty * r.per;
-      return `<tr>
-        <td>${r.label}</td>
-        <td class="text-right mono">${fmt(r.qty)}</td>
-        <td class="text-right mono">${fmt(r.qty)} × ${fmt(r.per)}</td>
-        <td class="text-right mono ${pts>=0?'text-emerald-700':'text-red-700'}">${fmt(pts)}</td>
-      </tr>`;
-    }).join("");
-
-    // Histogram
-    const pairs = [['1',dist[1]],['2',dist[2]],['3',dist[3]],['4',dist[4]],['5',dist[5]],['6',dist[6]],['X',dist.fail]];
-    const maxv = Math.max(1, ...pairs.map(p => p[1]));
-    distWrap.innerHTML = pairs.map(([lb,val]) => {
-      const w = val === 0 ? 0 : Math.max(6, Math.round((val/maxv)*100));
-      return `<div class="barRow"><div class="text-xs font-bold text-slate-500">${lb}</div><div class="bar" style="width:${w}%"></div><div class="mono text-sm font-extrabold">${fmt(val)}</div></div>`;
-    }).join("");
-
-    // Totals & labels
-    subtotalCell.textContent = fmt(subtotal);
-    $("lopieBonusCell").textContent = fmt(streakBonus);
-    $("supporterBonusCell").textContent = fmt(supporterBonus);
-    totalCell.textContent = fmt(total);
-
-    if (streakMult > 1) {
-      streakChip.classList.remove("hidden");
-      lopieMeta.innerHTML = `Lopie: ${cur} op ’n ry <span class="text-slate-400">(×${STREAK_MULTIPLIER.toFixed(2)})</span>`;
-    } else {
-      streakChip.classList.add("hidden");
-      lopieMeta.innerHTML = `Geen <span class="text-slate-400">(huidige lopie: ${cur})</span>`;
+      $("deleteBtn").addEventListener("click", async () => {
+        if (!confirm("Is jy seker? Jou rekening sal verwyder word.")) return;
+        try {
+          await deleteUser(user);
+          deleteMsg.textContent = "Rekening verwyder.";
+          deleteMsg.className = "text-sm mt-2 text-green-600";
+          deleteMsg.classList.remove("hidden");
+          setTimeout(() => (window.location.href = "/"), 800);
+        } catch (err) {
+          console.error(err);
+          let m = "Kon nie jou rekening verwyder nie.";
+          if (String(err.code || "").includes("requires-recent-login")) {
+            m = "Vir sekuriteit: Meld asseblief weer aan en probeer dan weer.";
+          }
+          deleteMsg.textContent = m;
+          deleteMsg.className = "text-sm mt-2 text-red-600";
+          deleteMsg.classList.remove("hidden");
+        }
+      });
     }
-    supporterMeta.textContent = supporterActive ? `×${SUPPORTER_MULTIPLIER.toFixed(2)}` : "Geen";
 
-    const combinedMult = streakMult * supporterMult;
-    multiplierLabel.textContent = `×${combinedMult.toFixed(2)}`;
+    // -------- Dilemma data: compute and render --------
+    async function loadAndRenderDilemma(uid) {
+      const uref = doc(db, "users", uid);
+      const uSnap = await getDoc(uref);
 
-    calcTime.textContent = new Date().toLocaleString("af-ZA");
-    pillOverall.textContent     = `JOU KRIPTIEK-TELLING: ${fmt(total)}`;
-    pillDilemmaLive.textContent = `JOU DILEMMA-TELLING: ${fmt(total)}`;
-    totalPointsEl.textContent   = fmt(total);
-  }
-</script>
+      let supporterActive = false;
+      if (uSnap.exists()) {
+        const d = uSnap.data();
+        if (d?.supporterActive === true) supporterActive = true;
+        if (d?.supporterUntil?.toMillis && d.supporterUntil.toMillis() > Date.now()) supporterActive = true;
+      }
 
-  
+      const playsRef = collection(db, "userGames", uid, "plays");
+      const q = query(playsRef, orderBy("finishedAt", "desc"), limit(200));
+      const snap = await getDocs(q);
+
+      const plays = [];
+      snap.forEach((docSnap) => {
+        const d = docSnap.data();
+        const gameId = docSnap.id; // "GameYYYY-MM-DD"
+        const date = gameId.replace(/^Game/, "");
+        plays.push({
+          date,
+          win: d?.result === "win" || d?.finished === true,
+          guesses: Number(d?.guesses || 0),
+        });
+      });
+
+      computeAndRender(plays, supporterActive);
+    }
+
+    function computeAndRender(plays, supporterActive) {
+      const byDate = new Map();
+      plays.slice().reverse().forEach((p) => byDate.set(p.date, p));
+
+      const dates = Array.from(byDate.keys()).sort();
+      let cur = 0, best = 0, prev = null;
+      for (const d of dates) {
+        const consec = prev && (new Date(d) - new Date(prev) === 24 * 60 * 60 * 1000);
+        if (!consec) cur = 0;
+        const p = byDate.get(d);
+        if (p?.win) { cur++; best = Math.max(best, cur); } else { cur = 0; }
+        prev = d;
+      }
+
+      const dist = { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, fail:0 };
+      for (const p of byDate.values()) {
+        if (p.win) {
+          const g = Math.min(Math.max(1, p.guesses || 6), 6);
+          dist[g] += 1;
+        } else {
+          dist.fail += 1;
+        }
+      }
+
+      const subtotal =
+        dist[1]*BASE_POINTS[1] + dist[2]*BASE_POINTS[2] + dist[3]*BASE_POINTS[3] +
+        dist[4]*BASE_POINTS[4] + dist[5]*BASE_POINTS[5] + dist[6]*BASE_POINTS[6] +
+        dist.fail*BASE_POINTS.fail;
+
+      const streakMult = cur >= STREAK_THRESHOLD ? STREAK_MULTIPLIER : 1;
+      const supporterMult = supporterActive ? SUPPORTER_MULTIPLIER : 1;
+      const streakBonus = Math.round(subtotal * (streakMult - 1));
+      const supporterBonus = Math.round((subtotal + streakBonus) * (supporterMult - 1));
+      const total = subtotal + streakBonus + supporterBonus;
+
+      const totalPlayed = dates.length;
+      const wins = totalPlayed - dist.fail;
+      const winrate = totalPlayed ? Math.round((wins / totalPlayed) * 100) : 0;
+
+      playedStat.textContent = totalPlayed;
+      winrateStat.textContent = `${winrate}%`;
+      curStreakEl.textContent = cur;
+      bestStreakEl.textContent = best;
+
+      const rows = [
+        {label: `In 1 raaiskoot opgelos`, qty: dist[1], per: BASE_POINTS[1]},
+        {label: `In 2 raaiskote opgelos`,  qty: dist[2], per: BASE_POINTS[2]},
+        {label: `In 3 raaiskote opgelos`,  qty: dist[3], per: BASE_POINTS[3]},
+        {label: `In 4 raaiskote opgelos`,  qty: dist[4], per: BASE_POINTS[4]},
+        {label: `In 5 raaiskote opgelos`,  qty: dist[5], per: BASE_POINTS[5]},
+        {label: `In 6 raaiskote opgelos`,  qty: dist[6], per: BASE_POINTS[6]},
+        {label: `Onopgelos`,               qty: dist.fail, per: BASE_POINTS.fail},
+      ];
+      breakdownBody.innerHTML = rows.map(r => {
+        const pts = r.qty * r.per;
+        return `<tr>
+          <td>${r.label}</td>
+          <td class="text-right mono">${fmt(r.qty)}</td>
+          <td class="text-right mono">${fmt(r.qty)} × ${fmt(r.per)}</td>
+          <td class="text-right mono ${pts>=0?'text-emerald-700':'text-red-700'}">${fmt(pts)}</td>
+        </tr>`;
+      }).join("");
+
+      const pairs = [['1',dist[1]],['2',dist[2]],['3',dist[3]],['4',dist[4]],['5',dist[5]],['6',dist[6]],['X',dist.fail]];
+      const maxv = Math.max(1, ...pairs.map(p => p[1]));
+      distWrap.innerHTML = pairs.map(([lb,val]) => {
+        const w = val === 0 ? 0 : Math.max(6, Math.round((val/maxv)*100));
+        return `<div class="barRow"><div class="text-xs font-bold text-slate-500">${lb}</div><div class="bar" style="width:${w}%"></div><div class="mono text-sm font-extrabold">${fmt(val)}</div></div>`;
+      }).join("");
+
+      subtotalCell.textContent = fmt(subtotal);
+      $("lopieBonusCell").textContent = fmt(streakBonus);
+      $("supporterBonusCell").textContent = fmt(supporterBonus);
+      totalCell.textContent = fmt(total);
+
+      if (streakMult > 1) {
+        streakChip.classList.remove("hidden");
+        lopieMeta.innerHTML = `Lopie: ${cur} op ’n ry <span class="text-slate-400">(×${STREAK_MULTIPLIER.toFixed(2)})</span>`;
+      } else {
+        streakChip.classList.add("hidden");
+        lopieMeta.innerHTML = `Geen <span class="text-slate-400">(huidige lopie: ${cur})</span>`;
+      }
+      supporterMeta.textContent = supporterActive ? `×${SUPPORTER_MULTIPLIER.toFixed(2)}` : "Geen";
+
+      const combinedMult = streakMult * supporterMult;
+      multiplierLabel.textContent = `×${combinedMult.toFixed(2)}`;
+
+      calcTime.textContent = new Date().toLocaleString("af-ZA");
+      pillOverall.textContent     = `JOU KRIPTIEK-TELLING: ${fmt(total)}`;
+      pillDilemmaLive.textContent = `JOU DILEMMA-TELLING: ${fmt(total)}`;
+      totalPointsEl.textContent   = fmt(total);
+    }
+  </script>
 </body>
 </html>
