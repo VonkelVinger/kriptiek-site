@@ -869,6 +869,171 @@ onAuthStateChanged(auth, async (user) => {
   await loadLeaderboard();
 });
 </script>
+
+<!-- DILEMMA SCORE PILL (inline on the game page) -->
+<script type="module">
+  import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, updateDoc,
+    collection, query, orderBy, limit, getDocs, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+  // --- same config/version as index.html ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+    authDomain: "kriptiek-c9ea2.firebaseapp.com",
+    projectId: "kriptiek-c9ea2",
+    storageBucket: "kriptiek-c9ea2.appspot.com",
+    messagingSenderId: "620450620939",
+    appId: "1:620450620939:web:e93a18ac23b53b33db890e"
+  };
+
+  const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // --- scoring constants (match profile.html) ---
+  const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
+  const STREAK_THRESHOLD = 5;
+  const STREAK_MULTIPLIER = 1.10;
+  const SUPPORTER_MULTIPLIER = 1.10; // applied if supporterActive/supporterUntil
+
+  // Insert pill into the page (tries to sit in your header meta)
+  function mountPill() {
+    const pill = document.createElement("span");
+    pill.id = "pillDilemmaInline";
+    pill.className = "inline-flex items-center gap-2 px-3.5 py-2 rounded-full font-extrabold text-white " +
+                     "bg-gradient-to-b from-orange-500 to-orange-700 shadow";
+    pill.textContent = "JOU DILEMMA-TELLING: —";
+    // Try a few common anchors; fall back under header
+    const anchors = [
+      document.getElementById("game-meta"),
+      document.querySelector("#hudRight"),
+      document.querySelector("#hud"),
+      document.querySelector("header .container, header .max-w-6xl, header")
+    ].filter(Boolean);
+    const target = anchors[0] || document.querySelector("main") || document.body;
+    if (anchors[0]) {
+      anchors[0].appendChild(pill);
+    } else {
+      const wrap = document.createElement("div");
+      wrap.className = "max-w-6xl mx-auto px-4 mt-3 mb-2";
+      wrap.appendChild(pill);
+      target.prepend(wrap);
+    }
+    return pill;
+  }
+
+  function fmt(n){ return typeof n === "number" ? n.toLocaleString("af-ZA") : n; }
+
+  // Compute Dilemma score exactly like profile.html (using last ~200 plays)
+  async function computeDilemmaTotal(uid) {
+    // supporter flag from users/{uid}
+    const uref = doc(db, "users", uid);
+    const usnap = await getDoc(uref);
+    let supporterActive = false;
+    if (usnap.exists()) {
+      const d = usnap.data();
+      if (d?.supporterActive === true) supporterActive = true;
+      if (d?.supporterUntil?.toMillis && d.supporterUntil.toMillis() > Date.now()) supporterActive = true;
+    }
+
+    const playsRef = collection(db, "userGames", uid, "plays");
+    const qy = query(playsRef, orderBy("finishedAt", "desc"), limit(200));
+    const snap = await getDocs(qy);
+
+    // de-dupe by date (last entry wins)
+    const byDate = new Map();
+    snap.forEach(ds => {
+      const d = ds.data();
+      const gameId = ds.id;            // e.g. "GameYYYY-MM-DD"
+      const date = gameId.replace(/^Game/, "");
+      byDate.set(date, {
+        date,
+        win: d?.result === "win" || d?.finished === true,
+        guesses: Number(d?.guesses || 0)
+      });
+    });
+
+    const dates = Array.from(byDate.keys()).sort();
+    // streak calc (calendar-consecutive wins)
+    let cur=0, best=0, prev=null;
+    for (const d of dates) {
+      const consec = prev && (new Date(d) - new Date(prev) === 24*60*60*1000);
+      if (!consec) cur=0;
+      const p = byDate.get(d);
+      if (p?.win) { cur++; best=Math.max(best,cur); } else { cur=0; }
+      prev=d;
+    }
+
+    // distribution
+    const dist = {1:0,2:0,3:0,4:0,5:0,6:0,fail:0};
+    for (const p of byDate.values()) {
+      if (p.win) {
+        const g = Math.min(Math.max(1, p.guesses || 6), 6);
+        dist[g] += 1;
+      } else {
+        dist.fail += 1;
+      }
+    }
+
+    const subtotal =
+      dist[1]*BASE_POINTS[1] + dist[2]*BASE_POINTS[2] + dist[3]*BASE_POINTS[3] +
+      dist[4]*BASE_POINTS[4] + dist[5]*BASE_POINTS[5] + dist[6]*BASE_POINTS[6] +
+      dist.fail*BASE_POINTS.fail;
+
+    const streakMult = cur >= STREAK_THRESHOLD ? STREAK_MULTIPLIER : 1;
+    const supporterMult = supporterActive ? SUPPORTER_MULTIPLIER : 1;
+    const streakBonus = Math.round(subtotal * (streakMult - 1));
+    const supporterBonus = Math.round((subtotal + streakBonus) * (supporterMult - 1));
+    const total = subtotal + streakBonus + supporterBonus;
+
+    return { total, supporterActive };
+  }
+
+  async function persistIfChanged(uid, value) {
+    const uref = doc(db, "users", uid);
+    const snap = await getDoc(uref);
+    const prev = snap.exists() ? (Number(snap.data()?.dilemmaScore) || 0) : null;
+    if (prev !== value) {
+      await setDoc(uref, {
+        dilemmaScore: value,
+        kScore: value,              // for now: Kriptiek-telling == Dilemma only
+        scoreUpdatedAt: serverTimestamp()
+      }, { merge: true });
+    }
+  }
+
+  const pillEl = mountPill();
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      // If not signed in, show a neutral hint instead of a number
+      pillEl.textContent = "Meld aan om jou Dilemma-telling te sien";
+      pillEl.classList.add("opacity-80");
+      return;
+    }
+    try {
+      const { total } = await computeDilemmaTotal(user.uid);
+      pillEl.textContent = `JOU DILEMMA-TELLING: ${fmt(total)}`;
+
+      // Optional: persist for leaderboard consumption
+      await persistIfChanged(user.uid, total);
+    } catch (e) {
+      console.error(e);
+      pillEl.textContent = "Dilemma-telling: —";
+      pillEl.title = "Kon nie jou telling haal nie";
+    }
+  });
+</script>
+
+
+
+
+  
 </body>
 
 <script>
