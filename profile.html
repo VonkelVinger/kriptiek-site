@@ -89,9 +89,14 @@
   .barRow{ display:grid; grid-template-columns:1.5rem 1fr auto; gap:.5rem; align-items:center; }
   .bar{ height:14px; background:linear-gradient(90deg,#1d4ed8,#1e40af); border-radius:7px; }
 
-  /* Supporter banner */
-  .supporter-banner{ display:flex; align-items:center; justify-content:center; width:100%;
-    background: linear-gradient(180deg, #22C55E 0%, #0EA55B 100%); color:#fff; font-weight:800; padding:.6rem 1rem; border-radius:999px; text-decoration:none; }
+  /* Supporter banner (base + color variants) */
+  .supporter-banner{
+    display:flex; align-items:center; justify-content:center; width:100%;
+    color:#fff; font-weight:800; padding:.6rem 1rem; border-radius:999px; text-decoration:none;
+    box-shadow: 0 6px 14px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.25);
+  }
+  .supporter-banner-green{ background: linear-gradient(180deg, #22C55E 0%, #0EA55B 100%); }
+  .supporter-banner-red{   background: linear-gradient(180deg, #DC2626 0%, #B91C1C 100%); }
 
   /* Equal tops */
   .top-card { min-height:320px; }
@@ -118,8 +123,10 @@
     <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 items-start">
       <!-- LEFT -->
       <section class="card p-5 md:p-6 top-card">
-        <a href="https://buymeacoffee.com/kriptiek" target="_blank" rel="noopener" class="supporter-banner mb-4" aria-label="Word ’n ondersteuner (Buy Me a Coffee)">
-          <span id="supporterBannerTxt">Word 'n betalende ondersteuner</span>
+        <a id="supporterBanner" href="https://buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
+           class="supporter-banner supporter-banner-red mb-4"
+           aria-label="Word ’n ondersteuner (Buy Me a Coffee)">
+          <span id="supporterBannerTxt">Kliek hier om 'n betalende ondersteuner van Kriptiek te word</span>
         </a>
 
         <h2 class="text-lg font-bold mb-2">Profiel</h2>
@@ -278,7 +285,7 @@
     });
   </script>
 
-  <!-- LIVE: Firebase Auth + Firestore integration (v11.9.1 to match index.html) -->
+  <!-- LIVE: Firebase Auth + Firestore integration -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import {
@@ -311,6 +318,7 @@
     const fmt = (n) => (typeof n === "number" ? n.toLocaleString("af-ZA") : n);
 
     const wbName = $("wbName");
+    const supporterBanner = $("supporterBanner");
     const supporterBannerTxt = $("supporterBannerTxt");
     const errBanner = $("errBanner");
     const formMsg = $("formMsg");
@@ -372,7 +380,19 @@
       }
 
       wbName.textContent = (userName || "GEBRUIKER").toUpperCase();
-      supporterBannerTxt.textContent = supporterActive ? "Betalende ondersteuner" : "Nie-betalende ondersteuner";
+
+      // NEW: toggle banner wording & color
+      if (supporterActive) {
+        supporterBanner.classList.remove("supporter-banner-red");
+        supporterBanner.classList.add("supporter-banner-green");
+        supporterBanner.setAttribute("aria-label", "Dankie dat jy 'n betalende ondersteuner is");
+        supporterBannerTxt.textContent = "Betalende ondersteuner — dankie!";
+      } else {
+        supporterBanner.classList.remove("supporter-banner-green");
+        supporterBanner.classList.add("supporter-banner-red");
+        supporterBanner.setAttribute("aria-label", "Word ’n ondersteuner (Buy Me a Coffee)");
+        supporterBannerTxt.textContent = "Kliek hier om 'n betalende ondersteuner van Kriptiek te word";
+      }
 
       $("nameInput").value = userName || "";
       $("emailInput").value = user.email || "";
@@ -415,13 +435,12 @@
           await sendPasswordResetEmail(auth, user.email);
           formMsg.textContent = "’n Wagwoordherstel-skakel is per e-pos gestuur.";
           formMsg.className = "text-sm mt-2 text-green-600";
-          formMsg.classList.remove("hidden");
         } catch (err) {
           console.error(err);
           formMsg.textContent = "Kon nie wagwoordherstel stuur nie.";
           formMsg.className = "text-sm mt-2 text-red-600";
-          formMsg.classList.remove("hidden");
         }
+        formMsg.classList.remove("hidden");
       });
 
       $("deleteBtn").addEventListener("click", async () => {
