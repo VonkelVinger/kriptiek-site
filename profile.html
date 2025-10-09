@@ -1,228 +1,121 @@
 <!DOCTYPE html>
 <html lang="af">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Profiel – Kriptiek</title>
 
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-S9V4CMP1FP"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-S9V4CMP1FP');
-</script>
-
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>My Profiel – Kriptiek</title>
-
-<link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
-<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=3">
-<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png?v=3">
-<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=3">
-<link rel="manifest" href="/assets/site.webmanifest?v=3">
-
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
-<style>
-  body { font-family: 'Montserrat', sans-serif; }
-  .mono{ font-variant-numeric: tabular-nums; }
-  .logo-container{position:relative;display:flex;justify-content:center;align-items:center;width:fit-content;margin:1rem auto;padding:1rem;border-radius:1rem;background:#fff;overflow:hidden;isolation:isolate}
-  .logo-container::before{content:"";position:absolute;inset:-2px;border-radius:1rem;background:conic-gradient(from 180deg at 50% 50%, #1e3a8a,#334155,#1e3a8a);animation:spin 14s linear infinite;z-index:0;padding:2px;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
-  @keyframes spin{to{transform:rotate(1turn)}}
-  @media (prefers-reduced-motion: reduce){.logo-container::before{animation:none}}
-  .crossword-grid{display:grid;grid-template-columns:repeat(8,minmax(40px,1fr));gap:4px;position:relative;z-index:10}
-  .letter-box{width:50px;height:50px;display:flex;justify-content:center;align-items:center;background:#374151;color:#fff;font-size:1.8rem;font-weight:700;border:2px solid #1f2937;border-radius:.375rem;text-transform:uppercase;box-shadow:inset 0 0 5px rgba(0,0,0,.2)}
-  .flipped-k{transform:scaleX(-1)}
-  .background-crossword{position:absolute;top:0;left:0;width:100%;height:100%;display:grid;grid-template-columns:repeat(auto-fill,minmax(30px,1fr));grid-template-rows:repeat(auto-fill,minmax(30px,1fr));opacity:.5;z-index:1;pointer-events:none;animation:bgFloat 30s linear infinite}
-  @keyframes bgFloat{0%{transform:translateY(0)}50%{transform:translateY(-12px)}100%{transform:translateY(0)}}
-  @media (prefers-reduced-motion: reduce){.background-crossword{animation:none}}
-  .bg-letter-box{display:flex;justify-content:center;align-items:center;font-size:1.1rem;font-weight:700;color:#9ca3af;border:1px solid #e5e7eb;background:transparent;user-select:none}
-  .kbtn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.65rem 1rem;border-radius:.9rem;background:#1d4ed8;color:#fff;font-weight:800;box-shadow:0 10px 24px rgba(29,78,216,.25)}
-  .kbtn:hover{background:#1e40af}
-  .kbtn-red{background:#dc2626}.kbtn-red:hover{background:#b91c1c}
-  .pill{display:inline-flex;align-items:center;gap:.6rem;padding:.6rem 1.1rem;border-radius:999px;font-weight:800;color:#fff;white-space:nowrap;line-height:1.15;box-shadow:0 6px 14px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.25)}
-  .pill-lg{font-size:1.15rem;padding:.75rem 1.25rem}
-  .pill-blue{background:linear-gradient(90deg,#1d4ed8,#1e40af)}
-  .pill-orange{background:linear-gradient(180deg,#FB7A12 0%,#D65A0A 100%)}
-  .pill-green{background:linear-gradient(180deg,#22C55E 0%,#0EA55B 100%)}
-  .pill-green-dark{background:linear-gradient(180deg,#0F766E 0%,#065F46 100%)}
-  .card{background:#fff;border-radius:1rem;box-shadow:0 8px 18px rgba(0,0,0,.08)}
-  .mini{background:#f8fafc;border:1px solid #e5e7eb;border-radius:.75rem;padding:12px;text-align:center}
-  .table{width:100%;border-collapse:separate;border-spacing:0}
-  .table th,.table td{padding:.6rem .75rem;border-bottom:1px solid #e5e7eb}
-  .table th{text-align:left;font-weight:700;color:#334155;background:#f8fafc;position:sticky;top:0}
-  .barRow{display:grid;grid-template-columns:1.5rem 1fr auto;gap:.5rem;align-items:center}
-  .bar{height:14px;background:linear-gradient(90deg,#1d4ed8,#1e40af);border-radius:7px}
-  .supporter-banner{display:flex;align-items:center;justify-content:center;width:100%;background:linear-gradient(180deg,#22C55E 0%,#0EA55B 100%);color:#fff;font-weight:800;padding:.6rem 1rem;border-radius:999px;text-decoration:none}
-  .top-card{min-height:320px}
-  @media (max-width:640px){.top-card{min-height:unset}}
-</style>
+  <link rel="icon" href="/assets/favicon.ico" type="image/x-icon" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Montserrat', sans-serif; }
+    .stat { display:grid; grid-template-columns:auto 1fr auto; gap:.5rem .75rem; align-items:center; }
+    .bar { height: 22px; background:#1d4ed8; border-radius:4px; transition:width .4s ease; }
+    .mono { font-variant-numeric: tabular-nums; }
+  </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
-  <header class="bg-white shadow p-4">
-    <div class="logo-container">
-      <div id="backgroundCrossword" class="background-crossword"></div>
-      <div class="crossword-grid">
-        <div class="letter-box flipped-k">K</div><div class="letter-box flipped-k">R</div><div class="letter-box">I</div>
-        <div class="letter-box flipped-k">P</div><div class="letter-box">T</div><div class="letter-box">I</div>
-        <div class="letter-box flipped-k">E</div><div class="letter-box">K</div>
-      </div>
-    </div>
+  <header class="bg-white shadow p-4 text-center">
+    <h1 class="text-xl font-bold text-[#1e3a8a]">Jou Kriptiek-profiel</h1>
   </header>
 
-  <div class="max-w-6xl mx-auto px-4 pt-2 text-center text-2xl font-bold text-[#1e3a8a]">
-    WELKOM TERUG, <span id="wbName">GEBRUIKER</span>
-  </div>
+  <main class="flex-grow p-4">
+    <div class="max-w-3xl mx-auto grid md:grid-cols-2 gap-6">
+      <!-- Editable profile -->
+      <section class="bg-white shadow rounded-xl p-5">
+        <h2 class="text-lg font-bold mb-1">Profiel</h2>
+        <p id="statusBanner" class="hidden text-sm mb-3 px-3 py-2 rounded bg-yellow-50 text-yellow-800">
+          Jou rekening is gemerk vir verwydering. Kontak ons as dit ’n fout is.
+        </p>
 
-  <main class="flex-grow p-4 pb-16">
-    <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 items-start">
-      <!-- LEFT -->
-      <section class="card p-5 md:p-6 top-card">
-        <a href="https://buymeacoffee.com/kriptiek" target="_blank" rel="noopener" class="supporter-banner mb-4" aria-label="Word ’n ondersteuner (Buy Me a Coffee)">
-          <span id="supporterBannerTxt">Word ’n betalende ondersteuner</span>
-        </a>
-
-        <h2 class="text-lg font-bold mb-2">Profiel</h2>
-        <p id="errBanner" class="hidden text-sm mb-3 px-3 py-2 rounded bg-red-50 text-red-800" role="alert"></p>
-
-        <form id="profileForm" class="space-y-4" novalidate>
+        <form id="profileForm" class="space-y-4">
           <div>
-            <label for="nameInput" class="block text-sm font-semibold text-gray-700">Naam (kan ’n skuilnaam wees)</label>
-            <input id="nameInput" type="text" minlength="2" maxlength="40" required class="mt-1 w-full border border-gray-300 rounded p-2" />
+            <label class="block text-sm font-semibold text-gray-700">Naam (kan 'n skuilnaam wees)</label>
+            <input id="nameInput" type="text" minlength="2" maxlength="40" required
+                   class="mt-1 w-full border border-gray-300 rounded p-2"/>
           </div>
           <div>
-            <label for="emailInput" class="block text-sm font-semibold text-gray-700">E-posadres</label>
-            <input id="emailInput" type="email" required aria-describedby="emailHelp" class="mt-1 w-full border border-gray-300 rounded p-2" />
-            <p id="emailHelp" class="text-xs text-gray-500 mt-1"><strong>Let wel:</strong> Jou e-pos word nie geverifieer nie, maar jy het dit nodig vir wagwoordherstel of navrae oor jou rekening.</p>
+            <label class="block text-sm font-semibold text-gray-700">E-posadres</label>
+            <input id="emailInput" type="email" required
+                   class="mt-1 w-full border border-gray-300 rounded p-2"/>
+            <p class="text-xs text-gray-500 mt-1">Let wel: Om jou e-pos te verander vereis dalk her-verifikasie.</p>
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
-            <button type="submit" class="kbtn" id="saveBtn">BÊRE</button>
-            <button id="resetPwBtn" type="button" class="kbtn bg-slate-800 hover:bg-slate-900">VRA NUWE WAGWOORD</button>
-            <button id="deleteBtn" type="button" class="kbtn kbtn-red">VERWYDER MY REKENING</button>
+            <button type="submit"
+                    class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded">BÊRE</button>
+            <button id="resetPwBtn" type="button"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+              VRA NUWE WAGWOORD
+            </button>
           </div>
-          <p id="formMsg" class="text-sm mt-2 hidden" aria-live="polite" role="status"></p>
-          <p id="deleteMsg" class="text-sm mt-2 hidden" aria-live="polite" role="status"></p>
+          <p id="formMsg" class="text-sm mt-2"></p>
         </form>
+
+        <hr class="my-5">
+
+        <!-- Soft delete -->
+        <div>
+          <h3 class="font-semibold mb-2">Verwyder my rekening</h3>
+          <p class="text-sm text-gray-600 mb-3">
+            Kliek op die rooi knoppie onder om te vra dat jou rekening <span class="font-semibold">gedeaktiveer word.</span>
+            Dit sal ’n verwyderingsversoek indien, waarna jou toegang onmiddellik geblokkeer sal word. Die laaste stap word op die bediener gedoen.
+          </p>
+          <button id="deleteBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+            VERWYDER MY REKENING
+          </button>
+          <p id="deleteMsg" class="text-sm mt-2"></p>
+        </div>
       </section>
 
-      <!-- RIGHT -->
-      <section class="card p-5 md:p-6 top-card">
-        <div class="mb-4"><span id="pillOverall" class="pill pill-lg pill-blue" role="status">JOU KRIPTIEK-TELLING: 0</span></div>
-        <div class="flex flex-wrap gap-2 mb-6 items-start">
-          <span id="pillDilemmaLive" class="pill pill-lg pill-orange" role="status">JOU DILEMMA-TELLING: 0</span>
-          <span class="pill pill-lg pill-green">JOU BLITSTIEK-TELLING: BINNEKORT</span>
-          <span class="pill pill-lg pill-green-dark">JOU SLIMSTIEK-TELLING: BINNEKORT</span>
-        </div>
-        <h3 class="text-2xl md:text-[1.7rem] font-extrabold text-slate-900 mb-1">Hoe werk die Kriptiek-telling?</h3>
-        <p class="text-sm text-slate-600">
-          Jou Kriptiek-telling is die som van jou tellings vir Dilemma, Slimstiek en Blitstiek, maar tans is nog net eersgenoemde geaktiveer.
-          Vir eers is jou Kriptiek-telling dus dieselfde as jou Dilemma-telling. Later sal Slimstiek, Blitstiek en ander speletjies ook bykom.
-          En onthou, jy kry ook 10% ekstra by al jou punte as jy Kriptiek met $2 per maand of meer ondersteun.
-        </p>
-      </section>
-    </div>
-
-    <!-- DILEMMA -->
-    <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 mt-6">
-      <section class="card p-5 md:p-6">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="text-xl font-extrabold text-slate-900">Jou Dilemma-telling</h2>
-          <span id="streakChip" class="hidden px-2.5 py-1 rounded-full font-bold text-indigo-900" style="background:#e0e7ff">+10% lopie</span>
-        </div>
-
-        <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-4">
-          <div class="text-sm text-indigo-900/80">Laas bereken op: <span id="calcTime" class="mono">—</span></div>
-          <div class="mt-2 flex items-end gap-4">
-            <div>
-              <div class="text-4xl md:text-5xl font-extrabold mono text-indigo-900" id="totalPoints">0</div>
-              <div class="text-xs uppercase tracking-wide text-indigo-900/70">Totale DILEMMA-telling</div>
-            </div>
-            <div class="ml-auto text-right">
-              <div class="text-xs text-indigo-900/70">Vermenigvuldiger</div>
-              <div class="text-xl font-extrabold mono" id="multiplierLabel">×1.00</div>
-            </div>
+      <!-- Read-only stats -->
+      <section class="bg-white shadow rounded-xl p-5">
+        <h2 class="text-lg font-bold mb-4">Jou Dilemma-statistiek</h2>
+        <div class="grid grid-cols-2 gap-3 text-center mb-4">
+          <div class="bg-gray-50 rounded p-3">
+            <div class="text-2xl font-bold mono" id="gamesPlayed">0</div>
+            <div class="text-xs text-gray-500">Dilemmas gespeel</div>
+          </div>
+          <div class="bg-gray-50 rounded p-3">
+            <div class="text-2xl font-bold mono" id="successRate">0%</div>
+            <div class="text-xs text-gray-500">Sukseskoers</div>
+          </div>
+          <div class="bg-gray-50 rounded p-3">
+            <div class="text-2xl font-bold mono" id="streak">0</div>
+            <div class="text-xs text-gray-500">Huidige lopie</div>
+          </div>
+          <div class="bg-gray-50 rounded p-3">
+            <div class="text-2xl font-bold mono" id="bestStreak">0</div>
+            <div class="text-xs text-gray-500">Beste lopie</div>
           </div>
         </div>
 
-        <p class="text-sm leading-6 text-slate-600 mb-4">
-          Hoe minder raaiskote jy nodig het, hoe meer punte kry jy. Daar is ook bonuspunte as jy
-          <strong>vyf of meer Dilemmas opeenvolgend kan oplos</strong>, asook ’n
-          <strong>10%-bonus vir betalende ondersteuners in die afgelope 30 dae</strong>.
-        </p>
-
-        <div class="overflow-auto max-h-[420px] rounded-xl border border-slate-200 bg-white">
-          <table class="table text-sm w-full">
-            <thead>
-              <tr><th>Komponent</th><th class="text-right">Aantal</th><th class="text-right">Reël</th><th class="text-right">Punte</th></tr>
-            </thead>
-            <tbody id="breakdownBody"></tbody>
-            <tfoot>
-              <tr>
-                <td class="font-bold">Subtotaal</td><td></td><td></td>
-                <td class="text-right font-extrabold mono" id="subtotalCell">0</td>
-              </tr>
-              <tr>
-                <td class="font-bold">Lopie-bonus</td><td></td>
-                <td class="text-right whitespace-nowrap" id="lopieMeta">—</td>
-                <td class="text-right font-extrabold mono" id="lopieBonusCell">0</td>
-              </tr>
-              <tr>
-                <td class="font-bold">Ondersteuner-bonus</td><td></td>
-                <td class="text-right whitespace-nowrap" id="supporterMeta">—</td>
-                <td class="text-right font-extrabold mono" id="supporterBonusCell">0</td>
-              </tr>
-              <tr id="manualBonusRow" class="hidden">
-                <td class="font-bold">Handmatige bonus</td><td></td>
-                <td class="text-right text-slate-500" id="manualBonusNote">—</td>
-                <td class="text-right font-extrabold mono" id="manualBonusCell">0</td>
-              </tr>
-              <tr>
-                <td class="font-extrabold text-slate-900">Totaal</td><td></td><td></td>
-                <td class="text-right font-extrabold mono text-indigo-900" id="totalCell">0</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </section>
-
-      <section class="card p-5 md:p-6">
-        <h2 class="text-xl font-extrabold text-slate-900 mb-3">Jou Dilemma-statistiek</h2>
-        <div class="grid grid-cols-4 gap-2 mb-4">
-          <div class="mini"><div id="playedStat" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Dilemmas gespeel</div></div>
-          <div class="mini"><div id="winrateStat" class="text-3xl font-extrabold mono">0%</div><div class="text-xs text-slate-500 mt-1">Sukseskoers</div></div>
-          <div class="mini"><div id="curStreak" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Huidige lopie</div></div>
-          <div class="mini"><div id="bestStreak" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Beste lopie</div></div>
-        </div>
-
-        <h3 class="text-sm font-bold text-slate-700 mb-2">Suksesverdeling</h3>
-        <div id="distWrap" class="space-y-2"></div>
+        <h3 class="font-semibold mb-2">Suksesverdeling</h3>
+        <div id="distList" class="space-y-2"></div>
       </section>
     </div>
   </main>
 
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
-    &copy; 2025 Kriptiek. Alle regte voorbehou. |
-    <a href="/profile.html" class="underline px-1.5">My profiel</a> |
-    <a href="/forum.html" class="underline px-1.5">Gesels saam</a> |
-    <a href="/privacy.html" class="underline px-1.5">Privaatheidsbeleid</a> |
-    <a href="/terms.html" class="underline px-1.5">Voorwaardes</a> |
-    <a href="/faq.html" class="underline px-1.5">Gereelde vrae</a> |
-    <a href="/about.html" class="underline px-1.5">Oor Kriptiek</a> |
-    <a href="/contact.html" class="underline px-1.5">Kontak ons</a>
+    &copy; 2025 Kriptiek · <a href="/index.html" class="underline">Tuis</a> |
+    <a href="/forum.html" class="underline">Gesels saam</a> |
+    <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
+    <a href="/terms.html" class="underline">Voorwaardes</a> |
+    <a href="/faq.html" class="underline">Gereelde vrae</a> |
+    <a href="/about.html" class="underline">Oor Kriptiek</a> |
+    <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
 
-  <!-- Firebase v11 -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, updateEmail, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
     import {
-      getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp,
-      collection, getDocs, query, orderBy, limit,
-      // NEW: collection-group fallback
-      collectionGroup, where, documentId
+      getFirestore, doc, getDoc, setDoc, serverTimestamp,
+      collectionGroup, where, query, getDocs, limit
     } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
+    // --- Firebase ---
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
       authDomain: "kriptiek-c9ea2.firebaseapp.com",
@@ -231,318 +124,247 @@
       messagingSenderId: "620450620939",
       appId: "1:620450620939:web:e93a18ac23b53b33db890e"
     };
-
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db   = getFirestore(app);
+    const db = getFirestore(app);
 
-    const $ = id => document.getElementById(id);
-    const wbName = $('wbName');
-    const nameInput = $('nameInput');
-    const emailInput = $('emailInput');
-    const supporterBannerTxt = $('supporterBannerTxt');
-    const formMsg = $('formMsg'), deleteMsg = $('deleteMsg'), errBanner = $('errBanner');
+    // --- UI refs ---
+    const nameInput = document.getElementById('nameInput');
+    const emailInput = document.getElementById('emailInput');
+    const resetPwBtn = document.getElementById('resetPwBtn');
+    const deleteBtn = document.getElementById('deleteBtn');
+    const formMsg = document.getElementById('formMsg');
+    const deleteMsg = document.getElementById('deleteMsg');
+    const statusBanner = document.getElementById('statusBanner');
+    const el = (id)=>document.getElementById(id);
 
-    const breakdownBody = $('breakdownBody'), distWrap = $('distWrap');
-    const playedStat = $('playedStat'), winrateStat = $('winrateStat'), curStreakEl = $('curStreak'), bestStreakEl = $('bestStreak');
-    const subtotalCell = $('subtotalCell'), totalCell = $('totalCell');
-    const lopieMeta = $('lopieMeta'), supporterMeta = $('supporterMeta');
-    const manualBonusRow = $('manualBonusRow'), manualBonusCell = $('manualBonusCell'), manualBonusNote = $('manualBonusNote');
-    const totalPointsEl = $('totalPoints'), pillOverall = $('pillOverall'), pillDilemmaLive = $('pillDilemmaLive');
-    const streakChip = $('streakChip'), multiplierLabel = $('multiplierLabel'), calcTime = $('calcTime');
-
-    const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
-    const STREAK_THRESHOLD = 5, STREAK_MULTIPLIER = 1.10, SUPPORTER_MULTIPLIER = 1.10;
-    const fmt = n => (typeof n === 'number' ? n.toLocaleString('af-ZA') : n);
-
-    (function headerBG(){
-      const backgroundCrossword = document.getElementById('backgroundCrossword');
-      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      const rand = n => Math.floor(Math.random()*n);
-      function getRandomLetter(){ return letters[rand(letters.length)]; }
-      function generateBackgroundGrid() {
-        if (!backgroundCrossword) return;
-        backgroundCrossword.innerHTML = '';
-        const numRows = Math.ceil(backgroundCrossword.offsetHeight / 30);
-        const numCols = Math.ceil(backgroundCrossword.offsetWidth / 30);
-        const totalCells = (numRows * numCols) || 300;
-        for (let i = 0; i < totalCells; i++) {
-          const bg = document.createElement('div');
-          bg.className = 'bg-letter-box';
-          bg.textContent = getRandomLetter();
-          backgroundCrossword.appendChild(bg);
-        }
+    function renderDist(dist) {
+      const container = document.getElementById('distList');
+      container.innerHTML = "";
+      const totalWins = Object.values(dist || {}).reduce((a,b)=>a+(b||0),0) || 0;
+      for (let i=1;i<=6;i++){
+        const n = (dist && dist[String(i)]) || 0;
+        const pct = totalWins ? Math.round((n/totalWins)*100) : 0;
+        const row = document.createElement('div');
+        row.className = "stat";
+        row.innerHTML = `
+          <div class="text-sm text-gray-600 w-5">${i}</div>
+          <div class="w-full"><div class="bar" style="width:${Math.max(pct, 5)}%"></div></div>
+          <div class="text-sm text-gray-600 text-right mono w-10">${n}</div>
+        `;
+        container.appendChild(row);
       }
-      window.addEventListener('load', generateBackgroundGrid);
-      let gridTimer;
-      window.addEventListener('resize', () => {
-        clearTimeout(gridTimer);
-        gridTimer = setTimeout(generateBackgroundGrid, 150);
-      });
-    })();
-
-    function normalizeDate(v, fallbackId="") {
-      try {
-        if (!v && fallbackId) v = fallbackId;
-        if (!v) return null;
-        if (typeof v === "object" && v.toDate && typeof v.toDate === "function") {
-          const d = v.toDate();
-          return new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString().slice(0,10);
-        }
-        if (v instanceof Date) {
-          return new Date(v.getFullYear(), v.getMonth(), v.getDate()).toISOString().slice(0,10);
-        }
-        const s = String(v);
-        const m = s.match(/\d{4}-\d{2}-\d{2}/);
-        if (m) return m[0];
-        if (typeof v === "number") {
-          const ms = (v > 1e12) ? v : v * 1000;
-          return new Date(new Date(ms).toISOString().slice(0,10)).toISOString().slice(0,10);
-        }
-      } catch(_) {}
-      return null;
     }
 
-    async function loadDilemmaPlays(uid) {
-      const out = [];
+    // Compute stats from leaderboard docs (fallback)
+    function statsFromLeaderboardDocs(docs){
+      const guessDist = {"1":0,"2":0,"3":0,"4":0,"5":0,"6":0};
+      let gamesPlayed = 0, wins = 0, streak = 0, bestStreak = 0;
+      let prevDate = null;
 
-      // New path
-      try {
-        const colNew = collection(db, "users", uid, "dilemmaPlays");
-        const qsNew  = await getDocs(query(colNew, orderBy("date", "asc"), limit(365)));
-        qsNew.forEach(s => {
-          const d = s.data() || {};
-          const date = normalizeDate(d.date, s.id);
-          const win  = (typeof d.win === 'boolean') ? d.win : null;
-          const guesses = Number(d.guesses ?? 0);
-          if (date && win !== null) out.push({ date, win, guesses });
-        });
-      } catch(e){ console.warn("New plays read failed:", e); }
-
-      // If we got some, return unique
-      if (out.length > 0) {
-        const map = new Map(); out.forEach(p => map.set(p.date, p));
-        return [...map.values()].sort((a,b)=> a.date.localeCompare(b.date));
+      const byDate = new Map();
+      for (const d of docs){
+        const data = d.data() || {};
+        // Assumed shape: { guesses:int, timestamp?:..., ... }
+        const g = Number(data.guesses || 0);
+        const ts = (data.timestamp && data.timestamp.toDate) ? data.timestamp.toDate() : null;
+        const dateKey = ts ? ts.toISOString().slice(0,10) : (data.date || '');
+        if (!dateKey) continue;
+        if (!byDate.has(dateKey)) byDate.set(dateKey, g); // one per day
       }
 
-      // Legacy fallback (/userGames/{uid}/plays)
-      try {
-        const colOld = collection(db, "userGames", uid, "plays");
-        const qsOld  = await getDocs(colOld);
-        qsOld.forEach(s => {
-          const d = s.data() || {};
-          const date    = normalizeDate(d.date, s.id);
-          const win     = (typeof d.win === 'boolean') ? d.win : (d.solved === true ? true : (d.solved === false ? false : null));
-          const guesses = Number(d.guesses ?? d.tries ?? d.attempts ?? 0);
-          if (date && win !== null) out.push({ date, win, guesses });
-        });
-      } catch(e){ console.warn("Legacy plays read failed:", e); }
-
-      if (out.length > 0) {
-        const map = new Map(); out.forEach(p => map.set(p.date, p));
-        return [...map.values()].sort((a,b)=> a.date.localeCompare(b.date));
+      const days = [...byDate.keys()].sort();
+      for (const day of days){
+        const g = byDate.get(day);
+        gamesPlayed++;
+        if (g >= 1 && g <= 6){
+          wins++;
+          guessDist[String(g)]++;
+          // streak calc (strict daily)
+          if (prevDate){
+            const diff = (new Date(day) - new Date(prevDate)) / (24*60*60*1000);
+            streak = (diff === 1) ? streak + 1 : 1;
+          } else {
+            streak = 1;
+          }
+          bestStreak = Math.max(bestStreak, streak);
+          prevDate = day;
+        } else {
+          // fail or missing
+          streak = 0;
+          prevDate = day;
+        }
       }
 
-      // NEW: Collection-group fallback across all /games/*/leaderboard/{uid}
-      try {
-        const cg = query(collectionGroup(db, "leaderboard"), where(documentId(), "==", uid), limit(365));
-        const qs = await getDocs(cg);
-        qs.forEach(s => {
-          // parent: /games/{gameId}/leaderboard
-          const gameDoc = s.ref.parent.parent; // DocumentReference of /games/{gameId}
-          const gameId  = gameDoc ? gameDoc.id : "";
-          const d = s.data() || {};
-          // try fields, otherwise derive from gameId
-          const date = normalizeDate(d.date || d.day || d.gameDate, gameId);
-          // If a leaderboard row exists for the user, we can assume a "win" (played & solved), unless field says otherwise
-          const win = (typeof d.win === 'boolean') ? d.win : true;
-          const guesses = Number(d.guesses ?? d.tries ?? d.attempts ?? 0);
-          if (date && win !== null) out.push({ date, win, guesses });
-        });
-      } catch(e){ console.warn("Collection-group fallback failed (index needed?):", e); }
-
-      const map = new Map(); out.forEach(p => map.set(p.date, p));
-      return [...map.values()].sort((a,b)=> a.date.localeCompare(b.date));
+      return { gamesPlayed, wins, streak, bestStreak, guessDist };
     }
 
+    async function tryCollectionGroupFallback(uid){
+      // IMPORTANT FIX: documentId() must include the collection segment
+      const q = query(
+        collectionGroup(db, "leaderboard"),
+        where(documentId(), "==", `leaderboard/${uid}`),
+        limit(365)
+      );
+      const snap = await getDocs(q);
+      if (snap.empty) return null;
+      return statsFromLeaderboardDocs(snap.docs);
+    }
+
+    function showStats(data){
+      const gamesPlayed = data.gamesPlayed || 0;
+      const wins = data.wins || 0;
+      const successRate = gamesPlayed ? Math.round((wins/gamesPlayed)*100) : 0;
+
+      el('gamesPlayed').textContent = gamesPlayed;
+      el('successRate').textContent = `${successRate}%`;
+      el('streak').textContent = data.streak || 0;
+      el('bestStreak').textContent = data.bestStreak || 0;
+      renderDist(data.guessDist || {});
+    }
+
+    // Load user + stats
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        try { localStorage.setItem("redirectAfterLogin", "/profile.html"); } catch {}
-        location.href = "/login.html";
+        localStorage.setItem('redirectAfterLogin','/profile.html');
+        window.location.href = '/login.html';
         return;
       }
-      wbName.textContent = user.displayName || 'GEBRUIKER';
 
-      const uref = doc(db, "users", user.uid);
-      const usnap = await getDoc(uref);
-      const profile = usnap.exists() ? usnap.data() : {};
+      emailInput.value = user.email || '';
+      const cachedName = localStorage.getItem('userName') || '';
+      if (cachedName) nameInput.value = cachedName;
 
-      nameInput.value = profile.name || user.displayName || '';
-      emailInput.value = user.email || profile.email || '';
+      const userRef = doc(db, 'users', user.uid);
+      if (!(await getDoc(userRef)).exists()) {
+        await setDoc(userRef, {
+          userName: cachedName || 'Speler',
+          email: user.email || '',
+          gamesPlayed: 0, wins: 0,
+          streak: 0, bestStreak: 0,
+          guessDist: { "1":0, "2":0, "3":0, "4":0, "5":0, "6":0 },
+          status: "active",
+          createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+        }, { merge: true });
+      }
+      let data = (await getDoc(userRef)).data() || {};
 
-      const now = new Date();
-      const supporterActive = !!profile.supporterActive ||
-                              (profile.supporterUntil && new Date(profile.supporterUntil) > now);
-      supporterBannerTxt.textContent = supporterActive
-        ? 'Dankie dat jy ’n ondersteuner is!'
-        : 'Word ’n betalende ondersteuner';
+      if (data.userName) nameInput.value = data.userName;
 
-      const plays = await loadDilemmaPlays(user.uid);
+      // If user has requested deletion, show banner and disable edits
+      const isDeactivated = data.status && data.status !== 'active';
+      if (isDeactivated) {
+        statusBanner.classList.remove('hidden');
+        nameInput.disabled = true;
+        emailInput.disabled = true;
+        resetPwBtn.disabled = true;
+        document.querySelector('#profileForm button[type="submit"]').disabled = true;
+      }
 
-      computeAndRender(plays, supporterActive, profile.manualBonus || 0, profile.manualBonusNote || '');
+      // If we have no stats yet, try legacy fallback from /games/*/leaderboard/{uid}
+      const hasStats =
+        (data.gamesPlayed && data.gamesPlayed > 0) ||
+        Object.values(data.guessDist || {}).some(v => Number(v) > 0);
 
-      document.getElementById('profileForm').addEventListener('submit', async (e)=>{
-        e.preventDefault();
-        try{
-          await setDoc(uref, {
-            name: nameInput.value.trim().slice(0,40),
-            email: user.email,
-            updatedAt: serverTimestamp()
-          }, { merge: true });
-          formMsg.textContent = "Profiel gestoor.";
-          formMsg.className = "text-sm mt-2 text-green-600";
-          formMsg.classList.remove('hidden');
-          gtag('event','profile_update');
-        }catch(err){
-          console.error(err);
-          showError('Kon nie jou profiel stoor nie.');
+      if (!hasStats) {
+        try {
+          const legacy = await tryCollectionGroupFallback(user.uid);
+          if (legacy) {
+            // Persist to users doc for future fast loads
+            await setDoc(userRef, {
+              ...legacy,
+              updatedAt: serverTimestamp()
+            }, { merge: true });
+            data = { ...data, ...legacy };
+          }
+        } catch (e) {
+          // Silently ignore; page will just show 0s
+          console.warn("Fallback load failed:", e);
         }
-      });
+      }
 
-      document.getElementById('resetPwBtn').addEventListener('click', async ()=>{
-        try{
-          await sendPasswordResetEmail(auth, user.email);
-          formMsg.textContent = "Skakel vir wagwoordherstel is gestuur na jou e-pos.";
-          formMsg.className = "text-sm mt-2 text-green-600";
-          formMsg.classList.remove('hidden');
-          gtag('event','password_reset_request');
-        }catch(err){
-          console.error(err);
-          showError('Kon nie wagwoordherstel stuur nie.');
-        }
-      });
-
-      document.getElementById('deleteBtn').addEventListener('click', async ()=>{
-        if (!confirm("Is jy seker? Jou rekening sal gedeaktiveer word.")) return;
-        try{
-          await updateDoc(uref, { deleteRequestedAt: serverTimestamp() });
-          deleteMsg.textContent = "Jou versoek is aangeteken. Ons sal opvolg.";
-          deleteMsg.className = "text-sm mt-2 text-green-600";
-          deleteMsg.classList.remove('hidden');
-          gtag('event','account_delete_request');
-        }catch(err){
-          console.error(err);
-          showError('Kon nie die verwyderingsversoek aanteken nie.');
-        }
-      });
+      showStats(data);
     });
 
-    function showError(msg){ errBanner.textContent = msg; errBanner.classList.remove('hidden'); }
+    // Save profile changes
+    document.getElementById('profileForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const user = auth.currentUser;
+      if (!user) return;
 
-    function computeAndRender(plays, supporterActive, manualBonus=0, manualNote=''){
-      const dates = [...new Set(plays.map(p=>p.date))].sort();
-      const byDate = new Map();
-      dates.forEach(d=>{
-        const p = plays.find(x=>x.date===d);
-        byDate.set(d, p?.win === true);
-      });
+      const name = nameInput.value.trim();
+      const newEmail = emailInput.value.trim();
+      if (name.length < 2){ formMsg.textContent = "Naam te kort."; formMsg.className="text-red-600"; return;}
 
-      let cur=0, best=0, prev=null;
-      for(const d of dates){
-        const consec = prev && (new Date(d) - new Date(prev) === 24*60*60*1000);
-        if(!consec) cur=0;
-        if(byDate.get(d)===true){ cur++; best=Math.max(best,cur); } else { cur=0; }
-        prev=d;
-      }
-
-      const dist = {1:0,2:0,3:0,4:0,5:0,6:0,fail:0};
-      for(const p of plays){
-        if(p.win===true){
-          const g = Math.min(Math.max(1,p.guesses||6),6);
-          dist[g] += 1;
-        } else {
-          dist.fail += 1;
+      try {
+        if (newEmail && newEmail !== (user.email || '')) {
+          await updateEmail(user, newEmail); // may require recent login
         }
+        const payload = {
+          userName: name,
+          email: newEmail || user.email || '',
+          updatedAt: serverTimestamp()
+        };
+        await setDoc(doc(db,'users', user.uid), payload, { merge:true });
+        await setDoc(doc(db,'registrations', user.uid), { ...payload, userId: user.uid }, { merge:true });
+
+        localStorage.setItem('userName', name);
+
+        formMsg.textContent = "Profiel gestoor.";
+        formMsg.className = "text-green-600";
+      } catch (err) {
+        formMsg.textContent = "Kon nie stoor nie: " + err.message;
+        formMsg.className = "text-red-600";
       }
+    });
 
-      const subtotal =
-        dist[1]*BASE_POINTS[1] + dist[2]*BASE_POINTS[2] + dist[3]*BASE_POINTS[3] +
-        dist[4]*BASE_POINTS[4] + dist[5]*BASE_POINTS[5] + dist[6]*BASE_POINTS[6] +
-        dist.fail*BASE_POINTS.fail;
-
-      const streakMult = cur>=STREAK_THRESHOLD ? STREAK_MULTIPLIER : 1;
-      const supporterMult = supporterActive ? SUPPORTER_MULTIPLIER : 1;
-      const streakBonus = Math.round(subtotal * (streakMult - 1));
-      const supporterBonus = Math.round((subtotal + streakBonus) * (supporterMult - 1));
-      const manual = Math.round(Number(manualBonus||0));
-      const total = subtotal + streakBonus + supporterBonus + manual;
-
-      const totalPlayed = plays.length;
-      const wins = plays.filter(p=>p.win===true).length;
-      const winrate = totalPlayed ? Math.round((wins/totalPlayed)*100) : 0;
-
-      playedStat.textContent = totalPlayed;
-      winrateStat.textContent = `${winrate}%`;
-      curStreakEl.textContent = cur;
-      bestStreakEl.textContent = best;
-
-      const rows=[
-        {label:`In 1 raaiskoot opgelos`, qty:dist[1], per:BASE_POINTS[1]},
-        {label:`In 2 raaiskote opgelos`,  qty:dist[2], per:BASE_POINTS[2]},
-        {label:`In 3 raaiskote opgelos`,  qty:dist[3], per:BASE_POINTS[3]},
-        {label:`In 4 raaiskote opgelos`,  qty:dist[4], per:BASE_POINTS[4]},
-        {label:`In 5 raaiskote opgelos`,  qty:dist[5], per:BASE_POINTS[5]},
-        {label:`In 6 raaiskote opgelos`,  qty:dist[6], per:BASE_POINTS[6]},
-        {label:`Onopgelos`,               qty:dist.fail, per:BASE_POINTS.fail},
-      ];
-      breakdownBody.innerHTML = rows.map(r=>{
-        const pts = r.qty * r.per;
-        return `<tr>
-          <td>${r.label}</td>
-          <td class="text-right mono">${fmt(r.qty)}</td>
-          <td class="text-right mono">${fmt(r.qty)} × ${fmt(r.per)}</td>
-          <td class="text-right mono ${pts>=0?'text-emerald-700':'text-red-700'}">${fmt(pts)}</td>
-        </tr>`;
-      }).join('');
-
-      const pairs=[['1',dist[1]],['2',dist[2]],['3',dist[3]],['4',dist[4]],['5',dist[5]],['6',dist[6]],['X',dist.fail]];
-      const maxv=Math.max(1,...pairs.map(p=>p[1]));
-      distWrap.innerHTML=pairs.map(([lb,val])=>{
-        const w = val === 0 ? 0 : Math.max(6, Math.round((val/maxv)*100));
-        return `<div class="barRow"><div class="text-xs font-bold text-slate-500">${lb}</div><div class="bar" style="width:${w}%"></div><div class="mono text-sm font-extrabold">${fmt(val)}</div></div>`;
-      }).join('');
-
-      subtotalCell.textContent    = fmt(subtotal);
-      document.getElementById('lopieBonusCell').textContent = fmt(streakBonus);
-      document.getElementById('supporterBonusCell').textContent = fmt(supporterBonus);
-
-      if (manual !== 0){
-        manualBonusRow.classList.remove('hidden');
-        manualBonusCell.textContent = fmt(manual);
-        manualBonusNote.textContent = manualNote || '—';
-      } else {
-        manualBonusRow.classList.add('hidden');
+    // Password reset
+    resetPwBtn.addEventListener('click', async ()=>{
+      const user = auth.currentUser;
+      if (!user || !user.email){
+        formMsg.textContent = "Geen e-pos gevind vir jou rekening nie.";
+        formMsg.className = "text-red-600"; return;
       }
-
-      totalCell.textContent = fmt(total);
-
-      if (streakMult > 1) {
-        streakChip.classList.remove('hidden');
-        lopieMeta.innerHTML = `Lopie: ${cur} op ’n ry <span class="text-slate-400">(×${STREAK_MULTIPLIER.toFixed(2)})</span>`;
-      } else {
-        streakChip.classList.add('hidden');
-        lopieMeta.innerHTML = `Geen <span class="text-slate-400">(huidige lopie: ${cur})</span>`;
+      try {
+        await sendPasswordResetEmail(auth, user.email, {
+          url: 'https://www.kriptiek.com/login.html',
+          handleCodeInApp: false
+        });
+        formMsg.textContent = "Wagwoordherstel-e-pos is gestuur (kyk ook jou spam).";
+        formMsg.className = "text-green-600";
+      } catch (err) {
+        formMsg.textContent = "Kon nie e-pos stuur nie: " + err.message;
+        formMsg.className = "text-red-600";
       }
-      supporterMeta.textContent = supporterActive ? `×${SUPPORTER_MULTIPLIER.toFixed(2)}` : 'Geen';
+    });
 
-      const combinedMult = streakMult * supporterMult;
-      multiplierLabel.textContent = `×${combinedMult.toFixed(2)}`;
+    // Soft-delete request
+    deleteBtn.addEventListener('click', async ()=>{
+      const user = auth.currentUser;
+      if (!user) return;
+      const ok = confirm("Is jy seker? Jou rekening word gedeaktiveer en vir verwydering ingedien.");
+      if (!ok) return;
+      try {
+        await setDoc(doc(db,'users', user.uid), {
+          status: "deletion_requested",
+          updatedAt: serverTimestamp()
+        }, { merge: true });
 
-      calcTime.textContent = new Date().toLocaleString('af-ZA');
-      totalPointsEl.textContent   = fmt(total);
-      pillOverall.textContent     = `JOU KRIPTIEK-TELLING: ${fmt(total)}`;
-      pillDilemmaLive.textContent = `JOU DILEMMA-TELLING: ${fmt(total)}`;
-    }
+        await setDoc(doc(db,'deletionRequests', user.uid), {
+          requestedAt: serverTimestamp(),
+          uid: user.uid,
+          email: user.email || null
+        }, { merge: true });
+
+        deleteMsg.textContent = "Versoek gestuur. Jy sal nou afgemeld word.";
+        deleteMsg.className = "text-green-600";
+        await signOut(auth);
+        setTimeout(()=>{ window.location.href = "/index.html"; }, 800);
+      } catch (err) {
+        deleteMsg.textContent = "Kon nie versoek stuur nie: " + err.message;
+        deleteMsg.className = "text-red-600";
+      }
+    });
   </script>
 </body>
 </html>
