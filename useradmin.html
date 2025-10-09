@@ -97,15 +97,17 @@
 
       <!-- Search -->
       <section class="card p-5 md:p-6 mb-6">
-        <h2 class="text-lg font-bold mb-3">Soek gebruiker per e-pos</h2>
+        <h2 class="text-lg font-bold mb-3">Soek gebruiker (e-pos of naam)</h2>
         <form id="searchForm" class="flex flex-col gap-3 md:flex-row md:items-end">
           <label class="flex-1">
-            <span class="block text-sm font-semibold text-gray-700">E-posadres</span>
-            <input id="searchEmail" type="email" required class="mt-1 w-full border border-gray-300 rounded p-2" placeholder="bv. speler@example.com" />
+            <span class="block text-sm font-semibold text-gray-700">Soekterm</span>
+            <input id="searchTerm" type="text" required
+                   class="mt-1 w-full border border-gray-300 rounded p-2"
+                   placeholder="bv. speler@example.com of ‘Admin’" />
           </label>
           <button id="searchBtn" class="kbtn rounded-lg" type="submit">Soek</button>
         </form>
-        <p class="text-xs text-slate-500 mt-2">Soek in <code>users</code>; as niks gevind word nie, val terug na <code>registrations</code>.</p>
+        <p class="text-xs text-slate-500 mt-2">Soek eers in <code>users</code>; as niks gevind word nie, val terug na <code>registrations</code>. E-pos of presiese gebruikersnaam werk.</p>
       </section>
 
       <!-- Result -->
@@ -245,7 +247,6 @@
       if (!isAdmin) {
         $("adminPill").classList.remove("hidden");
         showAlert("Jy het nie admin-regte nie. Meld aan met ’n admin-rekening.", "error");
-        // Optionally redirect:
         setTimeout(()=>{ window.location.href="/index.html"; }, 2200);
         return;
       } else {
@@ -281,68 +282,119 @@
     // --- Search + Edit state ---
     let loaded = null; // { uid, email, name, lastLogin, profile:{...}, ref: docRef }
 
+    // Helpers: single-field equality queries (no composite index needed)
+    async function findInUsersBy(field, value) {
+      const usersCol = collection(db, "users");
+      const q1 = query(usersCol, where(field, "==", value), limit(5));
+      const snap = await getDocs(q1);
+      return snap.empty ? null : snap.docs[0];
+    }
+    async function findInRegsBy(field, value) {
+      const regsCol = collection(db, "registrations");
+      const q1 = query(regsCol, where(field, "==", value), limit(5));
+      const snap = await getDocs(q1);
+      return snap.empty ? null : snap.docs[0];
+    }
+
+    async function lookupByEmail(term) {
+      const email = term.trim().toLowerCase();
+      // users first
+      let docHit = await findInUsersBy("email", email);
+      if (!docHit) docHit = await findInUsersBy("emailLower", email); // optional mirror field
+      if (docHit) return { source: "users", docHit };
+
+      // registrations fallback
+      docHit = await findInRegsBy("email", email);
+      if (!docHit) docHit = await findInRegsBy("emailLower", email);
+      if (docHit) return { source: "registrations", docHit };
+
+      return null;
+    }
+
+    async function lookupByName(term) {
+      const raw = term.trim();
+      const lower = raw.toLowerCase();
+
+      // users first
+      let docHit =
+        (await findInUsersBy("userName", raw)) ||
+        (await findInUsersBy("name", raw)) ||
+        (await findInUsersBy("userNameLower", lower)) ||
+        (await findInUsersBy("nameLower", lower));
+      if (docHit) return { source: "users", docHit };
+
+      // registrations fallback
+      docHit =
+        (await findInRegsBy("userName", raw)) ||
+        (await findInRegsBy("name", raw)) ||
+        (await findInRegsBy("userNameLower", lower)) ||
+        (await findInRegsBy("nameLower", lower));
+      if (docHit) return { source: "registrations", docHit };
+
+      return null;
+    }
+
+    async function hydrateLoadedFromHit(hit, searchTerm, preferUsersDoc = true) {
+      const { source, docHit } = hit;
+      const uid = docHit.id;
+      let profile = source === "users" ? (docHit.data() || {}) : {};
+      let name = profile.name || profile.userName || "";
+
+      // If hit came from registrations, try enrich from users/{uid}
+      if (source !== "users" || (preferUsersDoc && !profile.lastLogin)) {
+        const uref = doc(db, "users", uid);
+        const udoc = await getDoc(uref);
+        if (udoc.exists()) {
+          const pdata = udoc.data() || {};
+          profile = { ...pdata, ...profile }; // prefer users doc values by default
+          name = profile.name || profile.userName || name || "";
+        }
+      }
+
+      // Email to display: from user doc if present, else infer from search term
+      const emailOut = profile.email || (searchTerm.includes("@") ? searchTerm.toLowerCase() : (profile.email || ""));
+
+      loaded = {
+        uid,
+        email: emailOut || "",
+        name,
+        lastLogin: profile.lastLogin || null,
+        profile,
+        ref: doc(db, "users", uid),
+      };
+      renderLoaded();
+      $("resultCard").classList.remove("hidden");
+      gtag('event','admin_user_lookup');
+    }
+
     $("searchForm").addEventListener("submit", async (e)=>{
       e.preventDefault(); hideAlert();
       $("resultCard").classList.add("hidden");
       loaded = null;
 
-      const email = $("searchEmail").value.trim().toLowerCase();
-      if (!email) { showAlert("Voer ’n geldige e-posadres in.", "error"); return; }
+      const term = $("searchTerm").value.trim();
+      if (!term) { showAlert("Voer ’n soekterm in (e-pos of presiese naam).", "error"); return; }
 
       $("searchBtn").disabled = true;
 
       try{
-        // 1) lookup in users by email
-        let uid = null, name = "", lastLogin = null, profile = null;
+        const looksLikeEmail = term.includes("@");
 
-        const usersCol = collection(db, "users");
-        let snap = await getDocs(query(usersCol, where("email","==", email), limit(5)));
-        if (!snap.empty) {
-          const first = snap.docs[0];
-          uid = first.id;
-          profile = first.data() || {};
-          name = profile.name || profile.userName || "";
-          lastLogin = profile.lastLogin || null;
+        let hit = null;
+        if (looksLikeEmail) {
+          hit = await lookupByEmail(term);
+          if (!hit) hit = await lookupByName(term); // fallback
+        } else {
+          hit = await lookupByName(term);
+          if (!hit) hit = await lookupByEmail(term); // fallback
         }
 
-        // 2) fallback to registrations
-        if (!uid) {
-          const regsCol = collection(db, "registrations");
-          const rs = await getDocs(query(regsCol, where("email","==", email), limit(5)));
-          if (!rs.empty) {
-            const first = rs.docs[0];
-            uid = first.id;
-            const rdata = first.data() || {};
-            name = rdata.userName || rdata.name || "";
-            // try to fetch users/{uid} now (may not exist yet)
-            const uref = doc(db, "users", uid);
-            const udoc = await getDoc(uref);
-            if (udoc.exists()) {
-              profile = udoc.data() || {};
-              lastLogin = profile.lastLogin || null;
-            } else {
-              profile = {}; // will create on save if needed
-            }
-          }
-        }
-
-        if (!uid) {
-          showAlert("Geen gebruiker met dié e-pos gevind nie.", "error");
+        if (!hit) {
+          showAlert("Geen gebruiker gevind met dié soekterm nie.", "error");
           return;
         }
 
-        // Prepare UI
-        loaded = {
-          uid,
-          email,
-          name,
-          lastLogin,
-          profile,
-          ref: doc(db, "users", uid)
-        };
-        renderLoaded();
-        $("resultCard").classList.remove("hidden");
-        gtag('event','admin_user_lookup');
+        await hydrateLoadedFromHit(hit, term);
       }catch(err){
         console.error(err);
         showAlert("Fout tydens soek. Probeer weer.", "error");
@@ -383,14 +435,11 @@
 
     // Quick date helpers
     function toYMD(input){
-      // Accept Date, Timestamp, or string
       try{
         if (!input) return "";
         if (typeof input === "string") {
-          // Try parse
           const d = new Date(input);
           if (isFinite(d)) return d.toISOString().slice(0,10);
-          // If already YYYY-MM-DD
           if (/^\d{4}-\d{2}-\d{2}$/.test(input)) return input;
         }
         if (input?.toDate) { return input.toDate().toISOString().slice(0,10); }
