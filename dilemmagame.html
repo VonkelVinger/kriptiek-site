@@ -76,7 +76,6 @@
   }
   .share-menu-local button:hover{ background:#f3f4f6; }
 
-  /* ---- Action bars ---- */
   .action-grid{
     display:grid;
     grid-template-columns:repeat(3,1fr);
@@ -86,28 +85,12 @@
     max-width:376px;
     margin:0 auto;
   }
-  .action-grid.two{
-    grid-template-columns:repeat(2,1fr);
-    max-width:248px;
-  }
+  .action-grid.two{ grid-template-columns:repeat(2,1fr); max-width:248px; }
   .action-grid > a, .action-grid > button{
-    display:grid;
-    place-items:center;
-    width:100%;
-    aspect-ratio:1/1;
-    max-width:120px;
-    background:transparent;
-    border:0;
-    padding:0;
-    line-height:0;
-    cursor:pointer;
+    display:grid; place-items:center; width:100%; aspect-ratio:1/1; max-width:120px;
+    background:transparent; border:0; padding:0; line-height:0; cursor:pointer;
   }
-  .btn-img{
-    width:100%; height:100%;
-    object-fit:contain;
-    box-shadow:0 6px 15px rgba(0,0,0,.25);
-    display:block;
-  }
+  .btn-img{ width:100%; height:100%; object-fit:contain; box-shadow:0 6px 15px rgba(0,0,0,.25); display:block; }
   .btn-img:hover{ transform:translateY(-1px); filter:brightness(1.02); }
   .btn-img:active{ transform:translateY(0); filter:brightness(.98); }
 </style>
@@ -128,10 +111,8 @@
   <div id="game-grid" class="mb-6"></div>
   <div id="keyboard" class="mb-2"></div>
 
-  <!-- Status line -->
   <p id="statusLine" class="text-center font-bold text-[#1e3a8a] mb-4" style="display:none;"></p>
 
-  <!-- R ACTION BAR (shown only when signed in) -->
   <div id="barR" class="mt-4 hidden">
     <div class="action-grid">
       <a href="/forum.html" title="Gesels saam">
@@ -144,7 +125,6 @@
         <button id="tileShareBtn" type="button" title="Deel">
           <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
         </button>
-        <!-- Share dropdown anchored to yellow tile -->
         <div id="shareMenuPersistent" class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
           <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
           <div class="space-y-1">
@@ -165,9 +145,7 @@
       Jy mag vir elke probeerslag enige letters in enige volgorde kies, maar elke raaiskoot moet dieselfde aantal letters hê as die woord waarna jy soek. Dit hoef nie ook 'n woord te vorm nie.<br>
       Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER.
     </p>
-    <p class="text-gray-700 italic mb-2">
-      WENK: Op kleiner skerms kan jy Dilemma soos 'n foto met jou vingers kleiner trek totdat dit heeltemal inpas.
-    </p>
+    <p class="text-gray-700 italic mb-2">WENK: Op kleiner skerms kan jy Dilemma soos 'n foto met jou vingers kleiner trek totdat dit heeltemal inpas.</p>
     <p class="text-gray-700 leading-relaxed">
       <span class="font-bold text-green-700">GROEN</span>: Die letter is in die antwoord en in die regte blokkie.<br>
       <span class="font-bold text-yellow-600">GEEL</span>: Die letter is in die antwoord, maar nie in die regte blokkie nie.<br>
@@ -208,12 +186,9 @@
 <div id="resultModal">
   <div class="modal-content">
     <p id="resultMessage" class="mb-4 font-bold"></p>
-
     <div class="relative flex items-center justify-center gap-2">
       <button id="modalShareBtn" type="button" class="btn-share">DEEL</button>
       <button id="closeModalBtn" type="button" class="btn-close">SLUIT</button>
-
-      <!-- Local dropdown for modal DEEL -->
       <div id="shareMenuModal" class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden share-menu-local">
         <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
         <div class="space-y-1">
@@ -690,7 +665,7 @@ async function ensureLeaderboardRow(summary) {
   }
 }
 
-/* ---- loadLeaderboard(): pill for everyone + right-aligned ---- */
+/* ---- loadLeaderboard(): right-aligned mini-pill + backfill ---- */
 async function loadLeaderboard() {
   try {
     const snap = await getDocs(collection(db, "games", gameId, "leaderboard"));
@@ -714,7 +689,6 @@ async function loadLeaderboard() {
       if (scoreVal == null) needScore.push(d.id);
     });
 
-    /* Fill missing successRate from users/{uid} */
     if (needSR.length) {
       const results = await Promise.allSettled(needSR.map(uid => getDoc(doc(db, "users", uid))));
       results.forEach((res, i) => {
@@ -730,7 +704,6 @@ async function loadLeaderboard() {
       });
     }
 
-    /* Fill/back-fill missing dilemmaScoreAtPlay gradually */
     if (needScore.length) {
       const userDocs = await Promise.allSettled(needScore.map(uid => getDoc(doc(db, "users", uid))));
       const toCompute = [];
@@ -741,11 +714,7 @@ async function loadLeaderboard() {
         if (res.status === "fulfilled" && res.value.exists()) {
           const u = res.value.data() || {};
           const k = Number(u.dilemmaScore);
-          if (Number.isFinite(k)) {
-            ent.score = k;
-          } else {
-            toCompute.push(uid);
-          }
+          if (Number.isFinite(k)) ent.score = k; else toCompute.push(uid);
         } else {
           toCompute.push(uid);
         }
@@ -757,22 +726,17 @@ async function loadLeaderboard() {
           const uid = toCompute[i];
           const ent = entries.find(e => e.uid === uid);
           if (!ent) return;
-          if (res.status === "fulfilled" && Number.isFinite(res.value)) {
-            ent.score = Number(res.value);
-          }
+          if (res.status === "fulfilled" && Number.isFinite(res.value)) ent.score = Number(res.value);
         });
       }
 
-      /* Snapshot back to leaderboard for next time */
       await Promise.allSettled(
         entries
           .filter(e => Number.isFinite(e.score))
           .map(e =>
-            setDoc(
-              doc(db, "games", gameId, "leaderboard", e.uid),
-              { dilemmaScoreAtPlay: Number(e.score) },
-              { merge: true }
-            )
+            setDoc(doc(db, "games", gameId, "leaderboard", e.uid),
+                  { dilemmaScoreAtPlay: Number(e.score) },
+                  { merge: true })
           )
       );
     }
@@ -962,8 +926,7 @@ onAuthStateChanged(auth, async (user) => {
   const barR = document.getElementById('barR');
   if (barR) barR.classList.remove('hidden');
 
-  const shareBtnModal = document.getElementById("modalShareBtn");
-  wireShareDropdown(shareBtnModal, mMenu);
+  wireShareDropdown(document.getElementById("modalShareBtn"), mMenu);
   bindMenuActions(mMenu, { waBtn: mWA, copyBtn: mCopy, sysBtn: mSys });
   wireShareDropdown(tileShareBtn, pMenu);
   bindMenuActions(pMenu, { waBtn: pWA, copyBtn: pCopy, sysBtn: pSys });
@@ -1041,9 +1004,8 @@ onAuthStateChanged(auth, async (user) => {
       document.querySelector("header .container, header .max-w-6xl, header")
     ].filter(Boolean);
     const target = anchors[0] || document.querySelector("main") || document.body;
-    if (anchors[0]) {
-      anchors[0].appendChild(pill);
-    } else {
+    if (anchors[0]) anchors[0].appendChild(pill);
+    else {
       const wrap = document.createElement("div");
       wrap.className = "max-w-6xl mx-auto px-4 mt-3 mb-2";
       wrap.appendChild(pill);
@@ -1064,8 +1026,7 @@ onAuthStateChanged(auth, async (user) => {
       if (d?.supporterUntil?.toMillis && d.supporterUntil.toMillis() > Date.now()) supporterActive = true;
     }
 
-    const playsRef = collection(db, "userGames", uid, "plays");
-    const qy = query(playsRef, orderBy("finishedAt", "desc"), limit(200));
+    const qy = query(collection(db, "userGames", uid, "plays"), orderBy("finishedAt", "desc"), limit(200));
     const snap = await getDocs(qy);
 
     const byDate = new Map();
@@ -1110,7 +1071,7 @@ onAuthStateChanged(auth, async (user) => {
   async function persistIfChanged(uid, value) {
     const uref = doc(db, "users", uid);
     const snap = await getDoc(uref);
-    const prev = snap.exists() ? (Number(snap.data()?.dilemmaScore) || 0) : null;
+    const prev = snap.exists() ? (Number(snap.data()?.dilemmaScore ?? snap.data()?.kScore) || 0) : null;
     if (prev !== value) {
       await setDoc(uref, {
         dilemmaScore: value,
@@ -1128,14 +1089,30 @@ onAuthStateChanged(auth, async (user) => {
       pillEl.classList.add("opacity-80");
       return;
     }
+
+    // 1) Show any existing saved score immediately (prevents “—”)
+    try {
+      const uref = doc(db, "users", user.uid);
+      const usnap = await getDoc(uref);
+      if (usnap.exists()) {
+        const d = usnap.data() || {};
+        const saved = Number(d.dilemmaScore ?? d.kScore);
+        if (Number.isFinite(saved)) pillEl.textContent = `JOU DILEMMA-TELLING: ${fmt(saved)}`;
+      }
+    } catch {}
+
+    // 2) Recompute in background; persist and update UI
     try {
       const total = await computeDilemmaTotal(user.uid);
       pillEl.textContent = `JOU DILEMMA-TELLING: ${fmt(total)}`;
-      await persistIfChanged(user.uid, total);   /* ✅ permanent fix */
+      await persistIfChanged(user.uid, total);
     } catch (e) {
       console.error(e);
-      pillEl.textContent = "Dilemma-telling: —";
-      pillEl.title = "Kon nie jou telling haal nie";
+      // keep whatever we were showing (saved score if any)
+      if (!/\d/.test(pillEl.textContent)) {
+        pillEl.textContent = "Dilemma-telling: —";
+        pillEl.title = "Kon nie jou telling haal nie";
+      }
     }
   });
 </script>
@@ -1158,15 +1135,4 @@ document.addEventListener('DOMContentLoaded', () => {
       <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
          onclick="gtag && gtag('event','bmac_click',{from:'dilemma-leaderboard'})"
          class="flex items-center justify-center w-full px-5 py-3
-                bg-yellow-500 hover:bg-yellow-600 text-white font-bold
-                rounded-xl shadow-md transition duration-200"
-         aria-label="Help ons om Kriptiek gratis te hou">
-        <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
-      </a>
-    </div>
-  `;
-  target.parentElement.insertBefore(wrap, target);
-});
-</script>
-
-</html>
+                bg-yellow-500
