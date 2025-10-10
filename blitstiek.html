@@ -157,7 +157,6 @@
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
-
   <!-- HEADER -->
   <header>
     <div class="logo-container" aria-label="BLITSTIEK">
@@ -329,7 +328,6 @@
           </li>
         </ol>
       </section>
-
       <!-- LEADERBOARD -->
       <section class="card mt-6 p-4">
         <div class="flex items-center justify-between mb-2">
@@ -426,7 +424,6 @@
 
     /* Absolute site URL for share (dev falls back to prod) */
     const SITE_ORIGIN = location.hostname.endsWith('kriptiek.com') ? location.origin : 'https://www.kriptiek.com';
-
     /* N-R gate utils */
     let guestGateBypassOnce = false;
     function showNRGate(){ nrGate.style.display='flex'; }
@@ -684,31 +681,24 @@
 
     /* ---- Keyboard controls (arrows + space + P) ---- */
     window.addEventListener('keydown', (e) => {
-      // If the success modal is open, ignore gameplay keys
       const modalOpen = over && over.style.display === 'flex';
       if (modalOpen) return;
 
-      // avoid typing in inputs (if any are ever added)
       const tag = (document.activeElement && document.activeElement.tagName) || '';
       if (['INPUT','TEXTAREA','SELECT'].includes(tag)) return;
 
-      // If the N-R gate is open, accept first gameplay key to proceed as guest
       const gateOpen = nrGate && nrGate.style.display === 'flex';
       const isGameplayKey = (
-        e.key === 'ArrowLeft' ||
-        e.key === 'ArrowRight' ||
-        e.key === 'ArrowDown' ||
-        e.key === ' ' || e.key === 'Spacebar' ||
-        e.key === 'p' || e.key === 'P'
+        e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowDown' ||
+        e.key === ' ' || e.key === 'Spacebar' || e.key === 'p' || e.key === 'P'
       );
 
       if (gateOpen && isGameplayKey) {
         e.preventDefault();
-        chooseGuest();           // hide the gate and focus window
-        if (!cur) start();       // start a round if not already started
+        chooseGuest();
+        if (!cur) start();
       }
 
-      // Normal controls
       switch (e.key) {
         case 'ArrowLeft':  e.preventDefault(); move(-1, 0); break;
         case 'ArrowRight': e.preventDefault(); move( 1, 0); break;
@@ -724,13 +714,10 @@
     function toggleShareMenu(){ shareMenu.classList.toggle('hidden'); }
     modalShareBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleShareMenu(); });
 
-    // Hide menus when clicking outside / scrolling / resizing
     document.addEventListener('click', (e)=>{
       if(shareMenu && !shareMenu.contains(e.target) && e.target!==modalShareBtn){ shareMenu.classList.add('hidden'); }
       if(stickyShareMenu && !stickyShareMenu.contains(e.target) && e.target!==stickyShareBtn){ stickyShareMenu.classList.add('hidden'); }
-      document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>{
-        if(!m.contains(e.target)) m.classList.add('hidden');
-      });
+      document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>{ if(!m.contains(e.target)) m.classList.add('hidden'); });
     });
     window.addEventListener('scroll',  ()=>{
       shareMenu.classList.add('hidden');
@@ -743,7 +730,6 @@
       document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>m.classList.add('hidden'));
     });
 
-    // System share helper (tries to attach green tile image on mobile)
     async function trySystemShare(text){
       try{
         const res = await fetch(`${SITE_ORIGIN}/assets/BLITSTIEK_12SEP.png`);
@@ -760,7 +746,6 @@
       return false;
     }
 
-    // ✅ Use success text (with time) if available, else the basic link-only text for MODAL menu
     mWA.onclick   = () => { openWhatsApp(currentShareText()); shareMenu.classList.add('hidden'); };
     mCopy.onclick = async () => {
       try{ await navigator.clipboard.writeText(currentShareText()); alert('Skakel gekopieer!'); }catch{}
@@ -772,7 +757,6 @@
       shareMenu.classList.add('hidden');
     };
 
-    // Sticky share menu (uses success text if available)
     sWA.onclick   = () => { openWhatsApp(currentShareText()); stickyShareMenu.classList.add('hidden'); };
     sCopy.onclick = async () => {
       try{ await navigator.clipboard.writeText(currentShareText()); alert('Skakel gekopieer!'); }catch{}
@@ -829,7 +813,6 @@
       submitTimeToBoard();
       enableStickyShare({ time: t, target: TARGET });
 
-      // UI message (bold in modal only)
       winMsg.innerHTML = `Veels geluk, <strong>${currentUserName}</strong>, jy het <strong>${TARGET}</strong> in <strong>${fmt(t)}</strong> voltooi!`;
       over.style.display='flex';
       modalCloseBtn.onclick = ()=>{ over.style.display='none'; };
@@ -887,7 +870,6 @@
     async function loadGame(){
       GAME_ID = await resolveGameId();
 
-      // --- Canonical URL normalization (after GAME_ID is known) ---
       try {
         if (GAME_ID) {
           const urlObj = new URL(window.location.href);
@@ -918,14 +900,12 @@
       const data=snap.data();
       TARGET=(data.word||'').toUpperCase();
 
-      // target chips (fallback if blank)
       targetEl.innerHTML='';
       (TARGET || '—').split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
 
       grid = Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
 
-      // Sticky share restore
       maybeEnableStickyShareFromStorage();
       if(user){
         try{
@@ -937,7 +917,6 @@
         }catch{}
       }
 
-      // live leaderboard
       startLiveLeaderboard();
     }
 
@@ -974,7 +953,6 @@
       }catch{}
     }
 
-    /* ---- Yellow tile share dropdowns (both bars) ---- */
     function wireShareTile(wrapper){
       const btn  = wrapper.querySelector('.share-tile');
       const menu = wrapper.querySelector('.share-menu-local');
@@ -988,7 +966,7 @@
         menu.classList.toggle('hidden');
       });
 
-      const txt = () => currentShareText(); // ✅ use success text if available
+      const txt = () => currentShareText();
       wa.onclick = () => { openWhatsApp(txt()); menu.classList.add('hidden'); };
       cp.onclick = async () => { try{ await navigator.clipboard.writeText(txt()); alert('Skakel gekopieer!'); }catch{} menu.classList.add('hidden'); };
       sys.onclick = async () => { const ok = await trySystemShare(txt()); if(!ok) openWhatsApp(txt()); menu.classList.add('hidden'); };
@@ -1013,10 +991,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const wrap = document.createElement('div');
   wrap.className = 'my-4';
   wrap.innerHTML = `
-    <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800">
+    <!-- Center the card's contents on mobile and make the anchor shrink-to-fit -->
+    <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800 text-center">
       <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
          onclick="gtag && gtag('event','bmac_click',{from:'blitstiek-leaderboard'})"
-         class="flex items-center justify-center w-full px-5 py-3
+         class="inline-flex items-center justify-center px-5 py-3
                 bg-yellow-500 hover:bg-yellow-600 text-white font-bold
                 rounded-xl shadow-md transition duration-200"
          aria-label="Help ons om Kriptiek gratis te hou">
