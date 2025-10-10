@@ -973,3 +973,180 @@ onAuthStateChanged(auth, async (user) => {
   await loadLeaderboard();
 });
 </script>
+<!-- DILEMMA SCORE PILL (inline on the game page) -->
+<script type="module">
+  import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc, collection, query, orderBy, limit, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+    authDomain: "kriptiek-c9ea2.firebaseapp.com",
+    projectId: "kriptiek-c9ea2",
+    storageBucket: "kriptiek-c9ea2.appspot.com",
+    messagingSenderId: "620450620939",
+    appId: "1:620450620939:web:e93a18ac23b53b33db890e"
+  };
+
+  const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
+  const STREAK_THRESHOLD = 5;
+  const STREAK_MULTIPLIER = 1.10;
+  const SUPPORTER_MULTIPLIER = 1.10;
+
+  function mountPill() {
+    const pill = document.createElement("span");
+    pill.id = "pillDilemmaInline";
+    pill.className = "inline-flex items-center gap-2 px-3.5 py-2 rounded-full font-extrabold text-white bg-gradient-to-b from-orange-500 to-orange-700 shadow";
+    pill.textContent = "JOU DILEMMA-TELLING: —";
+    const anchors = [
+      document.getElementById("game-meta"),
+      document.querySelector("#hudRight"),
+      document.querySelector("#hud"),
+      document.querySelector("header .container, header .max-w-6xl, header")
+    ].filter(Boolean);
+    const target = anchors[0] || document.querySelector("main") || document.body;
+    if (anchors[0]) anchors[0].appendChild(pill);
+    else {
+      const wrap = document.createElement("div");
+      wrap.className = "max-w-6xl mx-auto px-4 mt-3 mb-2";
+      wrap.appendChild(pill);
+      target.prepend(wrap);
+    }
+    return pill;
+  }
+
+  function fmt(n){ return typeof n === "number" ? n.toLocaleString("af-ZA") : n; }
+
+  async function computeDilemmaTotal(uid) {
+    const uref = doc(db, "users", uid);
+    const usnap = await getDoc(uref);
+    let supporterActive = false;
+    if (usnap.exists()) {
+      const d = usnap.data();
+      if (d?.supporterActive === true) supporterActive = true;
+      if (d?.supporterUntil?.toMillis && d.supporterUntil.toMillis() > Date.now()) supporterActive = true;
+    }
+
+    const qy = query(collection(db, "userGames", uid, "plays"), orderBy("finishedAt", "desc"), limit(200));
+    const snap = await getDocs(qy);
+
+    const byDate = new Map();
+    snap.forEach(ds => {
+      const d = ds.data();
+      const date = ds.id.replace(/^Game/, "");
+      byDate.set(date, { win: d?.result === "win" || d?.finished === true, guesses: Number(d?.guesses || 0) });
+    });
+
+    const dates = Array.from(byDate.keys()).sort();
+    let cur=0, prev=null;
+    for (const d of dates) {
+      const consec = prev && (new Date(d) - new Date(prev) === 24*60*60*1000);
+      if (!consec) cur=0;
+      const p = byDate.get(d);
+      if (p?.win) cur++; else cur=0;
+      prev=d;
+    }
+
+    const dist = {1:0,2:0,3:0,4:0,5:0,6:0,fail:0};
+    for (const p of byDate.values()) {
+      if (p.win) {
+        const g = Math.min(Math.max(1, p.guesses || 6), 6);
+        dist[g] += 1;
+      } else {
+        dist.fail += 1;
+      }
+    }
+
+    const subtotal =
+      dist[1]*BASE_POINTS[1] + dist[2]*BASE_POINTS[2] + dist[3]*BASE_POINTS[3] +
+      dist[4]*BASE_POINTS[4] + dist[5]*BASE_POINTS[5] + dist[6]*BASE_POINTS[6] +
+      dist.fail*BASE_POINTS.fail;
+
+    const streakMult = cur >= STREAK_THRESHOLD ? STREAK_MULTIPLIER : 1;
+    const supporterMult = supporterActive ? SUPPORTER_MULTIPLIER : 1;
+    const streakBonus = Math.round(subtotal * (streakMult - 1));
+    const supporterBonus = Math.round((subtotal + streakBonus) * (supporterMult - 1));
+    return subtotal + streakBonus + supporterBonus;
+  }
+
+  async function persistIfChanged(uid, value) {
+    const uref = doc(db, "users", uid);
+    const snap = await getDoc(uref);
+    const prev = snap.exists() ? (Number(snap.data()?.dilemmaScore ?? snap.data()?.kScore) || 0) : null;
+    if (prev !== value) {
+      await setDoc(uref, {
+        dilemmaScore: value,
+        kScore: value,
+        scoreUpdatedAt: serverTimestamp()
+      }, { merge: true });
+    }
+  }
+
+  const pillEl = mountPill();
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      pillEl.textContent = "Meld aan om jou Dilemma-telling te sien";
+      pillEl.classList.add("opacity-80");
+      return;
+    }
+
+    try {
+      const uref = doc(db, "users", user.uid);
+      const usnap = await getDoc(uref);
+      if (usnap.exists()) {
+        const d = usnap.data() || {};
+        const saved = Number(d.dilemmaScore ?? d.kScore);
+        if (Number.isFinite(saved)) pillEl.textContent = `JOU DILEMMA-TELLING: ${fmt(saved)}`;
+      }
+    } catch {}
+
+    try {
+      const total = await computeDilemmaTotal(user.uid);
+      pillEl.textContent = `JOU DILEMMA-TELLING: ${fmt(total)}`;
+      await persistIfChanged(user.uid, total);
+    } catch (e) {
+      console.error(e);
+      if (!/\d/.test(pillEl.textContent)) {
+        pillEl.textContent = "Dilemma-telling: —";
+        pillEl.title = "Kon nie jou telling haal nie";
+      }
+    }
+  });
+</script>
+
+<!-- BuyMeACoffee CTA above leaderboard -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const target =
+    Array.from(document.querySelectorAll('h1,h2,h3,h4,section,div'))
+      .find(el => /Vandag se bestes/i.test(el.textContent.trim()))
+    || document.getElementById('leaderboard')
+    || document.querySelector('[data-leaderboard], .leaderboard');
+
+  if (!target || !target.parentElement) return;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'my-4';
+  wrap.innerHTML = `
+    <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800">
+      <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
+         onclick="window.gtag && gtag('event','bmac_click',{from:'dilemma-leaderboard'})"
+         class="flex items-center justify-center w-full px-5 py-3
+                bg-yellow-500 hover:bg-yellow-600 text-white font-bold
+                rounded-xl shadow-md transition duration-200"
+         aria-label="Help ons om Kriptiek gratis te hou">
+        <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
+      </a>
+    </div>
+  `;
+  target.parentElement.insertBefore(wrap, target);
+});
+</script>
+
+</body>
+</html>
