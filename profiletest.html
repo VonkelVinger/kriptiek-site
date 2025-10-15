@@ -13,7 +13,7 @@
 
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>My Profiel – Kriptiek (TOETS)</title>
+<title>My Profiel – Kriptiek</title>
 
 <!-- Favicons -->
 <link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
@@ -89,9 +89,14 @@
   .barRow{ display:grid; grid-template-columns:1.5rem 1fr auto; gap:.5rem; align-items:center; }
   .bar{ height:14px; background:linear-gradient(90deg,#1d4ed8,#1e40af); border-radius:7px; }
 
-  /* Supporter banner */
-  .supporter-banner{ display:flex; align-items:center; justify-content:center; width:100%;
-    background: linear-gradient(180deg, #22C55E 0%, #0EA55B 100%); color:#fff; font-weight:800; padding:.6rem 1rem; border-radius:999px; text-decoration:none; }
+  /* Supporter banner (base + color variants) */
+  .supporter-banner{
+    display:flex; align-items:center; justify-content:center; width:100%;
+    color:#fff; font-weight:800; padding:.6rem 1rem; border-radius:999px; text-decoration:none;
+    box-shadow: 0 6px 14px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.25);
+  }
+  .supporter-banner-green{ background: linear-gradient(180deg, #22C55E 0%, #0EA55B 100%); }
+  .supporter-banner-red{   background: linear-gradient(180deg, #DC2626 0%, #B91C1C 100%); }
 
   /* Equal tops */
   .top-card { min-height:320px; }
@@ -118,8 +123,10 @@
     <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 items-start">
       <!-- LEFT -->
       <section class="card p-5 md:p-6 top-card">
-        <a href="https://buymeacoffee.com/kriptiek" target="_blank" rel="noopener" class="supporter-banner mb-4" aria-label="Word ’n ondersteuner (Buy Me a Coffee)">
-          <span id="supporterBannerTxt">Word ’n betalende ondersteuner</span>
+        <a id="supporterBanner" href="https://buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
+           class="supporter-banner supporter-banner-red mb-4"
+           aria-label="Word ’n ondersteuner (Buy Me a Coffee)">
+          <span id="supporterBannerTxt">Kliek hier om 'n betalende ondersteuner te word</span>
         </a>
 
         <h2 class="text-lg font-bold mb-2">Profiel</h2>
@@ -157,8 +164,7 @@
         <h3 class="text-2xl md:text-[1.7rem] font-extrabold text-slate-900 mb-1">Hoe werk die Kriptiek-telling?</h3>
         <p class="text-sm text-slate-600">
           Jou Kriptiek-telling is die som van jou tellings vir Dilemma, Slimstiek en Blitstiek, maar tans is nog net eersgenoemde geaktiveer.
-          Vir eers is jou Kriptiek-telling dus dieselfde as jou Dilemma-telling. Later sal Slimstiek, Blitstiek en ander speletjies ook bykom.
-          En onthou, jy kry ook 10% ekstra by al jou nuwe punte sodra jy Kriptiek met $2 per maand of meer ondersteun.
+          Vir eers is jou Kriptiek-telling dus dieselfde as jou Dilemma-telling. Later sal Slimstiek, Blitstiek en ander speletjies ook bykom, wat allerhande lekker nuwe moontlikhede skep. En onthou, jy kry ook 10% ekstra by al jou punte as jy Kriptiek met $2 per maand of meer ondersteun.
         </p>
       </section>
     </div>
@@ -232,30 +238,13 @@
 
         <h3 class="text-sm font-bold text-slate-700 mb-2">Suksesverdeling</h3>
         <div id="distWrap" class="space-y-2"></div>
-
-        <div class="mt-5 flex items-center gap-2">
-          <button id="btnRefresh" class="kbtn" type="button">Herlaai (toetsdata)</button>
-          <span id="hint" class="text-xs text-slate-500">Hierdie blad is ’n TOETS-weergawe (geen Firestore).</span>
-        </div>
-      </section>
-    </div>
-
-    <!-- Future games -->
-    <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 mt-6">
-      <section class="card p-5 md:p-6">
-        <h2 class="text-lg font-bold text-slate-900">Blitstiek-telling</h2>
-        <div class="mt-3 border-2 border-dashed rounded-xl text-slate-400 font-bold flex items-center justify-center h-28">BINNEKORT</div>
-      </section>
-      <section class="card p-5 md:p-6">
-        <h2 class="text-lg font-bold text-slate-900">Slimstiek-telling</h2>
-        <div class="mt-3 border-2 border-dashed rounded-xl text-slate-400 font-bold flex items-center justify-center h-28">BINNEKORT</div>
       </section>
     </div>
   </main>
 
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
     &copy; 2025 Kriptiek. Alle regte voorbehou. |
-    <a href="/profile.html" class="underline px-1.5">My profiel</a> |
+    <a href="/index.html" class="underline px-1.5">Tuis</a> |
     <a href="/forum.html" class="underline px-1.5">Gesels saam</a> |
     <a href="/privacy.html" class="underline px-1.5">Privaatheidsbeleid</a> |
     <a href="/terms.html" class="underline px-1.5">Voorwaardes</a> |
@@ -295,106 +284,234 @@
     });
   </script>
 
-  <!-- TEST PAGE LOGIC (no Firestore) -->
-  <script>
-    // ====== MOCK DATA ======
-    const MOCK_SUPPORTER_ACTIVE = false; // toggle to true to preview supporter bonus
-    const MOCK_PLAYS = [
-      { date: offsetDay(-6), win: true,  guesses: 3 },
-      { date: offsetDay(-5), win: true,  guesses: 4 },
-      { date: offsetDay(-4), win: true,  guesses: 2 },
-      { date: offsetDay(-3), win: true,  guesses: 4 },
-      { date: offsetDay(-2), win: true,  guesses: 3 },
-      { date: offsetDay(-1), win: false, guesses: 0 },
-      { date: offsetDay(0),  win: true,  guesses: 5 },
-    ];
-    // =======================
+  <!-- LIVE: Firebase Auth + Firestore integration -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import {
+      getAuth, onAuthStateChanged, updateEmail, updateProfile,
+      sendPasswordResetEmail, deleteUser
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc, setDoc, updateDoc,
+      collection, query, orderBy, limit, getDocs, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
-    const fmt = n => (typeof n === 'number' ? n.toLocaleString('af-ZA') : n);
+    // Same config as index.html
+    const firebaseConfig = {
+      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+      authDomain: "kriptiek-c9ea2.firebaseapp.com",
+      projectId: "kriptiek-c9ea2",
+      storageBucket: "kriptiek-c9ea2.appspot.com",
+      messagingSenderId: "620450620939",
+      appId: "1:620450620939:web:e93a18ac23b53b33db890e"
+    };
 
+    // ---- constants (match your scoring) ----
     const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
     const STREAK_THRESHOLD = 5;
     const STREAK_MULTIPLIER = 1.10;
     const SUPPORTER_MULTIPLIER = 1.10;
 
-    const $ = id => document.getElementById(id);
-    const supporterBannerTxt = $('supporterBannerTxt');
-    const wbName = $('wbName');
-    const btnRefresh = $('btnRefresh');
+    // ---- helpers / DOM ----
+    const $ = (id) => document.getElementById(id);
+    const fmt = (n) => (typeof n === "number" ? n.toLocaleString("af-ZA") : n);
 
-    const totalPointsEl = $('totalPoints'), subtotalCell = $('subtotalCell'), totalCell = $('totalCell');
-    const breakdownBody = $('breakdownBody'), distWrap = $('distWrap');
-    const playedStat = $('playedStat'), winrateStat = $('winrateStat'), curStreakEl = $('curStreak'), bestStreakEl = $('bestStreak');
-    const streakChip = $('streakChip'), multiplierLabel = $('multiplierLabel'), calcTime = $('calcTime'), lopieMeta = $('lopieMeta');
-    const pillOverall = $('pillOverall'), pillDilemmaLive = $('pillDilemmaLive');
-    const formMsg = $('formMsg'), deleteMsg = $('deleteMsg');
-    const errBanner = $('errBanner');
+    const wbName = $("wbName");
+    const supporterBanner = $("supporterBanner");
+    const supporterBannerTxt = $("supporterBannerTxt");
+    const errBanner = $("errBanner");
+    const formMsg = $("formMsg");
+    const deleteMsg = $("deleteMsg");
 
-    wbName.textContent = 'GEBRUIKER';
-    supporterBannerTxt.textContent = MOCK_SUPPORTER_ACTIVE
-      ? 'Dankie dat jy ’n ondersteuner is!'
-      : 'Word ’n betalende ondersteuner';
+    const totalPointsEl = $("totalPoints"), subtotalCell = $("subtotalCell"), totalCell = $("totalCell");
+    const breakdownBody = $("breakdownBody"), distWrap = $("distWrap");
+    const playedStat = $("playedStat"), winrateStat = $("winrateStat");
+    const curStreakEl = $("curStreak"), bestStreakEl = $("bestStreak");
+    const streakChip = $("streakChip"), multiplierLabel = $("multiplierLabel"), calcTime = $("calcTime");
+    const lopieMeta = $("lopieMeta"), supporterMeta = $("supporterMeta");
+    const pillOverall = $("pillOverall"), pillDilemmaLive = $("pillDilemmaLive");
 
-    computeAndRender(MOCK_PLAYS, MOCK_SUPPORTER_ACTIVE);
-    if (btnRefresh) btnRefresh.addEventListener('click', ()=> computeAndRender(MOCK_PLAYS, MOCK_SUPPORTER_ACTIVE));
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-    function withBusy(btn, fn, gaEventName){
-      return async () => {
-        if (btn) { btn.disabled = true; btn.setAttribute('aria-busy','true'); }
-        try { await fn(); if (gaEventName) gtag('event', gaEventName); }
-        catch(e){ console.error(e); showError('Iets het skeefgeloop (TOETS).'); }
-        finally { if (btn) { btn.disabled=false; btn.removeAttribute('aria-busy'); } }
-      };
-    }
-    function showError(msg){ errBanner.textContent = msg; errBanner.classList.remove('hidden'); }
-
-    $('profileForm').addEventListener('submit', e=>{
-      e.preventDefault();
-      withBusy($('saveBtn'), async ()=>{
-        formMsg.textContent = "Profiel (TOETS) gestoor — niks is werklik verander nie.";
-        formMsg.className = "text-sm mt-2 text-green-600";
-        formMsg.classList.remove('hidden');
-      }, 'update_profile_test')();
+    // -------- gate: must be signed in --------
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        const ret = encodeURIComponent("/profile.html");
+        window.location.href = `/login.html?return=${ret}`;
+        return;
+      }
+      try {
+        await hydrateProfile(user);
+        await loadAndRenderDilemma(user.uid);
+        wireFormHandlers(user);
+      } catch (e) {
+        console.error(e);
+        showError("Kon nie data laai nie. Probeer asb. weer.");
+      }
     });
-    $('resetPwBtn').addEventListener('click', withBusy($('resetPwBtn'), async ()=>{
-      formMsg.textContent = "Wagwoordherstel (TOETS): Geen e-pos gestuur in hierdie toetsweergawe.";
-      formMsg.className = "text-sm mt-2 text-green-600";
-      formMsg.classList.remove('hidden');
-    }, 'password_reset_test'));
-    $('deleteBtn').addEventListener('click', withBusy($('deleteBtn'), async ()=>{
-      if (!confirm("Is jy seker? (TOETS) Jou rekening sou gedeaktiveer word.")) return;
-      deleteMsg.textContent = "Versoek (TOETS) sou gestuur word. Geen werklike veranderinge is gemaak nie.";
-      deleteMsg.className = "text-sm mt-2 text-green-600";
-      deleteMsg.classList.remove('hidden');
-    }, 'delete_account_request_test'));
 
-    function offsetDay(delta){
-      const d = new Date();
-      d.setHours(12,0,0,0);
-      d.setDate(d.getDate()+delta);
-      return d.toISOString().slice(0,10);
+    function showError(msg) {
+      errBanner.textContent = msg;
+      errBanner.classList.remove("hidden");
     }
 
-    function computeAndRender(plays, supporterActive){
-      const dates = [...new Set(plays.map(p=>p.date))].sort();
-      const byDate = new Map();
-      dates.forEach(d=>{
-        const p = plays.find(x=>x.date===d);
-        byDate.set(d, p && p.win === true);
-      });
+    // -------- profile load/write --------
+    async function hydrateProfile(user) {
+      const uref = doc(db, "users", user.uid);
+      const snap = await getDoc(uref);
 
-      let cur=0, best=0, prev=null;
-      for(const d of dates){
-        const consec = prev && (new Date(d) - new Date(prev) === 24*60*60*1000);
-        if(!consec) cur=0;
-        if(byDate.get(d)===true){ cur++; best=Math.max(best,cur); } else { cur=0; }
-        prev=d;
+      let userName = user.displayName || "Gebruiker";
+      let supporterActive = false;
+
+      if (snap.exists()) {
+        const d = snap.data();
+        if (d?.userName) userName = d.userName;
+        if (d?.supporterActive === true) supporterActive = true;
+        if (d?.supporterUntil?.toMillis && d.supporterUntil.toMillis() > Date.now()) supporterActive = true;
+      } else {
+        await setDoc(uref, {
+          userName: userName,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
       }
 
-      const dist = {1:0,2:0,3:0,4:0,5:0,6:0,fail:0};
-      for(const p of plays){
-        if(p.win===true){
-          const g = Math.min(Math.max(1,p.guesses||6),6);
+      wbName.textContent = (userName || "GEBRUIKER").toUpperCase();
+
+      // NEW: toggle banner wording & color
+      if (supporterActive) {
+        supporterBanner.classList.remove("supporter-banner-red");
+        supporterBanner.classList.add("supporter-banner-green");
+        supporterBanner.setAttribute("aria-label", "Dankie dat jy 'n betalende ondersteuner is");
+        supporterBannerTxt.textContent = "Betalende ondersteuner — dankie!";
+      } else {
+        supporterBanner.classList.remove("supporter-banner-green");
+        supporterBanner.classList.add("supporter-banner-red");
+        supporterBanner.setAttribute("aria-label", "Word ’n ondersteuner (Buy Me a Coffee)");
+        supporterBannerTxt.textContent = "Kliek hier om 'n betalende ondersteuner te word";
+      }
+
+      $("nameInput").value = userName || "";
+      $("emailInput").value = user.email || "";
+    }
+
+    function wireFormHandlers(user) {
+      $("profileForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const name = $("nameInput").value.trim().slice(0, 40);
+        const email = $("emailInput").value.trim();
+
+        try {
+          if (name && name !== (user.displayName || "")) {
+            await updateProfile(user, { displayName: name });
+            await updateDoc(doc(db, "users", user.uid), {
+              userName: name,
+              updatedAt: serverTimestamp(),
+            });
+          }
+          if (email && email !== (user.email || "")) {
+            await updateEmail(user, email);
+          }
+          formMsg.textContent = "Profiel gestoor.";
+          formMsg.className = "text-sm mt-2 text-green-600";
+          formMsg.classList.remove("hidden");
+        } catch (err) {
+          console.error(err);
+          let m = "Kon nie jou profiel opdateer nie.";
+          if (String(err.code || "").includes("requires-recent-login")) {
+            m = "Vir sekuriteit: Meld asseblief weer aan om jou e-pos te kan verander.";
+          }
+          formMsg.textContent = m;
+          formMsg.className = "text-sm mt-2 text-red-600";
+          formMsg.classList.remove("hidden");
+        }
+      });
+
+      $("resetPwBtn").addEventListener("click", async () => {
+        try {
+          await sendPasswordResetEmail(auth, user.email);
+          formMsg.textContent = "’n Wagwoordherstel-skakel is per e-pos gestuur.";
+          formMsg.className = "text-sm mt-2 text-green-600";
+        } catch (err) {
+          console.error(err);
+          formMsg.textContent = "Kon nie wagwoordherstel stuur nie.";
+          formMsg.className = "text-sm mt-2 text-red-600";
+        }
+        formMsg.classList.remove("hidden");
+      });
+
+      $("deleteBtn").addEventListener("click", async () => {
+        if (!confirm("Is jy seker? Jou rekening sal verwyder word.")) return;
+        try {
+          await deleteUser(user); // may require recent login
+          deleteMsg.textContent = "Rekening verwyder.";
+          deleteMsg.className = "text-sm mt-2 text-green-600";
+          deleteMsg.classList.remove("hidden");
+          setTimeout(() => (window.location.href = "/"), 800);
+        } catch (err) {
+          console.error(err);
+          let m = "Kon nie jou rekening verwyder nie.";
+          if (String(err.code || "").includes("requires-recent-login")) {
+            m = "Vir sekuriteit: Meld asseblief weer aan en probeer dan weer.";
+          }
+          deleteMsg.textContent = m;
+          deleteMsg.className = "text-sm mt-2 text-red-600";
+          deleteMsg.classList.remove("hidden");
+        }
+      });
+    }
+
+    // -------- Dilemma data: compute and render --------
+    async function loadAndRenderDilemma(uid) {
+      const uref = doc(db, "users", uid);
+      const uSnap = await getDoc(uref);
+
+      let supporterActive = false;
+      if (uSnap.exists()) {
+        const d = uSnap.data();
+        if (d?.supporterActive === true) supporterActive = true;
+        if (d?.supporterUntil?.toMillis && d.supporterUntil.toMillis() > Date.now()) supporterActive = true;
+      }
+
+      const playsRef = collection(db, "userGames", uid, "plays");
+      const q = query(playsRef, orderBy("finishedAt", "desc"), limit(200));
+      const snap = await getDocs(q);
+
+      const plays = [];
+      snap.forEach((docSnap) => {
+        const d = docSnap.data();
+        const gameId = docSnap.id; // "GameYYYY-MM-DD"
+        const date = gameId.replace(/^Game/, "");
+        plays.push({
+          date,
+          win: d?.result === "win" || d?.finished === true,
+          guesses: Number(d?.guesses || 0),
+        });
+      });
+
+      computeAndRender(plays, supporterActive);
+    }
+
+    function computeAndRender(plays, supporterActive) {
+      const byDate = new Map();
+      plays.slice().reverse().forEach((p) => byDate.set(p.date, p));
+
+      const dates = Array.from(byDate.keys()).sort();
+      let cur = 0, best = 0, prev = null;
+      for (const d of dates) {
+        const consec = prev && (new Date(d) - new Date(prev) === 24 * 60 * 60 * 1000);
+        if (!consec) cur = 0;
+        const p = byDate.get(d);
+        if (p?.win) { cur++; best = Math.max(best, cur); } else { cur = 0; }
+        prev = d;
+      }
+
+      const dist = { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, fail:0 };
+      for (const p of byDate.values()) {
+        if (p.win) {
+          const g = Math.min(Math.max(1, p.guesses || 6), 6);
           dist[g] += 1;
         } else {
           dist.fail += 1;
@@ -406,31 +523,31 @@
         dist[4]*BASE_POINTS[4] + dist[5]*BASE_POINTS[5] + dist[6]*BASE_POINTS[6] +
         dist.fail*BASE_POINTS.fail;
 
-      const streakMult = cur>=STREAK_THRESHOLD ? STREAK_MULTIPLIER : 1;
+      const streakMult = cur >= STREAK_THRESHOLD ? STREAK_MULTIPLIER : 1;
       const supporterMult = supporterActive ? SUPPORTER_MULTIPLIER : 1;
       const streakBonus = Math.round(subtotal * (streakMult - 1));
       const supporterBonus = Math.round((subtotal + streakBonus) * (supporterMult - 1));
       const total = subtotal + streakBonus + supporterBonus;
 
-      const totalPlayed = plays.length;
-      const wins = plays.filter(p=>p.win===true).length;
-      const winrate = totalPlayed ? Math.round((wins/totalPlayed)*100) : 0;
+      const totalPlayed = dates.length;
+      const wins = totalPlayed - dist.fail;
+      const winrate = totalPlayed ? Math.round((wins / totalPlayed) * 100) : 0;
 
       playedStat.textContent = totalPlayed;
       winrateStat.textContent = `${winrate}%`;
       curStreakEl.textContent = cur;
       bestStreakEl.textContent = best;
 
-      const rows=[
-        {label:`In 1 raaiskoot opgelos`, qty:dist[1], per:BASE_POINTS[1]},
-        {label:`In 2 raaiskote opgelos`,  qty:dist[2], per:BASE_POINTS[2]},
-        {label:`In 3 raaiskote opgelos`,  qty:dist[3], per:BASE_POINTS[3]},
-        {label:`In 4 raaiskote opgelos`,  qty:dist[4], per:BASE_POINTS[4]},
-        {label:`In 5 raaiskote opgelos`,  qty:dist[5], per:BASE_POINTS[5]},
-        {label:`In 6 raaiskote opgelos`,  qty:dist[6], per:BASE_POINTS[6]},
-        {label:`Onopgelos`,               qty:dist.fail, per:BASE_POINTS.fail},
+      const rows = [
+        {label: `In 1 raaiskoot opgelos`, qty: dist[1], per: BASE_POINTS[1]},
+        {label: `In 2 raaiskote opgelos`,  qty: dist[2], per: BASE_POINTS[2]},
+        {label: `In 3 raaiskote opgelos`,  qty: dist[3], per: BASE_POINTS[3]},
+        {label: `In 4 raaiskote opgelos`,  qty: dist[4], per: BASE_POINTS[4]},
+        {label: `In 5 raaiskote opgelos`,  qty: dist[5], per: BASE_POINTS[5]},
+        {label: `In 6 raaiskote opgelos`,  qty: dist[6], per: BASE_POINTS[6]},
+        {label: `Onopgelos`,               qty: dist.fail, per: BASE_POINTS.fail},
       ];
-      breakdownBody.innerHTML = rows.map(r=>{
+      breakdownBody.innerHTML = rows.map(r => {
         const pts = r.qty * r.per;
         return `<tr>
           <td>${r.label}</td>
@@ -438,37 +555,33 @@
           <td class="text-right mono">${fmt(r.qty)} × ${fmt(r.per)}</td>
           <td class="text-right mono ${pts>=0?'text-emerald-700':'text-red-700'}">${fmt(pts)}</td>
         </tr>`;
-      }).join('');
+      }).join("");
 
-      const pairs=[['1',dist[1]],['2',dist[2]],['3',dist[3]],['4',dist[4]],['5',dist[5]],['6',dist[6]],['X',dist.fail]];
-      const maxv=Math.max(1,...pairs.map(p=>p[1]));
-      distWrap.innerHTML=pairs.map(([lb,val])=>{
+      const pairs = [['1',dist[1]],['2',dist[2]],['3',dist[3]],['4',dist[4]],['5',dist[5]],['6',dist[6]],['X',dist.fail]];
+      const maxv = Math.max(1, ...pairs.map(p => p[1]));
+      distWrap.innerHTML = pairs.map(([lb,val]) => {
         const w = val === 0 ? 0 : Math.max(6, Math.round((val/maxv)*100));
         return `<div class="barRow"><div class="text-xs font-bold text-slate-500">${lb}</div><div class="bar" style="width:${w}%"></div><div class="mono text-sm font-extrabold">${fmt(val)}</div></div>`;
-      }).join('');
+      }).join("");
 
-      subtotalCell.textContent    = fmt(subtotal);
-      document.getElementById('lopieBonusCell').textContent = fmt(streakBonus);
-      document.getElementById('supporterBonusCell').textContent = fmt(supporterBonus);
-      totalCell.textContent       = fmt(total);
+      subtotalCell.textContent = fmt(subtotal);
+      $("lopieBonusCell").textContent = fmt(streakBonus);
+      $("supporterBonusCell").textContent = fmt(supporterBonus);
+      totalCell.textContent = fmt(total);
 
-      // Meta labels (tidy, non-wrapping)
       if (streakMult > 1) {
-        streakChip.classList.remove('hidden');
+        streakChip.classList.remove("hidden");
         lopieMeta.innerHTML = `Lopie: ${cur} op ’n ry <span class="text-slate-400">(×${STREAK_MULTIPLIER.toFixed(2)})</span>`;
       } else {
-        streakChip.classList.add('hidden');
+        streakChip.classList.add("hidden");
         lopieMeta.innerHTML = `Geen <span class="text-slate-400">(huidige lopie: ${cur})</span>`;
       }
-      document.getElementById('supporterMeta').textContent = supporterActive
-        ? `×${SUPPORTER_MULTIPLIER.toFixed(2)}`
-        : 'Geen';
+      supporterMeta.textContent = supporterActive ? `×${SUPPORTER_MULTIPLIER.toFixed(2)}` : "Geen";
 
-      // Combined multiplier label
       const combinedMult = streakMult * supporterMult;
       multiplierLabel.textContent = `×${combinedMult.toFixed(2)}`;
 
-      calcTime.textContent = new Date().toLocaleString('af-ZA');
+      calcTime.textContent = new Date().toLocaleString("af-ZA");
       pillOverall.textContent     = `JOU KRIPTIEK-TELLING: ${fmt(total)}`;
       pillDilemmaLive.textContent = `JOU DILEMMA-TELLING: ${fmt(total)}`;
       totalPointsEl.textContent   = fmt(total);
