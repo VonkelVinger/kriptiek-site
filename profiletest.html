@@ -101,6 +101,12 @@
   /* Equal tops */
   .top-card { min-height:320px; }
   @media (max-width: 640px){ .top-card{ min-height:unset; } }
+
+  /* --- Game blocks: enforce neat bottom alignment --- */
+  .game-card .game-col { display:flex; flex-direction:column; min-height: 420px; }
+  .game-card .push-end { margin-top:auto; }
+  @media (max-width: 640px){ .game-card .game-col { min-height: unset; } }
+  .col-summary { border-top: 1px solid #e5e7eb; padding-top: .75rem; }
 </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -121,7 +127,7 @@
 
   <main class="flex-grow p-4 pb-16">
     <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 items-start">
-      <!-- LEFT -->
+      <!-- LEFT (UNCHANGED) -->
       <section class="card p-5 md:p-6 top-card">
         <a id="supporterBanner" href="https://buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
            class="supporter-banner supporter-banner-red mb-4"
@@ -153,7 +159,7 @@
         </form>
       </section>
 
-      <!-- RIGHT -->
+      <!-- RIGHT (UNCHANGED) -->
       <section class="card p-5 md:p-6 top-card">
         <div class="mb-4"><span id="pillOverall" class="pill pill-lg pill-blue" role="status">JOU KRIPTIEK-TELLING: 0</span></div>
         <div class="flex flex-wrap gap-2 mb-6 items-start">
@@ -169,76 +175,209 @@
       </section>
     </div>
 
-    <!-- DILEMMA -->
-    <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 mt-6">
-      <section class="card p-5 md:p-6">
+    <!-- GAMES: DILEMMA + placeholders for BLITSTIEK & SLIMSTIEK -->
+    <div class="max-w-6xl mx-auto space-y-6 mt-6">
+
+      <!-- DILEMMA (reflowed, original IDs preserved) -->
+      <section class="card p-5 md:p-6 game-card">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-xl font-extrabold text-slate-900">Jou Dilemma-telling</h2>
           <span id="streakChip" class="hidden px-2.5 py-1 rounded-full font-bold text-indigo-900" style="background:#e0e7ff">+10% lopie</span>
         </div>
 
-        <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-4">
-          <div class="text-sm text-indigo-900/80">Laas bereken op: <span id="calcTime" class="mono">—</span></div>
-          <div class="mt-2 flex items-end gap-4">
-            <div>
-              <div class="text-4xl md:text-5xl font-extrabold mono text-indigo-900" id="totalPoints">0</div>
-              <div class="text-xs uppercase tracking-wide text-indigo-900/70">Totale DILEMMA-telling</div>
+        <div class="grid md:grid-cols-2 gap-4 items-start">
+          <!-- LEFT COL -->
+          <div class="game-col">
+            <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-4">
+              <div class="text-sm text-indigo-900/80">Laas bereken op: <span id="calcTime" class="mono">—</span></div>
+              <div class="mt-2 flex items-end gap-4">
+                <div>
+                  <div class="text-4xl md:text-5xl font-extrabold mono text-indigo-900" id="totalPoints">0</div>
+                  <div class="text-xs uppercase tracking-wide text-indigo-900/70">Totale DILEMMA-telling</div>
+                </div>
+                <div class="ml-auto text-right">
+                  <div class="text-xs text-indigo-900/70">Vermenigvuldiger</div>
+                  <div class="text-xl font-extrabold mono" id="multiplierLabel">×1.00</div>
+                </div>
+              </div>
             </div>
-            <div class="ml-auto text-right">
-              <div class="text-xs text-indigo-900/70">Vermenigvuldiger</div>
-              <div class="text-xl font-extrabold mono" id="multiplierLabel">×1.00</div>
+
+            <p class="text-sm leading-6 text-slate-600 mb-4">
+              Hoe minder raaiskote jy nodig het, hoe meer punte kry jy. Daar is ook bonuspunte as jy
+              <strong>vyf of meer Dilemmas opeenvolgend kan oplos</strong>, asook ’n
+              <strong>10%-bonus vir betalende ondersteuners in die afgelope 30 dae</strong>.
+            </p>
+
+            <div class="overflow-auto max-h-[420px] rounded-xl border border-slate-200 bg-white">
+              <table class="table text-sm w-full">
+                <thead>
+                  <tr><th>Komponent</th><th class="text-right">Aantal</th><th class="text-right">Reël</th><th class="text-right">Punte</th></tr>
+                </thead>
+                <tbody id="breakdownBody"></tbody>
+                <tfoot>
+                  <tr>
+                    <td class="font-bold">Subtotaal</td><td></td><td></td>
+                    <td class="text-right font-extrabold mono" id="subtotalCell">0</td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold">Lopie-bonus</td><td></td>
+                    <td class="text-right whitespace-nowrap" id="lopieMeta">—</td>
+                    <td class="text-right font-extrabold mono" id="lopieBonusCell">0</td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold">Ondersteuner-bonus</td><td></td>
+                    <td class="text-right whitespace-nowrap" id="supporterMeta">—</td>
+                    <td class="text-right font-extrabold mono" id="supporterBonusCell">0</td>
+                  </tr>
+                  <tr>
+                    <td class="font-extrabold text-slate-900">Totaal</td><td></td><td></td>
+                    <td class="text-right font-extrabold mono text-indigo-900" id="totalCell">0</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <div class="push-end"></div>
+          </div>
+
+          <!-- RIGHT COL -->
+          <div class="game-col">
+            <h3 class="text-sm font-bold text-slate-700 mb-2">Jou Dilemma-statistiek</h3>
+            <div class="grid grid-cols-4 gap-2 mb-4">
+              <div class="mini"><div id="playedStat" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Dilemmas gespeel</div></div>
+              <div class="mini"><div id="winrateStat" class="text-3xl font-extrabold mono">0%</div><div class="text-xs text-slate-500 mt-1">Sukseskoers</div></div>
+              <div class="mini"><div id="curStreak" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Huidige lopie</div></div>
+              <div class="mini"><div id="bestStreak" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Beste lopie</div></div>
+            </div>
+
+            <h4 class="text-sm font-bold text-slate-700 mb-2">Suksesverdeling</h4>
+            <div id="distWrap" class="space-y-2"></div>
+
+            <div class="col-summary push-end text-sm text-slate-600">
+              <span class="font-semibold">Leidraad:</span> Dilemma-telling word by jou Kriptiek-telling ingereken.
             </div>
           </div>
         </div>
+      </section>
 
-        <p class="text-sm leading-6 text-slate-600 mb-4">
-          Hoe minder raaiskote jy nodig het, hoe meer punte kry jy. Daar is ook bonuspunte as jy
-          <strong>vyf of meer Dilemmas opeenvolgend kan oplos</strong>, asook ’n
-          <strong>10%-bonus vir betalende ondersteuners in die afgelope 30 dae</strong>.
-        </p>
+      <!-- BLITSTIEK (placeholder; ready to wire) -->
+      <section class="card p-5 md:p-6 game-card">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xl font-extrabold text-slate-900">Jou Blitstiek-telling</h2>
+          <span class="px-2.5 py-1 rounded-full font-bold text-emerald-900" style="background:#d1fae5">Binnekort</span>
+        </div>
 
-        <div class="overflow-auto max-h-[420px] rounded-xl border border-slate-200 bg-white">
-          <table class="table text-sm w-full">
-            <thead>
-              <tr><th>Komponent</th><th class="text-right">Aantal</th><th class="text-right">Reël</th><th class="text-right">Punte</th></tr>
-            </thead>
-            <tbody id="breakdownBody"></tbody>
-            <tfoot>
-              <tr>
-                <td class="font-bold">Subtotaal</td><td></td><td></td>
-                <td class="text-right font-extrabold mono" id="subtotalCell">0</td>
-              </tr>
-              <tr>
-                <td class="font-bold">Lopie-bonus</td><td></td>
-                <td class="text-right whitespace-nowrap" id="lopieMeta">—</td>
-                <td class="text-right font-extrabold mono" id="lopieBonusCell">0</td>
-              </tr>
-              <tr>
-                <td class="font-bold">Ondersteuner-bonus</td><td></td>
-                <td class="text-right whitespace-nowrap" id="supporterMeta">—</td>
-                <td class="text-right font-extrabold mono" id="supporterBonusCell">0</td>
-              </tr>
-              <tr>
-                <td class="font-extrabold text-slate-900">Totaal</td><td></td><td></td>
-                <td class="text-right font-extrabold mono text-indigo-900" id="totalCell">0</td>
-              </tr>
-            </tfoot>
-          </table>
+        <div class="grid md:grid-cols-2 gap-4 items-start">
+          <div class="game-col">
+            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4">
+              <div class="text-sm text-emerald-900/80">Laas bereken op: <span id="calcTimeBlit" class="mono">—</span></div>
+              <div class="mt-2 flex items-end gap-4">
+                <div>
+                  <div id="totalPointsBlit" class="text-4xl md:text-5xl font-extrabold mono text-emerald-900">0</div>
+                  <div class="text-xs uppercase tracking-wide text-emerald-900/70">Totale BLITSTIEK-telling</div>
+                </div>
+                <div class="ml-auto text-right">
+                  <div class="text-xs text-emerald-900/70">Vermenigvuldiger</div>
+                  <div id="multiplierLabelBlit" class="text-xl font-extrabold mono">×1.00</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="overflow-auto max-h-[420px] rounded-xl border border-slate-200 bg-white">
+              <table class="table text-sm w-full">
+                <thead>
+                  <tr><th>Komponent</th><th class="text-right">Aantal</th><th class="text-right">Reël</th><th class="text-right">Punte</th></tr>
+                </thead>
+                <tbody id="breakdownBodyBlit"><tr><td colspan="4" class="text-center text-slate-400 py-6">Kom binnekort.</td></tr></tbody>
+                <tfoot>
+                  <tr><td class="font-bold">Subtotaal</td><td></td><td></td><td id="subtotalCellBlit" class="text-right font-extrabold mono">0</td></tr>
+                  <tr><td class="font-bold">Bonusse</td><td></td><td class="text-right whitespace-nowrap" id="bonusMetaBlit">—</td><td id="bonusCellBlit" class="text-right font-extrabold mono">0</td></tr>
+                  <tr><td class="font-extrabold text-slate-900">Totaal</td><td></td><td></td><td id="totalCellBlit" class="text-right font-extrabold mono text-emerald-900">0</td></tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <div class="push-end"></div>
+          </div>
+
+          <div class="game-col">
+            <h3 class="text-sm font-bold text-slate-700 mb-2">Blitstiek-statistiek</h3>
+            <div class="grid grid-cols-4 gap-2 mb-4">
+              <div class="mini"><div id="playedStatBlit" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Gespeel</div></div>
+              <div class="mini"><div id="bestTimeBlit" class="text-3xl font-extrabold mono">—</div><div class="text-xs text-slate-500 mt-1">Beste tyd</div></div>
+              <div class="mini"><div id="avgTimeBlit" class="text-3xl font-extrabold mono">—</div><div class="text-xs text-slate-500 mt-1">Gemiddeld</div></div>
+              <div class="mini"><div id="winsBlit" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Oorwinnings</div></div>
+            </div>
+
+            <h4 class="text-sm font-bold text-slate-700 mb-2">Verspreiding (bv. tyd-klasse)</h4>
+            <div id="distWrapBlit" class="space-y-2 text-slate-400">Kom binnekort.</div>
+
+            <div class="col-summary push-end text-sm text-slate-600">
+              <span class="font-semibold">Leidraad:</span> Blitstiek-telling sal later by jou Kriptiek-telling bytel.
+            </div>
+          </div>
         </div>
       </section>
 
-      <section class="card p-5 md:p-6">
-        <h2 class="text-xl font-extrabold text-slate-900 mb-3">Jou Dilemma-statistiek</h2>
-        <div class="grid grid-cols-4 gap-2 mb-4">
-          <div class="mini"><div id="playedStat" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Dilemmas gespeel</div></div>
-          <div class="mini"><div id="winrateStat" class="text-3xl font-extrabold mono">0%</div><div class="text-xs text-slate-500 mt-1">Sukseskoers</div></div>
-          <div class="mini"><div id="curStreak" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Huidige lopie</div></div>
-          <div class="mini"><div id="bestStreak" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Beste lopie</div></div>
+      <!-- SLIMSTIEK (placeholder; ready to wire) -->
+      <section class="card p-5 md:p-6 game-card">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xl font-extrabold text-slate-900">Jou Slimstiek-telling</h2>
+          <span class="px-2.5 py-1 rounded-full font-bold text-teal-900" style="background:#ccfbf1">Binnekort</span>
         </div>
 
-        <h3 class="text-sm font-bold text-slate-700 mb-2">Suksesverdeling</h3>
-        <div id="distWrap" class="space-y-2"></div>
+        <div class="grid md:grid-cols-2 gap-4 items-start">
+          <div class="game-col">
+            <div class="bg-teal-50 border border-teal-200 rounded-xl p-4 mb-4">
+              <div class="text-sm text-teal-900/80">Laas bereken op: <span id="calcTimeSlim" class="mono">—</span></div>
+              <div class="mt-2 flex items-end gap-4">
+                <div>
+                  <div id="totalPointsSlim" class="text-4xl md:text-5xl font-extrabold mono text-teal-900">0</div>
+                  <div class="text-xs uppercase tracking-wide text-teal-900/70">Totale SLIMSTIEK-telling</div>
+                </div>
+                <div class="ml-auto text-right">
+                  <div class="text-xs text-teal-900/70">Vermenigvuldiger</div>
+                  <div id="multiplierLabelSlim" class="text-xl font-extrabold mono">×1.00</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="overflow-auto max-h-[420px] rounded-xl border border-slate-200 bg-white">
+              <table class="table text-sm w-full">
+                <thead>
+                  <tr><th>Komponent</th><th class="text-right">Aantal</th><th class="text-right">Reël</th><th class="text-right">Punte</th></tr>
+                </thead>
+                <tbody id="breakdownBodySlim"><tr><td colspan="4" class="text-center text-slate-400 py-6">Kom binnekort.</td></tr></tbody>
+                <tfoot>
+                  <tr><td class="font-bold">Subtotaal</td><td></td><td></td><td id="subtotalCellSlim" class="text-right font-extrabold mono">0</td></tr>
+                  <tr><td class="font-bold">Bonusse</td><td></td><td class="text-right whitespace-nowrap" id="bonusMetaSlim">—</td><td id="bonusCellSlim" class="text-right font-extrabold mono">0</td></tr>
+                  <tr><td class="font-extrabold text-slate-900">Totaal</td><td></td><td></td><td id="totalCellSlim" class="text-right font-extrabold mono text-teal-900">0</td></tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <div class="push-end"></div>
+          </div>
+
+          <div class="game-col">
+            <h3 class="text-sm font-bold text-slate-700 mb-2">Slimstiek-statistiek</h3>
+            <div class="grid grid-cols-4 gap-2 mb-4">
+              <div class="mini"><div id="playedStatSlim" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Gespeel</div></div>
+              <div class="mini"><div id="bestScoreSlim" class="text-3xl font-extrabold mono">—</div><div class="text-xs text-slate-500 mt-1">Beste telling</div></div>
+              <div class="mini"><div id="avgScoreSlim" class="text-3xl font-extrabold mono">—</div><div class="text-xs text-slate-500 mt-1">Gemiddeld</div></div>
+              <div class="mini"><div id="winsSlim" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Oorwinnings</div></div>
+            </div>
+
+            <h4 class="text-sm font-bold text-slate-700 mb-2">Verspreiding (bv. punte-klasse)</h4>
+            <div id="distWrapSlim" class="space-y-2 text-slate-400">Kom binnekort.</div>
+
+            <div class="col-summary push-end text-sm text-slate-600">
+              <span class="font-semibold">Leidraad:</span> Slimstiek-telling sal later by jou Kriptiek-telling bytel.
+            </div>
+          </div>
+        </div>
       </section>
+
     </div>
   </main>
 
@@ -380,7 +519,7 @@
 
       wbName.textContent = (userName || "GEBRUIKER").toUpperCase();
 
-      // NEW: toggle banner wording & color
+      // Toggle banner wording & color
       if (supporterActive) {
         supporterBanner.classList.remove("supporter-banner-red");
         supporterBanner.classList.add("supporter-banner-green");
