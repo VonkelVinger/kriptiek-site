@@ -58,8 +58,8 @@
     grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
     opacity: 0.5; z-index: 1; pointer-events: none; animation: bgFloat 30s linear infinite;
   }
-  @keyframes bgFloat{ 0%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } 100%{ transform:translateY(0); } }
   @media (prefers-reduced-motion: reduce){ .background-crossword{ animation:none; } }
+  @keyframes bgFloat{ 0%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } 100%{ transform:translateY(0); } }
 
   .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
 
@@ -72,7 +72,6 @@
           box-shadow: 0 6px 14px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.25); }
   .pill-sm { font-size:.95rem; padding:.55rem 1rem; }
   .pill-lg { font-size:1.15rem; padding:.75rem 1.25rem; }
-
   .pill-blue { background:linear-gradient(90deg,#1d4ed8,#1e40af); }
   .pill-orange { background: linear-gradient(180deg, #FB7A12 0%, #D65A0A 100%); }
   .pill-green { background: linear-gradient(180deg, #22C55E 0%, #0EA55B 100%); }
@@ -84,14 +83,20 @@
 
   /* Table & bars */
   .table{ width:100%; border-collapse:separate; border-spacing:0; }
-  .table th,.table td{ padding:.6rem .75rem; border-bottom:1px solid #e5e7eb; }
-  .table th{ text-align:left; font-weight:700; color:#334155; background:#f8fafc; position:sticky; top:0; }
-  /* ensure right-aligned header cells (e.g. "Formule", "Punte") actually align right */
+  .table th,.table td{ padding:.55rem .75rem; border-bottom:1px solid #e5e7eb; }
+  .table th{
+    text-align:left; font-weight:700; color:#334155; background:#f8fafc; position:sticky; top:0;
+    box-shadow: inset 0 -1px 0 #e5e7eb; /* hairline under sticky header */
+  }
+  /* make right-aligned header cells actually align right */
   .table th.text-right{ text-align:right; }
   .table th.mono{ font-variant-numeric: tabular-nums; }
+  .table tbody tr:nth-child(even){ background:#f9fafb; }
+  .table tbody tr:hover{ background:#f1f5f9; }
 
-  .barRow{ display:grid; grid-template-columns:1.25rem 1fr auto; gap:.5rem; align-items:center; }
-  .bar{ height:12px; background:linear-gradient(90deg,#1d4ed8,#1e40af); border-radius:6px; }
+  .barRow{ display:grid; grid-template-columns:1.1rem 1fr auto; gap:.5rem; align-items:center; }
+  .barTrack{ height:12px; background:#e5e7eb; border-radius:6px; overflow:hidden; }
+  .barFill{ height:100%; background:linear-gradient(90deg,#1d4ed8,#1e40af); }
 
   /* Supporter banner (base + color variants) */
   .supporter-banner{
@@ -108,8 +113,7 @@
 
   /* --- Game blocks --- */
   .game-card .game-col { display:flex; flex-direction:column; }
-  /* Slightly reduced min-height on Dilemma to cut dead space on right */
-  .game-card .game-col.dilemma-col { min-height: 360px; }
+  .game-card .game-col.dilemma-col { min-height: 340px; }
   @media (max-width: 640px){ .game-card .game-col.dilemma-col { min-height: unset; } }
   .game-card .push-end { margin-top:auto; }
   .col-summary { border-top: 1px solid #e5e7eb; padding-top: .75rem; }
@@ -119,8 +123,15 @@
   .banner-live { background:#ecfeff; color:#155e75; border:1px solid #a5f3fc; }
   .banner-archive { background:#f8fafc; color:#334155; border:1px solid #e2e8f0; }
 
-  /* Polished table wrapper look */
-  .table-wrap{ border:1px solid #e5e7eb; border-radius:.75rem; overflow:hidden; background:#fff; }
+  /* Polished table wrapper with scroll + custom scrollbar */
+  .table-wrap{ border:1px solid #e5e7eb; border-radius:.75rem; background:#fff; overflow:hidden; }
+  .table-scroll{ max-height:420px; overflow:auto; }
+  .table-scroll::-webkit-scrollbar{ width:10px; height:10px; }
+  .table-scroll::-webkit-scrollbar-thumb{ background:#cbd5e1; border-radius:999px; }
+  .table-scroll::-webkit-scrollbar-track{ background:#f1f5f9; border-radius:999px; }
+
+  /* Summary panel gradient */
+  .summary-panel{ background:linear-gradient(180deg,#eef2ff 0%, #e0e7ff 100%); }
 </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -201,7 +212,7 @@
         <div class="grid md:grid-cols-2 gap-5 items-start">
           <!-- LEFT COL -->
           <div class="game-col dilemma-col">
-            <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-4">
+            <div class="summary-panel border border-indigo-200 rounded-xl p-4 mb-4">
               <div class="text-sm text-indigo-900/80">Laas bereken op: <span id="calcTime" class="mono">—</span></div>
               <div class="mt-2 flex items-end gap-4">
                 <div>
@@ -223,37 +234,39 @@
 
             <!-- Polished table wrapper -->
             <div class="table-wrap">
-              <table class="table text-sm w-full">
-                <thead>
-                  <tr>
-                    <th>Komponent</th>
-                    <th class="text-right">Aantal</th>
-                    <th class="text-right mono">Formule</th>
-                    <th class="text-right">Punte</th>
-                  </tr>
-                </thead>
-                <tbody id="breakdownBody"></tbody>
-                <tfoot>
-                  <tr>
-                    <td class="font-bold">Subtotaal</td><td></td><td></td>
-                    <td class="text-right font-extrabold mono" id="subtotalCell">0</td>
-                  </tr>
-                  <tr>
-                    <td class="font-bold">Lopie-bonus</td><td></td>
-                    <td class="text-right whitespace-nowrap" id="lopieMeta">—</td>
-                    <td class="text-right font-extrabold mono" id="lopieBonusCell">0</td>
-                  </tr>
-                  <tr>
-                    <td class="font-bold">Ondersteuner-bonus</td><td></td>
-                    <td class="text-right whitespace-nowrap" id="supporterMeta">—</td>
-                    <td class="text-right font-extrabold mono" id="supporterBonusCell">0</td>
-                  </tr>
-                  <tr>
-                    <td class="font-extrabold text-slate-900">Totaal</td><td></td><td></td>
-                    <td class="text-right font-extrabold mono text-indigo-900" id="totalCell">0</td>
-                  </tr>
-                </tfoot>
-              </table>
+              <div class="table-scroll">
+                <table class="table text-sm w-full">
+                  <thead>
+                    <tr>
+                      <th>Komponent</th>
+                      <th class="text-right">Aantal</th>
+                      <th class="text-right mono">Formule</th>
+                      <th class="text-right">Punte</th>
+                    </tr>
+                  </thead>
+                  <tbody id="breakdownBody"></tbody>
+                  <tfoot>
+                    <tr>
+                      <td class="font-bold">Subtotaal</td><td></td><td></td>
+                      <td class="text-right font-extrabold mono" id="subtotalCell">0</td>
+                    </tr>
+                    <tr>
+                      <td class="font-bold">Lopie-bonus</td><td></td>
+                      <td class="text-right whitespace-nowrap" id="lopieMeta">—</td>
+                      <td class="text-right font-extrabold mono" id="lopieBonusCell">0</td>
+                    </tr>
+                    <tr>
+                      <td class="font-bold">Ondersteuner-bonus</td><td></td>
+                      <td class="text-right whitespace-nowrap" id="supporterMeta">—</td>
+                      <td class="text-right font-extrabold mono" id="supporterBonusCell">0</td>
+                    </tr>
+                    <tr>
+                      <td class="font-extrabold text-slate-900">Totaal</td><td></td><td></td>
+                      <td class="text-right font-extrabold mono text-indigo-900" id="totalCell">0</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
             </div>
 
             <div class="push-end"></div>
@@ -270,7 +283,7 @@
             </div>
 
             <h4 class="text-sm font-bold text-slate-700 mb-2">Suksesverdeling</h4>
-            <div id="distWrap" class="space-y-1.5"></div>
+            <div id="distWrap" class="space-y-2"></div>
 
             <div class="col-summary push-end text-sm text-slate-600 mt-3">
               <span class="font-semibold">Leidraad:</span> Dilemma-telling word by jou Kriptiek-telling ingereken.
@@ -279,7 +292,7 @@
         </div>
       </section>
 
-      <!-- BLITSTIEK (shadow-mode; with rules & archive banner) -->
+      <!-- BLITSTIEK (shadow-mode; unchanged logic; slightly cleaner table frame for consistency) -->
       <section class="card p-5 md:p-6 game-card">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-xl font-extrabold text-slate-900">Jou Blitstiek-telling</h2>
@@ -303,20 +316,22 @@
             </div>
 
             <div class="table-wrap">
-              <table class="table text-sm w-full">
-                <thead>
-                  <tr><th>Komponent</th><th class="text-right">Reël</th><th class="text-right">Punte</th></tr>
-                </thead>
-                <tbody id="breakdownBodyBlit">
-                  <tr><td>Vroeë voël (eerste 10 ná 07:00)</td><td class="text-right mono">+20 indien van toepassing</td><td class="text-right mono" id="blitEarlyCell">0</td></tr>
-                  <tr><td>Verbetering / nuwe PB (vandag)</td><td class="text-right mono">+30 (maks 1/dag)</td><td class="text-right mono" id="blitImproveCell">0</td></tr>
-                  <tr><td>Finale posisie @ 23:55</td><td class="text-right mono">120/90/70/60/50/40/30/25/20/15</td><td class="text-right mono" id="blitPlaceCell">0</td></tr>
-                  <tr class="archiveOnly hidden"><td>Argief: PB-punt</td><td class="text-right mono">+10 (eenmalig per dag)</td><td class="text-right mono" id="blitPBArchiveCell">0</td></tr>
-                </tbody>
-                <tfoot>
-                  <tr><td class="font-extrabold text-slate-900">Totaal (vandag)</td><td></td><td id="totalCellBlit" class="text-right font-extrabold mono text-emerald-900">0</td></tr>
-                </tfoot>
-              </table>
+              <div class="table-scroll">
+                <table class="table text-sm w-full">
+                  <thead>
+                    <tr><th>Komponent</th><th class="text-right">Reël</th><th class="text-right">Punte</th></tr>
+                  </thead>
+                  <tbody id="breakdownBodyBlit">
+                    <tr><td>Vroeë voël (eerste 10 ná 07:00)</td><td class="text-right mono">+20 indien van toepassing</td><td class="text-right mono" id="blitEarlyCell">0</td></tr>
+                    <tr><td>Verbetering / nuwe PB (vandag)</td><td class="text-right mono">+30 (maks 1/dag)</td><td class="text-right mono" id="blitImproveCell">0</td></tr>
+                    <tr><td>Finale posisie @ 23:55</td><td class="text-right mono">120/90/70/60/50/40/30/25/20/15</td><td class="text-right mono" id="blitPlaceCell">0</td></tr>
+                    <tr class="archiveOnly hidden"><td>Argief: PB-punt</td><td class="text-right mono">+10 (eenmalig per dag)</td><td class="text-right mono" id="blitPBArchiveCell">0</td></tr>
+                  </tbody>
+                  <tfoot>
+                    <tr><td class="font-extrabold text-slate-900">Totaal (vandag)</td><td></td><td id="totalCellBlit" class="text-right font-extrabold mono text-emerald-900">0</td></tr>
+                  </tfoot>
+                </table>
+              </div>
             </div>
 
             <details class="mt-4">
@@ -352,7 +367,7 @@
           </div>
         </div>
       </section>
-      <!-- SLIMSTIEK (shadow-mode; with rules & archive banner) -->
+      <!-- SLIMSTIEK (shadow-mode; consistent frame) -->
       <section class="card p-5 md:p-6 game-card">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-xl font-extrabold text-slate-900">Jou Slimstiek-telling</h2>
@@ -376,20 +391,22 @@
             </div>
 
             <div class="table-wrap">
-              <table class="table text-sm w-full">
-                <thead>
-                  <tr><th>Komponent</th><th class="text-right">Reël</th><th class="text-right">Punte</th></tr>
-                </thead>
-                <tbody id="breakdownBodySlim">
-                  <tr><td>Vroeë voël (eerste 10 ná 07:00)</td><td class="text-right mono">+20 indien van toepassing</td><td class="text-right mono" id="slimEarlyCell">0</td></tr>
-                  <tr><td>Verbetering / nuwe PB (vandag)</td><td class="text-right mono">+30 (maks 1/dag)</td><td class="text-right mono" id="slimImproveCell">0</td></tr>
-                  <tr><td>Finale posisie @ 23:55</td><td class="text-right mono">120/90/70/60/50/40/30/25/20/15</td><td class="text-right mono" id="slimPlaceCell">0</td></tr>
-                  <tr class="archiveOnly hidden"><td>Argief: PB-punt</td><td class="text-right mono">+10 (eenmalig per dag)</td><td class="text-right mono" id="slimPBArchiveCell">0</td></tr>
-                </tbody>
-                <tfoot>
-                  <tr><td class="font-extrabold text-slate-900">Totaal (vandag)</td><td></td><td id="totalCellSlim" class="text-right font-extrabold mono text-teal-900">0</td></tr>
-                </tfoot>
-              </table>
+              <div class="table-scroll">
+                <table class="table text-sm w-full">
+                  <thead>
+                    <tr><th>Komponent</th><th class="text-right">Reël</th><th class="text-right">Punte</th></tr>
+                  </thead>
+                  <tbody id="breakdownBodySlim">
+                    <tr><td>Vroeë voël (eerste 10 ná 07:00)</td><td class="text-right mono">+20 indien van toepassing</td><td class="text-right mono" id="slimEarlyCell">0</td></tr>
+                    <tr><td>Verbetering / nuwe PB (vandag)</td><td class="text-right mono">+30 (maks 1/dag)</td><td class="text-right mono" id="slimImproveCell">0</td></tr>
+                    <tr><td>Finale posisie @ 23:55</td><td class="text-right mono">120/90/70/60/50/40/30/25/20/15</td><td class="text-right mono" id="slimPlaceCell">0</td></tr>
+                    <tr class="archiveOnly hidden"><td>Argief: PB-punt</td><td class="text-right mono">+10 (eenmalig per dag)</td><td class="text-right mono" id="slimPBArchiveCell">0</td></tr>
+                  </tbody>
+                  <tfoot>
+                    <tr><td class="font-extrabold text-slate-900">Totaal (vandag)</td><td></td><td id="totalCellSlim" class="text-right font-extrabold mono text-teal-900">0</td></tr>
+                  </tfoot>
+                </table>
+              </div>
             </div>
 
             <details class="mt-4">
@@ -499,7 +516,7 @@
     const STREAK_MULTIPLIER = 1.10;
     const SUPPORTER_MULTIPLIER = 1.10;
 
-    // ---- New: Blitstiek & Slimstiek config (shadow mode) ----
+    // ---- New: Blitstiek & Slimstiek (shadow mode) ----
     const K_CONF = {
       EARLY_BIRD_WINDOW_START: "07:00",
       CUTOFF_TIME: "23:55",
@@ -568,9 +585,7 @@
       try {
         await hydrateProfile(user);
         await loadAndRenderDilemma(user.uid);
-        // Shadow-mode banners per game
         configureGameBanners();
-        // Shadow-mode reads (and archive PB award if applicable)
         await renderShadowGame(user.uid, "blitstiek");
         await renderShadowGame(user.uid, "slimstiek");
         wireFormHandlers(user);
@@ -608,7 +623,6 @@
 
       wbName.textContent = (userName || "GEBRUIKER").toUpperCase();
 
-      // Toggle banner wording & color
       if (supporterActive) {
         supporterBanner.classList.remove("supporter-banner-red");
         supporterBanner.classList.add("supporter-banner-green");
@@ -674,7 +688,7 @@
         const deleteMsg = $("deleteMsg");
         if (!confirm("Is jy seker? Jou rekening sal verwyder word.")) return;
         try {
-          await deleteUser(auth.currentUser); // may require recent login
+          await deleteUser(auth.currentUser);
           deleteMsg.textContent = "Rekening verwyder.";
           deleteMsg.className = "text-sm mt-2 text-green-600";
           deleteMsg.classList.remove("hidden");
@@ -727,9 +741,9 @@
       snap.forEach((docSnap) => {
         const d = docSnap.data();
         const gameId = docSnap.id; // "GameYYYY-MM-DD"
-        const date = gameId.replace(/^Game/, "");
+        theDate = gameId.replace(/^Game/, "");
         plays.push({
-          date,
+          date: theDate,
           win: d?.result === "win" || d?.finished === true,
           guesses: Number(d?.guesses || 0),
         });
@@ -757,9 +771,7 @@
         if (p.win) {
           const g = Math.min(Math.max(1, p.guesses || 6), 6);
           dist[g] += 1;
-        } else {
-          dist.fail += 1;
-        }
+        } else { dist.fail += 1; }
       }
 
       const subtotal =
@@ -801,11 +813,16 @@
         </tr>`;
       }).join("");
 
+      // Neater distribution bars: track + fill + value
       const pairs = [['1',dist[1]],['2',dist[2]],['3',dist[3]],['4',dist[4]],['5',dist[5]],['6',dist[6]],['X',dist.fail]];
       const maxv = Math.max(1, ...pairs.map(p => p[1]));
       distWrap.innerHTML = pairs.map(([lb,val]) => {
-        const w = val === 0 ? 0 : Math.max(6, Math.round((val/maxv)*100));
-        return `<div class="barRow"><div class="text-xs font-bold text-slate-500">${lb}</div><div class="bar" style="width:${w}%"></div><div class="mono text-sm font-extrabold">${fmt(val)}</div></div>`;
+        const w = val === 0 ? 0 : Math.round((val/maxv)*100);
+        return `<div class="barRow">
+          <div class="text-xs font-bold text-slate-500">${lb}</div>
+          <div class="barTrack"><div class="barFill" style="width:${w}%"></div></div>
+          <div class="mono text-sm font-extrabold text-slate-700">${fmt(val)}</div>
+        </div>`;
       }).join("");
 
       subtotalCell.textContent = fmt(subtotal);
