@@ -425,6 +425,35 @@
     /* Absolute site URL for share (dev falls back to prod) */
     const SITE_ORIGIN = location.hostname.endsWith('kriptiek.com') ? location.origin : 'https://www.kriptiek.com';
 
+    // ZA "today" for profile-compat mirroring
+    function todayZaISO(){
+      const now = new Date();
+      const utc = now.getTime() + now.getTimezoneOffset()*60000;
+      const za  = new Date(utc + 120*60000);
+      return za.toISOString().slice(0,10);
+    }
+    const TODAY_ID = `Game${todayZaISO()}`;
+
+    // ZA-time helpers for points windows
+    const K_CONF = {
+      EARLY_START: "07:00",
+      CUTOFF: "23:55",
+      EARLY_POINTS: 20,
+      IMPROVE_POINTS: 30,
+      FINAL_POINTS: [120,90,70,60,50,40,30,25,20,15],
+      DAILY_CAP: 200,
+      SUPPORTER_MULTIPLIER: 1.10
+    };
+    function nowZa(){
+      const n=new Date(); return new Date(n.getTime() + n.getTimezoneOffset()*-60000 + 120*60000);
+    }
+    function zaTimeOn(dateStr, hhmm){
+      const [hh,mm] = hhmm.split(":").map(Number);
+      // construct a UTC time that corresponds to ZA hh:mm
+      const d = new Date(`${dateStr}T${String(hh-2).padStart(2,'0')}:${String(mm).padStart(2,'0')}:00.000Z`);
+      return d;
+    }
+
     /* N-R gate utils */
     let guestGateBypassOnce = false;
     function showNRGate(){ nrGate.style.display='flex'; }
@@ -450,7 +479,7 @@
       return `Kom speel vandag se BLITSTIEK op Kriptiek: ${buildShareUrl(gid)}`;
     }
 
-    /* ✅ Exact success wording for WhatsApp/system share (after finishing) */
+    /* success wording for WhatsApp/system share (after finishing) */
     function buildWinShareText(payload){
       const tt   = Number(payload?.time);
       const word = String(payload?.target || TARGET || '—').toUpperCase();
@@ -472,6 +501,7 @@
     /* ---- State ---- */
     let user=null;
     let currentUserName='Speler';
+    let supporterActive=false;
     let GAME_ID=null, TARGET='';
     let grid=Array.from({length:H},()=>Array(W).fill(null));
     let cur=null, nxt=null;
@@ -487,6 +517,11 @@
         if(snap.exists() && snap.data().userName){
           return String(snap.data().userName).slice(0,24);
         }
+        // supporter flag
+        supporterActive = !!(snap.exists() && (
+          snap.data().supporterActive === true ||
+          (snap.data().supporterUntil?.toMillis && snap.data().supporterUntil.toMillis() > Date.now())
+        ));
       }catch{}
       if (u.displayName) return String(u.displayName).slice(0,24);
       if (u.email){
@@ -509,6 +544,7 @@
         hideNRGate();
       } else {
         currentUserName = 'Speler';
+        supporterActive = false;
         playerNameEl.textContent = currentUserName;
         welcomeLine.style.display = 'none';
         barNR.classList.remove('hidden');
@@ -806,99 +842,98 @@
       } catch (e) { console.warn('RUNS_TRIM_FAILED', e); }
     }
 
-    /* ------------------ NEW: Blitstiek points (profile pill) ------------------ */
-    const K_CONF = {
-      EARLY_BIRD_WINDOW_START: "07:00",
-      CUTOFF_TIME: "23:55",
-      LEADERBOARD_SIZE: 10,
-      EARLY_BIRD_POINTS: 20,
-      IMPROVE_POINTS: 30,
-      FINAL_POINTS: [120,90,70,60,50,40,30,25,20,15],
-      DAILY_CAP_PER_GAME: 200,
-      SUPPORTER_MULTIPLIER: 1.10
-    };
-    function nowZa(){
-      const now = new Date();
-      const utc = now.getTime() + now.getTimezoneOffset()*60000;
-      return new Date(utc + 120*60000);
-    }
-    function zaTimeOn(dateStr, hhmm){
-      const [h,m] = hhmm.split(":").map(Number);
-      return new Date(`${dateStr}T${String(h-2).padStart(2,'0')}:${String(m).padStart(2,'0')}:00.000Z`);
-    }
-    function gameDateFromId(id){ return (id || "").replace(/^Game/, ""); }
-    async function isSupporter(uid){
+    /* ---- Shadow-mode K points ---- */
+    async function awardPoints(userId, gameId){
       try{
-        const s = await getDoc(doc(db, "users", uid));
-        if (!s.exists()) return false;
-        const u = s.data();
-        if (u?.supporterActive === true) return true;
-        if (u?.supporterUntil?.toMillis && u.supporterUntil.toMillis() > Date.now()) return true;
-      }catch{}
-      return false;
-    }
-    async function awardPoints(uid, GAME_ID){
-      if (!uid || !GAME_ID) return;
-      const GAME_DATE = gameDateFromId(GAME_ID);
-      const playRef = doc(db, `userGames/${uid}/plays/${GAME_ID}`);
-      const bestRef = doc(db, `blitstiekGames/${GAME_ID}/leaderboard/${uid}`);
-      const lbCol   = collection(db, `blitstiekGames/${GAME_ID}/leaderboard`);
+        const playRef = doc(db, `userGames/${userId}/plays/${gameId}`);
+        const playSnap = await getDoc(playRef);
+        let { kBlit_early=0, kBlit_improve=0, kBlit_place=0, kBlit_total=0 } = playSnap.exists() ? playSnap.data() : {};
 
-      const playSnap = await getDoc(playRef);
-      let { kBlit_early=0, kBlit_improve=0, kBlit_place=0, kBlit_total=0 } =
-          playSnap.exists() ? (playSnap.data() || {}) : {};
+        // We need the game's date (YYYY-MM-DD) from its id
+        const gameDate = String(gameId || '').replace(/^Game/, '');
+        const now = nowZa();
 
-      const bestSnap = await getDoc(bestRef);
-      const haveBest = bestSnap.exists() && Number.isFinite(Number(bestSnap.data()?.time));
-
-      const now = nowZa();
-
-      if (kBlit_early === 0 && haveBest && now >= zaTimeOn(GAME_DATE, K_CONF.EARLY_BIRD_WINDOW_START)){
-        const qEarly = query(lbCol, orderBy("timestamp","asc"), limit(10));
-        const earlySnap = await getDocs(qEarly);
-        const inTop10 = earlySnap.docs.some(d => d.id === uid);
-        if (inTop10) kBlit_early = K_CONF.EARLY_BIRD_POINTS;
-      }
-
-      if (kBlit_improve === 0 && haveBest){
-        kBlit_improve = K_CONF.IMPROVE_POINTS;
-      }
-
-      if (kBlit_place === 0 && now >= zaTimeOn(GAME_DATE, K_CONF.CUTOFF_TIME)){
-        const qRank = query(lbCol, orderBy("time","asc"), orderBy("timestamp","asc"), limit(K_CONF.LEADERBOARD_SIZE));
-        const rankSnap = await getDocs(qRank);
-        const pos = rankSnap.docs.findIndex(d => d.id === uid);
-        if (pos >= 0 && pos < K_CONF.FINAL_POINTS.length){
-          kBlit_place = K_CONF.FINAL_POINTS[pos];
+        // Early bonus — if within first 10 by timestamp after 07:00 ZA
+        if (kBlit_early === 0 && gameDate && now >= zaTimeOn(gameDate, K_CONF.EARLY_START)) {
+          const qEarly = query(
+            collection(db, `blitstiekGames/${gameId}/leaderboard`),
+            orderBy('timestamp','asc'),
+            limit(10)
+          );
+          const s = await getDocs(qEarly);
+          const isInTop10 = s.docs.some(d => d.id === userId);
+          if (isInTop10) kBlit_early = K_CONF.EARLY_POINTS;
         }
-      }
 
-      const supporter = await isSupporter(uid);
-      const base = kBlit_early + kBlit_improve + kBlit_place;
-      const mult = supporter ? K_CONF.SUPPORTER_MULTIPLIER : 1;
-      const total = Math.min(Math.round(base * mult), K_CONF.DAILY_CAP_PER_GAME);
-      kBlit_total = total;
+        // Improve bonus — grant once on day’s first recorded best
+        if (kBlit_improve === 0) {
+          const myBest = await getDoc(doc(db, `blitstiekGames/${gameId}/leaderboard/${userId}`));
+          if (myBest.exists() && Number.isFinite(Number(myBest.data().time))) {
+            kBlit_improve = K_CONF.IMPROVE_POINTS;
+          }
+        }
 
-      await setDoc(playRef, {
-        kBlit_early, kBlit_improve, kBlit_place, kBlit_total,
-        updatedAt: serverTimestamp()
-      }, { merge:true });
+        // Final placing — after 23:55 ZA only, once
+        if (kBlit_place === 0 && gameDate && now >= zaTimeOn(gameDate, K_CONF.CUTOFF)) {
+          const qTop = query(
+            collection(db, `blitstiekGames/${gameId}/leaderboard`),
+            orderBy('time','asc'),
+            orderBy('timestamp','asc'),
+            limit(10)
+          );
+          const s = await getDocs(qTop);
+          const pos = s.docs.findIndex(d => d.id === userId);
+          if (pos >= 0 && pos < K_CONF.FINAL_POINTS.length) {
+            kBlit_place = K_CONF.FINAL_POINTS[pos];
+          }
+        }
+
+        // Multiplier & cap
+        const base = kBlit_early + kBlit_improve + kBlit_place;
+        const mult = supporterActive ? K_CONF.SUPPORTER_MULTIPLIER : 1;
+        kBlit_total = Math.min(Math.round(base * mult), K_CONF.DAILY_CAP);
+
+        await setDoc(playRef, {
+          kBlit_early, kBlit_improve, kBlit_place, kBlit_total, updatedAt: serverTimestamp()
+        }, { merge:true });
+
+      }catch(e){ console.warn('awardPoints failed', e); }
     }
-    /* ------------------------------------------------------------------------ */
 
-    async function end(win){
+    function end(win){
       ended=true; clearInterval(tInt); clearInterval(gInt);
       if(!win) return;
 
-      // 1) push to leaderboard
-      await submitTimeToBoard();
+      submitTimeToBoard()
+        .then(async ()=> {
+          if (user && GAME_ID) {
+            // write K points for this GAME_ID
+            await awardPoints(user.uid, GAME_ID);
 
-      // 2) write Blitstiek-telling so the profile pill lights up
-      try{
-        if (user && GAME_ID) await awardPoints(user.uid, GAME_ID);
-      }catch(e){ console.warn("awardPoints failed:", e); }
+            // ✅ Mirror to TODAY_ID so profile.html (which reads today) shows it immediately
+            if (GAME_ID !== TODAY_ID) {
+              try {
+                const src = await getDoc(doc(db, `userGames/${user.uid}/plays/${GAME_ID}`));
+                if (src.exists()) {
+                  const d = src.data() || {};
+                  await setDoc(
+                    doc(db, `userGames/${user.uid}/plays/${TODAY_ID}`),
+                    {
+                      kBlit_early:   Number(d?.kBlit_early||0),
+                      kBlit_improve: Number(d?.kBlit_improve||0),
+                      kBlit_place:   Number(d?.kBlit_place||0),
+                      kBlit_total:   Number(d?.kBlit_total||0),
+                      updatedAt: serverTimestamp()
+                    },
+                    { merge: true }
+                  );
+                }
+              } catch(e) { console.warn('mirror to TODAY_ID failed', e); }
+            }
+          }
+        })
+        .catch(e=>console.warn('submit/points error', e));
 
-      // 3) share UI
       enableStickyShare({ time: t, target: TARGET });
 
       winMsg.innerHTML = `Veels geluk, <strong>${currentUserName}</strong>, jy het <strong>${TARGET}</strong> in <strong>${fmt(t)}</strong> voltooi!`;
