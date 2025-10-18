@@ -86,8 +86,12 @@
   .table{ width:100%; border-collapse:separate; border-spacing:0; }
   .table th,.table td{ padding:.6rem .75rem; border-bottom:1px solid #e5e7eb; }
   .table th{ text-align:left; font-weight:700; color:#334155; background:#f8fafc; position:sticky; top:0; }
-  .barRow{ display:grid; grid-template-columns:1.5rem 1fr auto; gap:.5rem; align-items:center; }
-  .bar{ height:14px; background:linear-gradient(90deg,#1d4ed8,#1e40af); border-radius:7px; }
+  /* ensure right-aligned header cells (e.g. "Formule", "Punte") actually align right */
+  .table th.text-right{ text-align:right; }
+  .table th.mono{ font-variant-numeric: tabular-nums; }
+
+  .barRow{ display:grid; grid-template-columns:1.25rem 1fr auto; gap:.5rem; align-items:center; }
+  .bar{ height:12px; background:linear-gradient(90deg,#1d4ed8,#1e40af); border-radius:6px; }
 
   /* Supporter banner (base + color variants) */
   .supporter-banner{
@@ -102,16 +106,21 @@
   .top-card { min-height:320px; }
   @media (max-width: 640px){ .top-card{ min-height:unset; } }
 
-  /* --- Game blocks: enforce neat bottom alignment --- */
-  .game-card .game-col { display:flex; flex-direction:column; min-height: 420px; }
+  /* --- Game blocks --- */
+  .game-card .game-col { display:flex; flex-direction:column; }
+  /* Slightly reduced min-height on Dilemma to cut dead space on right */
+  .game-card .game-col.dilemma-col { min-height: 360px; }
+  @media (max-width: 640px){ .game-card .game-col.dilemma-col { min-height: unset; } }
   .game-card .push-end { margin-top:auto; }
-  @media (max-width: 640px){ .game-card .game-col { min-height: unset; } }
   .col-summary { border-top: 1px solid #e5e7eb; padding-top: .75rem; }
 
   /* Info banners */
   .banner { display:flex; align-items:center; gap:.6rem; border-radius:.75rem; padding:.5rem .75rem; font-weight:700; }
   .banner-live { background:#ecfeff; color:#155e75; border:1px solid #a5f3fc; }
   .banner-archive { background:#f8fafc; color:#334155; border:1px solid #e2e8f0; }
+
+  /* Polished table wrapper look */
+  .table-wrap{ border:1px solid #e5e7eb; border-radius:.75rem; overflow:hidden; background:#fff; }
 </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -132,7 +141,7 @@
 
   <main class="flex-grow p-4 pb-16">
     <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 items-start">
-      <!-- LEFT (UNCHANGED) -->
+      <!-- LEFT -->
       <section class="card p-5 md:p-6 top-card">
         <a id="supporterBanner" href="https://buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
            class="supporter-banner supporter-banner-red mb-4"
@@ -164,7 +173,7 @@
         </form>
       </section>
 
-      <!-- RIGHT (UNCHANGED) -->
+      <!-- RIGHT -->
       <section class="card p-5 md:p-6 top-card">
         <div class="mb-4"><span id="pillOverall" class="pill pill-lg pill-blue" role="status">JOU KRIPTIEK-TELLING: 0</span></div>
         <div class="flex flex-wrap gap-2 mb-6 items-start">
@@ -182,16 +191,16 @@
     <!-- GAMES: DILEMMA + Blitstiek & Slimstiek (shadow-mode) -->
     <div class="max-w-6xl mx-auto space-y-6 mt-6">
 
-      <!-- DILEMMA (reflowed, original IDs preserved) -->
+      <!-- DILEMMA (polished layout) -->
       <section class="card p-5 md:p-6 game-card">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-xl font-extrabold text-slate-900">Jou Dilemma-telling</h2>
           <span id="streakChip" class="hidden px-2.5 py-1 rounded-full font-bold text-indigo-900" style="background:#e0e7ff">+10% lopie</span>
         </div>
 
-        <div class="grid md:grid-cols-2 gap-4 items-start">
+        <div class="grid md:grid-cols-2 gap-5 items-start">
           <!-- LEFT COL -->
-          <div class="game-col">
+          <div class="game-col dilemma-col">
             <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-4">
               <div class="text-sm text-indigo-900/80">Laas bereken op: <span id="calcTime" class="mono">—</span></div>
               <div class="mt-2 flex items-end gap-4">
@@ -206,14 +215,14 @@
               </div>
             </div>
 
-            <p class="text-sm leading-6 text-slate-600 mb-4">
+            <p class="text-sm leading-6 text-slate-600 mb-3">
               Hoe minder raaiskote jy nodig het, hoe meer punte kry jy. Daar is ook bonuspunte as jy
               <strong>vyf of meer Dilemmas opeenvolgend kan oplos</strong>, asook ’n
               <strong>10%-bonus vir betalende ondersteuners in die afgelope 30 dae</strong>.
             </p>
 
-            <!-- NOTE: fixed Tailwind utility + renamed header to 'Formule' and matched type/align -->
-            <div class="overflow-auto max-h-[420px] rounded-xl border border-slate-200 bg-white">
+            <!-- Polished table wrapper -->
+            <div class="table-wrap">
               <table class="table text-sm w-full">
                 <thead>
                   <tr>
@@ -251,9 +260,9 @@
           </div>
 
           <!-- RIGHT COL -->
-          <div class="game-col">
+          <div class="game-col dilemma-col">
             <h3 class="text-sm font-bold text-slate-700 mb-2">Jou Dilemma-statistiek</h3>
-            <div class="grid grid-cols-4 gap-2 mb-4">
+            <div class="grid grid-cols-4 gap-2 mb-3">
               <div class="mini"><div id="playedStat" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Dilemmas gespeel</div></div>
               <div class="mini"><div id="winrateStat" class="text-3xl font-extrabold mono">0%</div><div class="text-xs text-slate-500 mt-1">Sukseskoers</div></div>
               <div class="mini"><div id="curStreak" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Huidige lopie</div></div>
@@ -261,9 +270,9 @@
             </div>
 
             <h4 class="text-sm font-bold text-slate-700 mb-2">Suksesverdeling</h4>
-            <div id="distWrap" class="space-y-2"></div>
+            <div id="distWrap" class="space-y-1.5"></div>
 
-            <div class="col-summary push-end text-sm text-slate-600">
+            <div class="col-summary push-end text-sm text-slate-600 mt-3">
               <span class="font-semibold">Leidraad:</span> Dilemma-telling word by jou Kriptiek-telling ingereken.
             </div>
           </div>
@@ -293,7 +302,7 @@
               </div>
             </div>
 
-            <div class="overflow-auto max-h-[420px] rounded-xl border border-slate-200 bg-white">
+            <div class="table-wrap">
               <table class="table text-sm w-full">
                 <thead>
                   <tr><th>Komponent</th><th class="text-right">Reël</th><th class="text-right">Punte</th></tr>
@@ -366,7 +375,7 @@
               </div>
             </div>
 
-            <div class="overflow-auto max-h-[420px] rounded-xl border border-slate-200 bg-white">
+            <div class="table-wrap">
               <table class="table text-sm w-full">
                 <thead>
                   <tr><th>Komponent</th><th class="text-right">Reël</th><th class="text-right">Punte</th></tr>
@@ -484,7 +493,7 @@
       appId: "1:620450620939:web:e93a18ac23b53b33db890e"
     };
 
-    // ---- Dilemma constants (unchanged) ----
+    // ---- Dilemma constants ----
     const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
     const STREAK_THRESHOLD = 5;
     const STREAK_MULTIPLIER = 1.10;
@@ -576,7 +585,7 @@
       errBanner.classList.remove("hidden");
     }
 
-    // -------- profile load/write (unchanged) --------
+    // -------- profile load/write --------
     async function hydrateProfile(user) {
       const uref = doc(db, "users", user.uid);
       const snap = await getDoc(uref);
@@ -698,7 +707,7 @@
       }
     }
 
-    // -------- Dilemma data: compute and render (unchanged logic) --------
+    // -------- Dilemma compute + render --------
     async function loadAndRenderDilemma(uid) {
       const uref = doc(db, "users", uid);
       const uSnap = await getDoc(uref);
@@ -824,14 +833,12 @@
 
     // -------- Shadow-mode renderer + archive PB award --------
     async function renderShadowGame(uid, gameKey){
-      // Determine per-game paths & fields
       const isBlit = gameKey === "blitstiek";
       const gameRoot = isBlit ? "blitstiekGames" : "slimstiekGames";
       const metricField = isBlit ? "bestTimeMs" : "bestScore";
       const lbUserRef = doc(db, `${gameRoot}/${GAME_ID}/leaderboard/${uid}`);
       const userPlayRef = doc(db, `userGames/${uid}/plays/${GAME_ID}`);
 
-      // Read any existing shadow totals for today/that gameId
       const playSnap = await getDoc(userPlayRef);
       let kEarly=0,kImprove=0,kPlace=0,kPBArch=0,kTotal=0, supporterActive=false;
 
@@ -852,14 +859,12 @@
         }
       }
 
-      // Optional: supporter multiplier display (we do not apply it here; points shown are raw shadow deltas)
       const userSnap = await getDoc(doc(db,"users",uid));
       if (userSnap.exists()){
         const u = userSnap.data();
         supporterActive = !!(u?.supporterActive === true || (u?.supporterUntil?.toMillis && u.supporterUntil.toMillis()>Date.now()));
       }
 
-      // If ARCHIVE and user has a result on that LB, and no PB-archive awarded yet: give +10 once (shadow mode)
       if (IS_ARCHIVE && kPBArch === 0) {
         const lbUserSnap = await getDoc(lbUserRef);
         if (lbUserSnap.exists() && lbUserSnap.data()?.[metricField] != null) {
@@ -874,7 +879,6 @@
         }
       }
 
-      // Write to UI
       if (isBlit) {
         blitEarlyCell.textContent = fmt(kEarly);
         blitImproveCell.textContent = fmt(kImprove);
