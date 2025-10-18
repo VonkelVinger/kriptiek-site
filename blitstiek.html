@@ -102,9 +102,11 @@
     @media (min-width:640px){.dir-btn{min-width:72px;min-height:72px;font-size:28px}}
 
     .pill{background:#0c4a3e;color:#fff;font-weight:700;padding:6px 10px;border-radius:8px;text-align:center;}
-    #leaderboardList li{padding:.35rem .5rem;border-radius:.375rem;}
+    #leaderboardList li{padding:.35rem .5rem;border-radius:.375rem;display:flex;gap:.5rem;align-items:center;justify-content:space-between;}
     #leaderboardList li:nth-child(odd){background:#f3f4f6;}
     #leaderboardList li:first-child{background:#d1fae5;font-weight:700;}
+    .k-pill{display:inline-flex;align-items:center;gap:.35rem;background:#16a34a;color:#fff;font-weight:800;border-radius:999px;padding:.15rem .5rem;font-size:.75rem;line-height:1;}
+    .k-pill .dot{width:.5rem;height:.5rem;border-radius:999px;background:#fff;opacity:.85}
 
     /* Share dropdown */
     .share-menu-local{
@@ -194,7 +196,6 @@
             </div>
           </div>
         </div>
-
         <!-- Arrows -->
         <div class="controls mt-3">
           <div class="arrow-row">
@@ -391,10 +392,14 @@
     /* ---- Helpers ---- */
     const pad = n => String(n).padStart(2,'0');
     const fmt = s => s==null ? '--:--' : `${pad(Math.floor(s/60))}:${pad(s%60)}`;
-    const todayISO = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+    function nowZa(){
+      const n=new Date(); const utc=n.getTime()+n.getTimezoneOffset()*60000;
+      return new Date(utc + 120*60000);
+    }
+    const todayISO = () => { const d=nowZa(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+
     const qs = new URLSearchParams(location.search);
     const explicitId = qs.get('gameId');
-
     const SITE_ORIGIN = location.hostname.endsWith('kriptiek.com') ? location.origin : 'https://www.kriptiek.com';
 
     /* ---- Share helpers ---- */
@@ -431,10 +436,6 @@
       SUPPORTER_MULTIPLIER: 1.10
     };
     function gameDateFromId(id){ return id.replace(/^Game/,''); }
-    function nowZa(){
-      const n=new Date(); const utc=n.getTime()+n.getTimezoneOffset()*60000;
-      return new Date(utc + 120*60000);
-    }
     function zaTimeOn(dateStr, hhmm){
       const [h,m] = hhmm.split(":").map(Number);
       return new Date(`${dateStr}T${String(h-2).padStart(2,'0')}:${String(m).padStart(2,'0')}:00.000Z`);
@@ -476,7 +477,6 @@
     /* ---- Auth ---- */
     onAuthStateChanged(auth, async (u)=>{
       user=u||null;
-
       if(user){
         currentUserName = await resolveUserName(user);
         playerNameEl.textContent = currentUserName;
@@ -837,7 +837,7 @@
       } catch (e) { console.warn('RUN_APPEND/TRIM_FAILED', e); }
     }
 
-    /* ==== Mirror Blitstiek points into userGames/plays ==== */
+    /* ==== Mirror Blitstiek points into userGames/plays & expose to leaderboard ==== */
     async function mirrorBlitstiekPoints(){
       if (!user || !GAME_ID) return;
 
@@ -915,6 +915,7 @@
       const mult = supporterActive ? K_CONF.SUPPORTER_MULTIPLIER : 1;
       kTotal = Math.min(Math.round(base * mult), K_CONF.DAILY_CAP_PER_GAME);
 
+      // persist in private play doc
       await setDoc(playRef, {
         kBlit_early:   kEarly,
         kBlit_improve: kImprove,
@@ -922,9 +923,14 @@
         kBlit_total:   kTotal,
         updatedAt: serverTimestamp()
       }, { merge:true });
+
+      // also expose on leaderboard row for public rendering of the green pill
+      try {
+        await setDoc(bestRef, { kBlit_total: kTotal }, { merge: true });
+      } catch {}
     }
 
-    /* ---- LIVE Leaderboard ---- */
+    /* ---- LIVE Leaderboard (now with green pill) ---- */
     function startLiveLeaderboard(){
       if(lbUnsub) { lbUnsub(); lbUnsub=null; }
       const qy=query(collection(db,'blitstiekGames',GAME_ID,'leaderboard'), orderBy('time','asc'), orderBy('timestamp','asc'), limit(10));
@@ -932,7 +938,7 @@
         lbList.innerHTML='';
         if(snap.empty){
           bestText.textContent='--:--';
-          lbList.innerHTML = `<li class="bg-green-100 font-medium">Jy kan eerste op die leierbord wees!</li>`;
+          lbList.innerHTML = `<li class="bg-green-100 font-medium"><span>Jy kan eerste op die leierbord wees!</span></li>`;
           return;
         }
         let idx=0;
@@ -940,8 +946,11 @@
           const v = docSnap.data()||{};
           if(idx===0) bestText.textContent = fmt(Number(v.time));
           const you = user && docSnap.id===user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
+          const pill = (typeof v.kBlit_total === 'number' && v.kBlit_total > 0)
+            ? `<span class="k-pill" title="Vandag se Blitstiek-telling"><span class="dot"></span>${v.kBlit_total}</span>`
+            : '';
           const li=document.createElement('li');
-          li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>${you}: ${fmt(Number(v.time))}`;
+          li.innerHTML = `<span><strong>${(v.userName||'Onbekend')}</strong>${you}: ${fmt(Number(v.time))}</span>${pill}`;
           lbList.appendChild(li);
           idx++;
         });
@@ -975,16 +984,17 @@
     async function loadGame(){
       GAME_ID = await resolveGameId();
 
-      // keep URL stable for sharing
+      // keep URL stable for sharing (avoid dangling "?")
       try {
         if (GAME_ID) {
           const urlObj = new URL(window.location.href);
           urlObj.searchParams.set('gameId', GAME_ID);
           urlObj.hash = '';
-          const canonicalPathAndQuery = urlObj.pathname + '?' + urlObj.searchParams.toString();
-          const current = window.location.pathname + window.location.search + window.location.hash;
-          if (current !== canonicalPathAndQuery) {
-            history.replaceState(null, '', canonicalPathAndQuery);
+          const hasQuery = urlObj.searchParams.toString();
+          const canonical = hasQuery ? `${urlObj.pathname}?${hasQuery}` : urlObj.pathname;
+          const current = window.location.pathname + window.location.search;
+          if (current !== canonical) {
+            history.replaceState(null, '', canonical);
           }
         }
       } catch {}
@@ -1041,7 +1051,7 @@
       if(!win) return;
 
       submitTimeToBoard();
-      mirrorBlitstiekPoints();   // ensure profile gets today's kBlit_* values
+      mirrorBlitstiekPoints();   // ensure profile + leaderboard row get today’s values
 
       enableStickyShare({ time: t, target: TARGET });
 
