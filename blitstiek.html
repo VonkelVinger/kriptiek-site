@@ -10,7 +10,7 @@
   gtag('js', new Date());
   gtag('config', 'G-S9V4CMP1FP');
 </script>
-
+  
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
   <title>BLITSTIEK – Kriptiek</title>
@@ -117,40 +117,10 @@
     }
     .share-menu-local button:hover{background:#f3f4f6;}
 
-    /* --- ACTION BAR (base = 4-up) --- */
-    .action-grid{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:.5rem;
-      justify-items:center;
-      align-items:center;
-    }
-    .cols-3{ grid-template-columns:repeat(3,1fr); }
-
-    .action-grid > a,
-    .action-grid > button{
-      display:grid;
-      place-items:center;
-      width:100%;
-      aspect-ratio:1/1;
-      max-width:120px;
-      padding:0; margin:0;
-      background:transparent !important;
-      border:0; border-radius:0;
-      line-height:0;
-      appearance:none; -webkit-appearance:none;
-      box-shadow:none;
-      cursor:pointer;
-    }
-    .btn-img{
-      width:100%; height:100%;
-      display:block;
-      object-fit:contain;
-      border-radius:0;
-      box-shadow:0 6px 15px rgba(0,0,0,.25);
-    }
-    .btn-img:hover{transform:translateY(-1px);filter:brightness(1.02)}
-    .btn-img:active{transform:translateY(0);filter:brightness(.98)}
+    /* ACTION BAR */
+    .action-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:.5rem; justify-items:center; align-items:center; }
+    .action-grid > a,.action-grid > button{ display:grid; place-items:center; width:100%; aspect-ratio:1/1; max-width:120px; background:transparent!important; border:0; cursor:pointer; }
+    .btn-img{ width:100%; height:100%; object-fit:contain; box-shadow:0 6px 15px rgba(0,0,0,.25); }
 
     /* N-R gate */
     #nrGate{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:60;}
@@ -249,17 +219,17 @@
           <div id="bestBox" class="pill">Beste tyd: <b>--:--</b></div>
         </div>
 
-        <!-- ACTION BARS -->
+        <!-- ACTION BAR -->
         <div class="controls mt-3" id="actionBars">
           <!-- Guests (N-R) -->
-          <div id="barNR" class="action-grid cols-3">
+          <div id="barNR" class="action-grid">
             <a href="/register.html" title="Registreer">
               <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="120" height="120">
             </a>
             <a href="/forum.html" title="Gesels saam">
               <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
             </a>
-            <!-- DEEL tile with dropdown (matches Dilemma) -->
+            <!-- DEEL tile -->
             <div class="relative share-tile-wrap">
               <button type="button" class="share-tile" title="Deel">
                 <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
@@ -276,14 +246,14 @@
           </div>
 
           <!-- Registered (R) -->
-          <div id="barR" class="action-grid cols-3 hidden">
+          <div id="barR" class="action-grid hidden">
             <a href="/forum.html" title="Gesels saam">
               <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
             </a>
             <a href="/blitstiek-argief.html" title="Blitstiek-argief">
               <img class="btn-img" src="/assets/B_ARGIEF_12SEP.png" alt="B Argief" width="120" height="120">
             </a>
-            <!-- DEEL tile with dropdown (matches Dilemma) -->
+            <!-- DEEL tile -->
             <div class="relative share-tile-wrap">
               <button type="button" class="share-tile" title="Deel">
                 <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
@@ -328,6 +298,7 @@
           </li>
         </ol>
       </section>
+
       <!-- LEADERBOARD -->
       <section class="card mt-6 p-4">
         <div class="flex items-center justify-between mb-2">
@@ -349,12 +320,14 @@
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
+
+  <!-- Firebase + Logic -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
     import {
       getFirestore, serverTimestamp, doc, getDoc, setDoc, deleteDoc,
-      collection, query, orderBy, limit, getDocs, onSnapshot, where, updateDoc
+      collection, query, limit, getDocs, onSnapshot, where
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
     /* ---- Firebase ---- */
@@ -370,18 +343,6 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
-
-    /* ---- K config (points, ZA times) ---- */
-    const K_CONF = {
-      EARLY_BIRD_WINDOW_START: "07:00",
-      CUTOFF_TIME: "23:55",
-      LEADERBOARD_SIZE: 10,
-      EARLY_BIRD_POINTS: 20,
-      IMPROVE_POINTS: 30,
-      FINAL_POINTS: [120,90,70,60,50,40,30,25,20,15],
-      DAILY_CAP_PER_GAME: 200,
-      SUPPORTER_MULTIPLIER: 1.10
-    };
 
     /* ---- DOM ---- */
     const welcomeLine = document.getElementById('welcomeLine');
@@ -426,25 +387,7 @@
     /* ---- Helpers ---- */
     const pad = n => String(n).padStart(2,'0');
     const fmt = s => s==null ? '--:--' : `${pad(Math.floor(s/60))}:${pad(s%60)}`;
-
-    // ZA time helpers (UTC+2; no DST)
-    function nowZa(){
-      const now = new Date();
-      const utc = now.getTime() + now.getTimezoneOffset()*60000;
-      return new Date(utc + 120*60000);
-    }
-    function todayZaISO(){
-      const z = nowZa();
-      return `${z.getFullYear()}-${pad(z.getMonth()+1)}-${pad(z.getDate())}`;
-    }
-    function zaTimeOn(dateStr, hhmm){
-      const [h,m] = hhmm.split(":").map(Number);
-      // Convert local ZA (UTC+2) to UTC string for Date ctor
-      const Hutc = (h - 2 + 24) % 24;
-      const iso = `${dateStr}T${String(Hutc).padStart(2,'0')}:${String(m).padStart(2,'0')}:00.000Z`;
-      return new Date(iso);
-    }
-
+    const todayISO = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
     const qs = new URLSearchParams(location.search);
     const explicitId = qs.get('gameId');
 
@@ -453,6 +396,7 @@
 
     /* Absolute site URL for share (dev falls back to prod) */
     const SITE_ORIGIN = location.hostname.endsWith('kriptiek.com') ? location.origin : 'https://www.kriptiek.com';
+
     /* N-R gate utils */
     let guestGateBypassOnce = false;
     function showNRGate(){ nrGate.style.display='flex'; }
@@ -472,10 +416,7 @@
       if (gameId) url.searchParams.set('gameId', gameId);
       return url.toString();
     }
-
-    function shareTextLinkOnly(gid){
-      return `Kom speel vandag se BLITSTIEK op Kriptiek: ${buildShareUrl(gid)}`;
-    }
+    function shareTextLinkOnly(gid){ return `Kom speel vandag se BLITSTIEK op Kriptiek: ${buildShareUrl(gid)}`; }
     function buildWinShareText(payload){
       const tt   = Number(payload?.time);
       const word = String(payload?.target || TARGET || '—').toUpperCase();
@@ -503,11 +444,6 @@
     let t=0, tInt=null, gInt=null;
     let lbUnsub=null;
 
-    // K-state
-    let supporterActive=false;
-    let IS_ARCHIVE=false;
-    let GAME_DATE='';
-
     /* ---- Username ---- */
     async function resolveUserName(u){
       try{
@@ -525,20 +461,9 @@
       return 'Speler';
     }
 
-    async function readSupporterFlag(uid){
-      try{
-        const s = await getDoc(doc(db,'users',uid));
-        if(!s.exists()) return false;
-        const d = s.data();
-        return !!(d?.supporterActive === true ||
-                 (d?.supporterUntil?.toMillis && d.supporterUntil.toMillis() > Date.now()));
-      }catch{ return false; }
-    }
-
     /* ---- Auth ---- */
     onAuthStateChanged(auth, async (u)=>{
       user=u||null;
-
       if(user){
         currentUserName = await resolveUserName(user);
         playerNameEl.textContent = currentUserName;
@@ -546,19 +471,17 @@
         barR.classList.remove('hidden');
         barNR.classList.add('hidden');
         hideNRGate();
-        supporterActive = await readSupporterFlag(user.uid);
       } else {
         currentUserName = 'Speler';
         playerNameEl.textContent = currentUserName;
         welcomeLine.style.display = 'none';
         barNR.classList.remove('hidden');
         barR.classList.add('hidden');
-        supporterActive = false;
         showNRGate();
       }
     });
 
-    /* ---- Pixel-perfect grid sizing ---- */
+    /* ---- Pixel grid ---- */
     function resizeGrid(){
       const wrap = gridEl.parentElement;
       const availCss = Math.min(320, Math.floor(wrap.clientWidth));
@@ -698,7 +621,6 @@
         }
       }
     }
-    function checkFail(){}
 
     /* ---- Timer & control ---- */
     function setTime(v){ t=v; timeText.textContent=fmt(v); }
@@ -716,14 +638,11 @@
 
     // gate-aware start
     btnStart.addEventListener('click', ()=>{
-      if(IS_ARCHIVE){
-        alert('Argiefdag: speel gerus, maar inskrywings en punte is af.');
-      }
       if(!user && !guestGateBypassOnce){ showNRGate(); return; }
       guestGateBypassOnce=false; window.focus?.(); start();
     });
 
-    /* ---- Keyboard controls (arrows + space + P) ---- */
+    /* Keyboard controls */
     window.addEventListener('keydown', (e) => {
       const modalOpen = over && over.style.display === 'flex';
       if (modalOpen) return;
@@ -811,170 +730,50 @@
       if(!ok) openWhatsApp(currentShareText());
       stickyShareMenu.classList.add('hidden');
     };
-    /* ---- New leaderboard + points (K) ---- */
 
-    // Compute IS_ARCHIVE from resolved GAME_ID vs today's ZA date
-    function computeArchiveFlags(){
-      const todayId = `Game${todayZaISO()}`;
-      IS_ARCHIVE = GAME_ID && (GAME_ID !== todayId);
-      GAME_DATE = GAME_ID ? GAME_ID.replace(/^Game/,'') : todayZaISO();
-    }
-
-    // Submit: write bestTimeMs + achievedAt; write run; then award points (early/improve). Place is awarded after cutoff on any visit.
+    /* ---- Leaderboard submit (writes INT seconds) ---- */
     async function submitTimeToBoard(){
-      if(!user || IS_ARCHIVE) return; // archive = no writes
-      const name = currentUserName.slice(0,24);
-      const newTimeSec = Number(t);
-      const bestRef = doc(db, `blitstiekGames/${GAME_ID}/leaderboard/${user.uid}`);
-      const runsCol = collection(db, `blitstiekGames/${GAME_ID}/runs`);
+      if(!user) return;
+      const name    = currentUserName.slice(0,24);
+      const newTime = Number.isFinite(t) ? Math.max(0, Math.floor(t)) : 0;
 
-      // Upsert best
-      let improved = false;
-      try{
+      const runsCol = collection(db,'blitstiekGames', GAME_ID, 'runs');
+      const bestRef = doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid);
+
+      try {
         const bestSnap = await getDoc(bestRef);
-        const prevMs = bestSnap.exists() ? Number(bestSnap.data()?.bestTimeMs ?? Infinity) : Infinity;
-        const newMs  = newTimeSec * 1000;
-        improved = newMs < prevMs;
-        await setDoc(bestRef, {
-          name,
-          bestTimeMs: improved ? newMs : prevMs,
-          updatedAt: serverTimestamp(),
-          ...(improved ? { achievedAt: serverTimestamp() } : {})
-        }, { merge:true });
-      }catch(e){ console.warn('BEST_UPDATE_FAILED', e); }
+        const prevTime = bestSnap.exists() ? Number(bestSnap.data().time) : null;
+        if (prevTime == null || !Number.isFinite(prevTime) || newTime < prevTime){
+          await setDoc(bestRef, {
+            userName: name,
+            time: newTime,                  // 🔒 int only
+            achievedAt: serverTimestamp()   // optional; helps tie-break client-side
+          }, { merge:true });
+        }
+      } catch (e) { console.warn('BEST_UPDATE_FAILED', e); }
 
-      // Append run (trim later)
-      try{
+      try {
         await setDoc(doc(runsCol), {
-          uid: user.uid, name, timeSec: newTimeSec, createdAt: serverTimestamp()
+          uid: user.uid,
+          userName: name,
+          time: newTime,
+          timestamp: serverTimestamp()
         });
-      }catch(e){ console.warn('RUN_APPEND_FAILED', e); }
+      } catch (e) { console.warn('RUN_APPEND_FAILED', e); }
 
-      // Trim user runs to 10 newest
-      try{
-        const qy = query(runsCol, where('uid','==', user.uid), orderBy('createdAt','desc'), limit(50));
+      try {
+        const qy = query(runsCol, where('uid','==', user.uid), limit(50));
         const snap = await getDocs(qy);
         const toDelete = snap.docs.slice(10);
         await Promise.all(toDelete.map(d => deleteDoc(d.ref)));
-      }catch(e){ console.warn('RUNS_TRIM_FAILED', e); }
-
-      // Award points for early & improve (if applicable)
-      try{
-        await awardPoints({ justImproved: improved });
-      }catch(e){ console.warn('AWARD_POINTS_FAILED', e); }
-    }
-
-    // Live leaderboard (new fields/sort)
-    function startLiveLeaderboard(){
-      if(lbUnsub) { lbUnsub(); lbUnsub=null; }
-      const qy=query(
-        collection(db,`blitstiekGames/${GAME_ID}/leaderboard`),
-        orderBy('bestTimeMs','asc'),
-        orderBy('achievedAt','asc'),
-        limit(10)
-      );
-      lbUnsub = onSnapshot(qy, (snap)=>{
-        lbList.innerHTML='';
-        if(snap.empty){
-          bestText.textContent='--:--';
-          lbList.innerHTML = `<li class="bg-green-100 font-medium">Jy kan eerste op die leierbord wees!</li>`;
-          return;
-        }
-        let idx=0;
-        snap.forEach(docSnap=>{
-          const v = docSnap.data()||{};
-          if(idx===0){
-            const ms = Number(v.bestTimeMs);
-            bestText.textContent = isFinite(ms) ? fmt(Math.round(ms/1000)) : '--:--';
-          }
-          const ms = Number(v.bestTimeMs);
-          const when = v?.achievedAt?.toDate ? v.achievedAt.toDate().toLocaleTimeString('af-ZA') : '—';
-          const li=document.createElement('li');
-          li.innerHTML = `<strong>${(v.name||'Onbekend')}</strong>: ${isFinite(ms)?fmt(Math.round(ms/1000)):'—'} <span class="text-xs text-slate-500">(${when})</span>`;
-          lbList.appendChild(li);
-          idx++;
-        });
-      }, (err) => {
-        console.warn('Leaderboard stream error:', err);
-        lbList.innerHTML = `<li class="text-red-600">Kon nie leierbord laai nie.</li>`;
-      });
-    }
-
-    // Award points to userGames/{uid}/plays/{GAME_ID}
-    async function awardPoints({ justImproved=false }={}){
-      if(!user || IS_ARCHIVE) return;
-
-      const playRef = doc(db, `userGames/${user.uid}/plays/${GAME_ID}`);
-      let e=0,i=0,p=0,t=0;
-
-      // Read current
-      try{
-        const snap = await getDoc(playRef);
-        if(snap.exists()){
-          const d = snap.data();
-          e = Number(d?.kBlit_early||0);
-          i = Number(d?.kBlit_improve||0);
-          p = Number(d?.kBlit_place||0);
-          t = Number(d?.kBlit_total||0);
-        }
-      }catch{}
-
-      const now = nowZa();
-
-      // EARLY bonus (first time only): in top 10 by achievedAt after 07:00 ZA
-      if(e===0 && now >= zaTimeOn(GAME_DATE, K_CONF.EARLY_BIRD_WINDOW_START)){
-        const qEarly = query(
-          collection(db, `blitstiekGames/${GAME_ID}/leaderboard`),
-          orderBy('achievedAt','asc'),
-          limit(10)
-        );
-        const earlySnap = await getDocs(qEarly);
-        const isTop10 = earlySnap.docs.some(d=>d.id===user.uid);
-        if (isTop10) e = K_CONF.EARLY_BIRD_POINTS;
-      }
-
-      // IMPROVE bonus (once per day) — grant on first recorded best for the day
-      if(i===0){
-        // If user has a bestTimeMs entry, grant once
-        const myBest = await getDoc(doc(db, `blitstiekGames/${GAME_ID}/leaderboard/${user.uid}`));
-        if(myBest.exists()){
-          i = K_CONF.IMPROVE_POINTS;
-        }
-      }
-
-      // PLACE points (after cutoff, once)
-      const afterCutoff = now >= zaTimeOn(GAME_DATE, K_CONF.CUTOFF_TIME);
-      if (p===0 && afterCutoff){
-        const qRank = query(
-          collection(db, `blitstiekGames/${GAME_ID}/leaderboard`),
-          orderBy('bestTimeMs','asc'),
-          orderBy('achievedAt','asc'),
-          limit(K_CONF.LEADERBOARD_SIZE)
-        );
-        const rankSnap = await getDocs(qRank);
-        const pos = rankSnap.docs.findIndex(d=>d.id===user.uid);
-        if (pos >= 0 && pos < K_CONF.FINAL_POINTS.length){
-          p = K_CONF.FINAL_POINTS[pos];
-        }
-      }
-
-      // TOTAL with supporter multiplier and daily cap
-      const base = e + i + p;
-      const mult = supporterActive ? K_CONF.SUPPORTER_MULTIPLIER : 1;
-      t = Math.min(Math.round(base * mult), K_CONF.DAILY_CAP_PER_GAME);
-
-      await setDoc(playRef, {
-        kBlit_early:e, kBlit_improve:i, kBlit_place:p, kBlit_total:t,
-        updatedAt: serverTimestamp()
-      }, { merge:true });
+      } catch (e) { console.warn('RUNS_TRIM_FAILED', e); }
     }
 
     function end(win){
       ended=true; clearInterval(tInt); clearInterval(gInt);
       if(!win) return;
 
-      submitTimeToBoard().catch(()=>{});
-
+      submitTimeToBoard();
       enableStickyShare({ time: t, target: TARGET });
 
       winMsg.innerHTML = `Veels geluk, <strong>${currentUserName}</strong>, jy het <strong>${TARGET}</strong> in <strong>${fmt(t)}</strong> voltooi!`;
@@ -984,22 +783,78 @@
       if(!user) showNRGate();
     }
 
-    /* ---- Resolve GAME_ID (compatible with your dynamic loader) ---- */
+    /* ---- LIVE Leaderboard (schema-agnostic) ----
+       We avoid Firestore orderBy to tolerate legacy docs with string time.
+       Stream a capped set (e.g. 100), then sort/filter client-side by numeric time asc, tie-break by achievedAt asc.
+    */
+    function startLiveLeaderboard(){
+      if(lbUnsub) { lbUnsub(); lbUnsub=null; }
+
+      const qy = query(collection(db,'blitstiekGames',GAME_ID,'leaderboard'), limit(100));
+
+      lbUnsub = onSnapshot(qy, (snap)=>{
+        try{
+          const rows = [];
+          snap.forEach(d=>{
+            const v = d.data()||{};
+            // normalise time -> number; accept legacy bestTimeMs
+            let time = Number(v.time);
+            if(!Number.isFinite(time) && Number.isFinite(Number(v.bestTimeMs))) {
+              time = Math.round(Number(v.bestTimeMs)/1000);
+            }
+            if(!Number.isFinite(time)) return; // skip invalid rows
+
+            rows.push({
+              name: v.userName || 'Onbekend',
+              time,
+              achievedAt: v.achievedAt?.toDate?.() || null
+            });
+          });
+
+          rows.sort((a,b)=>{
+            if(a.time !== b.time) return a.time - b.time;
+            const at = a.achievedAt?.getTime?.() ?? Infinity;
+            const bt = b.achievedAt?.getTime?.() ?? Infinity;
+            return at - bt;
+          });
+
+          const top = rows.slice(0,10);
+          lbList.innerHTML = '';
+          if(top.length===0){
+            bestText.textContent='--:--';
+            lbList.innerHTML = `<li class="bg-green-100 font-medium">Jy kan eerste op die leierbord wees!</li>`;
+            return;
+          }
+          bestText.textContent = fmt(top[0].time);
+          top.forEach((r,i)=>{
+            const li=document.createElement('li');
+            li.innerHTML = `<strong>${r.name}</strong>: ${fmt(r.time)}`;
+            lbList.appendChild(li);
+          });
+        }catch(err){
+          console.warn('LB_RENDER_FAIL',err);
+          lbList.innerHTML = `<li class="text-red-600">Kon nie leierbord laai nie.</li>`;
+        }
+      }, (err) => {
+        console.warn('Leaderboard stream error:', err);
+        lbList.innerHTML = `<li class="text-red-600">Kon nie leierbord laai nie.</li>`;
+      });
+    }
+
+    /* ---- Dynamic resolver ---- */
     async function resolveGameId(){
-      const param = explicitId;
-      if (param) return param;
-      const todayId = `Game${todayZaISO()}`;
+      if (explicitId) return explicitId;
+      const todayId = `Game${todayISO()}`;
       try {
         const todaySnap = await getDoc(doc(db,'blitstiekGames',todayId));
         if (todaySnap.exists()) return todayId;
       } catch {}
       try {
         const gamesRef = collection(db,'blitstiekGames');
-        let q1 = query(gamesRef, where('status','==','active'), orderBy('createdAt','desc'), limit(1));
-        let qs = await getDocs(q1);
+        let q = query(gamesRef, where('status','==','active'), limit(1));
+        let qs = await getDocs(q);
         if (!qs.empty) return qs.docs[0].id;
-        const q2 = query(gamesRef, orderBy('createdAt','desc'), limit(1));
-        qs = await getDocs(q2);
+        qs = await getDocs(query(gamesRef, limit(1)));
         if (!qs.empty) return qs.docs[0].id;
       } catch {}
       return null;
@@ -1008,18 +863,15 @@
     /* ---- Load game ---- */
     async function loadGame(){
       GAME_ID = await resolveGameId();
-      computeArchiveFlags();
 
       try {
         if (GAME_ID) {
           const urlObj = new URL(window.location.href);
           urlObj.searchParams.set('gameId', GAME_ID);
           urlObj.hash = '';
-          const canonicalPathAndQuery = urlObj.pathname + '?' + urlObj.searchParams.toString();
+          const canonical = urlObj.pathname + '?' + urlObj.searchParams.toString();
           const current = window.location.pathname + window.location.search + window.location.hash;
-          if (current !== canonicalPathAndQuery) {
-            history.replaceState(null, '', canonicalPathAndQuery);
-          }
+          if (current !== canonical) { history.replaceState(null, '', canonical); }
         }
       } catch {}
 
@@ -1049,18 +901,13 @@
       maybeEnableStickyShareFromStorage();
       if(user){
         try{
-          const my = await getDoc(doc(db,`blitstiekGames/${GAME_ID}/leaderboard/${user.uid}`));
+          const my = await getDoc(doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid));
           if(my.exists()){
             const v = my.data();
-            const ms = Number(v?.bestTimeMs ?? NaN);
-            if (isFinite(ms)) enableStickyShare({ time: Math.round(ms/1000), target: TARGET });
+            const time = Number(v.time ?? Math.round(Number(v.bestTimeMs||0)/1000));
+            if(Number.isFinite(time)) enableStickyShare({ time, target: TARGET });
           }
         }catch{}
-      }
-
-      // Even if it’s after cutoff, visiting should award place once
-      if(user && !IS_ARCHIVE){
-        try{ await awardPoints({}); }catch{}
       }
 
       startLiveLeaderboard();
@@ -1126,18 +973,16 @@
     await loadGame();
   </script>
 
-<!-- 🟡 Buy Me a Coffee CTA above the real leaderboard (Blitstiek) -->
+<!-- Buy Me a Coffee CTA above leaderboard -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const list = document.getElementById('leaderboardList');
   const section = list ? list.closest('section') : null;
-
   if (!section || !section.parentElement) return;
 
   const wrap = document.createElement('div');
   wrap.className = 'my-4';
   wrap.innerHTML = `
-    <!-- Center the card's contents on mobile and make the anchor shrink-to-fit -->
     <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800 text-center">
       <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
          onclick="gtag && gtag('event','bmac_click',{from:'blitstiek-leaderboard'})"
