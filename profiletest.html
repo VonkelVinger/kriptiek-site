@@ -113,8 +113,8 @@
 
   /* --- Game blocks --- */
   .game-card .game-col { display:flex; flex-direction:column; }
-  .game-card .game-col.dilemma-col { min-height: 340px; }
-  @media (max-width: 640px){ .game-card .game-col.dilemma-col { min-height: unset; } }
+  .game-card .game-col.-col { min-height: 340px; }
+  @media (max-width: 640px){ .game-card .game-col.-col { min-height: unset; } }
   .game-card .push-end { margin-top:auto; }
   .col-summary { border-top: 1px solid #e5e7eb; padding-top: .75rem; }
 
@@ -188,7 +188,7 @@
       <section class="card p-5 md:p-6 top-card">
         <div class="mb-4"><span id="pillOverall" class="pill pill-lg pill-blue" role="status">JOU KRIPTIEK-TELLING: 0</span></div>
         <div class="flex flex-wrap gap-2 mb-6 items-start">
-          <span id="pillDilemmaLive" class="pill pill-lg pill-orange" role="status">DILEMMA: 0</span>
+          <span id="pillDilemmaLive" class="pill pill-lg pill-orange" role="status">JOU DILEMMA-TELLING: 0</span>
           <span class="pill pill-lg pill-green">JOU BLITSTIEK-TELLING: BINNEKORT</span>
           <span class="pill pill-lg pill-green-dark">JOU SLIMSTIEK-TELLING: BINNEKORT</span>
         </div>
@@ -205,7 +205,7 @@
       <!-- DILEMMA (polished layout) -->
       <section class="card p-5 md:p-6 game-card">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="text-xl font-extrabold text-slate-900">Jou Dilemma-telling</h2>
+          <h2 class="text-xl font-extrabold text-slate-900">Jou Dilemmax-telling</h2>
           <span id="streakChip" class="hidden px-2.5 py-1 rounded-full font-bold text-indigo-900" style="background:#e0e7ff">+10% lopie</span>
         </div>
 
