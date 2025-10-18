@@ -179,7 +179,6 @@
         </p>
       </section>
     </div>
-
     <!-- GAMES: DILEMMA + Blitstiek & Slimstiek (shadow-mode) -->
     <div class="max-w-6xl mx-auto space-y-6 mt-6">
 
@@ -213,10 +212,16 @@
               <strong>10%-bonus vir betalende ondersteuners in die afgelope 30 dae</strong>.
             </p>
 
-            <div class="overflow-auto max-h=[420px] rounded-xl border border-slate-200 bg-white">
+            <!-- NOTE: fixed Tailwind utility + renamed header to 'Formule' and matched type/align -->
+            <div class="overflow-auto max-h-[420px] rounded-xl border border-slate-200 bg-white">
               <table class="table text-sm w-full">
                 <thead>
-                  <tr><th>Komponent</th><th class="text-right">Aantal</th><th class="text-right">Reël</th><th class="text-right">Punte</th></tr>
+                  <tr>
+                    <th>Komponent</th>
+                    <th class="text-right">Aantal</th>
+                    <th class="text-right mono">Formule</th>
+                    <th class="text-right">Punte</th>
+                  </tr>
                 </thead>
                 <tbody id="breakdownBody"></tbody>
                 <tfoot>
@@ -338,7 +343,6 @@
           </div>
         </div>
       </section>
-
       <!-- SLIMSTIEK (shadow-mode; with rules & archive banner) -->
       <section class="card p-5 md:p-6 game-card">
         <div class="flex items-center justify-between mb-3">
@@ -694,7 +698,7 @@
       }
     }
 
-    // -------- Dilemma data: compute and render (unchanged) --------
+    // -------- Dilemma data: compute and render (unchanged logic) --------
     async function loadAndRenderDilemma(uid) {
       const uref = doc(db, "users", uid);
       const uSnap = await getDoc(uref);
