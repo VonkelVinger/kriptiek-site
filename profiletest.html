@@ -88,7 +88,6 @@
     text-align:left; font-weight:700; color:#334155; background:#f8fafc; position:sticky; top:0;
     box-shadow: inset 0 -1px 0 #e5e7eb; /* hairline under sticky header */
   }
-  /* make right-aligned header cells actually align right */
   .table th.text-right{ text-align:right; }
   .table th.mono{ font-variant-numeric: tabular-nums; }
   .table tbody tr:nth-child(even){ background:#f9fafb; }
@@ -338,10 +337,10 @@
               <summary class="font-bold text-slate-800 cursor-pointer">Reëls vir Blitstiek (opsomming)</summary>
               <ul class="text-sm text-slate-700 mt-2 list-disc pl-5 space-y-1">
                 <li>Leierbord: maks. 10 inskrywings; <em>een inskrywing per speler</em> (beste tyd vervang ouer tyd).</li>
-                <li>Tydvensters (ZA): Vroeë voël vanaf 07:00; Finale posisie om 23:55.</li>
-                <li>Punte (vandag): Vroeë voël +20; Verbetering +30 (1×/dag); Finale posisie: 120,90,70,60,50,40,30,25,20,15.</li>
+                <li>Tydvensters (ZA): Vroeë bonus vanaf 07:00; Finale posisie om 23:55.</li>
+                <li>Punte (vandag): Vroeë bonus +20; Verbetering +30 (1×/dag); Finale posisie: 120,90,70,60,50,40,30,25,20,15.</li>
                 <li>Ondersteuner: ×1.10 oor vandag se som; daaglikse kap per spel: 200.</li>
-                <li>Argief (verlede dae): Geen vroeë voël of posisie-punte; <strong>PB-punt +10</strong> (eenmalig per argief-dag).</li>
+                <li>Argief (verlede dae): Geen vroeë bonus of posisie-punte; <strong>PB-punt +10</strong> (eenmalig per argief-dag).</li>
                 <li>Tiebreke: kortste tyd eerste; gelykstaande tye → vroeër <em>achievedAt</em> wen.</li>
               </ul>
             </details>
@@ -413,10 +412,10 @@
               <summary class="font-bold text-slate-800 cursor-pointer">Reëls vir Slimstiek (opsomming)</summary>
               <ul class="text-sm text-slate-700 mt-2 list-disc pl-5 space-y-1">
                 <li>Leierbord: maks. 10 inskrywings; <em>een inskrywing per speler</em> (beste telling vervang ouer telling).</li>
-                <li>Tydvensters (ZA): Vroeë voël vanaf 07:00; Finale posisie om 23:55.</li>
-                <li>Punte (vandag): Vroeë voël +20; Verbetering +30 (1×/dag); Finale posisie: 120,90,70,60,50,40,30,25,20,15.</li>
+                <li>Tydvensters (ZA): Vroeë bonus vanaf 07:00; Finale posisie om 23:55.</li>
+                <li>Punte (vandag): Vroeë bonus +20; Verbetering +30 (1×/dag); Finale posisie: 120,90,70,60,50,40,30,25,20,15.</li>
                 <li>Ondersteuner: ×1.10 oor vandag se som; daaglikse kap per spel: 200.</li>
-                <li>Argief (verlede dae): Geen vroeë voël of posisie-punte; <strong>PB-punt +10</strong> (eenmalig per argief-dag).</li>
+                <li>Argief (verlede dae): Geen vroeë bonus of posisie-punte; <strong>PB-punt +10</strong> (eenmalig per argief-dag).</li>
                 <li>Tiebreke: hoogste telling eerste; gelykstaande tellings → vroeër <em>achievedAt</em> wen.</li>
               </ul>
             </details>
@@ -578,7 +577,7 @@
     // -------- gate: must be signed in --------
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        const ret = encodeURIComponent("/profile.html");
+        const ret = encodeURIComponent("/profiletest.html");
         window.location.href = `/login.html?return=${ret}`;
         return;
       }
@@ -714,9 +713,9 @@
         bannerSlim.classList.remove("banner-live"); bannerSlim.classList.add("banner-archive");
         document.querySelectorAll(".archiveOnly").forEach(el=>el.classList.remove("hidden"));
       } else {
-        bannerBlit.textContent = "Vandag (live): Vroeë voël, Verbetering, Finale posisie @ 23:55";
+        bannerBlit.textContent = "Vandag (live): Vroeë bonus, Verbetering, Finale posisie @ 23:55";
         bannerBlit.classList.remove("banner-archive"); bannerBlit.classList.add("banner-live");
-        bannerSlim.textContent = "Vandag (live): Vroeë voël, Verbetering, Finale posisie @ 23:55";
+        bannerSlim.textContent = "Vandag (live): Vroeë bonus, Verbetering, Finale posisie @ 23:55";
         bannerSlim.classList.remove("banner-archive"); bannerSlim.classList.add("banner-live");
       }
     }
@@ -741,7 +740,7 @@
       snap.forEach((docSnap) => {
         const d = docSnap.data();
         const gameId = docSnap.id; // "GameYYYY-MM-DD"
-        theDate = gameId.replace(/^Game/, "");
+        const theDate = gameId.replace(/^Game/, "");
         plays.push({
           date: theDate,
           win: d?.result === "win" || d?.finished === true,
