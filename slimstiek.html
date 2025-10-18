@@ -119,7 +119,7 @@
     @media (min-width:640px){.dir-btn{min-width:72px;min-height:72px;font-size:28px}}
 
     .pill{background:#0c4a3e;color:#fff;font-weight:700;padding:6px 10px;border-radius:8px;text-align:center;}
-    #leaderboardList li{padding:.35rem .5rem;border-radius:.375rem;}
+    #leaderboardList li{padding:.35rem .5rem;border-radius:.375rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}
     #leaderboardList li:nth-child(odd){background:#f3f4f6;}
     #leaderboardList li:first-child{background:#d1fae5;font-weight:700;}
 
@@ -353,6 +353,7 @@
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
+
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
@@ -382,7 +383,7 @@
     const gridEl     = document.getElementById('grid');
     const fxEl       = document.getElementById('fx');
     const over       = document.getElementById('over');
-const winMsg   = document.getElementById('winMsg');
+    const winMsg     = document.getElementById('winMsg');
     const modalShareBtn = document.getElementById('modalShareBtn');
     const modalCloseBtn = document.getElementById('modalCloseBtn');
     const shareMenu  = document.getElementById('shareMenu');
@@ -424,8 +425,7 @@ const winMsg   = document.getElementById('winMsg');
 
     const dateParam = qs.get('date');
     let currentDate = (/^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : todayKeySAST());
-// Slimstiek uses a per-day game doc like Blitstiek:
-const GAME_ID = `Game${currentDate}`;
+    const GAME_ID = `Game${currentDate}`;
 
     // Canonical URL normalization
     try {
@@ -447,7 +447,7 @@ const GAME_ID = `Game${currentDate}`;
     }
     function shareTextLinkOnly(){ return `Kyk of jy my telling op vandag se SLIMSTIEK kan klop: ${buildShareUrl(currentDate)}`; }
 
-    /* ==== K mirror config & ZA helpers (same as Blitstiek) ==== */
+    /* ==== K mirror config & ZA helpers ==== */
     const K_CONF = {
       EARLY_BIRD_WINDOW_START: "07:00",
       CUTOFF_TIME: "23:55",
@@ -459,8 +459,8 @@ const GAME_ID = `Game${currentDate}`;
       SUPPORTER_MULTIPLIER: 1.10
     };
     function zaTimeOn(dateStr, hhmm){
-      const [h,m] = hhmm.split(":").map(Number);
-      return new Date(`${dateStr}T${String(h-2).padStart(2,'0')}:${String(m).padStart(2,'0')}:00.000Z`);
+      // Create a Date at ZA local time for comparisons
+      return new Date(`${dateStr}T${hhmm}:00+02:00`);
     }
 
     /* ---- Auth ---- */
@@ -866,92 +866,113 @@ const GAME_ID = `Game${currentDate}`;
       });
     }
 
-    /* ---- Live leaderboard with k-pill & stable tiebreak ---- */
+    /* ---- Live leaderboard with K-pill & stable tiebreak ---- */
     function startLiveLeaderboardFS(){
-  if(!db){
-    renderLocalLB(currentDate);
-    return;
-  }
-  if(lbUnsub){ lbUnsub(); lbUnsub = null; }
+      if(!db){
+        renderLocalLB(currentDate);
+        return;
+      }
+      if(lbUnsub){ lbUnsub(); lbUnsub = null; }
 
-  const qy = query(
-    collection(db, 'slimstiekGames', GAME_ID, 'leaderboard'),
-    orderBy('score','desc'),
-    orderBy('ts','asc'),
-    limit(25) // read a few extra, we’ll slice to 10 after a stable sort
-  );
+      const qy = query(
+        collection(db, 'slimstiekGames', GAME_ID, 'leaderboard'),
+        orderBy('score','desc'),
+        orderBy('ts','asc'),
+        limit(25) // read a few extra; we’ll slice to 10 after stable sort
+      );
 
-  lbUnsub = onSnapshot(qy, (snap)=>{
-    lbList.innerHTML = '';
+      lbUnsub = onSnapshot(qy, (snap)=>{
+        lbList.innerHTML = '';
 
-    if (snap.empty){
-      bestText.textContent = '—';
-      lbList.innerHTML = `<li class="bg-green-100 font-medium">Wees eerste op die leierbord!</li>`;
-      return;
+        if (snap.empty){
+          bestText.textContent = '—';
+          lbList.innerHTML = `<li class="bg-green-100 font-medium">Wees eerste op die leierbord!</li>`;
+          return;
+        }
+
+        const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        // Stable client tie-break: score DESC, timestamp ASC
+        rows.sort((a,b)=>{
+          const sa = Number(a.score) || 0;
+          const sb = Number(b.score) || 0;
+          if (sa !== sb) return sb - sa;
+          const ta = a.ts?.toMillis?.() ? a.ts.toMillis() : 9e15;
+          const tb = b.ts?.toMillis?.() ? b.ts.toMillis() : 9e15;
+          return ta - tb;
+        });
+
+        const top = rows.slice(0,10);
+
+        if (top.length) bestText.textContent = String(top[0].score ?? '—');
+
+        top.forEach(v=>{
+          const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
+          const pill = (Number(v.kSlim_total||0) > 0)
+            ? ` <span class="k-pill">+${Number(v.kSlim_total)}</span>`
+            : '';
+          const li = document.createElement('li');
+          li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>${you}: ${(v.score??0)} punte${pill}`;
+          lbList.appendChild(li);
+        });
+      }, (err)=>{
+        console.warn('LB stream failed, falling back to local:', err);
+        renderLocalLB(currentDate);
+      });
     }
 
-    const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    // Stable client tie-break: score DESC, timestamp ASC
-    rows.sort((a,b)=>{
-      const sa = Number(a.score) || 0;
-      const sb = Number(b.score) || 0;
-      if (sa !== sb) return sb - sa;
-      const ta = a.ts?.toMillis?.() ? a.ts.toMillis() : 9e15;
-      const tb = b.ts?.toMillis?.() ? b.ts.toMillis() : 9e15;
-      return ta - tb;
-    });
-
-    const top = rows.slice(0,10);
-
-    if (top.length) bestText.textContent = String(top[0].score ?? '—');
-
-    top.forEach(v=>{
-      const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
-      const li = document.createElement('li');
-      li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>${you}: ${(v.score??0)} punte`;
-      lbList.appendChild(li);
-    });
-  }, (err)=>{
-    console.warn('LB stream failed, falling back to local:', err);
-    renderLocalLB(currentDate);
-  });
-}
-
+    /* ---- Submit to leaderboard (mirror to legacy path too) ---- */
     async function submitToLB(scoreVal){
-  // Always keep a local fallback list (for offline/local dev)
-  const row = { userName: currentUserName, score: scoreVal|0 };
-  const arr = getLocalLB(currentDate);
-  const idx = arr.findIndex(r => (r.userName||'') === (row.userName||''));
-  if (idx >= 0){
-    if (row.score > (arr[idx].score||0)) arr[idx] = row;
-  } else {
-    arr.push(row);
-  }
-  setLocalLB(currentDate, arr);
+      // Always keep a local fallback list (for offline/local dev)
+      const row = { userName: currentUserName, score: scoreVal|0 };
+      const arr = getLocalLB(currentDate);
+      const idx = arr.findIndex(r => (r.userName||'') === (row.userName||''));
+      if (idx >= 0){
+        if (row.score > (arr[idx].score||0)) arr[idx] = row;
+      } else {
+        arr.push(row);
+      }
+      setLocalLB(currentDate, arr);
 
-  // Cloud write (best-per-user upsert)
-  if(!db || !user) return;
-  try{
-    const ref  = doc(db, 'slimstiekGames', GAME_ID, 'leaderboard', user.uid);
-    const snap = await getDoc(ref);
-    const prev = snap.exists() ? snap.data() : null;
-    const isBetter = !prev || ( (row.score|0) > (prev.score|0) );
-    if (isBetter){
-      await setDoc(ref, {
-        userName: currentUserName.slice(0,24),
-        score: row.score|0,
-        ts: serverTimestamp()
-      }, { merge:true });
-    } else {
-      // still keep display name fresh
-      await setDoc(ref, { userName: currentUserName.slice(0,24) }, { merge:true });
+      if(!db || !user) return;
+      try{
+        // Primary (new) path
+        const newRef  = doc(db, 'slimstiekGames', GAME_ID, 'leaderboard', user.uid);
+        const newSnap = await getDoc(newRef);
+        const prev = newSnap.exists() ? newSnap.data() : null;
+        const isBetter = !prev || ((row.score|0) > (prev.score|0));
+
+        if (isBetter){
+          await setDoc(newRef, {
+            userName: currentUserName.slice(0,24),
+            score: row.score|0,
+            ts: serverTimestamp()
+          }, { merge:true });
+        } else {
+          // keep display name fresh
+          await setDoc(newRef, { userName: currentUserName.slice(0,24) }, { merge:true });
+        }
+
+        // Legacy mirror (for archives / ranking / K systems that still read it)
+        const legacyRef = doc(db,'leaderboards','slimstiek','dates', currentDate, 'entries', user.uid);
+        const legSnap   = await getDoc(legacyRef);
+        const legPrev   = legSnap.exists() ? legSnap.data() : null;
+        const legBetter = !legPrev || ((row.score|0) > (legPrev.score|0));
+        if (legBetter){
+          await setDoc(legacyRef, {
+            userName: currentUserName.slice(0,24),
+            score: row.score|0,
+            ts: serverTimestamp()
+          }, { merge:true });
+        } else {
+          await setDoc(legacyRef, { userName: currentUserName.slice(0,24) }, { merge:true });
+        }
+      } catch (e){
+        console.warn('FS LB write failed (ok):', e);
+      }
     }
-  } catch (e){
-    console.warn('FS LB write failed (ok):', e);
-  }
-}
 
-    /* ==== Mirror Slimstiek points into userGames/plays & expose to leaderboard ==== */
+    /* ==== Mirror Slimstiek points into userGames/plays & expose for pill ==== */
     async function mirrorSlimstiekPoints(){
       if (!db || !user) return;
 
@@ -966,10 +987,10 @@ const GAME_ID = `Game${currentDate}`;
         }
       } catch {}
 
-      // best exists if you appeared on today’s Slimstiek LB
-      const bestRef = doc(db,'leaderboards','slimstiek','dates', currentDate, 'entries', user.uid);
-      const bestSnap = await getDoc(bestRef);
-      const haveBest = bestSnap.exists();
+      // Have a best today? — check the **new** LB path first
+      const newBestRef = doc(db,'slimstiekGames', GAME_ID, 'leaderboard', user.uid);
+      const newBestSnap = await getDoc(newBestRef);
+      const haveBest = newBestSnap.exists();
 
       // read existing k fields (daily)
       const S_ID = `Slim${currentDate}`;
@@ -987,7 +1008,7 @@ const GAME_ID = `Game${currentDate}`;
 
       const now = new Date();
 
-      // EARLY: first 10 entries after 07:00 ZA, once
+      // EARLY: first 10 entries after 07:00 ZA, once (use legacy list for consistency with other pages)
       if (kEarly === 0 && haveBest && now >= zaTimeOn(currentDate, K_CONF.EARLY_BIRD_WINDOW_START)) {
         try {
           const qEarly = query(
@@ -1006,7 +1027,7 @@ const GAME_ID = `Game${currentDate}`;
         kImprove = K_CONF.IMPROVE_POINTS;
       }
 
-      // PLACE: only after cutoff; rank by score DESC then ts ASC
+      // PLACE: only after cutoff; rank by score DESC then ts ASC (legacy list)
       if (kPlace === 0 && now >= zaTimeOn(currentDate, K_CONF.CUTOFF_TIME)) {
         try {
           const qRank = query(
@@ -1037,8 +1058,15 @@ const GAME_ID = `Game${currentDate}`;
         updatedAt: serverTimestamp()
       }, { merge:true });
 
-      // expose on LB row for public pill
-      try { await setDoc(bestRef, { kSlim_total: kTotal }, { merge: true }); } catch {}
+      // expose on BOTH rows for public pill
+      try {
+        const legacyBestRef = doc(db, 'leaderboards','slimstiek','dates', currentDate, 'entries', user.uid);
+        await setDoc(legacyBestRef, { kSlim_total: kTotal }, { merge: true });
+      } catch {}
+      try {
+        const newBestRef2 = doc(db, 'slimstiekGames', GAME_ID, 'leaderboard', user.uid);
+        await setDoc(newBestRef2, { kSlim_total: kTotal }, { merge: true });
+      } catch {}
     }
 
     /* ---- Game end ---- */
@@ -1049,7 +1077,7 @@ const GAME_ID = `Game${currentDate}`;
 
       if(bestScore==null || score > bestScore) bestScore = score;
       submitToLB(score);
-      mirrorSlimstiekPoints();  // <— mirror on finish
+      mirrorSlimstiekPoints();  // mirror on finish
       enableStickyShare({ score });
 
       winMsg.innerHTML = `Veels geluk, <strong>${currentUserName}</strong>! Jy het <strong>${TARGET}</strong> voltooi vir <strong>${score}</strong> punte.`;
@@ -1088,7 +1116,7 @@ const GAME_ID = `Game${currentDate}`;
       startLiveLeaderboardFS();
       updateRowHint();
 
-      if (user) { mirrorSlimstiekPoints(); } // <— backfill on load if you already have a best
+      if (user) { mirrorSlimstiekPoints(); } // backfill on load if you already have a best
     }
 
     /* ---- Init ---- */
