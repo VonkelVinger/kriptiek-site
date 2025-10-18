@@ -58,8 +58,8 @@
     grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
     opacity: 0.5; z-index: 1; pointer-events: none; animation: bgFloat 30s linear infinite;
   }
-  @keyframes bgFloat{ 0%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } 100%{ transform:translateY(0); } }
   @media (prefers-reduced-motion: reduce){ .background-crossword{ animation:none; } }
+  @keyframes bgFloat{ 0%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } 100%{ transform:translateY(0); } }
 
   .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
 
@@ -72,7 +72,6 @@
           box-shadow: 0 6px 14px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.25); }
   .pill-sm { font-size:.95rem; padding:.55rem 1rem; }
   .pill-lg { font-size:1.15rem; padding:.75rem 1.25rem; }
-
   .pill-blue { background:linear-gradient(90deg,#1d4ed8,#1e40af); }
   .pill-orange { background: linear-gradient(180deg, #FB7A12 0%, #D65A0A 100%); }
   .pill-green { background: linear-gradient(180deg, #22C55E 0%, #0EA55B 100%); }
@@ -84,10 +83,19 @@
 
   /* Table & bars */
   .table{ width:100%; border-collapse:separate; border-spacing:0; }
-  .table th,.table td{ padding:.6rem .75rem; border-bottom:1px solid #e5e7eb; }
-  .table th{ text-align:left; font-weight:700; color:#334155; background:#f8fafc; position:sticky; top:0; }
-  .barRow{ display:grid; grid-template-columns:1.5rem 1fr auto; gap:.5rem; align-items:center; }
-  .bar{ height:14px; background:linear-gradient(90deg,#1d4ed8,#1e40af); border-radius:7px; }
+  .table th,.table td{ padding:.55rem .75rem; border-bottom:1px solid #e5e7eb; }
+  .table th{
+    text-align:left; font-weight:700; color:#334155; background:#f8fafc; position:sticky; top:0;
+    box-shadow: inset 0 -1px 0 #e5e7eb; /* hairline under sticky header */
+  }
+  .table th.text-right{ text-align:right; }
+  .table th.mono{ font-variant-numeric: tabular-nums; }
+  .table tbody tr:nth-child(even){ background:#f9fafb; }
+  .table tbody tr:hover{ background:#f1f5f9; }
+
+  .barRow{ display:grid; grid-template-columns:1.1rem 1fr auto; gap:.5rem; align-items:center; }
+  .barTrack{ height:12px; background:#e5e7eb; border-radius:6px; overflow:hidden; }
+  .barFill{ height:100%; background:linear-gradient(90deg,#1d4ed8,#1e40af); }
 
   /* Supporter banner (base + color variants) */
   .supporter-banner{
@@ -101,6 +109,28 @@
   /* Equal tops */
   .top-card { min-height:320px; }
   @media (max-width: 640px){ .top-card{ min-height:unset; } }
+
+  /* --- Game blocks --- */
+  .game-card .game-col { display:flex; flex-direction:column; }
+  .game-card .game-col.-col { min-height: 340px; }
+  @media (max-width: 640px){ .game-card .game-col.-col { min-height: unset; } }
+  .game-card .push-end { margin-top:auto; }
+  .col-summary { border-top: 1px solid #e5e7eb; padding-top: .75rem; }
+
+  /* Info banners */
+  .banner { display:flex; align-items:center; gap:.6rem; border-radius:.75rem; padding:.5rem .75rem; font-weight:700; }
+  .banner-live { background:#ecfeff; color:#155e75; border:1px solid #a5f3fc; }
+  .banner-archive { background:#f8fafc; color:#334155; border:1px solid #e2e8f0; }
+
+  /* Polished table wrapper with scroll + custom scrollbar */
+  .table-wrap{ border:1px solid #e5e7eb; border-radius:.75rem; background:#fff; overflow:hidden; }
+  .table-scroll{ max-height:420px; overflow:auto; }
+  .table-scroll::-webkit-scrollbar{ width:10px; height:10px; }
+  .table-scroll::-webkit-scrollbar-thumb{ background:#cbd5e1; border-radius:999px; }
+  .table-scroll::-webkit-scrollbar-track{ background:#f1f5f9; border-radius:999px; }
+
+  /* Summary panel gradient */
+  .summary-panel{ background:linear-gradient(180deg,#eef2ff 0%, #e0e7ff 100%); }
 </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -168,77 +198,250 @@
         </p>
       </section>
     </div>
+    <!-- GAMES: DILEMMA + Blitstiek & Slimstiek (shadow-mode) -->
+    <div class="max-w-6xl mx-auto space-y-6 mt-6">
 
-    <!-- DILEMMA -->
-    <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 mt-6">
-      <section class="card p-5 md:p-6">
+      <!-- DILEMMA (polished layout) -->
+      <section class="card p-5 md:p-6 game-card">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="text-xl font-extrabold text-slate-900">Jou Dilemma-telling</h2>
+          <h2 class="text-xl font-extrabold text-slate-900">DILEMMA</h2>
           <span id="streakChip" class="hidden px-2.5 py-1 rounded-full font-bold text-indigo-900" style="background:#e0e7ff">+10% lopie</span>
         </div>
 
-        <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-4">
-          <div class="text-sm text-indigo-900/80">Laas bereken op: <span id="calcTime" class="mono">—</span></div>
-          <div class="mt-2 flex items-end gap-4">
-            <div>
-              <div class="text-4xl md:text-5xl font-extrabold mono text-indigo-900" id="totalPoints">0</div>
-              <div class="text-xs uppercase tracking-wide text-indigo-900/70">Totale DILEMMA-telling</div>
+        <div class="grid md:grid-cols-2 gap-5 items-start">
+          <!-- LEFT COL -->
+          <div class="game-col dilemma-col">
+            <div class="summary-panel border border-indigo-200 rounded-xl p-4 mb-4">
+              <div class="text-sm text-indigo-900/80">Laas bereken op: <span id="calcTime" class="mono">—</span></div>
+              <div class="mt-2 flex items-end gap-4">
+                <div>
+                  <div class="text-4xl md:text-5xl font-extrabold mono text-indigo-900" id="totalPoints">0</div>
+                  <div class="text-xs uppercase tracking-wide text-indigo-900/70">Totale DILEMMA-telling</div>
+                </div>
+                <div class="ml-auto text-right">
+                  <div class="text-xs text-indigo-900/70">Vermenigvuldiger</div>
+                  <div class="text-xl font-extrabold mono" id="multiplierLabel">×1.00</div>
+                </div>
+              </div>
             </div>
-            <div class="ml-auto text-right">
-              <div class="text-xs text-indigo-900/70">Vermenigvuldiger</div>
-              <div class="text-xl font-extrabold mono" id="multiplierLabel">×1.00</div>
+
+            <p class="text-sm leading-6 text-slate-600 mb-3">
+              Hoe minder raaiskote jy nodig het, hoe meer punte kry jy. Daar is ook bonuspunte as jy
+              <strong>vyf of meer Dilemmas opeenvolgend kan oplos</strong>, asook ’n
+              <strong>10%-bonus vir betalende ondersteuners in die afgelope 30 dae</strong>.
+            </p>
+
+            <!-- Polished table wrapper -->
+            <div class="table-wrap">
+              <div class="table-scroll">
+                <table class="table text-sm w-full">
+                  <thead>
+                    <tr>
+                      <th>Komponent</th>
+                      <th class="text-right">Aantal</th>
+                      <th class="text-right mono">Formule</th>
+                      <th class="text-right">Punte</th>
+                    </tr>
+                  </thead>
+                  <tbody id="breakdownBody"></tbody>
+                  <tfoot>
+                    <tr>
+                      <td class="font-bold">Subtotaal</td><td></td><td></td>
+                      <td class="text-right font-extrabold mono" id="subtotalCell">0</td>
+                    </tr>
+                    <tr>
+                      <td class="font-bold">Lopie-bonus</td><td></td>
+                      <td class="text-right whitespace-nowrap" id="lopieMeta">—</td>
+                      <td class="text-right font-extrabold mono" id="lopieBonusCell">0</td>
+                    </tr>
+                    <tr>
+                      <td class="font-bold">Ondersteuner-bonus</td><td></td>
+                      <td class="text-right whitespace-nowrap" id="supporterMeta">—</td>
+                      <td class="text-right font-extrabold mono" id="supporterBonusCell">0</td>
+                    </tr>
+                    <tr>
+                      <td class="font-extrabold text-slate-900">Totaal</td><td></td><td></td>
+                      <td class="text-right font-extrabold mono text-indigo-900" id="totalCell">0</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <div class="push-end"></div>
+          </div>
+
+          <!-- RIGHT COL -->
+          <div class="game-col dilemma-col">
+            <h3 class="text-sm font-bold text-slate-700 mb-2">Jou Dilemma-statistiek</h3>
+            <div class="grid grid-cols-4 gap-2 mb-3">
+              <div class="mini"><div id="playedStat" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Dilemmas gespeel</div></div>
+              <div class="mini"><div id="winrateStat" class="text-3xl font-extrabold mono">0%</div><div class="text-xs text-slate-500 mt-1">Sukseskoers</div></div>
+              <div class="mini"><div id="curStreak" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Huidige lopie</div></div>
+              <div class="mini"><div id="bestStreak" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Beste lopie</div></div>
+            </div>
+
+            <h4 class="text-sm font-bold text-slate-700 mb-2">Suksesverdeling</h4>
+            <div id="distWrap" class="space-y-2"></div>
+
+            <div class="col-summary push-end text-sm text-slate-600 mt-3">
+              <span class="font-semibold">Leidraad:</span> Dilemma-telling word by jou Kriptiek-telling ingereken.
             </div>
           </div>
         </div>
+      </section>
 
-        <p class="text-sm leading-6 text-slate-600 mb-4">
-          Hoe minder raaiskote jy nodig het, hoe meer punte kry jy. Daar is ook bonuspunte as jy
-          <strong>vyf of meer Dilemmas opeenvolgend kan oplos</strong>, asook ’n
-          <strong>10%-bonus vir betalende ondersteuners in die afgelope 30 dae</strong>.
-        </p>
+      <!-- BLITSTIEK (shadow-mode; unchanged logic; slightly cleaner table frame for consistency) -->
+      <section class="card p-5 md:p-6 game-card">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xl font-extrabold text-slate-900">BLITSTIEK</h2>
+          <div id="bannerBlit" class="banner banner-live">Vandag (live): Vroeë bonus, Verbetering, Finale posisie @ 23:55</div>
+        </div>
 
-        <div class="overflow-auto max-h-[420px] rounded-xl border border-slate-200 bg-white">
-          <table class="table text-sm w-full">
-            <thead>
-              <tr><th>Komponent</th><th class="text-right">Aantal</th><th class="text-right">Reël</th><th class="text-right">Punte</th></tr>
-            </thead>
-            <tbody id="breakdownBody"></tbody>
-            <tfoot>
-              <tr>
-                <td class="font-bold">Subtotaal</td><td></td><td></td>
-                <td class="text-right font-extrabold mono" id="subtotalCell">0</td>
-              </tr>
-              <tr>
-                <td class="font-bold">Lopie-bonus</td><td></td>
-                <td class="text-right whitespace-nowrap" id="lopieMeta">—</td>
-                <td class="text-right font-extrabold mono" id="lopieBonusCell">0</td>
-              </tr>
-              <tr>
-                <td class="font-bold">Ondersteuner-bonus</td><td></td>
-                <td class="text-right whitespace-nowrap" id="supporterMeta">—</td>
-                <td class="text-right font-extrabold mono" id="supporterBonusCell">0</td>
-              </tr>
-              <tr>
-                <td class="font-extrabold text-slate-900">Totaal</td><td></td><td></td>
-                <td class="text-right font-extrabold mono text-indigo-900" id="totalCell">0</td>
-              </tr>
-            </tfoot>
-          </table>
+        <div class="grid md:grid-cols-2 gap-4 items-start">
+          <div class="game-col">
+            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4">
+              <div class="text-sm text-emerald-900/80">Laas bereken op: <span id="calcTimeBlit" class="mono">—</span></div>
+              <div class="mt-2 flex items-end gap-4">
+                <div>
+                  <div id="totalPointsBlit" class="text-4xl md:text-5xl font-extrabold mono text-emerald-900">0</div>
+                  <div class="text-xs uppercase tracking-wide text-emerald-900/70">Vandag se voorlopige punte</div>
+                </div>
+                <div class="ml-auto text-right">
+                  <div class="text-xs text-emerald-900/70">Vermenigvuldiger</div>
+                  <div id="multiplierLabelBlit" class="text-xl font-extrabold mono">×1.00</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <div class="table-scroll">
+                <table class="table text-sm w-full">
+                  <thead>
+                    <tr><th>Komponent</th><th class="text-right">Reël</th><th class="text-right">Punte</th></tr>
+                  </thead>
+                  <tbody id="breakdownBodyBlit">
+                    <tr><td>Vroeë bonus vir eerste 10 tye ná 07:00 opgestel</td><td class="text-right mono">+20 indien van toepassing</td><td class="text-right mono" id="blitEarlyCell">0</td></tr>
+                    <tr><td>Verbeter jou eie beste tyd vir die dag</td><td class="text-right mono">+30 (maks 1/dag)</td><td class="text-right mono" id="blitImproveCell">0</td></tr>
+                    <tr><td>Finale posisie om 23:55</td><td class="text-right mono">120/90/70/60/50/40/30/25/20/15</td><td class="text-right mono" id="blitPlaceCell">0</td></tr>
+                    <tr class="archiveOnly hidden"><td>Argief: PB-punt</td><td class="text-right mono">+10 (eenmalig per dag)</td><td class="text-right mono" id="blitPBArchiveCell">0</td></tr>
+                  </tbody>
+                  <tfoot>
+                    <tr><td class="font-extrabold text-slate-900">Totaal (vandag)</td><td></td><td id="totalCellBlit" class="text-right font-extrabold mono text-emerald-900">0</td></tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <details class="mt-4">
+              <summary class="font-bold text-slate-800 cursor-pointer">Reëls vir Blitstiek (opsomming)</summary>
+              <ul class="text-sm text-slate-700 mt-2 list-disc pl-5 space-y-1">
+                <li>Leierbord: maks. 10 inskrywings; <em>een inskrywing per speler</em> (beste tyd vervang ouer tyd).</li>
+                <li>Tydvensters (ZA): Vroeë bonus vanaf 07:00; Finale posisie om 23:55.</li>
+                <li>Punte (vandag): Vroeë bonus +20; Verbetering +30 (1×/dag); Finale posisie: 120,90,70,60,50,40,30,25,20,15.</li>
+                <li>Ondersteuner: ×1.10 oor vandag se som; daaglikse kap per spel: 200.</li>
+                <li>Argief (verlede dae): Geen vroeë bonus of posisie-punte; <strong>PB-punt +10</strong> (eenmalig per argief-dag).</li>
+                <li>Tiebreke: kortste tyd eerste; gelykstaande tye → vroeër <em>achievedAt</em> wen.</li>
+              </ul>
+            </details>
+
+            <div class="push-end"></div>
+          </div>
+
+          <div class="game-col">
+            <h3 class="text-sm font-bold text-slate-700 mb-2">Blitstiek-statistiek</h3>
+            <div class="grid grid-cols-4 gap-2 mb-4">
+              <div class="mini"><div id="playedStatBlit" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Gespeel</div></div>
+              <div class="mini"><div id="bestTimeBlit" class="text-3xl font-extrabold mono">—</div><div class="text-xs text-slate-500 mt-1">Beste tyd</div></div>
+              <div class="mini"><div id="avgTimeBlit" class="text-3xl font-extrabold mono">—</div><div class="text-xs text-slate-500 mt-1">Gemiddeld</div></div>
+              <div class="mini"><div id="winsBlit" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Oorwinnings</div></div>
+            </div>
+
+            <h4 class="text-sm font-bold text-slate-700 mb-2">Verspreiding (bv. tyd-klasse)</h4>
+            <div id="distWrapBlit" class="space-y-2 text-slate-400">Kom binnekort.</div>
+
+            <div class="col-summary push-end text-sm text-slate-600">
+              <span class="font-semibold">Leidraad:</span> Hierdie punte is proeflopie (shadow-mode) en tel nog nie by jou Kriptiek-telling nie.
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- SLIMSTIEK (shadow-mode; consistent frame) -->
+      <section class="card p-5 md:p-6 game-card">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xl font-extrabold text-slate-900">SLIMSTIEK</h2>
+          <div id="bannerSlim" class="banner banner-live">Vandag (live): Vroeë bonus, Verbetering, Finale posisie @ 23:55</div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4 items-start">
+          <div class="game-col">
+            <div class="bg-teal-50 border border-teal-200 rounded-xl p-4 mb-4">
+              <div class="text-sm text-teal-900/80">Laas bereken op: <span id="calcTimeSlim" class="mono">—</span></div>
+              <div class="mt-2 flex items-end gap-4">
+                <div>
+                  <div id="totalPointsSlim" class="text-4xl md:text-5xl font-extrabold mono text-teal-900">0</div>
+                  <div class="text-xs uppercase tracking-wide text-teal-900/70">Vandag se voorlopige punte</div>
+                </div>
+                <div class="ml-auto text-right">
+                  <div class="text-xs text-teal-900/70">Vermenigvuldiger</div>
+                  <div id="multiplierLabelSlim" class="text-xl font-extrabold mono">×1.00</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <div class="table-scroll">
+                <table class="table text-sm w-full">
+                  <thead>
+                    <tr><th>Komponent</th><th class="text-right">Reël</th><th class="text-right">Punte</th></tr>
+                  </thead>
+                  <tbody id="breakdownBodySlim">
+                    <tr><td>Vroeë bonus vir eerste 10 tellings ná 07:00 behaal</td><td class="text-right mono">+20 indien van toepassing</td><td class="text-right mono" id="slimEarlyCell">0</td></tr>
+                    <tr><td>Verbeter jou eie beste telling vir die dag</td><td class="text-right mono">+30 (maks 1/dag)</td><td class="text-right mono" id="slimImproveCell">0</td></tr>
+                    <tr><td>Finale posisie om 23:55</td><td class="text-right mono">120/90/70/60/50/40/30/25/20/15</td><td class="text-right mono" id="slimPlaceCell">0</td></tr>
+                    <tr class="archiveOnly hidden"><td>Argief: PB-punt</td><td class="text-right mono">+10 (eenmalig per dag)</td><td class="text-right mono" id="slimPBArchiveCell">0</td></tr>
+                  </tbody>
+                  <tfoot>
+                    <tr><td class="font-extrabold text-slate-900">Totaal (vandag)</td><td></td><td id="totalCellSlim" class="text-right font-extrabold mono text-teal-900">0</td></tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <details class="mt-4">
+              <summary class="font-bold text-slate-800 cursor-pointer">Reëls vir Slimstiek (opsomming)</summary>
+              <ul class="text-sm text-slate-700 mt-2 list-disc pl-5 space-y-1">
+                <li>Leierbord: maks. 10 inskrywings; <em>een inskrywing per speler</em> (beste telling vervang ouer telling).</li>
+                <li>Tydvensters (ZA): Vroeë bonus vanaf 07:00; Finale posisie om 23:55.</li>
+                <li>Punte (vandag): Vroeë bonus +20; Verbetering +30 (1×/dag); Finale posisie: 120,90,70,60,50,40,30,25,20,15.</li>
+                <li>Ondersteuner: ×1.10 oor vandag se som; daaglikse kap per spel: 200.</li>
+                <li>Argief (verlede dae): Geen vroeë bonus of posisie-punte; <strong>PB-punt +10</strong> (eenmalig per argief-dag).</li>
+                <li>Tiebreke: hoogste telling eerste; gelykstaande tellings → vroeër <em>achievedAt</em> wen.</li>
+              </ul>
+            </details>
+
+            <div class="push-end"></div>
+          </div>
+
+          <div class="game-col">
+            <h3 class="text-sm font-bold text-slate-700 mb-2">Slimstiek-statistiek</h3>
+            <div class="grid grid-cols-4 gap-2 mb-4">
+              <div class="mini"><div id="playedStatSlim" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Gespeel</div></div>
+              <div class="mini"><div id="bestScoreSlim" class="text-3xl font-extrabold mono">—</div><div class="text-xs text-slate-500 mt-1">Beste telling</div></div>
+              <div class="mini"><div id="avgScoreSlim" class="text-3xl font-extrabold mono">—</div><div class="text-xs text-slate-500 mt-1">Gemiddeld</div></div>
+              <div class="mini"><div id="winsSlim" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Oorwinnings</div></div>
+            </div>
+
+            <h4 class="text-sm font-bold text-slate-700 mb-2">Verspreiding (bv. punte-klasse)</h4>
+            <div id="distWrapSlim" class="space-y-2 text-slate-400">Kom binnekort.</div>
+
+            <div class="col-summary push-end text-sm text-slate-600">
+              <span class="font-semibold">Leidraad:</span> Hierdie punte is proeflopie (shadow-mode) en tel nog nie by jou Kriptiek-telling nie.
+            </div>
+          </div>
         </div>
       </section>
 
-      <section class="card p-5 md:p-6">
-        <h2 class="text-xl font-extrabold text-slate-900 mb-3">Jou Dilemma-statistiek</h2>
-        <div class="grid grid-cols-4 gap-2 mb-4">
-          <div class="mini"><div id="playedStat" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Dilemmas gespeel</div></div>
-          <div class="mini"><div id="winrateStat" class="text-3xl font-extrabold mono">0%</div><div class="text-xs text-slate-500 mt-1">Sukseskoers</div></div>
-          <div class="mini"><div id="curStreak" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Huidige lopie</div></div>
-          <div class="mini"><div id="bestStreak" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Beste lopie</div></div>
-        </div>
-
-        <h3 class="text-sm font-bold text-slate-700 mb-2">Suksesverdeling</h3>
-        <div id="distWrap" class="space-y-2"></div>
-      </section>
     </div>
   </main>
 
@@ -284,7 +487,7 @@
     });
   </script>
 
-  <!-- LIVE: Firebase Auth + Firestore integration -->
+  <!-- LIVE + SHADOW MODE: Firebase Auth + Firestore integration -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import {
@@ -306,23 +509,32 @@
       appId: "1:620450620939:web:e93a18ac23b53b33db890e"
     };
 
-    // ---- constants (match your scoring) ----
+    // ---- Dilemma constants ----
     const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
     const STREAK_THRESHOLD = 5;
     const STREAK_MULTIPLIER = 1.10;
     const SUPPORTER_MULTIPLIER = 1.10;
 
+    // ---- New: Blitstiek & Slimstiek (shadow mode) ----
+    const K_CONF = {
+      EARLY_BIRD_WINDOW_START: "07:00",
+      CUTOFF_TIME: "23:55",
+      LEADERBOARD_SIZE: 10,
+      EARLY_BIRD_POINTS: 20,
+      IMPROVE_POINTS: 30,
+      FINAL_POINTS: [120,90,70,60,50,40,30,25,20,15],
+      DAILY_CAP_PER_GAME: 200,
+      ARCHIVE_PB_POINTS: 10,
+      ARCHIVE_DAY_CAP: 10,
+      SUPPORTER_MULTIPLIER: 1.10
+    };
+
     // ---- helpers / DOM ----
     const $ = (id) => document.getElementById(id);
     const fmt = (n) => (typeof n === "number" ? n.toLocaleString("af-ZA") : n);
-
-    const wbName = $("wbName");
-    const supporterBanner = $("supporterBanner");
-    const supporterBannerTxt = $("supporterBannerTxt");
-    const errBanner = $("errBanner");
-    const formMsg = $("formMsg");
-    const deleteMsg = $("deleteMsg");
-
+    const wbName = $("wbName"); const errBanner = $("errBanner");
+    const supporterBanner = $("supporterBanner"); const supporterBannerTxt = $("supporterBannerTxt");
+    // Dilemma els
     const totalPointsEl = $("totalPoints"), subtotalCell = $("subtotalCell"), totalCell = $("totalCell");
     const breakdownBody = $("breakdownBody"), distWrap = $("distWrap");
     const playedStat = $("playedStat"), winrateStat = $("winrateStat");
@@ -330,7 +542,34 @@
     const streakChip = $("streakChip"), multiplierLabel = $("multiplierLabel"), calcTime = $("calcTime");
     const lopieMeta = $("lopieMeta"), supporterMeta = $("supporterMeta");
     const pillOverall = $("pillOverall"), pillDilemmaLive = $("pillDilemmaLive");
+    // Blitstiek els
+    const bannerBlit = $("bannerBlit"), blitEarlyCell = $("blitEarlyCell"), blitImproveCell = $("blitImproveCell");
+    const blitPlaceCell = $("blitPlaceCell"), blitPBArchiveCell = $("blitPBArchiveCell");
+    const totalPointsBlit = $("totalPointsBlit"), totalCellBlit = $("totalCellBlit"), calcTimeBlit = $("calcTimeBlit");
+    const multiplierLabelBlit = $("multiplierLabelBlit");
+    // Slimstiek els
+    const bannerSlim = $("bannerSlim"), slimEarlyCell = $("slimEarlyCell"), slimImproveCell = $("slimImproveCell");
+    const slimPlaceCell = $("slimPlaceCell"), slimPBArchiveCell = $("slimPBArchiveCell");
+    const totalPointsSlim = $("totalPointsSlim"), totalCellSlim = $("totalCellSlim"), calcTimeSlim = $("calcTimeSlim");
+    const multiplierLabelSlim = $("multiplierLabelSlim");
 
+    // ---- date helpers (ZA) & gameId detection ----
+    function todayZaISO(){
+      const now = new Date();
+      const utc = now.getTime() + now.getTimezoneOffset()*60000;
+      const za = new Date(utc + 120*60000); // UTC+2
+      return za.toISOString().slice(0,10);
+    }
+    function parseGameIdParam(){
+      const p = new URLSearchParams(location.search).get("gameId");
+      return p && /^Game\d{4}-\d{2}-\d{2}$/.test(p) ? p : null;
+    }
+    const TODAY_ID = `Game${todayZaISO()}`;
+    const GAME_ID = parseGameIdParam() || TODAY_ID;
+    const GAME_DATE = GAME_ID.replace(/^Game/,'');
+    const IS_ARCHIVE = GAME_ID !== TODAY_ID;
+
+    // ---- init Firebase ----
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
@@ -338,13 +577,16 @@
     // -------- gate: must be signed in --------
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        const ret = encodeURIComponent("/profile.html");
+        const ret = encodeURIComponent("/profiletest.html");
         window.location.href = `/login.html?return=${ret}`;
         return;
       }
       try {
         await hydrateProfile(user);
         await loadAndRenderDilemma(user.uid);
+        configureGameBanners();
+        await renderShadowGame(user.uid, "blitstiek");
+        await renderShadowGame(user.uid, "slimstiek");
         wireFormHandlers(user);
       } catch (e) {
         console.error(e);
@@ -380,7 +622,6 @@
 
       wbName.textContent = (userName || "GEBRUIKER").toUpperCase();
 
-      // NEW: toggle banner wording & color
       if (supporterActive) {
         supporterBanner.classList.remove("supporter-banner-red");
         supporterBanner.classList.add("supporter-banner-green");
@@ -392,9 +633,6 @@
         supporterBanner.setAttribute("aria-label", "Word ’n ondersteuner (Buy Me a Coffee)");
         supporterBannerTxt.textContent = "Kliek hier om 'n betalende ondersteuner te word";
       }
-
-      $("nameInput").value = userName || "";
-      $("emailInput").value = user.email || "";
     }
 
     function wireFormHandlers(user) {
@@ -414,6 +652,7 @@
           if (email && email !== (user.email || "")) {
             await updateEmail(user, email);
           }
+          const formMsg = $("formMsg");
           formMsg.textContent = "Profiel gestoor.";
           formMsg.className = "text-sm mt-2 text-green-600";
           formMsg.classList.remove("hidden");
@@ -423,6 +662,7 @@
           if (String(err.code || "").includes("requires-recent-login")) {
             m = "Vir sekuriteit: Meld asseblief weer aan om jou e-pos te kan verander.";
           }
+          const formMsg = $("formMsg");
           formMsg.textContent = m;
           formMsg.className = "text-sm mt-2 text-red-600";
           formMsg.classList.remove("hidden");
@@ -430,8 +670,9 @@
       });
 
       $("resetPwBtn").addEventListener("click", async () => {
+        const formMsg = $("formMsg");
         try {
-          await sendPasswordResetEmail(auth, user.email);
+          await sendPasswordResetEmail(auth, auth.currentUser.email);
           formMsg.textContent = "’n Wagwoordherstel-skakel is per e-pos gestuur.";
           formMsg.className = "text-sm mt-2 text-green-600";
         } catch (err) {
@@ -443,9 +684,10 @@
       });
 
       $("deleteBtn").addEventListener("click", async () => {
+        const deleteMsg = $("deleteMsg");
         if (!confirm("Is jy seker? Jou rekening sal verwyder word.")) return;
         try {
-          await deleteUser(user); // may require recent login
+          await deleteUser(auth.currentUser);
           deleteMsg.textContent = "Rekening verwyder.";
           deleteMsg.className = "text-sm mt-2 text-green-600";
           deleteMsg.classList.remove("hidden");
@@ -463,7 +705,22 @@
       });
     }
 
-    // -------- Dilemma data: compute and render --------
+    function configureGameBanners(){
+      if (IS_ARCHIVE) {
+        bannerBlit.textContent = `ARGIEF — slegs PB-punte (+10) • Dag: ${GAME_DATE}`;
+        bannerBlit.classList.remove("banner-live"); bannerBlit.classList.add("banner-archive");
+        bannerSlim.textContent = `ARGIEF — slegs PB-punte (+10) • Dag: ${GAME_DATE}`;
+        bannerSlim.classList.remove("banner-live"); bannerSlim.classList.add("banner-archive");
+        document.querySelectorAll(".archiveOnly").forEach(el=>el.classList.remove("hidden"));
+      } else {
+        bannerBlit.textContent = "Vandag (live): Vroeë bonus, Verbetering, Finale posisie @ 23:55";
+        bannerBlit.classList.remove("banner-archive"); bannerBlit.classList.add("banner-live");
+        bannerSlim.textContent = "Vandag (live): Vroeë bonus, Verbetering, Finale posisie @ 23:55";
+        bannerSlim.classList.remove("banner-archive"); bannerSlim.classList.add("banner-live");
+      }
+    }
+
+    // -------- Dilemma compute + render --------
     async function loadAndRenderDilemma(uid) {
       const uref = doc(db, "users", uid);
       const uSnap = await getDoc(uref);
@@ -483,18 +740,18 @@
       snap.forEach((docSnap) => {
         const d = docSnap.data();
         const gameId = docSnap.id; // "GameYYYY-MM-DD"
-        const date = gameId.replace(/^Game/, "");
+        const theDate = gameId.replace(/^Game/, "");
         plays.push({
-          date,
+          date: theDate,
           win: d?.result === "win" || d?.finished === true,
           guesses: Number(d?.guesses || 0),
         });
       });
 
-      computeAndRender(plays, supporterActive);
+      computeAndRenderDilemma(plays, supporterActive);
     }
 
-    function computeAndRender(plays, supporterActive) {
+    function computeAndRenderDilemma(plays, supporterActive) {
       const byDate = new Map();
       plays.slice().reverse().forEach((p) => byDate.set(p.date, p));
 
@@ -513,9 +770,7 @@
         if (p.win) {
           const g = Math.min(Math.max(1, p.guesses || 6), 6);
           dist[g] += 1;
-        } else {
-          dist.fail += 1;
-        }
+        } else { dist.fail += 1; }
       }
 
       const subtotal =
@@ -557,11 +812,16 @@
         </tr>`;
       }).join("");
 
+      // Neater distribution bars: track + fill + value
       const pairs = [['1',dist[1]],['2',dist[2]],['3',dist[3]],['4',dist[4]],['5',dist[5]],['6',dist[6]],['X',dist.fail]];
       const maxv = Math.max(1, ...pairs.map(p => p[1]));
       distWrap.innerHTML = pairs.map(([lb,val]) => {
-        const w = val === 0 ? 0 : Math.max(6, Math.round((val/maxv)*100));
-        return `<div class="barRow"><div class="text-xs font-bold text-slate-500">${lb}</div><div class="bar" style="width:${w}%"></div><div class="mono text-sm font-extrabold">${fmt(val)}</div></div>`;
+        const w = val === 0 ? 0 : Math.round((val/maxv)*100);
+        return `<div class="barRow">
+          <div class="text-xs font-bold text-slate-500">${lb}</div>
+          <div class="barTrack"><div class="barFill" style="width:${w}%"></div></div>
+          <div class="mono text-sm font-extrabold text-slate-700">${fmt(val)}</div>
+        </div>`;
       }).join("");
 
       subtotalCell.textContent = fmt(subtotal);
@@ -585,6 +845,75 @@
       pillOverall.textContent     = `JOU KRIPTIEK-TELLING: ${fmt(total)}`;
       pillDilemmaLive.textContent = `JOU DILEMMA-TELLING: ${fmt(total)}`;
       totalPointsEl.textContent   = fmt(total);
+    }
+
+    // -------- Shadow-mode renderer + archive PB award --------
+    async function renderShadowGame(uid, gameKey){
+      const isBlit = gameKey === "blitstiek";
+      const gameRoot = isBlit ? "blitstiekGames" : "slimstiekGames";
+      const metricField = isBlit ? "bestTimeMs" : "bestScore";
+      const lbUserRef = doc(db, `${gameRoot}/${GAME_ID}/leaderboard/${uid}`);
+      const userPlayRef = doc(db, `userGames/${uid}/plays/${GAME_ID}`);
+
+      const playSnap = await getDoc(userPlayRef);
+      let kEarly=0,kImprove=0,kPlace=0,kPBArch=0,kTotal=0, supporterActive=false;
+
+      if (playSnap.exists()) {
+        const d = playSnap.data();
+        if (isBlit) {
+          kEarly   = Number(d?.kBlit_early||0);
+          kImprove = Number(d?.kBlit_improve||0);
+          kPlace   = Number(d?.kBlit_place||0);
+          kPBArch  = Number(d?.kBlit_pbArchive||0);
+          kTotal   = Number(d?.kBlit_total||0);
+        } else {
+          kEarly   = Number(d?.kSlim_early||0);
+          kImprove = Number(d?.kSlim_improve||0);
+          kPlace   = Number(d?.kSlim_place||0);
+          kPBArch  = Number(d?.kSlim_pbArchive||0);
+          kTotal   = Number(d?.kSlim_total||0);
+        }
+      }
+
+      const userSnap = await getDoc(doc(db,"users",uid));
+      if (userSnap.exists()){
+        const u = userSnap.data();
+        supporterActive = !!(u?.supporterActive === true || (u?.supporterUntil?.toMillis && u.supporterUntil.toMillis()>Date.now()));
+      }
+
+      if (IS_ARCHIVE && kPBArch === 0) {
+        const lbUserSnap = await getDoc(lbUserRef);
+        if (lbUserSnap.exists() && lbUserSnap.data()?.[metricField] != null) {
+          const delta = K_CONF.ARCHIVE_PB_POINTS;
+          if (isBlit) {
+            await setDoc(userPlayRef, { kBlit_pbArchive: delta, kBlit_total: (kTotal||0)+delta }, { merge:true });
+            kPBArch = delta; kTotal = (kTotal||0)+delta;
+          } else {
+            await setDoc(userPlayRef, { kSlim_pbArchive: delta, kSlim_total: (kTotal||0)+delta }, { merge:true });
+            kPBArch = delta; kTotal = (kTotal||0)+delta;
+          }
+        }
+      }
+
+      if (isBlit) {
+        blitEarlyCell.textContent = fmt(kEarly);
+        blitImproveCell.textContent = fmt(kImprove);
+        blitPlaceCell.textContent = fmt(kPlace);
+        blitPBArchiveCell.textContent = fmt(kPBArch);
+        totalCellBlit.textContent = fmt(kTotal);
+        totalPointsBlit.textContent = fmt(kTotal);
+        multiplierLabelBlit.textContent = supporterActive ? "×1.10" : "×1.00";
+        calcTimeBlit.textContent = new Date().toLocaleString("af-ZA");
+      } else {
+        slimEarlyCell.textContent = fmt(kEarly);
+        slimImproveCell.textContent = fmt(kImprove);
+        slimPlaceCell.textContent = fmt(kPlace);
+        slimPBArchiveCell.textContent = fmt(kPBArch);
+        totalCellSlim.textContent = fmt(kTotal);
+        totalPointsSlim.textContent = fmt(kTotal);
+        multiplierLabelSlim.textContent = supporterActive ? "×1.10" : "×1.00";
+        calcTimeSlim.textContent = new Date().toLocaleString("af-ZA");
+      }
     }
   </script>
 </body>
