@@ -932,33 +932,55 @@
 
     /* ---- LIVE Leaderboard (now with green pill) ---- */
     function startLiveLeaderboard(){
-      if(lbUnsub) { lbUnsub(); lbUnsub=null; }
-      const qy=query(collection(db,'blitstiekGames',GAME_ID,'leaderboard'), orderBy('time','asc'), orderBy('timestamp','asc'), limit(10));
-      lbUnsub = onSnapshot(qy, (snap)=>{
-        lbList.innerHTML='';
-        if(snap.empty){
-          bestText.textContent='--:--';
-          lbList.innerHTML = `<li class="bg-green-100 font-medium"><span>Jy kan eerste op die leierbord wees!</span></li>`;
-          return;
-        }
-        let idx=0;
-        snap.forEach(docSnap=>{
-          const v = docSnap.data()||{};
-          if(idx===0) bestText.textContent = fmt(Number(v.time));
-          const you = user && docSnap.id===user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
-          const pill = (typeof v.kBlit_total === 'number' && v.kBlit_total > 0)
-            ? `<span class="k-pill" title="Vandag se Blitstiek-telling"><span class="dot"></span>${v.kBlit_total}</span>`
-            : '';
-          const li=document.createElement('li');
-          li.innerHTML = `<span><strong>${(v.userName||'Onbekend')}</strong>${you}: ${fmt(Number(v.time))}</span>${pill}`;
-          lbList.appendChild(li);
-          idx++;
-        });
-      }, (err) => {
-        console.warn('Leaderboard stream error:', err);
-        lbList.innerHTML = `<li class="text-red-600 bg-green-100 px-2 py-1 rounded">Kon nie leierbord laai nie.</li>`;
-      });
+  if(lbUnsub) { lbUnsub(); lbUnsub=null; }
+
+  const qy = query(
+    collection(db,'blitstiekGames', GAME_ID, 'leaderboard'),
+    orderBy('time','asc'),
+    limit(25) // pull a few extra for clean client tie-break
+  );
+
+  lbUnsub = onSnapshot(qy, (snap)=>{
+    lbList.innerHTML = '';
+
+    if (snap.empty) {
+      bestText.textContent='--:--';
+      lbList.innerHTML = `<li class="bg-green-100 font-medium"><span>Jy kan eerste op die leierbord wees!</span></li>`;
+      return;
     }
+
+    // stable client-side tiebreak: time ASC, then timestamp ASC
+    const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    rows.sort((a,b)=>{
+      const ta = Number(a.time) || Infinity;
+      const tb = Number(b.time) || Infinity;
+      if (ta !== tb) return ta - tb;
+      const sa = a.timestamp?.toMillis?.() ? a.timestamp.toMillis() : 9e15;
+      const sb = b.timestamp?.toMillis?.() ? b.timestamp.toMillis() : 9e15;
+      return sa - sb;
+    });
+
+    const top = rows.slice(0,10);
+
+    if (top.length) bestText.textContent = fmt(Number(top[0].time));
+
+    top.forEach(v => {
+      const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
+      const pill = (typeof v.kBlit_total === 'number' && v.kBlit_total > 0)
+        ? `<span class="k-pill" title="Vandag se Blitstiek-telling"><span class="dot"></span>${v.kBlit_total}</span>`
+        : '';
+      const li = document.createElement('li');
+      li.innerHTML = `<span><strong>${(v.userName||'Onbekend')}</strong>${you}: ${fmt(Number(v.time))}</span>${pill}`;
+      lbList.appendChild(li);
+    });
+
+  }, (err) => {
+    console.warn('Leaderboard stream error:', err);
+    const msg = (err && (err.code || err.message)) ? ` – ${err.code||err.message}` : '';
+    lbList.innerHTML = `<li class="px-2 py-1 rounded bg-red-50 text-red-700">Kon nie leierbord laai nie${msg}.</li>`;
+  });
+}
+
 
     /* ---- Dynamic resolver ---- */
     async function resolveGameId(){
