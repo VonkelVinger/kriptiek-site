@@ -967,8 +967,8 @@
     top.forEach(v => {
       const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
       const pill = (typeof v.kBlit_total === 'number' && v.kBlit_total > 0)
-        ? `<span class="k-pill" title="Vandag se Blitstiek-telling"><span class="dot"></span>${v.kBlit_total}</span>`
-        : '';
+  ? `<span class="k-pill" title="Vandag se Blitstiek-telling">${v.kBlit_total}</span>`
+  : '';
       const li = document.createElement('li');
       li.innerHTML = `<span><strong>${(v.userName||'Onbekend')}</strong>${you}: ${fmt(Number(v.time))}</span>${pill}`;
       lbList.appendChild(li);
