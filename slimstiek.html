@@ -424,6 +424,8 @@ const winMsg   = document.getElementById('winMsg');
 
     const dateParam = qs.get('date');
     let currentDate = (/^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : todayKeySAST());
+// Slimstiek uses a per-day game doc like Blitstiek:
+const GAME_ID = `Game${currentDate}`;
 
     // Canonical URL normalization
     try {
@@ -866,73 +868,88 @@ const winMsg   = document.getElementById('winMsg');
 
     /* ---- Live leaderboard with k-pill & stable tiebreak ---- */
     function startLiveLeaderboardFS(){
-      if(!db){ renderLocalLB(currentDate); return; }
-      if(lbUnsub){ lbUnsub(); lbUnsub=null; }
+  if(!db){
+    renderLocalLB(currentDate);
+    return;
+  }
+  if(lbUnsub){ lbUnsub(); lbUnsub = null; }
 
-      const qy = query(
-        collection(db,'leaderboards','slimstiek','dates', currentDate, 'entries'),
-        orderBy('score','desc'),
-        orderBy('ts','asc'),
-        limit(25) // pull extra; we’ll slice client-side
-      );
+  const qy = query(
+    collection(db, 'slimstiekGames', GAME_ID, 'leaderboard'),
+    orderBy('score','desc'),
+    orderBy('ts','asc'),
+    limit(25) // read a few extra, we’ll slice to 10 after a stable sort
+  );
 
-      lbUnsub = onSnapshot(qy, (snap)=>{
-        lbList.innerHTML='';
-        if(snap.empty){
-          bestText.textContent='—';
-          lbList.innerHTML = `<li class="bg-green-100 font-medium">Wees eerste op die leierbord!</li>`;
-          return;
-        }
+  lbUnsub = onSnapshot(qy, (snap)=>{
+    lbList.innerHTML = '';
 
-        const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        rows.sort((a,b)=>{
-          const sa = Number(a.score)||0, sb = Number(b.score)||0;
-          if (sa !== sb) return sb - sa; // DESC
-          const ta = a.ts?.toMillis?.() ? a.ts.toMillis() : 9e15;
-          const tb = b.ts?.toMillis?.() ? b.ts.toMillis() : 9e15;
-          return ta - tb;                 // earlier first
-        });
-
-        const top = rows.slice(0,10);
-        if (top.length) bestText.textContent = String(top[0].score ?? '—');
-
-        top.forEach(v=>{
-          const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
-          const pill = (typeof v.kSlim_total === 'number' && v.kSlim_total > 0)
-            ? `<span class="k-pill" title="Vandag se Slimstiek-telling">${v.kSlim_total}</span>`
-            : '';
-          const li = document.createElement('li');
-          li.className = 'flex items-center justify-between gap-2 px-2 py-1 rounded';
-          li.innerHTML = `<span><strong>${v.userName||'Onbekend'}</strong>${you}: ${v.score|0} punte</span>${pill}`;
-          lbList.appendChild(li);
-        });
-
-      }, (err)=>{ console.warn('LB stream failed; fallback to local:', err); renderLocalLB(currentDate); });
+    if (snap.empty){
+      bestText.textContent = '—';
+      lbList.innerHTML = `<li class="bg-green-100 font-medium">Wees eerste op die leierbord!</li>`;
+      return;
     }
+
+    const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    // Stable client tie-break: score DESC, timestamp ASC
+    rows.sort((a,b)=>{
+      const sa = Number(a.score) || 0;
+      const sb = Number(b.score) || 0;
+      if (sa !== sb) return sb - sa;
+      const ta = a.ts?.toMillis?.() ? a.ts.toMillis() : 9e15;
+      const tb = b.ts?.toMillis?.() ? b.ts.toMillis() : 9e15;
+      return ta - tb;
+    });
+
+    const top = rows.slice(0,10);
+
+    if (top.length) bestText.textContent = String(top[0].score ?? '—');
+
+    top.forEach(v=>{
+      const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
+      const li = document.createElement('li');
+      li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>${you}: ${(v.score??0)} punte`;
+      lbList.appendChild(li);
+    });
+  }, (err)=>{
+    console.warn('LB stream failed, falling back to local:', err);
+    renderLocalLB(currentDate);
+  });
+}
 
     async function submitToLB(scoreVal){
-      const row = { userName: currentUserName, score: scoreVal|0 };
-      const arr = getLocalLB(currentDate);
-      const idx = arr.findIndex(r => (r.userName||'') === (row.userName||''));
-      if(idx>=0){ if (row.score > (arr[idx].score||0)) arr[idx] = row; }
-      else{ arr.push(row); }
-      setLocalLB(currentDate, arr);
+  // Always keep a local fallback list (for offline/local dev)
+  const row = { userName: currentUserName, score: scoreVal|0 };
+  const arr = getLocalLB(currentDate);
+  const idx = arr.findIndex(r => (r.userName||'') === (row.userName||''));
+  if (idx >= 0){
+    if (row.score > (arr[idx].score||0)) arr[idx] = row;
+  } else {
+    arr.push(row);
+  }
+  setLocalLB(currentDate, arr);
 
-      if(!db || !user) return;
-      try{
-        const ref = doc(db,'leaderboards','slimstiek','dates', currentDate, 'entries', user.uid);
-        const snap = await getDoc(ref);
-        const prev = snap.exists() ? snap.data() : null;
-        const isBetter = !prev || (row.score > (prev.score||0));
-        if(isBetter){
-          await setDoc(ref, {
-            userName: currentUserName.slice(0,24),
-            score: row.score,
-            ts: serverTimestamp()
-          }, { merge:true });
-        }
-      }catch(e){ console.warn('FS LB write failed (ok):', e); }
+  // Cloud write (best-per-user upsert)
+  if(!db || !user) return;
+  try{
+    const ref  = doc(db, 'slimstiekGames', GAME_ID, 'leaderboard', user.uid);
+    const snap = await getDoc(ref);
+    const prev = snap.exists() ? snap.data() : null;
+    const isBetter = !prev || ( (row.score|0) > (prev.score|0) );
+    if (isBetter){
+      await setDoc(ref, {
+        userName: currentUserName.slice(0,24),
+        score: row.score|0,
+        ts: serverTimestamp()
+      }, { merge:true });
+    } else {
+      // still keep display name fresh
+      await setDoc(ref, { userName: currentUserName.slice(0,24) }, { merge:true });
     }
+  } catch (e){
+    console.warn('FS LB write failed (ok):', e);
+  }
+}
 
     /* ==== Mirror Slimstiek points into userGames/plays & expose to leaderboard ==== */
     async function mirrorSlimstiekPoints(){
