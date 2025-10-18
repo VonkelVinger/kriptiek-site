@@ -390,15 +390,15 @@
 
     /* ---- Helpers ---- */
     const pad = n => String(n).padStart(2,'0');
-    const fmt = s => s==null ? '--:--' : ${pad(Math.floor(s/60))}:${pad(s%60)};
-    const todayISO = () => { const d=new Date(); return ${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}; };
+    const fmt = s => s==null ? '--:--' : `${pad(Math.floor(s/60))}:${pad(s%60)}`;
+    const todayISO = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
     const qs = new URLSearchParams(location.search);
     const explicitId = qs.get('gameId');
 
     const SITE_ORIGIN = location.hostname.endsWith('kriptiek.com') ? location.origin : 'https://www.kriptiek.com';
 
     /* ---- Share helpers ---- */
-    const shareKey = gid => blitstiekShare:${gid};
+    const shareKey = gid => `blitstiekShare:${gid}`;
     let stickyPayload = null;
     function buildShareUrl(gameId){
       const url = new URL('/blitstiek.html', SITE_ORIGIN);
@@ -406,12 +406,12 @@
       return url.toString();
     }
     function shareTextLinkOnly(gid){
-      return Kom speel vandag se BLITSTIEK op Kriptiek: ${buildShareUrl(gid)};
+      return `Kom speel vandag se BLITSTIEK op Kriptiek: ${buildShareUrl(gid)}`;
     }
     function buildWinShareText(payload){
       const tt   = Number(payload?.time);
       const word = String(payload?.target || TARGET || '—').toUpperCase();
-      return Ek het ${word} op BLITSTIEK in ${fmt(tt)} gebou: ${buildShareUrl(GAME_ID)};
+      return `Ek het ${word} op BLITSTIEK in ${fmt(tt)} gebou: ${buildShareUrl(GAME_ID)}`;
     }
     function currentShareText(){
       return (stickyPayload && Number.isFinite(Number(stickyPayload.time)))
@@ -437,7 +437,7 @@
     }
     function zaTimeOn(dateStr, hhmm){
       const [h,m] = hhmm.split(":").map(Number);
-      return new Date(${dateStr}T${String(h-2).padStart(2,'0')}:${String(m).padStart(2,'0')}:00.000Z);
+      return new Date(`${dateStr}T${String(h-2).padStart(2,'0')}:${String(m).padStart(2,'0')}:00.000Z`);
     }
 
     /* ---- Mechanics ---- */
@@ -510,9 +510,9 @@
       const cellCss = Math.floor(quantW / 8);
       const quantH  = cellCss * 10;
 
-      document.documentElement.style.setProperty('--cellSize', ${cellCss}px);
+      document.documentElement.style.setProperty('--cellSize', `${cellCss}px`);
       const lineCss = 1 / dpr;
-      document.documentElement.style.setProperty('--line', ${lineCss}px);
+      document.documentElement.style.setProperty('--line', `${lineCss}px`);
 
       gridEl.style.width  = quantW + 'px';
       gridEl.style.height = quantH + 'px';
@@ -534,13 +534,13 @@
     }
     function drawBlock(b){
       if(!b||b.x<0||b.x>=W||b.y<0||b.y>=H) return;
-      const c=gridEl.querySelector(.cell[data-x="${b.x}"][data-y="${b.y}"]);
+      const c=gridEl.querySelector(`.cell[data-x="${b.x}"][data-y="${b.y}"]`);
       if(!c) return;
       c.className='cell f'; c.style.background=b.color; c.textContent=b.letter;
     }
     function clearBlock(b){
       if(!b) return;
-      const c=gridEl.querySelector(.cell[data-x="${b.x}"][data-y="${b.y}"]);
+      const c=gridEl.querySelector(`.cell[data-x="${b.x}"][data-y="${b.y}"]`);
       if(!c) return;
       c.className='cell'; c.style.background='var(--cell-bg)'; c.textContent='';
     }
@@ -588,14 +588,14 @@
         for(const [dx,dy] of [[1,0],[0,1],[-1,0],[0,-1]]){
           const nx=x+dx, ny=y+dy; if(nx<0||nx>=W||ny<0||ny>=H) continue;
           const b=grid[ny][nx]; if(!b||partOfTarget(b.letter)) continue;
-          if(a.letter===b.letter || a.color===b.color){ del.add(${x},${y}); del.add(${nx},${ny}); }
+          if(a.letter===b.letter || a.color===b.color){ del.add(`${x},${y}`); del.add(`${nx},${ny}`); }
         }
       }
       if(!del.size) return;
 
       await Promise.all(Array.from(del).map(key=>new Promise(res=>{
         const [x,y]=key.split(',').map(Number);
-        const c=gridEl.querySelector(.cell[data-x="${x}"][data-y="${y}"]);
+        const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
         if(c){ c.classList.add('pop'); setTimeout(()=>{ c.classList.remove('pop'); res(); },150);} else res();
         grid[y][x]=null;
       })));
@@ -610,7 +610,7 @@
         }
       }
       for(let y=0;y<H;y++) for(let x=0;x<W;x++){
-        const c=gridEl.querySelector(.cell[data-x="${x}"][data-y="${y}"]);
+        const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
         c.className='cell'; c.style.background='var(--cell-bg)'; c.textContent='';
         if(grid[y][x]) drawBlock({...grid[y][x],x,y});
       }
@@ -626,7 +626,7 @@
         }
         if(ok){
           for(let i=0;i<TARGET.length;i++){
-            const c=gridEl.querySelector(.cell[data-x="${x+i}"][data-y="${y}"]);
+            const c=gridEl.querySelector(`.cell[data-x="${x+i}"][data-y="${y}"]`);
             if(c) c.style.transform='scale(1.05)';
           }
           setTimeout(()=>end(true), 450);
@@ -658,7 +658,7 @@
     function goRegister(){
       const returnUrl = location.pathname + location.search;
       sessionStorage.setItem('returnAfterAuth', returnUrl);
-      location.href = /register.html?return=${encodeURIComponent(returnUrl)};
+      location.href = `/register.html?return=${encodeURIComponent(returnUrl)}`;
     }
     gateGuestBtn.addEventListener('click', chooseGuest);
     gateRegBtn  .addEventListener('click', goRegister);
@@ -715,7 +715,7 @@
 
     async function trySystemShare(text){
       try{
-        const res = await fetch(${SITE_ORIGIN}/assets/BLITSTIEK_12SEP.png);
+        const res = await fetch(`${SITE_ORIGIN}/assets/BLITSTIEK_12SEP.png`);
         const blob = await res.blob();
         const files = [new File([blob],'BLITSTIEK.png',{type:blob.type})];
         if(navigator.canShare && navigator.canShare({files})){
@@ -752,7 +752,7 @@
     };
 
     function openWhatsApp(text){
-      const url = https://wa.me/?text=${encodeURIComponent(text)};
+      const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
       const w = window.open(url,'_blank','noopener,noreferrer');
       if(!w && navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>alert("Skakel gekopieer!")); }
     }
@@ -855,12 +855,12 @@
       const dateStr = gameDateFromId(GAME_ID);
 
       // current best + time it was achieved
-      const bestRef = doc(db, blitstiekGames/${GAME_ID}/leaderboard/${user.uid});
+      const bestRef = doc(db, `blitstiekGames/${GAME_ID}/leaderboard/${user.uid}`);
       const bestSnap = await getDoc(bestRef);
       const haveBest = bestSnap.exists();
 
       // read existing k fields
-      const playRef = doc(db, userGames/${user.uid}/plays/${GAME_ID});
+      const playRef = doc(db, `userGames/${user.uid}/plays/${GAME_ID}`);
       const playSnap = await getDoc(playRef);
       let kEarly=0, kImprove=0, kPlace=0, kTotal=0;
 
@@ -878,7 +878,7 @@
       if (kEarly === 0 && haveBest && now >= zaTimeOn(dateStr, K_CONF.EARLY_BIRD_WINDOW_START)) {
         try {
           const qEarly = query(
-            collection(db, blitstiekGames/${GAME_ID}/leaderboard),
+            collection(db, `blitstiekGames/${GAME_ID}/leaderboard`),
             orderBy("timestamp","asc"),
             limit(10)
           );
@@ -897,7 +897,7 @@
       if (kPlace === 0 && now >= zaTimeOn(dateStr, K_CONF.CUTOFF_TIME)) {
         try {
           const qRank = query(
-            collection(db, blitstiekGames/${GAME_ID}/leaderboard),
+            collection(db, `blitstiekGames/${GAME_ID}/leaderboard`),
             orderBy("time","asc"),
             orderBy("timestamp","asc"),
             limit(K_CONF.LEADERBOARD_SIZE)
@@ -932,7 +932,7 @@
         lbList.innerHTML='';
         if(snap.empty){
           bestText.textContent='--:--';
-          lbList.innerHTML = <li class="bg-green-100 font-medium">Jy kan eerste op die leierbord wees!</li>;
+          lbList.innerHTML = `<li class="bg-green-100 font-medium">Jy kan eerste op die leierbord wees!</li>`;
           return;
         }
         let idx=0;
@@ -941,20 +941,20 @@
           if(idx===0) bestText.textContent = fmt(Number(v.time));
           const you = user && docSnap.id===user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
           const li=document.createElement('li');
-          li.innerHTML = <strong>${(v.userName||'Onbekend')}</strong>${you}: ${fmt(Number(v.time))};
+          li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>${you}: ${fmt(Number(v.time))}`;
           lbList.appendChild(li);
           idx++;
         });
       }, (err) => {
         console.warn('Leaderboard stream error:', err);
-        lbList.innerHTML = <li class="text-red-600 bg-green-100 px-2 py-1 rounded">Kon nie leierbord laai nie.</li>;
+        lbList.innerHTML = `<li class="text-red-600 bg-green-100 px-2 py-1 rounded">Kon nie leierbord laai nie.</li>`;
       });
     }
 
     /* ---- Dynamic resolver ---- */
     async function resolveGameId(){
       if (explicitId) return explicitId;
-      const todayId = Game${todayISO()};
+      const todayId = `Game${todayISO()}`;
       try {
         const todaySnap = await getDoc(doc(db,'blitstiekGames',todayId));
         if (todaySnap.exists()) return todayId;
@@ -990,16 +990,16 @@
       } catch {}
 
       if(!GAME_ID){
-        targetEl.innerHTML = <span>—</span>;
+        targetEl.innerHTML = `<span>—</span>`;
         drawGrid();
-        lbList.innerHTML = <li class="text-red-600">Geen spel beskikbaar nie.</li>;
+        lbList.innerHTML = `<li class="text-red-600">Geen spel beskikbaar nie.</li>`;
         return;
       }
       const snap = await getDoc(doc(db,'blitstiekGames',GAME_ID));
       if(!snap.exists()){
-        targetEl.innerHTML = <span>—</span>;
+        targetEl.innerHTML = `<span>—</span>`;
         drawGrid();
-        lbList.innerHTML = <li class="text-red-600">Kon nie spel laai nie.</li>;
+        lbList.innerHTML = `<li class="text-red-600">Kon nie spel laai nie.</li>`;
         return;
       }
 
@@ -1045,7 +1045,7 @@
 
       enableStickyShare({ time: t, target: TARGET });
 
-      winMsg.innerHTML = Veels geluk, <strong>${currentUserName}</strong>, jy het <strong>${TARGET}</strong> in <strong>${fmt(t)}</strong> voltooi!;
+      winMsg.innerHTML = `Veels geluk, <strong>${currentUserName}</strong>, jy het <strong>${TARGET}</strong> in <strong>${fmt(t)}</strong> voltooi!`;
       over.style.display='flex';
       modalCloseBtn.onclick = ()=>{ over.style.display='none'; };
 
