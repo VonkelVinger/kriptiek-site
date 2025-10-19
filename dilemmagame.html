@@ -259,6 +259,10 @@ async function selfResetIfRequested() {
 
   const GAME_ID = window.GAME_ID;
   // 1) Clear localStorage for today & yesterday
+
+const __QP = new URLSearchParams(location.search);
+const RESET_REQUESTED = __QP.get('reset') === '1';
+  
   const today = GAME_ID;
   const y = 'Game' + (() => {
     const d = new Date();
@@ -980,6 +984,7 @@ function checkGuessWithFlip(guess) {
 
 /* ---- Auth gate + init ---- */
 onAuthStateChanged(auth, async (user) => {
+    if (RESET_REQUESTED) return; // Don’t run normal init while the reset flow is in progress
   if (!user) {
     renderAuthRequired();
     await loadLeaderboard();
