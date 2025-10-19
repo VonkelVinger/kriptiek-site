@@ -954,11 +954,11 @@ lbUnsubLegacy = onSnapshot(legacyQ, (snap)=>{
 
       // NEW stream (fallback if legacy empty)
       const newQ = query(
-        collection(db, 'slimstiekGames', GAME_ID, 'leaderboard'),
-        orderBy('score','desc'),
-        orderBy('ts','asc'),
-        limit(25)
-      );
+  collection(db, 'slimstiekGames', GAME_ID, 'leaderboard'),
+  orderBy('score','desc'),
+  limit(50)   // read a few more; we still slice to 10 after sorting
+);
+     
       lbUnsubNew = onSnapshot(newQ, (snap)=>{
         lastNewRows = snap.docs.map(d => normalizeRow(d));
         decideAndRender();
