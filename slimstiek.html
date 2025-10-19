@@ -1,17 +1,16 @@
-
 <!DOCTYPE html>
 <html lang="af">
 <head>
 
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-S9V4CMP1FP"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-S9V4CMP1FP');
-</script>
-  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9V4CMP1FP"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-S9V4CMP1FP');
+  </script>
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
   <title>SLIMSTIEK – Kriptiek</title>
@@ -120,7 +119,7 @@
     @media (min-width:640px){.dir-btn{min-width:72px;min-height:72px;font-size:28px}}
 
     .pill{background:#0c4a3e;color:#fff;font-weight:700;padding:6px 10px;border-radius:8px;text-align:center;}
-    #leaderboardList li{padding:.35rem .5rem;border-radius:.375rem;}
+    #leaderboardList li{padding:.35rem .5rem;border-radius:.375rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}
     #leaderboardList li:nth-child(odd){background:#f3f4f6;}
     #leaderboardList li:first-child{background:#d1fae5;font-weight:700;}
 
@@ -149,6 +148,14 @@
 
     /* N-R gate */
     #nrGate{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:60;}
+
+    /* Slimstiek K-pill (teal) */
+    .k-pill{
+      display:inline-flex;align-items:center;gap:.35rem;
+      background:#0f766e;color:#fff;font-weight:800;
+      border-radius:999px;padding:.15rem .5rem;
+      font-size:.75rem;line-height:1;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -352,7 +359,7 @@
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
     import {
       getFirestore, serverTimestamp, doc, getDoc, setDoc,
-      collection, query, orderBy, limit, onSnapshot
+      collection, query, orderBy, limit, onSnapshot, getDocs
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
     /* ---- Firebase ---- */
@@ -418,8 +425,9 @@
 
     const dateParam = qs.get('date');
     let currentDate = (/^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : todayKeySAST());
+    const GAME_ID = `Game${currentDate}`;
 
-    // --- Canonical URL normalization (after currentDate is known) ---
+    // Canonical URL normalization
     try {
       const urlObj = new URL(window.location.href);
       urlObj.searchParams.set('date', currentDate);
@@ -438,6 +446,22 @@
       return url.toString();
     }
     function shareTextLinkOnly(){ return `Kyk of jy my telling op vandag se SLIMSTIEK kan klop: ${buildShareUrl(currentDate)}`; }
+
+    /* ==== K mirror config & ZA helpers ==== */
+    const K_CONF = {
+      EARLY_BIRD_WINDOW_START: "07:00",
+      CUTOFF_TIME: "23:55",
+      LEADERBOARD_SIZE: 10,
+      EARLY_BIRD_POINTS: 20,
+      IMPROVE_POINTS: 30,
+      FINAL_POINTS: [120,90,70,60,50,40,30,25,20,15],
+      DAILY_CAP_PER_GAME: 200,
+      SUPPORTER_MULTIPLIER: 1.10
+    };
+    function zaTimeOn(dateStr, hhmm){
+      // Create a Date at ZA local time for comparisons
+      return new Date(`${dateStr}T${hhmm}:00+02:00`);
+    }
 
     /* ---- Auth ---- */
     let user=null, currentUserName='Speler';
@@ -511,7 +535,7 @@
     let paused=false, ended=false, moving=false;
     let gInt=null;                 // drop-tick only
     let score=0, bestScore=null;
-    let lbUnsub=null;
+    let lbUnsubLegacy=null, lbUnsubNew=null;
 
     function drawGrid(){
       gridEl.innerHTML='';
@@ -822,7 +846,7 @@
       }catch{}
     }
 
-    /* ---- Leaderboard ---- */
+    /* ---- Local leaderboard (fallback) ---- */
     const LB_LOCAL_KEY = d => `slimstiekLocalLB:${d}`;
     function getLocalLB(date){ try{ return JSON.parse(localStorage.getItem(LB_LOCAL_KEY(date))) || []; }catch{ return []; } }
     function setLocalLB(date, arr){ try{ localStorage.setItem(LB_LOCAL_KEY(date), JSON.stringify(arr)); }catch{} }
@@ -842,54 +866,249 @@
       });
     }
 
-    function startLiveLeaderboardFS(){
-      if(!db){ renderLocalLB(currentDate); return; }
-      if(lbUnsub){ lbUnsub(); lbUnsub=null; }
-      const qy = query(
-        collection(db,'leaderboards','slimstiek','dates', currentDate, 'entries'),
-        orderBy('score','desc'), limit(10)
-      );
-      lbUnsub = onSnapshot(qy, (snap)=>{
-        lbList.innerHTML='';
-        if(snap.empty){
-          bestText.textContent='—';
-          lbList.innerHTML = `<li class="bg-green-100 font-medium">Wees eerste op die leierbord!</li>`;
-          return;
-        }
-        let idx=0;
-        snap.forEach(docSnap=>{
-          const v = docSnap.data()||{};
-          if(idx===0) bestText.textContent = String(v.score ?? '—');
-          const li=document.createElement('li');
-          li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>: ${(v.score??0)} punte`;
-          lbList.appendChild(li);
-          idx++;
-        });
-      }, (err)=>{ console.warn('LB stream failed, falling back to local:', err); renderLocalLB(currentDate); });
+    /* ========= HYBRID LIVE LEADERBOARD (legacy-first) ========= */
+    let lastLegacyRows = [], lastNewRows = [];
+
+    function normalizeRow(d){
+      const data = d.data ? d.data() : d; // accept doc or plain
+      return {
+        id: d.id || data.id,
+        userName: data.userName || 'Onbekend',
+        score: Number(data.score) || 0,
+        kSlim_total: Number(data.kSlim_total || 0),
+        tsMillis: data.ts?.toMillis?.() ? data.ts.toMillis() : 9e15
+      };
     }
 
+    function sortRows(rows){
+      return rows.slice().sort((a,b)=>{
+        if(a.score !== b.score) return b.score - a.score;
+        return a.tsMillis - b.tsMillis;
+      });
+    }
+
+    function renderLBView(rows){
+      lbList.innerHTML='';
+      const top = sortRows(rows).slice(0,10);
+      if(!top.length){
+        bestText.textContent = '—';
+        lbList.innerHTML = `<li class="bg-green-100 font-medium">Wees eerste op die leierbord!</li>`;
+        return;
+      }
+      bestText.textContent = String(top[0].score ?? '—');
+
+      top.forEach(v=>{
+        const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
+        const pill = (Number(v.kSlim_total||0) > 0)
+          ? ` <span class="k-pill">+${Number(v.kSlim_total)}</span>`
+          : '';
+        const li = document.createElement('li');
+        li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>${you}: ${(v.score??0)} punte${pill}`;
+        lbList.appendChild(li);
+      });
+    }
+
+    function decideAndRender(){
+      if(lastLegacyRows.length){
+        renderLBView(lastLegacyRows);
+      }else if(lastNewRows.length){
+        renderLBView(lastNewRows);
+      }else{
+        // both empty — show placeholder (or local)
+        bestText.textContent = '—';
+        lbList.innerHTML = `<li class="bg-green-100 font-medium">Wees eerste op die leierbord!</li>`;
+      }
+    }
+
+    function startLiveLeaderboardHybrid(){
+      if(!db){
+        renderLocalLB(currentDate);
+        return;
+      }
+
+      // Clean up any previous listeners
+      if(lbUnsubLegacy){ lbUnsubLegacy(); lbUnsubLegacy = null; }
+      if(lbUnsubNew){ lbUnsubNew(); lbUnsubNew = null; }
+
+      // LEGACY stream (preferred if it has data)
+      const legacyQ = query(
+        collection(db, 'leaderboards','slimstiek','dates', currentDate, 'entries'),
+        orderBy('score','desc'),
+        orderBy('ts','asc'),
+        limit(25)
+      );
+      lbUnsubLegacy = onSnapshot(legacyQ, (snap)=>{
+        lastLegacyRows = snap.docs.map(d => normalizeRow(d));
+        decideAndRender();
+      }, (err)=>{
+        console.warn('Legacy LB stream failed:', err);
+        lastLegacyRows = [];
+        decideAndRender();
+      });
+
+      // NEW stream (fallback if legacy empty)
+      const newQ = query(
+        collection(db, 'slimstiekGames', GAME_ID, 'leaderboard'),
+        orderBy('score','desc'),
+        orderBy('ts','asc'),
+        limit(25)
+      );
+      lbUnsubNew = onSnapshot(newQ, (snap)=>{
+        lastNewRows = snap.docs.map(d => normalizeRow(d));
+        decideAndRender();
+      }, (err)=>{
+        console.warn('New LB stream failed:', err);
+        lastNewRows = [];
+        decideAndRender();
+      });
+    }
+
+    /* ---- Submit to leaderboard (mirror to legacy path too) ---- */
     async function submitToLB(scoreVal){
+      // Always keep a local fallback list (for offline/local dev)
       const row = { userName: currentUserName, score: scoreVal|0 };
       const arr = getLocalLB(currentDate);
       const idx = arr.findIndex(r => (r.userName||'') === (row.userName||''));
-      if(idx>=0){ if (row.score > (arr[idx].score||0)) arr[idx] = row; }
-      else{ arr.push(row); }
+      if (idx >= 0){
+        if (row.score > (arr[idx].score||0)) arr[idx] = row;
+      } else {
+        arr.push(row);
+      }
       setLocalLB(currentDate, arr);
 
       if(!db || !user) return;
       try{
-        const ref = doc(db,'leaderboards','slimstiek','dates', currentDate, 'entries', user.uid);
-        const snap = await getDoc(ref);
-        const prev = snap.exists() ? snap.data() : null;
-        const isBetter = !prev || (row.score > (prev.score||0));
-        if(isBetter){
-          await setDoc(ref, {
+        // Primary (new) path
+        const newRef  = doc(db, 'slimstiekGames', GAME_ID, 'leaderboard', user.uid);
+        const newSnap = await getDoc(newRef);
+        const prev = newSnap.exists() ? newSnap.data() : null;
+        const isBetter = !prev || ((row.score|0) > (prev.score|0));
+
+        if (isBetter){
+          await setDoc(newRef, {
             userName: currentUserName.slice(0,24),
-            score: row.score,
+            score: row.score|0,
             ts: serverTimestamp()
           }, { merge:true });
+        } else {
+          // keep display name fresh
+          await setDoc(newRef, { userName: currentUserName.slice(0,24) }, { merge:true });
         }
-      }catch(e){ console.warn('FS LB write failed (ok):', e); }
+
+        // Legacy mirror (for archives / ranking / K systems that still read it)
+        const legacyRef = doc(db,'leaderboards','slimstiek','dates', currentDate, 'entries', user.uid);
+        const legSnap   = await getDoc(legacyRef);
+        const legPrev   = legSnap.exists() ? legSnap.data() : null;
+        const legBetter = !legPrev || ((row.score|0) > (legPrev.score|0));
+        if (legBetter){
+          await setDoc(legacyRef, {
+            userName: currentUserName.slice(0,24),
+            score: row.score|0,
+            ts: serverTimestamp()
+          }, { merge:true });
+        } else {
+          await setDoc(legacyRef, { userName: currentUserName.slice(0,24) }, { merge:true });
+        }
+      } catch (e){
+        console.warn('FS LB write failed (ok):', e);
+      }
+    }
+
+    /* ==== Mirror Slimstiek points into userGames/plays & expose for pill ==== */
+    async function mirrorSlimstiekPoints(){
+      if (!db || !user) return;
+
+      // supporter flag
+      let supporterActive = false;
+      try {
+        const uSnap = await getDoc(doc(db, "users", user.uid));
+        if (uSnap.exists()){
+          const u = uSnap.data();
+          supporterActive = !!(u?.supporterActive === true ||
+            (u?.supporterUntil?.toMillis && u.supporterUntil.toMillis() > Date.now()));
+        }
+      } catch {}
+
+      // Have a best today? — check the **new** LB path first
+      const newBestRef = doc(db,'slimstiekGames', GAME_ID, 'leaderboard', user.uid);
+      const newBestSnap = await getDoc(newBestRef);
+      const haveBest = newBestSnap.exists();
+
+      // read existing k fields (daily)
+      const S_ID = `Slim${currentDate}`;
+      const playRef = doc(db, `userGames/${user.uid}/plays/${S_ID}`);
+      const playSnap = await getDoc(playRef);
+      let kEarly=0, kImprove=0, kPlace=0, kTotal=0;
+
+      if (playSnap.exists()){
+        const d = playSnap.data();
+        kEarly   = Number(d?.kSlim_early   || 0);
+        kImprove = Number(d?.kSlim_improve || 0);
+        kPlace   = Number(d?.kSlim_place   || 0);
+        kTotal   = Number(d?.kSlim_total   || 0);
+      }
+
+      const now = new Date();
+
+      // EARLY: first 10 entries after 07:00 ZA, once (use legacy list for consistency with other pages)
+      if (kEarly === 0 && haveBest && now >= zaTimeOn(currentDate, K_CONF.EARLY_BIRD_WINDOW_START)) {
+        try {
+          const qEarly = query(
+            collection(db,'leaderboards','slimstiek','dates', currentDate, 'entries'),
+            orderBy('ts','asc'),
+            limit(10)
+          );
+          const eSnap = await getDocs(qEarly);
+          const inTop10 = eSnap.docs.some(d => d.id === user.uid);
+          if (inTop10) kEarly = K_CONF.EARLY_BIRD_POINTS;
+        } catch {}
+      }
+
+      // IMPROVE: grant once the first time you have a recorded best
+      if (kImprove === 0 && haveBest) {
+        kImprove = K_CONF.IMPROVE_POINTS;
+      }
+
+      // PLACE: only after cutoff; rank by score DESC then ts ASC (legacy list)
+      if (kPlace === 0 && now >= zaTimeOn(currentDate, K_CONF.CUTOFF_TIME)) {
+        try {
+          const qRank = query(
+            collection(db,'leaderboards','slimstiek','dates', currentDate, 'entries'),
+            orderBy('score','desc'),
+            orderBy('ts','asc'),
+            limit(K_CONF.LEADERBOARD_SIZE)
+          );
+          const rSnap = await getDocs(qRank);
+          const pos = rSnap.docs.findIndex(d => d.id === user.uid);
+          if (pos >= 0 && pos < K_CONF.FINAL_POINTS.length) {
+            kPlace = K_CONF.FINAL_POINTS[pos];
+          }
+        } catch {}
+      }
+
+      // TOTAL with supporter multiplier + daily cap
+      const base = kEarly + kImprove + kPlace;
+      const mult = supporterActive ? K_CONF.SUPPORTER_MULTIPLIER : 1;
+      kTotal = Math.min(Math.round(base * mult), K_CONF.DAILY_CAP_PER_GAME);
+
+      // persist privately
+      await setDoc(playRef, {
+        kSlim_early:   kEarly,
+        kSlim_improve: kImprove,
+        kSlim_place:   kPlace,
+        kSlim_total:   kTotal,
+        updatedAt: serverTimestamp()
+      }, { merge:true });
+
+      // expose on BOTH rows for public pill
+      try {
+        const legacyBestRef = doc(db, 'leaderboards','slimstiek','dates', currentDate, 'entries', user.uid);
+        await setDoc(legacyBestRef, { kSlim_total: kTotal }, { merge: true });
+      } catch {}
+      try {
+        const newBestRef2 = doc(db, 'slimstiekGames', GAME_ID, 'leaderboard', user.uid);
+        await setDoc(newBestRef2, { kSlim_total: kTotal }, { merge: true });
+      } catch {}
     }
 
     /* ---- Game end ---- */
@@ -900,6 +1119,7 @@
 
       if(bestScore==null || score > bestScore) bestScore = score;
       submitToLB(score);
+      mirrorSlimstiekPoints();  // mirror on finish
       enableStickyShare({ score });
 
       winMsg.innerHTML = `Veels geluk, <strong>${currentUserName}</strong>! Jy het <strong>${TARGET}</strong> voltooi vir <strong>${score}</strong> punte.`;
@@ -914,7 +1134,7 @@
       if(db){
         try{
           const snap = await getDoc(doc(db,'daily_words', currentDate));
-          if(snap.exists()){
+        if(snap.exists()){
             const d = snap.data()||{};
             const w = (d.slimstiek || d.word || '').toString().toUpperCase().replace(/[^A-Z]/g,'');
             if(w) return w;
@@ -935,8 +1155,10 @@
       drawGrid();
 
       maybeEnableStickyShareFromStorage();
-      startLiveLeaderboardFS();
+      startLiveLeaderboardHybrid();   // ⬅️ hybrid reader (legacy-first)
       updateRowHint();
+
+      if (user) { mirrorSlimstiekPoints(); } // backfill on load if you already have a best
     }
 
     /* ---- Init ---- */
@@ -947,30 +1169,30 @@
     init();
   </script>
 
-<!-- 🟡 Buy Me a Coffee CTA above leaderboard -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const list = document.getElementById('leaderboardList');
-  const section = list ? list.closest('section') : null;
-  if (!section || !section.parentElement) return;
+  <!-- Buy Me a Coffee CTA above leaderboard -->
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const list = document.getElementById('leaderboardList');
+    const section = list ? list.closest('section') : null;
+    if (!section || !section.parentElement) return;
 
-  const wrap = document.createElement('div');
-  wrap.className = 'my-4';
-  wrap.innerHTML = `
-    <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800 text-center">
-      <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
-         onclick="gtag && gtag('event','bmac_click',{from:'slimstiek-leaderboard'})"
-         class="inline-flex items-center justify-center px-5 py-3
-                bg-yellow-500 hover:bg-yellow-600 text-white font-bold
-                rounded-xl shadow-md transition duration-200"
-         aria-label="Help ons om Kriptiek gratis te hou">
-        <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
-      </a>
-    </div>
-  `;
-  section.parentElement.insertBefore(wrap, section);
-});
-</script>
+    const wrap = document.createElement('div');
+    wrap.className = 'my-4';
+    wrap.innerHTML = `
+      <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800 text-center">
+        <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
+           onclick="gtag && gtag('event','bmac_click',{from:'slimstiek-leaderboard'})"
+           class="inline-flex items-center justify-center px-5 py-3
+                  bg-yellow-500 hover:bg-yellow-600 text-white font-bold
+                  rounded-xl shadow-md transition duration-200"
+           aria-label="Help ons om Kriptiek gratis te hou">
+          <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
+        </a>
+      </div>
+    `;
+    section.parentElement.insertBefore(wrap, section);
+  });
+  </script>
 
 </body>
 </html>
