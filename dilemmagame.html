@@ -55,7 +55,7 @@
   .keyboard-row{ display:flex; justify-content:center; margin:5px 0; }
   .key{ min-width:30px; padding:10px 12px; margin:2px; border-radius:4px; background:#374151; color:#fff; font-weight:700; cursor:pointer; text-transform:uppercase; }
   .key.bg-green-600{ background:#16a34a!important; }
-  .key.bg-red-600{ background:#1e3a8a!important; }
+  .key.bg-red-600{ background:#1e3a8a!important; } /* intended: navy backspace */
 
   /* Result modal */
   #resultModal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); align-items:center; justify-content:center; z-index:2000; }
@@ -94,7 +94,7 @@
   .btn-img:hover{ transform:translateY(-1px); filter:brightness(1.02); }
   .btn-img:active{ transform:translateY(0); filter:brightness(.98); }
 
-  /* ✅ Tidy leaderboard styles to match Blitstiek */
+  /* Leaderboard styles */
   #leaderboardList{ margin:0; padding:0; list-style:none; }
   #leaderboardList li{
     display:flex; align-items:center; justify-content:space-between;
@@ -189,7 +189,6 @@
   <a href="/about.html" class="underline">Oor Kriptiek</a> |
   <a href="/contact.html" class="underline">Kontak ons</a>
 </footer>
-
 <!-- RESULT MODAL -->
 <div id="resultModal">
   <div class="modal-content">
@@ -229,6 +228,7 @@
   console.log('[Dilemma] zone=', Intl.DateTimeFormat().resolvedOptions().timeZone,
               ' today=', getZAISODate(), ' GAME_ID=', window.GAME_ID);
 </script>
+
 <!-- MAIN GAME MODULE -->
 <script type="module">
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
@@ -249,27 +249,30 @@ const app  = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const db   = getFirestore(app);
 const auth = getAuth(app);
 
-/* ✅ Define once at module scope so the auth handler can see it */
+/* ✅ Define GAME_ID up-front so all functions can safely use it */
+const GAME_ID = window.GAME_ID;
+
+/* ✅ Query params & reset flag */
 const __QP = new URLSearchParams(location.search);
 const RESET_REQUESTED = __QP.get('reset') === '1';
 
-/* --- TEMP: self-reset via ?reset=1 --- */
+/* --- TEMP: self-reset via ?reset=1 (fixed: now safe to use GAME_ID) --- */
 async function selfResetIfRequested() {
   if (!RESET_REQUESTED) return;
 
-  const todayId = GAME_ID;                         // "Game2025-10-19"
-const plainId = todayId.replace(/^Game/, "");    // "2025-10-19"
-for (const k of Object.keys(localStorage)) {
-  if (
-    k.startsWith(`dilemma-${todayId}-`) ||
-    k.startsWith(`dilemma-Game${plainId}-`) ||   // belt-and-braces
-    k.startsWith(`dilemma-${plainId}-`)
-  ) {
-    localStorage.removeItem(k);
+  const todayId = GAME_ID;                         // "GameYYYY-MM-DD"
+  const plainId = todayId.replace(/^Game/, "");    // "YYYY-MM-DD"
+  for (const k of Object.keys(localStorage)) {
+    if (
+      k.startsWith(`dilemma-${todayId}-`) ||
+      k.startsWith(`dilemma-Game${plainId}-`) ||
+      k.startsWith(`dilemma-${plainId}-`)
+    ) {
+      localStorage.removeItem(k);
+    }
   }
-}
 
-  // 2) If signed in, delete today's plays doc (reopens the game)
+  // If signed in, delete today's plays doc (reopens the game)
   await new Promise(res => onAuthStateChanged(auth, res));
   const u = auth.currentUser;
   if (u) {
@@ -279,7 +282,6 @@ for (const k of Object.keys(localStorage)) {
   }
 
   alert("Herstel klaar. Die blad sal herlaai.");
-  // Reload without the reset param
   const clean = new URL(location.href); clean.searchParams.delete('reset');
   location.replace(clean.toString());
 }
@@ -313,8 +315,7 @@ let board = [], targetWord = "", gameOver = false;
 let currentUid = null;
 let displayName = localStorage.getItem("userName") || "Speler";
 
-/* ---- IDs/keys (UPDATED to use GAME_ID) ---- */
-const GAME_ID = window.GAME_ID;
+/* ---- IDs/keys (use GAME_ID) ---- */
 const doneKey = `dilemma-${GAME_ID}-done`;
 const progressKey = `dilemma-${GAME_ID}-progress`;
 
@@ -365,15 +366,14 @@ function deriveLocalSummaryFromProgress() {
     const saved = JSON.parse(localStorage.getItem(progressKey) || '{}');
     const rows = Array.isArray(saved.rows) ? saved.rows : [];
     if (!rows.length) return null;
-
     const winIndex = rows.findIndex(r =>
       Array.isArray(r.states) && r.states.length && r.states.every(s => s === 'correct')
     );
-    return (winIndex >= 0) ? { didWin:true, guesses: winIndex+1 } : null; // ✅ never infer a loss
+    return (winIndex >= 0) ? { didWin:true, guesses: winIndex+1 } : null; // never infer a loss
   } catch { return null; }
 }
 
-/* ---- Safe game loader (NEW) ---- */
+/* ---- Safe game loader ---- */
 async function loadTodayGame(db) {
   // Primary: prefixed “GameYYYY-MM-DD”
   let gameRef  = doc(db, "games", GAME_ID);
@@ -392,10 +392,9 @@ async function loadTodayGame(db) {
   }
 
   if (!gameSnap.exists()) {
-    // Don’t treat as fail; disable play and inform.
     const msg = 'Geen spel vir vandag gelaai nie. Probeer later weer.';
-    try { document.getElementById('statusLine').textContent = msg; document.getElementById('statusLine').style.display = 'block'; } catch(e){}
-    if (typeof disableGame === 'function') disableGame();
+    try { statusLine.textContent = msg; statusLine.style.display = 'block'; } catch(e){}
+    disableGame();
     throw new Error('[Dilemma] Game doc missing for ' + GAME_ID);
   }
 
@@ -976,7 +975,7 @@ function checkGuessWithFlip(guess) {
 
 /* ---- Auth gate + init ---- */
 onAuthStateChanged(auth, async (user) => {
-  if (RESET_REQUESTED) return; // ✅ prevents normal init during reset
+  if (RESET_REQUESTED) return; // prevents normal init during reset
   if (!user) {
     renderAuthRequired();
     await loadLeaderboard();
@@ -1015,29 +1014,29 @@ onAuthStateChanged(auth, async (user) => {
   bindMenuActions(pMenu, { waBtn: pWA, copyBtn: pCopy, sysBtn: pSys });
 
   // Always hide status until we *know*
-statusLine.textContent = "";
-statusLine.style.display = "none";
+  statusLine.textContent = "";
+  statusLine.style.display = "none";
 
-// FS first, then explicit local result, then win-only inference
-let summary = null;
-let fsSnap = null;
-try { fsSnap = await getDoc(doc(db, "userGames", currentUid, "plays", GAME_ID)); } catch {}
-if (fsSnap?.exists()) {
-  const d = fsSnap.data() || {};
-  summary = { didWin: d.result === "win", guesses: Number(d.guesses) || null };
-} else {
-  summary = readLocalResult() || deriveLocalSummaryFromProgress();
-}
+  // FS first, then explicit local result, then win-only inference
+  let summary = null;
+  let fsSnap = null;
+  try { fsSnap = await getDoc(doc(db, "userGames", currentUid, "plays", GAME_ID)); } catch {}
+  if (fsSnap?.exists()) {
+    const d = fsSnap.data() || {};
+    summary = { didWin: d.result === "win", guesses: Number(d.guesses) || null };
+  } else {
+    summary = readLocalResult() || deriveLocalSummaryFromProgress();
+  }
 
-if (summary) {
-  lastSummary = summary;
-  statusLine.textContent = summary.didWin
-    ? `Jy het hierdie Dilemma in ${summary.guesses} ${(summary.guesses===1?'raaiskoot':'raaiskote')} opgelos`
-    : `Jy kon nie hierdie Dilemma oplos nie`;
-  statusLine.style.display = "block";
-  disableGame();
-  await ensureLeaderboardRow(summary);
-}
+  if (summary) {
+    lastSummary = summary;
+    statusLine.textContent = summary.didWin
+      ? `Jy het hierdie Dilemma in ${summary.guesses} ${(summary.guesses===1?'raaiskoot':'raaiskote')} opgelos`
+      : `Jy kon nie hierdie Dilemma oplos nie`;
+    statusLine.style.display = "block";
+    disableGame();
+    await ensureLeaderboardRow(summary);
+  }
 
   await loadLeaderboard();
 });
@@ -1188,7 +1187,7 @@ if (summary) {
   });
 </script>
 
-<!-- BuyMeACoffee CTA above leaderboard -->
+<!-- BuyMeACoffee CTA above leaderboard (fixed class typo) -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const target =
@@ -1202,7 +1201,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const wrap = document.createElement('div');
   wrap.className = 'my-4';
   wrap.innerHTML = `
-    <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-8 00">
+    <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800">
       <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
          onclick="window.gtag && gtag('event','bmac_click',{from:'dilemma-leaderboard'})"
          class="flex items-center justify-center w-full px-5 py-3
