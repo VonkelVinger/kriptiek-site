@@ -250,6 +250,44 @@ const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 const auth = getAuth(app);
 
+ /* --- TEMP: self-reset via ?reset=1 --- */
+import { deleteDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+async function selfResetIfRequested() {
+  const qp = new URLSearchParams(location.search);
+  if (qp.get('reset') !== '1') return;
+
+  const GAME_ID = window.GAME_ID;
+  // 1) Clear localStorage for today & yesterday
+  const today = GAME_ID;
+  const y = 'Game' + (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return d.toISOString().slice(0,10);
+  })();
+  [today, y].forEach(id => {
+    Object.keys(localStorage).forEach(k => {
+      if (k.startsWith(`dilemma-${id}-`)) localStorage.removeItem(k);
+    });
+  });
+
+  // 2) If signed in, delete today's plays doc (reopens the game)
+  await new Promise(res => onAuthStateChanged(auth, res));
+  const u = auth.currentUser;
+  if (u) {
+    try {
+      await deleteDoc(doc(db, "userGames", u.uid, "plays", GAME_ID));
+    } catch(e) { console.warn("Reset couldn’t delete plays doc (maybe none):", e); }
+  }
+
+  alert("Herstel klaar. Die blad sal herlaai.");
+  // Reload without the reset param
+  const clean = new URL(location.href); clean.searchParams.delete('reset');
+  location.replace(clean.toString());
+}
+selfResetIfRequested();
+ 
+  
 /* ---- UI refs ---- */
 const gameGrid = document.getElementById("game-grid");
 const keyboard = document.getElementById("keyboard");
