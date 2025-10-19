@@ -208,6 +208,28 @@
     </div>
   </div>
 </div>
+
+<!-- ZA-safe resolver (NEW) -->
+<script>
+  // Build ZA date without relying on Intl locale quirks
+  function getZAISODate() {
+    const now = new Date();
+    const za = new Date(Date.UTC(
+      now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(),
+      now.getUTCHours() + 2, now.getUTCMinutes(), now.getUTCSeconds(), now.getUTCMilliseconds()
+    ));
+    return za.toISOString().slice(0, 10);
+  }
+  function resolveGameId() {
+    const qp = new URLSearchParams(location.search);
+    const override = qp.get('gameId') || qp.get('game') || qp.get('date');
+    return override ? (override.startsWith('Game') ? override : ('Game' + override)) : ('Game' + getZAISODate());
+  }
+  window.GAME_ID = resolveGameId();
+  console.log('[Dilemma] zone=', Intl.DateTimeFormat().resolvedOptions().timeZone,
+              ' today=', getZAISODate(), ' GAME_ID=', window.GAME_ID);
+</script>
+
 <!-- MAIN GAME MODULE -->
 <script type="module">
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
@@ -256,24 +278,16 @@ let board = [], targetWord = "", gameOver = false;
 let currentUid = null;
 let displayName = localStorage.getItem("userName") || "Speler";
 
-const params = new URLSearchParams(window.location.search);
-function todayZA() {
-  const now = new Date();
-  const parts = new Intl.DateTimeFormat('af-ZA', {
-    timeZone: 'Africa/Johannesburg',
-    year: 'numeric', month: '2-digit', day: '2-digit'
-  }).formatToParts(now).reduce((a, x) => (a[x.type] = x.value, a), {});
-  return `${parts.year}-${parts.month}-${parts.day}`;
-}
-const gameId = params.get("gameId") || `Game${todayZA()}`;
-const doneKey = `dilemma-${gameId}-done`;
-const progressKey = `dilemma-${gameId}-progress`;
+/* ---- IDs/keys (UPDATED to use GAME_ID) ---- */
+const GAME_ID = window.GAME_ID;
+const doneKey = `dilemma-${GAME_ID}-done`;
+const progressKey = `dilemma-${GAME_ID}-progress`;
 
 /* URLs for sharing */
 const SHARE_URL = "https://www.kriptiek.com/dilemmagame.html";
 const SHARE_TEXT_URL = (() => {
   const u = new URL(SHARE_URL);
-  u.searchParams.set('gameId', gameId);
+  u.searchParams.set('gameId', GAME_ID);
   u.searchParams.set('wa', 'v6');
   return u.toString();
 })();
@@ -324,20 +338,42 @@ function deriveLocalSummaryFromProgress() {
     return null;
   } catch { return null; }
 }
+
+/* ---- Safe game loader (NEW) ---- */
+async function loadTodayGame(db) {
+  // Primary: prefixed “GameYYYY-MM-DD”
+  let gameRef  = doc(db, "games", GAME_ID);
+  let gameSnap = await getDoc(gameRef);
+
+  // Legacy fallback: plain “YYYY-MM-DD” (read-only)
+  if (!gameSnap.exists()) {
+    const plainId   = GAME_ID.replace(/^Game/, '');
+    const legacyRef = doc(db, "games", plainId);
+    const legacySnap= await getDoc(legacyRef);
+    if (legacySnap.exists()) {
+      console.warn('[Dilemma] Using legacy game doc:', plainId);
+      gameRef  = legacyRef;
+      gameSnap = legacySnap;
+    }
+  }
+
+  if (!gameSnap.exists()) {
+    // Don’t treat as fail; disable play and inform.
+    const msg = 'Geen spel vir vandag gelaai nie. Probeer later weer.';
+    try { document.getElementById('statusLine').textContent = msg; document.getElementById('statusLine').style.display = 'block'; } catch(e){}
+    if (typeof disableGame === 'function') disableGame();
+    throw new Error('[Dilemma] Game doc missing for ' + GAME_ID);
+  }
+
+  return { gameRef, game: gameSnap.data() };
+}
+
 /* ---- Game data ---- */
 async function loadGameData() {
-  const gameRef = doc(db, "games", gameId);
-  const snap = await getDoc(gameRef);
-  if (snap.exists()) {
-    const data = snap.data();
-    targetWord = (data.word || "").toUpperCase();
-    gridCols = targetWord.length || 5;
-    document.getElementById("clue").textContent = data.clue || "Geen leidraad beskikbaar nie.";
-  } else {
-    targetWord = "WATER";
-    gridCols = targetWord.length;
-    document.getElementById("clue").textContent = "Geen leidraad beskikbaar nie.";
-  }
+  const { game } = await loadTodayGame(db);
+  targetWord = (game.word || "").toUpperCase();
+  gridCols = targetWord.length || 5;
+  document.getElementById("clue").textContent = game.clue || "Geen leidraad beskikbaar nie.";
 }
 
 function createGrid() {
@@ -598,7 +634,7 @@ async function submitScore(guessCount, didWin) {
 
   try {
     await setDoc(
-      doc(db, "games", gameId, "leaderboard", currentUid),
+      doc(db, "games", GAME_ID, "leaderboard", currentUid),
       {
         userName: displayName,
         guesses: Math.trunc(Number(guessCount)),
@@ -626,7 +662,7 @@ async function ensureLeaderboardRow(summary) {
   try {
     if (!currentUid || !summary) return;
 
-    const rowRef = doc(db, "games", gameId, "leaderboard", currentUid);
+    const rowRef = doc(db, "games", GAME_ID, "leaderboard", currentUid);
     const existing = await getDoc(rowRef);
     if (existing.exists()) return;
 
@@ -674,7 +710,7 @@ async function ensureLeaderboardRow(summary) {
 /* ---- loadLeaderboard(): right-aligned mini-pill + backfill ---- */
 async function loadLeaderboard() {
   try {
-    const snap = await getDocs(collection(db, "games", gameId, "leaderboard"));
+    const snap = await getDocs(collection(db, "games", GAME_ID, "leaderboard"));
     const entries = [];
     const needSR = [];
     const needScore = [];
@@ -740,7 +776,7 @@ async function loadLeaderboard() {
         entries
           .filter(e => Number.isFinite(e.score))
           .map(e =>
-            setDoc(doc(db, "games", gameId, "leaderboard", e.uid),
+            setDoc(doc(db, "games", GAME_ID, "leaderboard", e.uid),
                   { dilemmaScoreAtPlay: Number(e.score) },
                   { merge: true })
           )
@@ -759,7 +795,7 @@ async function loadLeaderboard() {
 
     entries.forEach((e, idx) => {
       const li = document.createElement("li");
-      li.className = "flex items-center justify-between gap-2"; // spacing controlled by CSS
+      li.className = "flex items-center justify-between gap-2";
       if (idx === 0) li.classList.add("font-bold","bg-green-100");
 
       const left = document.createElement("span");
@@ -845,7 +881,7 @@ async function gameCompleted(guessCount) {
 
   saveLocalProgress(true);
   localStorage.setItem(`${doneKey}-result`, `win:${guessCount}`);
-  await setDoc(doc(db, "userGames", currentUid, "plays", gameId),
+  await setDoc(doc(db, "userGames", currentUid, "plays", GAME_ID),
     { finished:true, result:"win", guesses:Math.trunc(Number(guessCount)), finishedAt: serverTimestamp() },
     { merge:true });
   await submitScore(guessCount, true);
@@ -866,7 +902,7 @@ async function gameFailed() {
 
   saveLocalProgress(true);
   localStorage.setItem(`${doneKey}-result`, `loss`);
-  await setDoc(doc(db, "userGames", currentUid, "plays", gameId),
+  await setDoc(doc(db, "userGames", currentUid, "plays", GAME_ID),
     { finished:true, result:"loss", guesses:gridRows, finishedAt: serverTimestamp() },
     { merge:true });
   await submitScore(gridRows, false);
@@ -924,7 +960,13 @@ onAuthStateChanged(auth, async (user) => {
   } catch {}
   playerNameEl.textContent = displayName;
 
-  await loadGameData();
+  try {
+    await loadGameData();
+  } catch (e) {
+    console.warn(e);
+    return; // if no game doc, we already displayed friendly status & disabled input
+  }
+
   createGrid();
   createKeyboard();
   restoreLocalProgress();
@@ -940,14 +982,14 @@ onAuthStateChanged(auth, async (user) => {
   const lsDone = localStorage.getItem(doneKey) === "true";
   let fsDone = false;
   try {
-    const p = await getDoc(doc(db, "userGames", currentUid, "plays", gameId));
+    const p = await getDoc(doc(db, "userGames", currentUid, "plays", GAME_ID));
     fsDone = p.exists();
   } catch {}
 
   if (lsDone || fsDone) {
     let s = null;
     try {
-      const snap = await getDoc(doc(db, "userGames", currentUid, "plays", gameId));
+      const snap = await getDoc(doc(db, "userGames", currentUid, "plays", GAME_ID));
       if (snap.exists()) {
         const d = snap.data() || {};
         s = { didWin: d.result === "win", guesses: Number(d.guesses) || null };
@@ -973,6 +1015,7 @@ onAuthStateChanged(auth, async (user) => {
   await loadLeaderboard();
 });
 </script>
+
 <!-- DILEMMA SCORE PILL (inline on the game page) -->
 <script type="module">
   import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
