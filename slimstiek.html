@@ -416,12 +416,15 @@
     const qs = new URLSearchParams(location.search);
 
     function todayKeySAST(){
-      const parts = new Intl.DateTimeFormat('en-CA', { timeZone:'Africa/Johannesburg', year:'numeric', month:'2-digit', day:'2-digit' }).formatToParts(new Date());
-      const y = parts.find(p=>p.type==='year').value;
-      const m = parts.find(p=>p.type==='month').value;
-      const d = parts.find(p=>p.type==='day').value;
-      return `${y}-${m}-${d}`;
-    }
+  // Compute SAST using pure UTC math (no Intl / locale quirks)
+  const MS_PER_HOUR = 3600_000;
+  const sastMs = Date.now() + 2 * MS_PER_HOUR;  // UTC → SAST (+02:00)
+  const d = new Date(sastMs);                    // still use UTC getters
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2,'0');
+  const dd = String(d.getUTCDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+}
 
     const dateParam = qs.get('date');
     let currentDate = (/^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : todayKeySAST());
