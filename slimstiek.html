@@ -17,6 +17,7 @@
 
   <!-- Open Graph / Twitter -->
   <link rel="canonical" href="https://www.kriptiek.com/slimstiek.html" />
+  <meta property="og:site_name" content="Kriptiek" />
   <meta property="og:title" content="SLIMSTIEK – Kriptiek" />
   <meta property="og:description" content="Kom speel vandag se SLIMSTIEK op Kriptiek." />
   <meta property="og:type" content="website" />
@@ -294,7 +295,6 @@
           </div>
         </div>
       </section>
-
       <!-- HOE OM TE SPEEL -->
       <section class="mt-4 bg-white rounded shadow p-4">
         <h2 class="text-xl font-bold mb-2">HOE OM TE SPEEL</h2>
@@ -320,7 +320,7 @@
               </li>
               <li>
                 <strong>+50 punte ekstra</strong> as <em>die letter en die kleur</em> van die twee blokke dieselfde is,
-                ook vermenigvuldig met die boonste ry waarin dit gebeur. Dit beteken: Hoe hoër jy die blokke laat opstapel, hoe meer punte kan jy aanteken, maar dan neem die risiko ook toe dat jy glad nie die woord gebou kan kry nie.
+                ook vermenigvuldig met die boonste ry waarin dit gebeur.
               </li>
               <li><strong>+100 bonuspunte</strong> sodra jy die teikenwoord gebou kry – die spel eindig dan ook.</li>
             </ul>
@@ -416,15 +416,12 @@
     const qs = new URLSearchParams(location.search);
 
     function todayKeySAST(){
-  // Compute SAST using pure UTC math (no Intl / locale quirks)
-  const MS_PER_HOUR = 3600_000;
-  const sastMs = Date.now() + 2 * MS_PER_HOUR;  // UTC → SAST (+02:00)
-  const d = new Date(sastMs);                    // still use UTC getters
-  const y = d.getUTCFullYear();
-  const m = String(d.getUTCMonth() + 1).padStart(2,'0');
-  const dd = String(d.getUTCDate()).padStart(2,'0');
-  return `${y}-${m}-${dd}`;
-}
+      const parts = new Intl.DateTimeFormat('en-CA', { timeZone:'Africa/Johannesburg', year:'numeric', month:'2-digit', day:'2-digit' }).formatToParts(new Date());
+      const y = parts.find(p=>p.type==='year').value;
+      const m = parts.find(p=>p.type==='month').value;
+      const d = parts.find(p=>p.type==='day').value;
+      return `${y}-${m}-${d}`;
+    }
 
     const dateParam = qs.get('date');
     let currentDate = (/^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : todayKeySAST());
@@ -462,7 +459,6 @@
       SUPPORTER_MULTIPLIER: 1.10
     };
     function zaTimeOn(dateStr, hhmm){
-      // Create a Date at ZA local time for comparisons
       return new Date(`${dateStr}T${hhmm}:00+02:00`);
     }
 
@@ -538,7 +534,7 @@
     let paused=false, ended=false, moving=false;
     let gInt=null;                 // drop-tick only
     let score=0, bestScore=null;
-    let lbUnsubLegacy=null, lbUnsubNew=null;
+    let lbUnsub=null;
 
     function drawGrid(){
       gridEl.innerHTML='';
@@ -752,12 +748,10 @@
 
     /* ---- Keyboard controls (arrows + space + P) ---- */
     window.addEventListener('keydown', (e) => {
-      // ignore while overlays are open
       const gateOpen  = nrGate && nrGate.style.display === 'flex';
       const modalOpen = over   && over.style.display   === 'flex';
       if (gateOpen || modalOpen) return;
 
-      // ignore when typing in fields (future-proof)
       const tag = (document.activeElement && document.activeElement.tagName) || '';
       if (['INPUT','TEXTAREA','SELECT'].includes(tag)) return;
 
@@ -869,112 +863,63 @@
       });
     }
 
-    /* ========= HYBRID LIVE LEADERBOARD (legacy-first) ========= */
-    let lastLegacyRows = [], lastNewRows = [];
-
-    function normalizeRow(d){
-      const data = d.data ? d.data() : d; // accept doc or plain
-      return {
-        id: d.id || data.id,
-        userName: data.userName || 'Onbekend',
-        score: Number(data.score) || 0,
-        kSlim_total: Number(data.kSlim_total || 0),
-        tsMillis: data.ts?.toMillis?.() ? data.ts.toMillis() : 9e15
-      };
-    }
-
-    function sortRows(rows){
-      return rows.slice().sort((a,b)=>{
-        if(a.score !== b.score) return b.score - a.score;
-        return a.tsMillis - b.tsMillis;
-      });
-    }
-
-    function renderLBView(rows){
-      lbList.innerHTML='';
-      const top = sortRows(rows).slice(0,10);
-      if(!top.length){
-        bestText.textContent = '—';
-        lbList.innerHTML = `<li class="bg-green-100 font-medium">Wees eerste op die leierbord!</li>`;
-        return;
-      }
-      bestText.textContent = String(top[0].score ?? '—');
-
-      top.forEach(v=>{
-        const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
-        const pill = (Number(v.kSlim_total||0) > 0)
-          ? ` <span class="k-pill">+${Number(v.kSlim_total)}</span>`
-          : '';
-        const li = document.createElement('li');
-        li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>${you}: ${(v.score??0)} punte${pill}`;
-        lbList.appendChild(li);
-      });
-    }
-
-    function decideAndRender(){
-      if(lastLegacyRows.length){
-        renderLBView(lastLegacyRows);
-      }else if(lastNewRows.length){
-        renderLBView(lastNewRows);
-      }else{
-        // both empty — show placeholder (or local)
-        bestText.textContent = '—';
-        lbList.innerHTML = `<li class="bg-green-100 font-medium">Wees eerste op die leierbord!</li>`;
-      }
-    }
-
-    function startLiveLeaderboardHybrid(){
+    /* ---- Live leaderboard with K-pill & stable tiebreak ---- */
+    function startLiveLeaderboardFS(){
       if(!db){
         renderLocalLB(currentDate);
         return;
       }
+      if(lbUnsub){ lbUnsub(); lbUnsub = null; }
 
-      // Clean up any previous listeners
-      if(lbUnsubLegacy){ lbUnsubLegacy(); lbUnsubLegacy = null; }
-      if(lbUnsubNew){ lbUnsubNew(); lbUnsubNew = null; }
+      const qy = query(
+        collection(db, 'slimstiekGames', GAME_ID, 'leaderboard'),
+        orderBy('score','desc'),
+        orderBy('ts','asc'),
+        limit(25)
+      );
 
-      // LEGACY stream (preferred if it has data) — no composite index required
-const legacyCol = collection(db, 'leaderboards','slimstiek','dates', currentDate, 'entries');
-const legacyQ   = query(legacyCol, orderBy('score','desc'), limit(50));
+      lbUnsub = onSnapshot(qy, (snap)=>{
+        lbList.innerHTML = '';
 
-lbUnsubLegacy = onSnapshot(legacyQ, (snap)=>{
-  // Normalize; tolerate missing ts
-  lastLegacyRows = snap.docs.map(d => ({
-    id: d.id,
-    userName: d.data().userName || 'Onbekend',
-    score: Number(d.data().score) || 0,
-    kSlim_total: Number(d.data().kSlim_total || 0),
-    tsMillis: d.data().ts?.toMillis?.() ? d.data().ts.toMillis() : 9e15
-  }));
-  decideAndRender();                 // will prefer legacy if it has rows
-}, (err)=>{
-  console.warn('Legacy LB stream failed:', err);
-  // Fallback: try un-ordered read and sort client-side (handles missing indexes/fields)
-  lastLegacyRows = [];
-  decideAndRender();
-});
+        if (snap.empty){
+          bestText.textContent = '—';
+          lbList.innerHTML = `<li class="bg-green-100 font-medium">Wees eerste op die leierbord!</li>`;
+          return;
+        }
 
+        const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-      // NEW stream (fallback if legacy empty)
-      const newQ = query(
-  collection(db, 'slimstiekGames', GAME_ID, 'leaderboard'),
-  orderBy('score','desc'),
-  limit(50)   // read a few more; we still slice to 10 after sorting
-);
-     
-      lbUnsubNew = onSnapshot(newQ, (snap)=>{
-        lastNewRows = snap.docs.map(d => normalizeRow(d));
-        decideAndRender();
+        // Stable client tie-break: score DESC, timestamp ASC
+        rows.sort((a,b)=>{
+          const sa = Number(a.score) || 0;
+          const sb = Number(b.score) || 0;
+          if (sa !== sb) return sb - sa;
+          const ta = a.ts?.toMillis?.() ? a.ts.toMillis() : 9e15;
+          const tb = b.ts?.toMillis?.() ? b.ts.toMillis() : 9e15;
+          return ta - tb;
+        });
+
+        const top = rows.slice(0,10);
+
+        if (top.length) bestText.textContent = String(top[0].score ?? '—');
+
+        top.forEach(v=>{
+          const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
+          const pill = (Number(v.kSlim_total||0) > 0)
+            ? ` <span class="k-pill">+${Number(v.kSlim_total)}</span>`
+            : '';
+          const li = document.createElement('li');
+          li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>${you}: ${(v.score??0)} punte${pill}`;
+          lbList.appendChild(li);
+        });
       }, (err)=>{
-        console.warn('New LB stream failed:', err);
-        lastNewRows = [];
-        decideAndRender();
+        console.warn('LB stream failed, falling back to local:', err);
+        renderLocalLB(currentDate);
       });
     }
 
     /* ---- Submit to leaderboard (mirror to legacy path too) ---- */
     async function submitToLB(scoreVal){
-      // Always keep a local fallback list (for offline/local dev)
       const row = { userName: currentUserName, score: scoreVal|0 };
       const arr = getLocalLB(currentDate);
       const idx = arr.findIndex(r => (r.userName||'') === (row.userName||''));
@@ -1000,11 +945,10 @@ lbUnsubLegacy = onSnapshot(legacyQ, (snap)=>{
             ts: serverTimestamp()
           }, { merge:true });
         } else {
-          // keep display name fresh
           await setDoc(newRef, { userName: currentUserName.slice(0,24) }, { merge:true });
         }
 
-        // Legacy mirror (for archives / ranking / K systems that still read it)
+        // Legacy mirror (archives/ranking)
         const legacyRef = doc(db,'leaderboards','slimstiek','dates', currentDate, 'entries', user.uid);
         const legSnap   = await getDoc(legacyRef);
         const legPrev   = legSnap.exists() ? legSnap.data() : null;
@@ -1038,7 +982,7 @@ lbUnsubLegacy = onSnapshot(legacyQ, (snap)=>{
         }
       } catch {}
 
-      // Have a best today? — check the **new** LB path first
+      // Have a best today?
       const newBestRef = doc(db,'slimstiekGames', GAME_ID, 'leaderboard', user.uid);
       const newBestSnap = await getDoc(newBestRef);
       const haveBest = newBestSnap.exists();
@@ -1059,7 +1003,7 @@ lbUnsubLegacy = onSnapshot(legacyQ, (snap)=>{
 
       const now = new Date();
 
-      // EARLY: first 10 entries after 07:00 ZA, once (use legacy list for consistency with other pages)
+      // EARLY: first 10 entries after 07:00 ZA, once (legacy list for consistency)
       if (kEarly === 0 && haveBest && now >= zaTimeOn(currentDate, K_CONF.EARLY_BIRD_WINDOW_START)) {
         try {
           const qEarly = query(
@@ -1143,7 +1087,7 @@ lbUnsubLegacy = onSnapshot(legacyQ, (snap)=>{
       if(db){
         try{
           const snap = await getDoc(doc(db,'daily_words', currentDate));
-        if(snap.exists()){
+          if(snap.exists()){
             const d = snap.data()||{};
             const w = (d.slimstiek || d.word || '').toString().toUpperCase().replace(/[^A-Z]/g,'');
             if(w) return w;
@@ -1164,10 +1108,10 @@ lbUnsubLegacy = onSnapshot(legacyQ, (snap)=>{
       drawGrid();
 
       maybeEnableStickyShareFromStorage();
-      startLiveLeaderboardHybrid();   // ⬅️ hybrid reader (legacy-first)
+      startLiveLeaderboardFS();
       updateRowHint();
 
-      if (user) { mirrorSlimstiekPoints(); } // backfill on load if you already have a best
+      if (user) { mirrorSlimstiekPoints(); }
     }
 
     /* ---- Init ---- */
@@ -1177,7 +1121,6 @@ lbUnsubLegacy = onSnapshot(legacyQ, (snap)=>{
     }
     init();
   </script>
-
   <!-- Buy Me a Coffee CTA above leaderboard -->
   <script>
   document.addEventListener('DOMContentLoaded', () => {
@@ -1188,9 +1131,9 @@ lbUnsubLegacy = onSnapshot(legacyQ, (snap)=>{
     const wrap = document.createElement('div');
     wrap.className = 'my-4';
     wrap.innerHTML = `
-      <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800 text-center">
+      <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-8 00 text-center">
         <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
-           onclick="gtag && gtag('event','bmac_click',{from:'slimstiek-leaderboard'})"
+           onclick="window.gtag && gtag('event','bmac_click',{from:'slimstiek-leaderboard'})"
            class="inline-flex items-center justify-center px-5 py-3
                   bg-yellow-500 hover:bg-yellow-600 text-white font-bold
                   rounded-xl shadow-md transition duration-200"
