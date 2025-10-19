@@ -2,1051 +2,237 @@
 <html lang="af">
 <head>
 
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-S9V4CMP1FP"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-S9V4CMP1FP');
-</script>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9V4CMP1FP"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-S9V4CMP1FP');
+  </script>
 
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>DILEMMA – Kriptiek</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DILEMMA – Kriptiek</title>
 
-<!-- Canonical & Open Graph / Twitter (Dilemma-specific) -->
-<link rel="canonical" href="https://www.kriptiek.com/dilemmagame.html" />
-<meta property="og:site_name" content="Kriptiek" />
-<meta property="og:title" content="DILEMMA – Kriptiek" />
-<meta property="og:description" content="Kom speel vandag se DILEMMA op Kriptiek." />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="https://www.kriptiek.com/dilemmagame.html" />
-<meta property="og:image" content="https://www.kriptiek.com/assets/DILEMMA_12SEP.png?v=6" />
-<meta property="og:image:secure_url" content="https://www.kriptiek.com/assets/DILEMMA_12SEP.png?v=6" />
-<meta property="og:image:alt" content="DILEMMA knoppie" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
-<meta property="og:updated_time" content="2025-09-28T09:00:00+02:00" />
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="DILEMMA – Kriptiek" />
-<meta name="twitter:description" content="Kom speel vandag se DILEMMA op Kriptiek." />
-<meta name="twitter:image" content="https://www.kriptiek.com/assets/DILEMMA_12SEP.png?v=6" />
+  <!-- Canonical & Open Graph / Twitter -->
+  <link rel="canonical" href="https://www.kriptiek.com/dilemmagame.html" />
+  <meta property="og:site_name" content="Kriptiek" />
+  <meta property="og:title" content="DILEMMA – Kriptiek" />
+  <meta property="og:description" content="Kom speel vandag se DILEMMA op Kriptiek." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.kriptiek.com/dilemmagame.html" />
+  <meta property="og:image" content="https://www.kriptiek.com/assets/DILEMMA_12SEP.png?v=6" />
+  <meta property="og:image:alt" content="DILEMMA knoppie" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="DILEMMA – Kriptiek" />
+  <meta name="twitter:description" content="Kom speel vandag se DILEMMA op Kriptiek." />
+  <meta name="twitter:image" content="https://www.kriptiek.com/assets/DILEMMA_12SEP.png?v=6" />
 
-<!-- Tailwind + font -->
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+  <!-- Tailwind + font -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
 
-<style>
-  body { font-family: 'Montserrat', sans-serif; background-color: #f9fafb; color: #1f2937; }
-  header { background-color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,.1); padding: 1rem; text-align: center; }
-  .logo-container { display:flex; justify-content:center; align-items:center; margin-bottom:10px; }
-  .logo-container .letter-box { width:40px; height:40px; margin:2px; display:flex; justify-content:center; align-items:center; background-color:#374151; color:#fff; font-size:1.5rem; font-weight:700; border-radius:4px; }
+  <style>
+    body { font-family: 'Montserrat', sans-serif; background-color: #f9fafb; color: #1f2937; }
+    header { background-color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,.1); padding: 1rem; text-align: center; }
+    .logo-container { display:flex; justify-content:center; align-items:center; margin-bottom:10px; }
+    .logo-container .letter-box { width:40px; height:40px; margin:2px; display:flex; justify-content:center; align-items:center; background-color:#374151; color:#fff; font-size:1.5rem; font-weight:700; border-radius:4px; }
 
-  .game-container { max-width: 640px; margin: 0 auto; padding: 1rem; }
-  .tile-row{ display:flex; justify-content:center; margin-bottom:5px; }
-  .letter-tile{ width:50px; height:50px; display:flex; justify-content:center; align-items:center; border:2px solid #374151; font-size:1.5rem; font-weight:bold; text-transform:uppercase; margin:2px; background:#fff; color:#1f2937; transition:transform .3s ease; }
-  .letter-tile.flip{ animation: flipAnim .5s ease forwards; }
-  @keyframes flipAnim{ 0%{transform:rotateX(0)} 50%{transform:rotateX(90deg)} 100%{transform:rotateX(0)} }
-  .correct{ background:#16a34a!important; color:#fff!important; }
-  .present{ background:#facc15!important; color:#000!important; }
-  .absent{ background:#9ca3af!important; color:#fff!important; }
+    .game-container { max-width: 640px; margin: 0 auto; padding: 1rem; }
+    .tile-row{ display:flex; justify-content:center; margin-bottom:5px; }
+    .letter-tile{ width:50px; height:50px; display:flex; justify-content:center; align-items:center; border:2px solid #374151; font-size:1.5rem; font-weight:bold; text-transform:uppercase; margin:2px; background:#fff; color:#1f2937; transition:transform .3s ease; }
+    .letter-tile.flip{ animation: flipAnim .5s ease forwards; }
+    @keyframes flipAnim{ 0%{transform:rotateX(0)} 50%{transform:rotateX(90deg)} 100%{transform:rotateX(0)} }
+    .correct{ background:#16a34a!important; color:#fff!important; }
+    .present{ background:#facc15!important; color:#000!important; }
+    .absent{ background:#9ca3af!important; color:#fff!important; }
 
-  .keyboard-row{ display:flex; justify-content:center; margin:5px 0; }
-  .key{ min-width:30px; padding:10px 12px; margin:2px; border-radius:4px; background:#374151; color:#fff; font-weight:700; cursor:pointer; text-transform:uppercase; }
-  .key.bg-green-600{ background:#16a34a!important; }
-  .key.bg-red-600{ background:#1e3a8a!important; } /* intended: navy backspace */
+    .keyboard-row{ display:flex; justify-content:center; margin:5px 0; }
+    .key{ min-width:30px; padding:10px 12px; margin:2px; border-radius:4px; background:#374151; color:#fff; font-weight:700; cursor:pointer; text-transform:uppercase; }
+    .key.bg-green-600{ background:#16a34a!important; }
+    .key.bg-red-600{ background:#1e3a8a!important; }
 
-  /* Result modal */
-  #resultModal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); align-items:center; justify-content:center; z-index:2000; }
-  #resultModal .modal-content{ background:#fff; padding:1.5rem; border-radius:8px; text-align:center; max-width:320px; width:100%; }
-  #resultModal button{ margin:5px; padding:8px 16px; border-radius:4px; font-weight:700; }
-  .btn-share{ background:#1e3a8a; color:#fff; }
-  .btn-close{ background:#6b7280; color:#fff; }
+    /* Result modal */
+    #resultModal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); align-items:center; justify-content:center; z-index:2000; }
+    #resultModal .modal-content{ background:#fff; padding:1.5rem; border-radius:8px; text-align:center; max-width:320px; width:100%; }
+    #resultModal button{ margin:5px; padding:8px 16px; border-radius:4px; font-weight:700; }
+    .btn-share{ background:#1e3a8a; color:#fff; }
+    .btn-close{ background:#6b7280; color:#fff; }
 
-  /* Local share dropdowns */
-  .share-menu-local{
-    background:#fff; border:1px solid #e5e7eb; box-shadow:0 8px 24px rgba(0,0,0,.12);
-    border-radius:.5rem; width:240px; padding:.5rem; z-index:3000;
-    line-height:1.25;
-  }
-  .share-menu-local button{
-    width:100%; text-align:left; padding:.5rem .75rem; border-radius:.375rem; font-weight:600;
-    line-height:1.25rem; display:flex; align-items:center; gap:.5rem; white-space:nowrap;
-  }
-  .share-menu-local button:hover{ background:#f3f4f6; }
+    /* Local share dropdowns */
+    .share-menu-local{
+      background:#fff; border:1px solid #e5e7eb; box-shadow:0 8px 24px rgba(0,0,0,.12);
+      border-radius:.5rem; width:240px; padding:.5rem; z-index:3000;
+      line-height:1.25;
+    }
+    .share-menu-local button{
+      width:100%; text-align:left; padding:.5rem .75rem; border-radius:.375rem; font-weight:600;
+      line-height:1.25rem; display:flex; align-items:center; gap:.5rem; white-space:nowrap;
+    }
+    .share-menu-local button:hover{ background:#f3f4f6; }
 
-  .action-grid{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:.5rem;
-    justify-items:center;
-    align-items:center;
-    max-width:376px;
-    margin:0 auto;
-  }
-  .action-grid.two{ grid-template-columns:repeat(2,1fr); max-width:248px; }
-  .action-grid > a, .action-grid > button{
-    display:grid; place-items:center; width:100%; aspect-ratio:1/1; max-width:120px;
-    background:transparent; border:0; padding:0; line-height:0; cursor:pointer;
-  }
-  .btn-img{ width:100%; height:100%; object-fit:contain; box-shadow:0 6px 15px rgba(0,0,0,.25); display:block; }
-  .btn-img:hover{ transform:translateY(-1px); filter:brightness(1.02); }
-  .btn-img:active{ transform:translateY(0); filter:brightness(.98); }
+    .action-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:.5rem;
+      justify-items:center;
+      align-items:center;
+      max-width:376px;
+      margin:0 auto;
+    }
+    .action-grid.two{ grid-template-columns:repeat(2,1fr); max-width:248px; }
+    .action-grid > a, .action-grid > button{
+      display:grid; place-items:center; width:100%; aspect-ratio:1/1; max-width:120px;
+      background:transparent; border:0; padding:0; line-height:0; cursor:pointer;
+    }
+    .btn-img{ width:100%; height:100%; object-fit:contain; box-shadow:0 6px 15px rgba(0,0,0,.25); display:block; }
+    .btn-img:hover{ transform:translateY(-1px); filter:brightness(1.02); }
+    .btn-img:active{ transform:translateY(0); filter:brightness(.98); }
 
-  /* Leaderboard styles */
-  #leaderboardList{ margin:0; padding:0; list-style:none; }
-  #leaderboardList li{
-    display:flex; align-items:center; justify-content:space-between;
-    gap:.5rem; padding:.35rem .5rem; border-radius:.375rem; line-height:1.3;
-  }
-  #leaderboardList li:nth-child(odd){ background:#f3f4f6; }
-  #leaderboardList li:first-child{ background:#d1fae5; font-weight:700; }
-</style>
+    /* Leaderboard styles */
+    #leaderboardList{ margin:0; padding:0; list-style:none; }
+    #leaderboardList li{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:.5rem; padding:.35rem .5rem; border-radius:.375rem; line-height:1.3;
+    }
+    #leaderboardList li:nth-child(odd){ background:#f3f4f6; }
+    #leaderboardList li:first-child{ background:#d1fae5; font-weight:700; }
+  </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
 
-<header>
-  <div class="logo-container">
-    <div class="letter-box">D</div><div class="letter-box">I</div><div class="letter-box">L</div>
-    <div class="letter-box">E</div><div class="letter-box">M</div><div class="letter-box">M</div>
-    <div class="letter-box">A</div>
-  </div>
-  <p class="text-sm text-gray-500">Welkom terug, <span id="playerName" class="font-semibold text-green-700"></span>!</p>
-</header>
+  <header>
+    <div class="logo-container">
+      <div class="letter-box">D</div><div class="letter-box">I</div><div class="letter-box">L</div>
+      <div class="letter-box">E</div><div class="letter-box">M</div><div class="letter-box">M</div>
+      <div class="letter-box">A</div>
+    </div>
+    <p class="text-sm text-gray-500">Welkom terug, <span id="playerName" class="font-semibold text-green-700"></span>!</p>
+  </header>
 
-<main class="flex-grow game-container">
-  <div id="clue" class="text-center text-lg mb-4 text-gray-700 font-semibold">Laai die leidraad...</div>
-  <div id="game-grid" class="mb-6"></div>
-  <div id="keyboard" class="mb-2"></div>
+  <main class="flex-grow game-container">
+    <div id="clue" class="text-center text-lg mb-4 text-gray-700 font-semibold">Laai die leidraad...</div>
+    <div id="game-grid" class="mb-6"></div>
+    <div id="keyboard" class="mb-2"></div>
 
-  <p id="statusLine" class="text-center font-bold text-[#1e3a8a] mb-4" style="display:none;"></p>
+    <p id="statusLine" class="text-center font-bold text-[#1e3a8a] mb-4" style="display:none;"></p>
 
-  <div id="barR" class="mt-4 hidden">
-    <div class="action-grid">
-      <a href="/forum.html" title="Gesels saam">
-        <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
-      </a>
-      <a href="/dilemma-argief.html" title="Dilemma-argief">
-        <img class="btn-img" src="/assets/D_ARGIEF_12SEP.png" alt="Argief" width="120" height="120">
-      </a>
-      <div class="relative">
-        <button id="tileShareBtn" type="button" title="Deel">
-          <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
-        </button>
-        <div id="shareMenuPersistent" class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
+    <div id="barR" class="mt-4 hidden">
+      <div class="action-grid">
+        <a href="/forum.html" title="Gesels saam">
+          <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
+        </a>
+        <a href="/dilemma-argief.html" title="Dilemma-argief">
+          <img class="btn-img" src="/assets/D_ARGIEF_12SEP.png" alt="Argief" width="120" height="120">
+        </a>
+        <div class="relative">
+          <button id="tileShareBtn" type="button" title="Deel">
+            <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
+          </button>
+          <div id="shareMenuPersistent" class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
+            <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
+            <div class="space-y-1">
+              <button id="pWhatsApp" type="button">📲 WhatsApp</button>
+              <button id="pCopy" type="button">📋 Kopieer skakel</button>
+              <button id="pSystem" type="button">🖥️ Stelsel-deel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOW TO PLAY -->
+    <div class="mt-6 bg-white rounded shadow p-4">
+      <h2 class="text-xl font-bold mb-2">HOE OM DILEMMA TE SPEEL</h2>
+      <p class="text-gray-700 leading-relaxed mb-2">
+        Jy het ses kanse om die woord te raai.<br>
+        Jy mag vir elke probeerslag enige letters in enige volgorde kies, maar elke raaiskoot moet dieselfde aantal letters hê as die woord waarna jy soek. Dit hoef nie ook 'n woord te vorm nie.<br>
+        Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER.
+      </p>
+      <p class="text-gray-700 italic mb-2">WENK: Op kleiner skerms kan jy Dilemma soos 'n foto met jou vingers kleiner trek totdat dit heeltemal inpas.</p>
+      <p class="text-gray-700 leading-relaxed">
+        <span class="font-bold text-green-700">GROEN</span>: Die letter is in die antwoord en in die regte blokkie.<br>
+        <span class="font-bold text-yellow-600">GEEL</span>: Die letter is in die antwoord, maar nie in die regte blokkie nie.<br>
+        <span class="font-bold text-gray-500">GRYS</span>: Die letter is glad nie in die antwoord nie.
+      </p>
+      <h3 class="text-lg font-bold mt-4">JOU STATISTIEK</h3>
+      <ul class="list-disc pl-6 text-gray-700 space-y-1">
+        <li><strong>Een poging per raaisel:</strong> Wanneer jy klaar gespeel het (wen of verloor), word daardie raaisel vir jou gesluit.</li>
+        <li><strong>Ouer raaisels is oop:</strong> Jy kan enige vroeëre Dilemma doen as jy nog nie het nie.</li>
+        <li><strong>Alles tel:</strong> Elke voltooide raaisel tel vir jou <strong>sukseskoers</strong>.</li>
+        <li><strong>Wenlopie:</strong> Suksesvolle opeenvolgende Dilemmas (in enige volgorde).</li>
+        <li><strong>Leierbord:</strong> Jou naam verskyn net een keer per dag.</li>
+      </ul>
+    </div>
+
+    <!-- LEADERBOARD -->
+    <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-xl font-bold">Vandag se bestes:</h2>
+      </div>
+      <ul id="leaderboardList" class="text-gray-700 text-left"><li>Laai...</li></ul>
+    </div>
+  </main>
+
+  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
+    &copy; 2025 Kriptiek. Alle regte voorbehou. |
+    <a href="/index.html" class="underline">Tuis</a> |
+    <a href="/profile.html" class="underline">My profiel</a> |
+    <a href="/forum.html" class="underline">Gesels saam</a> |
+    <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
+    <a href="/terms.html" class="underline">Voorwaardes</a> |
+    <a href="/faq.html" class="underline">Gereelde vrae</a> |
+    <a href="/about.html" class="underline">Oor Kriptiek</a> |
+    <a href="/contact.html" class="underline">Kontak ons</a>
+  </footer>
+
+  <!-- RESULT MODAL -->
+  <div id="resultModal">
+    <div class="modal-content">
+      <p id="resultMessage" class="mb-4 font-bold"></p>
+      <div class="relative flex items-center justify-center gap-2">
+        <button id="modalShareBtn" type="button" class="btn-share">DEEL</button>
+        <button id="closeModalBtn" type="button" class="btn-close">SLUIT</button>
+        <div id="shareMenuModal" class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden share-menu-local">
           <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
           <div class="space-y-1">
-            <button id="pWhatsApp" type="button">📲 WhatsApp</button>
-            <button id="pCopy" type="button">📋 Kopieer skakel</button>
-            <button id="pSystem" type="button">🖥️ Stelsel-deel</button>
+            <button id="mWhatsApp" type="button">📲 WhatsApp</button>
+            <button id="mCopy" type="button">📋 Kopieer skakel</button>
+            <button id="mSystem" type="button">🖥️ Stelsel-deel</button>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- HOW TO PLAY -->
-  <div class="mt-6 bg-white rounded shadow p-4">
-    <h2 class="text-xl font-bold mb-2">HOE OM DILEMMA TE SPEEL</h2>
-    <p class="text-gray-700 leading-relaxed mb-2">
-      Jy het ses kanse om die woord te raai.<br>
-      Jy mag vir elke probeerslag enige letters in enige volgorde kies, maar elke raaiskoot moet dieselfde aantal letters hê as die woord waarna jy soek. Dit hoef nie ook 'n woord te vorm nie.<br>
-      Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER.
-    </p>
-    <p class="text-gray-700 italic mb-2">WENK: Op kleiner skerms kan jy Dilemma soos 'n foto met jou vingers kleiner trek totdat dit heeltemal inpas.</p>
-    <p class="text-gray-700 leading-relaxed">
-      <span class="font-bold text-green-700">GROEN</span>: Die letter is in die antwoord en in die regte blokkie.<br>
-      <span class="font-bold text-yellow-600">GEEL</span>: Die letter is in die antwoord, maar nie in die regte blokkie nie.<br>
-      <span class="font-bold text-gray-500">GRYS</span>: Die letter is glad nie in die antwoord nie.
-    </p>
-    <h3 class="text-lg font-bold mt-4">JOU STATISTIEK</h3>
-    <ul class="list-disc pl-6 text-gray-700 space-y-1">
-      <li><strong>Een poging per raaisel:</strong> Wanneer jy klaar gespeel het (wen of verloor), word daardie raaisel vir jou gesluit.</li>
-      <li><strong>Ouer raaisels is oop:</strong> Jy kan enige vroeëre Dilemma doen as jy nog nie het nie.</li>
-      <li><strong>Alles tel:</strong> Elke voltooide raaisel tel vir jou <strong>sukseskoers</strong>.</li>
-      <li><strong>Wenlopie:</strong> Suksesvolle opeenvolgende Dilemmas (in enige volgorde).</li>
-      <li><strong>Leierbord:</strong> Jou naam verskyn net een keer per dag.</li>
-    </ul>
-  </div>
-
-  <!-- LEADERBOARD -->
-  <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
-    <div class="flex items-center justify-between mb-2">
-      <h2 class="text-xl font-bold">Vandag se bestes:</h2>
-    </div>
-    <ul id="leaderboardList" class="text-gray-700 text-left"><li>Laai...</li></ul>
-  </div>
-</main>
-<footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
-  &copy; 2025 Kriptiek. Alle regte voorbehou. |
-  <a href="/index.html" class="underline">Tuis</a> |
-  <a href="/profile.html" class="underline">My profiel</a> |
-  <a href="/forum.html" class="underline">Gesels saam</a> |
-  <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
-  <a href="/terms.html" class="underline">Voorwaardes</a> |
-  <a href="/faq.html" class="underline">Gereelde vrae</a> |
-  <a href="/about.html" class="underline">Oor Kriptiek</a> |
-  <a href="/contact.html" class="underline">Kontak ons</a>
-</footer>
-<!-- RESULT MODAL -->
-<div id="resultModal">
-  <div class="modal-content">
-    <p id="resultMessage" class="mb-4 font-bold"></p>
-    <div class="relative flex items-center justify-center gap-2">
-      <button id="modalShareBtn" type="button" class="btn-share">DEEL</button>
-      <button id="closeModalBtn" type="button" class="btn-close">SLUIT</button>
-      <div id="shareMenuModal" class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden share-menu-local">
-        <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
-        <div class="space-y-1">
-          <button id="mWhatsApp" type="button">📲 WhatsApp</button>
-          <button id="mCopy" type="button">📋 Kopieer skakel</button>
-          <button id="mSystem" type="button">🖥️ Stelsel-deel</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ZA-safe resolver (NEW) -->
-<script>
-  // Build ZA date without relying on Intl locale quirks
-  function getZAISODate() {
-    const now = new Date();
-    const za = new Date(Date.UTC(
-      now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(),
-      now.getUTCHours() + 2, now.getUTCMinutes(), now.getUTCSeconds(), now.getUTCMilliseconds()
-    ));
-    return za.toISOString().slice(0, 10);
-  }
-  function resolveGameId() {
-    const qp = new URLSearchParams(location.search);
-    const override = qp.get('gameId') || qp.get('game') || qp.get('date');
-    return override ? (override.startsWith('Game') ? override : ('Game' + override)) : ('Game' + getZAISODate());
-  }
-  window.GAME_ID = resolveGameId();
-  console.log('[Dilemma] zone=', Intl.DateTimeFormat().resolvedOptions().timeZone,
-              ' today=', getZAISODate(), ' GAME_ID=', window.GAME_ID);
-</script>
-
-<!-- MAIN GAME MODULE -->
-<script type="module">
-import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-import { getFirestore, doc, getDoc, collection, setDoc, getDocs, serverTimestamp, query, orderBy, limit, deleteDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-
-/* ---- Firebase config ---- */
-const firebaseConfig = {
-  apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
-  authDomain: "kriptiek-c9ea2.firebaseapp.com",
-  projectId: "kriptiek-c9ea2",
-  storageBucket: "kriptiek-c9ea2.appspot.com",
-  messagingSenderId: "620450620939",
-  appId: "1:620450620939:web:e93a18ac23b53b33db890e"
-};
-
-const app  = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-const db   = getFirestore(app);
-const auth = getAuth(app);
-
-/* ✅ Define GAME_ID up-front so all functions can safely use it */
-const GAME_ID = window.GAME_ID;
-
-/* ✅ Query params & reset flag */
-const __QP = new URLSearchParams(location.search);
-const RESET_REQUESTED = __QP.get('reset') === '1';
-
-/* --- TEMP: self-reset via ?reset=1 (fixed: now safe to use GAME_ID) --- */
-async function selfResetIfRequested() {
-  if (!RESET_REQUESTED) return;
-
-  const todayId = GAME_ID;                         // "GameYYYY-MM-DD"
-  const plainId = todayId.replace(/^Game/, "");    // "YYYY-MM-DD"
-  for (const k of Object.keys(localStorage)) {
-    if (
-      k.startsWith(`dilemma-${todayId}-`) ||
-      k.startsWith(`dilemma-Game${plainId}-`) ||
-      k.startsWith(`dilemma-${plainId}-`)
-    ) {
-      localStorage.removeItem(k);
+  <!-- ZA-safe resolver -->
+  <script>
+    function getZAISODate() {
+      const now = new Date();
+      const za = new Date(Date.UTC(
+        now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(),
+        now.getUTCHours() + 2, now.getUTCMinutes(), now.getUTCSeconds(), now.getUTCMilliseconds()
+      ));
+      return za.toISOString().slice(0, 10);
     }
-  }
-
-  // If signed in, delete today's plays doc (reopens the game)
-  await new Promise(res => onAuthStateChanged(auth, res));
-  const u = auth.currentUser;
-  if (u) {
-    try {
-      await deleteDoc(doc(db, "userGames", u.uid, "plays", GAME_ID));
-    } catch(e) { console.warn("Reset couldn’t delete plays doc (maybe none):", e); }
-  }
-
-  alert("Herstel klaar. Die blad sal herlaai.");
-  const clean = new URL(location.href); clean.searchParams.delete('reset');
-  location.replace(clean.toString());
-}
-selfResetIfRequested();
-
-/* ---- UI refs ---- */
-const gameGrid = document.getElementById("game-grid");
-const keyboard = document.getElementById("keyboard");
-const modal = document.getElementById("resultModal");
-const resultMsg = document.getElementById("resultMessage");
-const leaderboardList = document.getElementById("leaderboardList");
-const playerNameEl = document.getElementById("playerName");
-const statusLine = document.getElementById("statusLine");
-
-/* persistent (yellow tile) share menu + controls */
-const pMenu = document.getElementById("shareMenuPersistent");
-const mMenu = document.getElementById("shareMenuModal");
-const tileShareBtn = document.getElementById("tileShareBtn");
-const pWA = document.getElementById("pWhatsApp");
-const pCopy = document.getElementById("pCopy");
-const pSys = document.getElementById("pSystem");
-const mWA = document.getElementById("mWhatsApp");
-const mCopy = document.getElementById("mCopy");
-const mSys = document.getElementById("mSystem");
-
-/* ---- State ---- */
-let gridRows = 6, gridCols = 5;
-let currentRow = 0, currentCol = 0;
-let board = [], targetWord = "", gameOver = false;
-
-let currentUid = null;
-let displayName = localStorage.getItem("userName") || "Speler";
-
-/* ---- IDs/keys (use GAME_ID) ---- */
-const doneKey = `dilemma-${GAME_ID}-done`;
-const progressKey = `dilemma-${GAME_ID}-progress`;
-
-/* URLs for sharing */
-const SHARE_URL = "https://www.kriptiek.com/dilemmagame.html";
-const SHARE_TEXT_URL = (() => {
-  const u = new URL(SHARE_URL);
-  u.searchParams.set('gameId', GAME_ID);
-  u.searchParams.set('wa', 'v6');
-  return u.toString();
-})();
-
-playerNameEl.textContent = displayName;
-
-/* ---- If not signed in ---- */
-function renderAuthRequired() {
-  const clue = document.getElementById("clue");
-  clue.textContent = "Jy moet aangemeld wees om te speel.";
-  keyboard.innerHTML = `
-    <div class="action-grid two mt-2">
-      <a href="/login.html" title="Meld aan">
-        <img class="btn-img" src="/assets/K_MELD_AAN_12SEP.png" alt="Meld aan" width="120" height="120">
-      </a>
-      <a href="/register.html" title="Registreer">
-        <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="120" height="120">
-      </a>
-    </div>`;
-  const barR = document.getElementById('barR');
-  if (barR) barR.classList.add('hidden');
-}
-
-/* ---- Helpers ---- */
-function disableGame(){ gameOver = true; document.querySelectorAll(".key").forEach(k => k.disabled = true); }
-
-/* ---- Local result helpers ---- */
-function readLocalResult() {
-  const v = localStorage.getItem(`${doneKey}-result`);
-  if (!v) return null;
-  if (v.startsWith('win:')) {
-    const n = Number(v.split(':')[1]);
-    return { didWin: true, guesses: Number.isFinite(n) ? n : null };
-  }
-  if (v === 'loss') return { didWin: false, guesses: null };
-  return null;
-}
-function deriveLocalSummaryFromProgress() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(progressKey) || '{}');
-    const rows = Array.isArray(saved.rows) ? saved.rows : [];
-    if (!rows.length) return null;
-    const winIndex = rows.findIndex(r =>
-      Array.isArray(r.states) && r.states.length && r.states.every(s => s === 'correct')
-    );
-    return (winIndex >= 0) ? { didWin:true, guesses: winIndex+1 } : null; // never infer a loss
-  } catch { return null; }
-}
-
-/* ---- Safe game loader ---- */
-async function loadTodayGame(db) {
-  // Primary: prefixed “GameYYYY-MM-DD”
-  let gameRef  = doc(db, "games", GAME_ID);
-  let gameSnap = await getDoc(gameRef);
-
-  // Legacy fallback: plain “YYYY-MM-DD” (read-only)
-  if (!gameSnap.exists()) {
-    const plainId   = GAME_ID.replace(/^Game/, '');
-    const legacyRef = doc(db, "games", plainId);
-    const legacySnap= await getDoc(legacyRef);
-    if (legacySnap.exists()) {
-      console.warn('[Dilemma] Using legacy game doc:', plainId);
-      gameRef  = legacyRef;
-      gameSnap = legacySnap;
+    function resolveGameId() {
+      const qp = new URLSearchParams(location.search);
+      const override = qp.get('gameId') || qp.get('game') || qp.get('date');
+      return override ? (override.startsWith('Game') ? override : ('Game' + override)) : ('Game' + getZAISODate());
     }
-  }
-
-  if (!gameSnap.exists()) {
-    const msg = 'Geen spel vir vandag gelaai nie. Probeer later weer.';
-    try { statusLine.textContent = msg; statusLine.style.display = 'block'; } catch(e){}
-    disableGame();
-    throw new Error('[Dilemma] Game doc missing for ' + GAME_ID);
-  }
-
-  return { gameRef, game: gameSnap.data() };
-}
-
-/* ---- Game data ---- */
-async function loadGameData() {
-  const { game } = await loadTodayGame(db);
-  targetWord = (game.word || "").toUpperCase();
-  gridCols = targetWord.length || 5;
-  document.getElementById("clue").textContent = game.clue || "Geen leidraad beskikbaar nie.";
-}
-
-function createGrid() {
-  gameGrid.innerHTML = "";
-  board = [];
-  for (let r = 0; r < gridRows; r++) {
-    const row = document.createElement("div");
-    row.className = "tile-row";
-    const rowTiles = [];
-    for (let c = 0; c < gridCols; c++) {
-      const tile = document.createElement("div");
-      tile.className = "letter-tile";
-      row.appendChild(tile);
-      rowTiles.push(tile);
-    }
-    board.push(rowTiles);
-    gameGrid.appendChild(row);
-  }
-}
-
-function createKeyboard() {
-  keyboard.innerHTML = "";
-  const layout = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
-  layout.forEach(row => {
-    const rowDiv = document.createElement("div");
-    rowDiv.className = "keyboard-row";
-    [...row].forEach(letter => {
-      const key = document.createElement("button");
-      key.className = "key";
-      key.textContent = letter;
-      key.onclick = () => handleKey(letter);
-      rowDiv.appendChild(key);
-    });
-    if (row === "ZXCVBNM") {
-      const enter = document.createElement("button");
-      enter.className = "key bg-green-600";
-      enter.textContent = "Enter";
-      enter.onclick = handleEnter;
-      rowDiv.appendChild(enter);
-
-      const back = document.createElement("button");
-      back.className = "key bg-red-600";
-      back.textContent = "←";
-      back.onclick = handleBackspace;
-      rowDiv.appendChild(back);
-    }
-    keyboard.appendChild(rowDiv);
-  });
-}
-
-function updateKeyboard(letter, state) {
-  const keyBtn = [...document.querySelectorAll(".key")].find(k => k.textContent === letter);
-  if (!keyBtn) return;
-  if (state === "correct" || (state === "present" && !keyBtn.classList.contains("correct"))) {
-    keyBtn.classList.remove("present", "absent");
-    keyBtn.classList.add(state);
-  } else if (state === "absent" && !keyBtn.classList.contains("correct") && !keyBtn.classList.contains("present")) {
-    keyBtn.classList.add("absent");
-  }
-}
-
-/* ---- Input handling ---- */
-function handleKey(letter) {
-  if (gameOver) return;
-  if (currentCol < gridCols && currentRow < gridRows) {
-    board[currentRow][currentCol].textContent = letter;
-    currentCol++;
-  }
-}
-function handleBackspace() {
-  if (gameOver || currentCol === 0) return;
-  currentCol--;
-  board[currentRow][currentCol].textContent = "";
-}
-function handleEnter() {
-  if (gameOver) return;
-  if (currentCol < gridCols) return alert("Vul al die letters in!");
-  const guess = board[currentRow].map(t => t.textContent).join("");
-  checkGuessWithFlip(guess);
-}
-
-function computeStates(guess) {
-  const states = new Array(gridCols).fill("absent");
-  const letterCounts = {};
-  for (let ch of targetWord) letterCounts[ch] = (letterCounts[ch] || 0) + 1;
-
-  for (let i = 0; i < gridCols; i++) {
-    if (guess[i] === targetWord[i]) {
-      states[i] = "correct";
-      letterCounts[guess[i]]--;
-    }
-  }
-  for (let i = 0; i < gridCols; i++) {
-    if (states[i] === "correct") continue;
-    if (letterCounts[guess[i]] > 0) {
-      states[i] = "present";
-      letterCounts[guess[i]]--;
-    }
-  }
-  return states;
-}
-
-function applyStatesWithFlip(rowIndex, guess, states) {
-  states.forEach((s, i) => {
-    const tile = board[rowIndex][i];
-    setTimeout(() => {
-      tile.classList.remove("correct","present","absent");
-      tile.classList.add("flip", s);
-      updateKeyboard(guess[i], s);
-    }, i * 350);
-  });
-}
-
-/* ---- Save/restore progress ---- */
-function saveLocalProgress(done=false) {
-  const rows = [];
-  for (let r = 0; r < gridRows; r++) {
-    const guess = board[r].map(t => t.textContent).join("");
-    if (!guess.trim()) break;
-    const states = board[r].map(t =>
-      t.classList.contains("correct") ? "correct" :
-      t.classList.contains("present") ? "present" : "absent"
-    );
-    if (states.every(s=>["correct","present","absent"].includes(s))) {
-      rows.push({ guess, states });
-    } else { break; }
-  }
-  localStorage.setItem(progressKey, JSON.stringify({ rows }));
-  if (done) localStorage.setItem(doneKey, "true");
-}
-
-function restoreLocalProgress() {
-  const saved = localStorage.getItem(progressKey);
-  if (!saved) return;
-  try {
-    const data = JSON.parse(saved);
-    if (!data?.rows) return;
-    data.rows.forEach(({ guess, states }) => {
-      const letters = guess.split("");
-      for (let i = 0; i < letters.length; i++) {
-        const tile = board[currentRow][i];
-        tile.textContent = letters[i];
-        tile.classList.remove("correct","present","absent");
-        tile.classList.add(states[i], "flip");
-        updateKeyboard(letters[i], states[i]);
-      }
-      currentRow++;
-      currentCol = 0;
-    });
-  } catch {}
-}
-
-/* ---- Dilemma total (for snapshotting to leaderboard) ---- */
-const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
-const STREAK_THRESHOLD = 5;
-const STREAK_MULTIPLIER = 1.10;
-const SUPPORTER_MULTIPLIER = 1.10;
-
-async function computeDilemmaTotal(uid){
-  const usnap = await getDoc(doc(db, "users", uid));
-  let supporterActive = false;
-  if (usnap.exists()) {
-    const d = usnap.data();
-    if (d?.supporterActive === true) supporterActive = true;
-    if (d?.supporterUntil?.toMillis && d.supporterUntil.toMillis() > Date.now()) supporterActive = true;
-  }
-
-  const qy = query(collection(db, "userGames", uid, "plays"), orderBy("finishedAt","desc"), limit(200));
-  const snap = await getDocs(qy);
-
-  const byDate = new Map();
-  snap.forEach(ds=>{
-    const d = ds.data();
-    const date = ds.id.replace(/^Game/,"");
-    byDate.set(date, { win: d?.result === "win" || d?.finished === true, guesses: Number(d?.guesses || 0) });
-  });
-
-  const dates = Array.from(byDate.keys()).sort();
-  let cur=0, prev=null;
-  for(const d of dates){
-    const consec = prev && (new Date(d) - new Date(prev) === 24*60*60*1000);
-    if (!consec) cur = 0;
-    const p = byDate.get(d);
-    if (p?.win) cur++; else cur = 0;
-    prev = d;
-  }
-
-  const dist = {1:0,2:0,3:0,4:0,5:0,6:0,fail:0};
-  for (const p of byDate.values()){
-    if (p.win){ const g = Math.min(Math.max(1, p.guesses || 6), 6); dist[g]++; }
-    else { dist.fail++; }
-  }
-
-  const subtotal =
-    dist[1]*BASE_POINTS[1] + dist[2]*BASE_POINTS[2] + dist[3]*BASE_POINTS[3] +
-    dist[4]*BASE_POINTS[4] + dist[5]*BASE_POINTS[5] + dist[6]*BASE_POINTS[6] +
-    dist.fail*BASE_POINTS.fail;
-
-  const streakMult = cur >= STREAK_THRESHOLD ? STREAK_MULTIPLIER : 1;
-  const supporterMult = supporterActive ? SUPPORTER_MULTIPLIER : 1;
-  const streakBonus = Math.round(subtotal * (streakMult - 1));
-  const supporterBonus = Math.round((subtotal + streakBonus) * (supporterMult - 1));
-  return subtotal + streakBonus + supporterBonus;
-}
-
-/* ---- Leaderboard: submit, ensure, load ---- */
-async function submitScore(guessCount, didWin) {
-  if (!currentUid) return;
-
-  try {
-    const uDoc = await getDoc(doc(db, "users", currentUid));
-    if (uDoc.exists() && typeof uDoc.data().userName === "string") {
-      displayName = uDoc.data().userName || displayName;
-      playerNameEl.textContent = displayName;
-      localStorage.setItem("userName", displayName);
-    }
-  } catch (e) { console.warn("Could not read users doc:", e); }
-
-  let successRate = null;
-  try {
-    const uref = doc(db, "users", currentUid);
-    const before = await getDoc(uref);
-
-    let payload;
-    if (before.exists()) {
-      const u = before.data() || {};
-      const newGames  = (u.gamesPlayed || 0) + 1;
-      const newWins   = (u.wins || 0) + (didWin ? 1 : 0);
-      const newStreak = didWin ? (u.streak || 0) + 1 : 0;
-      const newBest   = Math.max(u.bestStreak || 0, newStreak);
-      const dist = { "1":0,"2":0,"3":0,"4":0,"5":0,"6":0, ...(u.guessDist || {}) };
-      if (didWin && guessCount >= 1 && guessCount <= 6) dist[String(guessCount)] = (dist[String(guessCount)] || 0) + 1;
-      payload = { userName: displayName, gamesPlayed: newGames, wins: newWins, streak: newStreak, bestStreak: newBest, guessDist: dist, updatedAt: serverTimestamp() };
-    } else {
-      payload = {
-        userName: displayName, gamesPlayed: 1, wins: didWin ? 1 : 0, streak: didWin ? 1 : 0, bestStreak: didWin ? 1 : 0,
-        guessDist: { "1":0,"2":0,"3":0,"4":0,"5":0,"6":0, ...(didWin && guessCount>=1 && guessCount<=6 ? { [String(guessCount)]: 1 } : {}) },
-        createdAt: serverTimestamp(), updatedAt: serverTimestamp()
-      };
-    }
-    await setDoc(uref, payload, { merge: true });
-
-    const after = await getDoc(uref);
-    const nd = after.data() || {};
-    const games = Number(nd.gamesPlayed || 0);
-    const wins  = Number(nd.wins || 0);
-    successRate = games > 0 ? Math.round((wins / games) * 100) : 0;
-  } catch (e) {
-    console.warn("User stats update failed (non-fatal):", e);
-  }
-
-  let totalScore = 0;
-  try {
-    totalScore = await computeDilemmaTotal(currentUid);
-  } catch (e) {
-    console.warn("Could not compute dilemma total:", e);
-  }
-
-  try {
-    await setDoc(
-      doc(db, "games", GAME_ID, "leaderboard", currentUid),
-      {
-        userName: displayName,
-        guesses: Math.trunc(Number(guessCount)),
-        ...(successRate == null ? {} : { successRate }),
-        date: serverTimestamp(),
-        createdAtMs: Date.now(),
-        dilemmaScoreAtPlay: Number(totalScore) || 0
-      },
-      { merge: true }
-    );
-  } catch (e) {
-    console.error("Kon nie leierbord-ry stoor nie:", e);
-  }
-
-  try {
-    await setDoc(
-      doc(db, "users", currentUid),
-      { dilemmaScore: Number(totalScore) || 0, kScore: Number(totalScore) || 0, scoreUpdatedAt: serverTimestamp() },
-      { merge: true }
-    );
-  } catch {}
-}
-
-async function ensureLeaderboardRow(summary) {
-  try {
-    if (!currentUid || !summary) return;
-
-    const rowRef = doc(db, "games", GAME_ID, "leaderboard", currentUid);
-    const existing = await getDoc(rowRef);
-    if (existing.exists()) return;
-
-    const guessCount = summary.didWin ? (Number(summary.guesses) || gridRows) : gridRows;
-
-    let sr = null;
-    try {
-      const uSnap = await getDoc(doc(db, "users", currentUid));
-      if (uSnap.exists()) {
-        const u = uSnap.data() || {};
-        const gp = Number(u.gamesPlayed || 0);
-        const w  = Number(u.wins || 0);
-        sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
-      }
-    } catch {}
-
-    let totalScore = 0;
-    try { totalScore = await computeDilemmaTotal(currentUid); } catch {}
-
-    const payload = {
-      userName: displayName,
-      guesses: Math.trunc(Number(guessCount)),
-      date: serverTimestamp(),
-      createdAtMs: Date.now(),
-      ...(sr == null ? {} : { successRate: sr }),
-      dilemmaScoreAtPlay: Number(totalScore) || 0
-    };
-
-    await setDoc(rowRef, payload, { merge: true });
-
-    try {
-      await setDoc(
-        doc(db, "users", currentUid),
-        { dilemmaScore: Number(totalScore) || 0, kScore: Number(totalScore) || 0, scoreUpdatedAt: serverTimestamp() },
-        { merge: true }
-      );
-    } catch {}
-
-    await loadLeaderboard();
-  } catch (e) {
-    console.warn("ensureLeaderboardRow failed:", e);
-  }
-}
-
-/* ---- loadLeaderboard(): right-aligned mini-pill + backfill ---- */
-async function loadLeaderboard() {
-  try {
-    const snap = await getDocs(collection(db, "games", GAME_ID, "leaderboard"));
-    const entries = [];
-    const needSR = [];
-    const needScore = [];
-
-    snap.forEach(d => {
-      const v = d.data() || {};
-      const guessesNum = Number(v.guesses);
-      if (!Number.isFinite(guessesNum) || guessesNum < 1 || guessesNum > gridRows) return;
-
-      const name = (typeof v.userName === "string" && v.userName.trim()) ? v.userName.trim() : "Onbekend";
-      const ts = v.date?.seconds ? v.date.seconds * 1000 : (typeof v.createdAtMs === "number" ? v.createdAtMs : 0);
-
-      const srVal    = Number.isFinite(Number(v.successRate)) ? Math.trunc(Number(v.successRate)) : null;
-      const scoreVal = Number.isFinite(Number(v.dilemmaScoreAtPlay)) ? Number(v.dilemmaScoreAtPlay) : null;
-
-      entries.push({ uid: d.id, name, guesses: guessesNum, when: ts, sr: srVal, score: scoreVal });
-      if (srVal == null) needSR.push(d.id);
-      if (scoreVal == null) needScore.push(d.id);
-    });
-
-    if (needSR.length) {
-      const results = await Promise.allSettled(needSR.map(uid => getDoc(doc(db, "users", uid))));
-      results.forEach((res, i) => {
-        if (res.status !== "fulfilled") return;
-        const s = res.value;
-        if (!s.exists()) return;
-        const u = s.data() || {};
-        const gp = Number(u.gamesPlayed || 0);
-        const w  = Number(u.wins || 0);
-        const sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
-        const ent = entries.find(e => e.uid === needSR[i]);
-        if (ent) ent.sr = sr;
-      });
-    }
-
-    if (needScore.length) {
-      const userDocs = await Promise.allSettled(needScore.map(uid => getDoc(doc(db, "users", uid))));
-      const toCompute = [];
-      userDocs.forEach((res, i) => {
-        const uid = needScore[i];
-        const ent = entries.find(e => e.uid === uid);
-        if (!ent) return;
-        if (res.status === "fulfilled" && res.value.exists()) {
-          const u = res.value.data() || {};
-          const k = Number(u.dilemmaScore);
-          if (Number.isFinite(k)) ent.score = k; else toCompute.push(uid);
-        } else {
-          toCompute.push(uid);
-        }
-      });
-
-      if (toCompute.length) {
-        const computed = await Promise.allSettled(toCompute.map(uid => computeDilemmaTotal(uid)));
-        computed.forEach((res, i) => {
-          const uid = toCompute[i];
-          const ent = entries.find(e => e.uid === uid);
-          if (!ent) return;
-          if (res.status === "fulfilled" && Number.isFinite(res.value)) ent.score = Number(res.value);
-        });
-      }
-
-      await Promise.allSettled(
-        entries
-          .filter(e => Number.isFinite(e.score))
-          .map(e =>
-            setDoc(doc(db, "games", GAME_ID, "leaderboard", e.uid),
-                  { dilemmaScoreAtPlay: Number(e.score) },
-                  { merge: true })
-          )
-      );
-    }
-
-    const fmt = (n)=> typeof n === 'number' ? n.toLocaleString('af-ZA') : n;
-
-    leaderboardList.innerHTML = "";
-    if (!entries.length) {
-      leaderboardList.innerHTML = `<li class="bg-green-100 font-medium px-2 py-1 rounded">Jy kan eerste op die leierbord wees!</li>`;
-      return;
-    }
-
-    entries.sort((a, b) => (a.guesses - b.guesses) || (a.when - b.when));
-
-    entries.forEach((e, idx) => {
-      const li = document.createElement("li");
-      li.className = "flex items-center justify-between gap-2";
-      if (idx === 0) li.classList.add("font-bold","bg-green-100");
-
-      const left = document.createElement("span");
-      const guessLabel = e.guesses === 1 ? 'raai' : 'raaie';
-      const rateText = Number.isFinite(e.sr) ? ` (${e.sr}%)` : '';
-      left.innerHTML = `<strong>${e.name}${rateText}</strong>: ${fmt(e.guesses)} ${guessLabel}`;
-
-      const right = document.createElement("span");
-      if (Number.isFinite(e.score)) {
-        right.className = "inline-flex items-center px-2 py-0.5 rounded-full text-white text-[12px] font-bold bg-gradient-to-b from-orange-500 to-orange-700";
-        right.textContent = fmt(e.score);
-      }
-
-      li.appendChild(left);
-      if (right.textContent) li.appendChild(right);
-      leaderboardList.appendChild(li);
-    });
-  } catch (err) {
-    console.error("Kon nie leierbord laai nie:", err);
-    leaderboardList.innerHTML = `<li class="text-red-600">Kon nie leierbord laai nie.</li>`;
-  }
-}
-
-/* ---- Share: bottom + modal ---- */
-let lastSummary = null;
-
-function shareTextFromSummary(summary) {
-  const link = SHARE_TEXT_URL;
-  if (!summary) return `Kom speel vandag se DILEMMA op Kriptiek: ${link}`;
-  if (summary.didWin) {
-    const woord = summary.guesses === 1 ? 'raaiskoot' : 'raaiskote';
-    return `Ek het hierdie DILEMMA in ${summary.guesses} ${woord} opgelos. Probeer self by ${link}`;
-  }
-  return `Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${link}`;
-}
-function openWhatsApp(text){
-  const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-  const w = window.open(url, '_blank', 'noopener,noreferrer');
-  if(!w && navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>alert("Skakel gekopieer!")); }
-}
-
-function wireShareDropdown(triggerBtn, menuEl){
-  if (!triggerBtn) return;
-  triggerBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    document.querySelectorAll('.share-menu-local').forEach(m => { if(m!==menuEl) m.classList.add('hidden'); });
-    menuEl.classList.toggle('hidden');
-  });
-  document.addEventListener('click', (e) => {
-    if (!menuEl.contains(e.target) && e.target !== triggerBtn) menuEl.classList.add('hidden');
-  });
-  window.addEventListener('scroll', () => menuEl.classList.add('hidden'));
-  window.addEventListener('resize', () => menuEl.classList.add('hidden'));
-}
-function bindMenuActions(menuEl, {waBtn, copyBtn, sysBtn}){
-  const text = () => shareTextFromSummary(lastSummary);
-  waBtn.onclick = () => { openWhatsApp(text()); menuEl.classList.add('hidden'); };
-  copyBtn.onclick = async () => {
-    try { await navigator.clipboard.writeText(text()); alert("Skakel gekopieer!"); }
-    catch(_) {}
-    menuEl.classList.add('hidden');
-  };
-  sysBtn.onclick = async () => {
-    try { if (navigator.share) await navigator.share({ text: text() }); else openWhatsApp(text()); }
-    catch {}
-    menuEl.classList.add('hidden');
-  };
-}
-
-/* ---- Game end flows ---- */
-async function gameCompleted(guessCount) {
-  gameOver = true;
-  const woord = guessCount === 1 ? 'raaiskoot' : 'raaiskote';
-
-  statusLine.textContent = `Jy het hierdie Dilemma in ${guessCount} ${woord} opgelos`;
-  statusLine.style.display = "block";
-
-  resultMsg.textContent = `Veels geluk, ${displayName}, jy het die woord in ${guessCount} ${woord} gekry!`;
-  modal.style.display = "flex";
-
-  lastSummary = { didWin:true, guesses:guessCount };
-
-  saveLocalProgress(true);
-  localStorage.setItem(`${doneKey}-result`, `win:${guessCount}`);
-  await setDoc(doc(db, "userGames", currentUid, "plays", GAME_ID),
-    { finished:true, result:"win", guesses:Math.trunc(Number(guessCount)), finishedAt: serverTimestamp() },
-    { merge:true });
-  await submitScore(guessCount, true);
-  await loadLeaderboard();
-  document.querySelectorAll(".key").forEach(k => k.disabled = true);
-}
-
-async function gameFailed() {
-  gameOver = true;
-
-  statusLine.textContent = `Jy kon nie hierdie Dilemma oplos nie`;
-  statusLine.style.display = "block";
-
-  resultMsg.textContent = `Jammer, ${displayName}! Vandag se oplossing is ${targetWord}.`;
-  modal.style.display = "flex";
-
-  lastSummary = { didWin:false, guesses:null };
-
-  saveLocalProgress(true);
-  localStorage.setItem(`${doneKey}-result`, `loss`);
-  await setDoc(doc(db, "userGames", currentUid, "plays", GAME_ID),
-    { finished:true, result:"loss", guesses:gridRows, finishedAt: serverTimestamp() },
-    { merge:true });
-  await submitScore(gridRows, false);
-  await loadLeaderboard();
-  document.querySelectorAll(".key").forEach(k => k.disabled = true);
-}
-
-/* ---- Modal + keyboard ---- */
-const closeBtn = document.getElementById("closeModalBtn");
-closeBtn.onclick = () => { modal.style.display = "none"; };
-document.addEventListener("keydown", e => {
-  if (e.key === "Enter") handleEnter();
-  else if (e.key === "Backspace") handleBackspace();
-  else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
-});
-
-/* ---- Guess orchestration ---- */
-function checkGuessWithFlip(guess) {
-  const states = computeStates(guess);
-  applyStatesWithFlip(currentRow, guess, states);
-
-  setTimeout(async () => {
-    saveLocalProgress(false);
-    if (guess === targetWord) {
-      await gameCompleted(currentRow + 1);
-    } else {
-      currentRow++;
-      currentCol = 0;
-      if (currentRow >= gridRows) {
-        await gameFailed();
-      } else {
-        saveLocalProgress(false);
-      }
-    }
-  }, gridCols * 350 + 20);
-}
-
-/* ---- Auth gate + init ---- */
-onAuthStateChanged(auth, async (user) => {
-  if (RESET_REQUESTED) return; // prevents normal init during reset
-  if (!user) {
-    renderAuthRequired();
-    await loadLeaderboard();
-    return;
-  }
-
-  currentUid = user.uid;
-
-  try {
-    const uDoc = await getDoc(doc(db, "users", currentUid));
-    const nm = uDoc.exists() ? uDoc.data()?.userName : null;
-    if (typeof nm === "string" && nm.trim()) {
-      displayName = nm.trim();
-      localStorage.setItem("userName", displayName);
-    }
-  } catch {}
-  playerNameEl.textContent = displayName;
-
-  try {
-    await loadGameData();
-  } catch (e) {
-    console.warn(e);
-    return; // if no game doc, we already displayed friendly status & disabled input
-  }
-
-  createGrid();
-  createKeyboard();
-  restoreLocalProgress();
-
-  const barR = document.getElementById('barR');
-  if (barR) barR.classList.remove('hidden');
-
-  wireShareDropdown(document.getElementById("modalShareBtn"), mMenu);
-  bindMenuActions(mMenu, { waBtn: mWA, copyBtn: mCopy, sysBtn: mSys });
-  wireShareDropdown(tileShareBtn, pMenu);
-  bindMenuActions(pMenu, { waBtn: pWA, copyBtn: pCopy, sysBtn: pSys });
-
-  // Always hide status until we *know*
-  statusLine.textContent = "";
-  statusLine.style.display = "none";
-
-  // FS first, then explicit local result, then win-only inference
-  let summary = null;
-  let fsSnap = null;
-  try { fsSnap = await getDoc(doc(db, "userGames", currentUid, "plays", GAME_ID)); } catch {}
-  if (fsSnap?.exists()) {
-    const d = fsSnap.data() || {};
-    summary = { didWin: d.result === "win", guesses: Number(d.guesses) || null };
-  } else {
-    summary = readLocalResult() || deriveLocalSummaryFromProgress();
-  }
-
-  if (summary) {
-    lastSummary = summary;
-    statusLine.textContent = summary.didWin
-      ? `Jy het hierdie Dilemma in ${summary.guesses} ${(summary.guesses===1?'raaiskoot':'raaiskote')} opgelos`
-      : `Jy kon nie hierdie Dilemma oplos nie`;
-    statusLine.style.display = "block";
-    disableGame();
-    await ensureLeaderboardRow(summary);
-  }
-
-  await loadLeaderboard();
-});
-</script>
-<!-- DILEMMA SCORE PILL (inline on the game page) -->
-<script type="module">
+    window.GAME_ID = resolveGameId();
+  </script>
+
+  <!-- MAIN GAME MODULE -->
+  <script type="module">
   import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+  import { getFirestore, doc, getDoc, collection, setDoc, getDocs, serverTimestamp, query, orderBy, limit, deleteDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, collection, query, orderBy, limit, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
+  /* ---- Firebase config ---- */
   const firebaseConfig = {
     apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
     authDomain: "kriptiek-c9ea2.firebaseapp.com",
@@ -1056,42 +242,323 @@ onAuthStateChanged(auth, async (user) => {
     appId: "1:620450620939:web:e93a18ac23b53b33db890e"
   };
 
-  const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+  const app  = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+  const db   = getFirestore(app);
   const auth = getAuth(app);
-  const db = getFirestore(app);
 
+  /* ✅ Define GAME_ID up-front so all functions can safely use it */
+  const GAME_ID = window.GAME_ID;
+
+  /* ✅ Query params & reset flag */
+  const __QP = new URLSearchParams(location.search);
+  const RESET_REQUESTED = __QP.get('reset') === '1';
+
+  /* --- TEMP: self-reset via ?reset=1 (safe to use GAME_ID) --- */
+  async function selfResetIfRequested() {
+    if (!RESET_REQUESTED) return;
+
+    const todayId = GAME_ID;                         // "GameYYYY-MM-DD"
+    const plainId = todayId.replace(/^Game/, "");    // "YYYY-MM-DD"
+    for (const k of Object.keys(localStorage)) {
+      if (
+        k.startsWith(`dilemma-${todayId}-`) ||
+        k.startsWith(`dilemma-Game${plainId}-`) ||
+        k.startsWith(`dilemma-${plainId}-`)
+      ) {
+        localStorage.removeItem(k);
+      }
+    }
+
+    await new Promise(res => onAuthStateChanged(auth, res));
+    const u = auth.currentUser;
+    if (u) {
+      try { await deleteDoc(doc(db, "userGames", u.uid, "plays", GAME_ID)); } catch {}
+    }
+
+    alert("Herstel klaar. Die blad sal herlaai.");
+    const clean = new URL(location.href); clean.searchParams.delete('reset');
+    location.replace(clean.toString());
+  }
+  selfResetIfRequested();
+
+  /* ---- UI refs ---- */
+  const gameGrid = document.getElementById("game-grid");
+  const keyboard = document.getElementById("keyboard");
+  const modal = document.getElementById("resultModal");
+  const resultMsg = document.getElementById("resultMessage");
+  const leaderboardList = document.getElementById("leaderboardList");
+  const playerNameEl = document.getElementById("playerName");
+  const statusLine = document.getElementById("statusLine");
+
+  /* persistent (yellow tile) share menu + controls */
+  const pMenu = document.getElementById("shareMenuPersistent");
+  const mMenu = document.getElementById("shareMenuModal");
+  const tileShareBtn = document.getElementById("tileShareBtn");
+  const pWA = document.getElementById("pWhatsApp");
+  const pCopy = document.getElementById("pCopy");
+  const pSys = document.getElementById("pSystem");
+  const mWA = document.getElementById("mWhatsApp");
+  const mCopy = document.getElementById("mCopy");
+  const mSys = document.getElementById("mSystem");
+
+  /* ---- State ---- */
+  let gridRows = 6, gridCols = 5;
+  let currentRow = 0, currentCol = 0;
+  let board = [], targetWord = "", gameOver = false;
+
+  let currentUid = null;
+  let displayName = localStorage.getItem("userName") || "Speler";
+
+  /* ---- IDs/keys (use GAME_ID) ---- */
+  const doneKey = `dilemma-${GAME_ID}-done`;
+  const progressKey = `dilemma-${GAME_ID}-progress`;
+
+  /* URLs for sharing */
+  const SHARE_URL = "https://www.kriptiek.com/dilemmagame.html";
+  const SHARE_TEXT_URL = (() => {
+    const u = new URL(SHARE_URL);
+    u.searchParams.set('gameId', GAME_ID);
+    u.searchParams.set('wa', 'v6');
+    return u.toString();
+  })();
+
+  playerNameEl.textContent = displayName;
+
+  /* ---- If not signed in ---- */
+  function renderAuthRequired() {
+    const clue = document.getElementById("clue");
+    clue.textContent = "Jy moet aangemeld wees om te speel.";
+    keyboard.innerHTML = `
+      <div class="action-grid two mt-2">
+        <a href="/login.html" title="Meld aan">
+          <img class="btn-img" src="/assets/K_MELD_AAN_12SEP.png" alt="Meld aan" width="120" height="120">
+        </a>
+        <a href="/register.html" title="Registreer">
+          <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="120" height="120">
+        </a>
+      </div>`;
+    const barR = document.getElementById('barR');
+    if (barR) barR.classList.add('hidden');
+  }
+
+  /* ---- Helpers ---- */
+  function disableGame(){ gameOver = true; document.querySelectorAll(".key").forEach(k => k.disabled = true); }
+
+  /* ---- Local result helpers ---- */
+  function readLocalResult() {
+    const v = localStorage.getItem(`${doneKey}-result`);
+    if (!v) return null;
+    if (v.startsWith('win:')) {
+      const n = Number(v.split(':')[1]);
+      return { didWin: true, guesses: Number.isFinite(n) ? n : null };
+    }
+    if (v === 'loss') return { didWin: false, guesses: null };
+    return null;
+  }
+  function deriveLocalSummaryFromProgress() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(progressKey) || '{}');
+      const rows = Array.isArray(saved.rows) ? saved.rows : [];
+      if (!rows.length) return null;
+      const winIndex = rows.findIndex(r =>
+        Array.isArray(r.states) && r.states.length && r.states.every(s => s === 'correct')
+      );
+      return (winIndex >= 0) ? { didWin:true, guesses: winIndex+1 } : null; // never infer a loss
+    } catch { return null; }
+  }
+
+  /* ---- Strict “today” helpers ---- */
+  function todayPlain(){ return (window.GAME_ID || '').replace(/^Game/, ''); }
+  function isTodayGameId(id){ return String(id||'').replace(/^Game/,'') === todayPlain(); }
+  function localLossForToday(){ return localStorage.getItem(`${doneKey}-result`) === 'loss'; }
+
+  /* ---- Safe game loader ---- */
+  async function loadTodayGame(db) {
+    let gameRef  = doc(db, "games", GAME_ID);
+    let gameSnap = await getDoc(gameRef);
+
+    if (!gameSnap.exists()) {
+      const plainId   = GAME_ID.replace(/^Game/, '');
+      const legacyRef = doc(db, "games", plainId);
+      const legacySnap= await getDoc(legacyRef);
+      if (legacySnap.exists()) { gameRef = legacyRef; gameSnap = legacySnap; }
+    }
+
+    if (!gameSnap.exists()) {
+      const msg = 'Geen spel vir vandag gelaai nie. Probeer later weer.';
+      try { statusLine.textContent = msg; statusLine.style.display = 'block'; } catch(e){}
+      disableGame();
+      throw new Error('[Dilemma] Game doc missing for ' + GAME_ID);
+    }
+    return { gameRef, game: gameSnap.data() };
+  }
+
+  /* ---- Game data ---- */
+  async function loadGameData() {
+    const { game } = await loadTodayGame(db);
+    targetWord = (game.word || "").toUpperCase();
+    gridCols = targetWord.length || 5;
+    document.getElementById("clue").textContent = game.clue || "Geen leidraad beskikbaar nie.";
+  }
+
+  function createGrid() {
+    gameGrid.innerHTML = "";
+    board = [];
+    for (let r = 0; r < 6; r++) {
+      const row = document.createElement("div");
+      row.className = "tile-row";
+      const rowTiles = [];
+      for (let c = 0; c < gridCols; c++) {
+        const tile = document.createElement("div");
+        tile.className = "letter-tile";
+        row.appendChild(tile);
+        rowTiles.push(tile);
+      }
+      board.push(rowTiles);
+      gameGrid.appendChild(row);
+    }
+  }
+
+  function createKeyboard() {
+    keyboard.innerHTML = "";
+    const layout = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
+    layout.forEach(row => {
+      const rowDiv = document.createElement("div");
+      rowDiv.className = "keyboard-row";
+      [...row].forEach(letter => {
+        const key = document.createElement("button");
+        key.className = "key";
+        key.textContent = letter;
+        key.onclick = () => handleKey(letter);
+        rowDiv.appendChild(key);
+      });
+      if (row === "ZXCVBNM") {
+        const enter = document.createElement("button");
+        enter.className = "key bg-green-600";
+        enter.textContent = "Enter";
+        enter.onclick = handleEnter;
+        rowDiv.appendChild(enter);
+
+        const back = document.createElement("button");
+        back.className = "key bg-red-600";
+        back.textContent = "←";
+        back.onclick = handleBackspace;
+        rowDiv.appendChild(back);
+      }
+      keyboard.appendChild(rowDiv);
+    });
+  }
+
+  function updateKeyboard(letter, state) {
+    const keyBtn = [...document.querySelectorAll(".key")].find(k => k.textContent === letter);
+    if (!keyBtn) return;
+    if (state === "correct" || (state === "present" && !keyBtn.classList.contains("correct"))) {
+      keyBtn.classList.remove("present", "absent");
+      keyBtn.classList.add(state);
+    } else if (state === "absent" && !keyBtn.classList.contains("correct") && !keyBtn.classList.contains("present")) {
+      keyBtn.classList.add("absent");
+    }
+  }
+
+  /* ---- Input handling ---- */
+  function handleKey(letter) {
+    if (gameOver) return;
+    if (currentCol < gridCols && currentRow < 6) {
+      board[currentRow][currentCol].textContent = letter;
+      currentCol++;
+    }
+  }
+  function handleBackspace() {
+    if (gameOver || currentCol === 0) return;
+    currentCol--;
+    board[currentRow][currentCol].textContent = "";
+  }
+  function handleEnter() {
+    if (gameOver) return;
+    if (currentCol < gridCols) return alert("Vul al die letters in!");
+    const guess = board[currentRow].map(t => t.textContent).join("");
+    checkGuessWithFlip(guess);
+  }
+
+  function computeStates(guess) {
+    const states = new Array(gridCols).fill("absent");
+    const letterCounts = {};
+    for (let ch of targetWord) letterCounts[ch] = (letterCounts[ch] || 0) + 1;
+
+    for (let i = 0; i < gridCols; i++) {
+      if (guess[i] === targetWord[i]) {
+        states[i] = "correct";
+        letterCounts[guess[i]]--;
+      }
+    }
+    for (let i = 0; i < gridCols; i++) {
+      if (states[i] === "correct") continue;
+      if (letterCounts[guess[i]] > 0) {
+        states[i] = "present";
+        letterCounts[guess[i]]--;
+      }
+    }
+    return states;
+  }
+
+  function applyStatesWithFlip(rowIndex, guess, states) {
+    states.forEach((s, i) => {
+      const tile = board[rowIndex][i];
+      setTimeout(() => {
+        tile.classList.remove("correct","present","absent");
+        tile.classList.add("flip", s);
+        updateKeyboard(guess[i], s);
+      }, i * 350);
+    });
+  }
+
+  /* ---- Save/restore progress ---- */
+  function saveLocalProgress(done=false) {
+    const rows = [];
+    for (let r = 0; r < 6; r++) {
+      const guess = board[r].map(t => t.textContent).join("");
+      if (!guess.trim()) break;
+      const states = board[r].map(t =>
+        t.classList.contains("correct") ? "correct" :
+        t.classList.contains("present") ? "present" : "absent"
+      );
+      if (states.every(s=>["correct","present","absent"].includes(s))) {
+        rows.push({ guess, states });
+      } else { break; }
+    }
+    localStorage.setItem(progressKey, JSON.stringify({ rows }));
+    if (done) localStorage.setItem(doneKey, "true");
+  }
+
+  function restoreLocalProgress() {
+    const saved = localStorage.getItem(progressKey);
+    if (!saved) return;
+    try {
+      const data = JSON.parse(saved);
+      if (!data?.rows) return;
+      data.rows.forEach(({ guess, states }) => {
+        const letters = guess.split("");
+        for (let i = 0; i < letters.length; i++) {
+          const tile = board[currentRow][i];
+          tile.textContent = letters[i];
+          tile.classList.remove("correct","present","absent");
+          tile.classList.add(states[i], "flip");
+          updateKeyboard(letters[i], states[i]);
+        }
+        currentRow++;
+        currentCol = 0;
+      });
+    } catch {}
+  }
+
+  /* ---- Dilemma total (for snapshotting to leaderboard) ---- */
   const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
   const STREAK_THRESHOLD = 5;
   const STREAK_MULTIPLIER = 1.10;
   const SUPPORTER_MULTIPLIER = 1.10;
 
-  function mountPill() {
-    const pill = document.createElement("span");
-    pill.id = "pillDilemmaInline";
-    pill.className = "inline-flex items-center gap-2 px-3.5 py-2 rounded-full font-extrabold text-white bg-gradient-to-b from-orange-500 to-orange-700 shadow";
-    pill.textContent = "JOU DILEMMA-TELLING: —";
-    const anchors = [
-      document.getElementById("game-meta"),
-      document.querySelector("#hudRight"),
-      document.querySelector("#hud"),
-      document.querySelector("header .container, header .max-w-6xl, header")
-    ].filter(Boolean);
-    const target = anchors[0] || document.querySelector("main") || document.body;
-    if (anchors[0]) anchors[0].appendChild(pill);
-    else {
-      const wrap = document.createElement("div");
-      wrap.className = "max-w-6xl mx-auto px-4 mt-3 mb-2";
-      wrap.appendChild(pill);
-      target.prepend(wrap);
-    }
-    return pill;
-  }
-
-  function fmt(n){ return typeof n === "number" ? n.toLocaleString("af-ZA") : n; }
-
-  async function computeDilemmaTotal(uid) {
-    const uref = doc(db, "users", uid);
-    const usnap = await getDoc(uref);
+  async function computeDilemmaTotal(uid){
+    const usnap = await getDoc(doc(db, "users", uid));
     let supporterActive = false;
     if (usnap.exists()) {
       const d = usnap.data();
@@ -1099,34 +566,30 @@ onAuthStateChanged(auth, async (user) => {
       if (d?.supporterUntil?.toMillis && d.supporterUntil.toMillis() > Date.now()) supporterActive = true;
     }
 
-    const qy = query(collection(db, "userGames", uid, "plays"), orderBy("finishedAt", "desc"), limit(200));
+    const qy = query(collection(db, "userGames", uid, "plays"), orderBy("finishedAt","desc"), limit(200));
     const snap = await getDocs(qy);
 
     const byDate = new Map();
-    snap.forEach(ds => {
+    snap.forEach(ds=>{
       const d = ds.data();
-      const date = ds.id.replace(/^Game/, "");
+      const date = ds.id.replace(/^Game/,"");
       byDate.set(date, { win: d?.result === "win" || d?.finished === true, guesses: Number(d?.guesses || 0) });
     });
 
     const dates = Array.from(byDate.keys()).sort();
     let cur=0, prev=null;
-    for (const d of dates) {
+    for(const d of dates){
       const consec = prev && (new Date(d) - new Date(prev) === 24*60*60*1000);
-      if (!consec) cur=0;
+      if (!consec) cur = 0;
       const p = byDate.get(d);
-      if (p?.win) cur++; else cur=0;
-      prev=d;
+      if (p?.win) cur++; else cur = 0;
+      prev = d;
     }
 
     const dist = {1:0,2:0,3:0,4:0,5:0,6:0,fail:0};
-    for (const p of byDate.values()) {
-      if (p.win) {
-        const g = Math.min(Math.max(1, p.guesses || 6), 6);
-        dist[g] += 1;
-      } else {
-        dist.fail += 1;
-      }
+    for (const p of byDate.values()){
+      if (p.win){ const g = Math.min(Math.max(1, p.guesses || 6), 6); dist[g]++; }
+      else { dist.fail++; }
     }
 
     const subtotal =
@@ -1141,80 +604,625 @@ onAuthStateChanged(auth, async (user) => {
     return subtotal + streakBonus + supporterBonus;
   }
 
-  async function persistIfChanged(uid, value) {
-    const uref = doc(db, "users", uid);
-    const snap = await getDoc(uref);
-    const prev = snap.exists() ? (Number(snap.data()?.dilemmaScore ?? snap.data()?.kScore) || 0) : null;
-    if (prev !== value) {
-      await setDoc(uref, {
-        dilemmaScore: value,
-        kScore: value,
-        scoreUpdatedAt: serverTimestamp()
-      }, { merge: true });
+  /* ---- Leaderboard: submit, ensure, load ---- */
+  async function submitScore(guessCount, didWin) {
+    if (!currentUid) return;
+
+    try {
+      const uDoc = await getDoc(doc(db, "users", currentUid));
+      if (uDoc.exists() && typeof uDoc.data().userName === "string") {
+        displayName = uDoc.data().userName || displayName;
+        playerNameEl.textContent = displayName;
+        localStorage.setItem("userName", displayName);
+      }
+    } catch (e) { console.warn("Could not read users doc:", e); }
+
+    let successRate = null;
+    try {
+      const uref = doc(db, "users", currentUid);
+      const before = await getDoc(uref);
+
+      let payload;
+      if (before.exists()) {
+        const u = before.data() || {};
+        const newGames  = (u.gamesPlayed || 0) + 1;
+        const newWins   = (u.wins || 0) + (didWin ? 1 : 0);
+        const newStreak = didWin ? (u.streak || 0) + 1 : 0;
+        const newBest   = Math.max(u.bestStreak || 0, newStreak);
+        const dist = { "1":0,"2":0,"3":0,"4":0,"5":0,"6":0, ...(u.guessDist || {}) };
+        if (didWin && guessCount >= 1 && guessCount <= 6) dist[String(guessCount)] = (dist[String(guessCount)] || 0) + 1;
+        payload = { userName: displayName, gamesPlayed: newGames, wins: newWins, streak: newStreak, bestStreak: newBest, guessDist: dist, updatedAt: serverTimestamp() };
+      } else {
+        payload = {
+          userName: displayName, gamesPlayed: 1, wins: didWin ? 1 : 0, streak: didWin ? 1 : 0, bestStreak: didWin ? 1 : 0,
+          guessDist: { "1":0,"2":0,"3":0,"4":0,"5":0,"6":0, ...(didWin && guessCount>=1 && guessCount<=6 ? { [String(guessCount)]: 1 } : {}) },
+          createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+        };
+      }
+      await setDoc(uref, payload, { merge: true });
+
+      const after = await getDoc(uref);
+      const nd = after.data() || {};
+      const games = Number(nd.gamesPlayed || 0);
+      const wins  = Number(nd.wins || 0);
+      successRate = games > 0 ? Math.round((wins / games) * 100) : 0;
+    } catch (e) {
+      console.warn("User stats update failed (non-fatal):", e);
+    }
+
+    let totalScore = 0;
+    try {
+      totalScore = await computeDilemmaTotal(currentUid);
+    } catch (e) {
+      console.warn("Could not compute dilemma total:", e);
+    }
+
+    try {
+      await setDoc(
+        doc(db, "games", GAME_ID, "leaderboard", currentUid),
+        {
+          userName: displayName,
+          guesses: Math.trunc(Number(guessCount)),
+          ...(successRate == null ? {} : { successRate }),
+          date: serverTimestamp(),
+          createdAtMs: Date.now(),
+          dilemmaScoreAtPlay: Number(totalScore) || 0
+        },
+        { merge: true }
+      );
+    } catch (e) {
+      console.error("Kon nie leierbord-ry stoor nie:", e);
+    }
+
+    try {
+      await setDoc(
+        doc(db, "users", currentUid),
+        { dilemmaScore: Number(totalScore) || 0, kScore: Number(totalScore) || 0, scoreUpdatedAt: serverTimestamp() },
+        { merge: true }
+      );
+    } catch {}
+  }
+
+  async function ensureLeaderboardRow(summary) {
+    try {
+      if (!currentUid || !summary) return;
+
+      const rowRef = doc(db, "games", GAME_ID, "leaderboard", currentUid);
+      const existing = await getDoc(rowRef);
+      if (existing.exists()) return;
+
+      const guessCount = summary.didWin ? (Number(summary.guesses) || 6) : 6;
+
+      let sr = null;
+      try {
+        const uSnap = await getDoc(doc(db, "users", currentUid));
+        if (uSnap.exists()) {
+          const u = uSnap.data() || {};
+          const gp = Number(u.gamesPlayed || 0);
+          const w  = Number(u.wins || 0);
+          sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
+        }
+      } catch {}
+
+      let totalScore = 0;
+      try { totalScore = await computeDilemmaTotal(currentUid); } catch {}
+
+      const payload = {
+        userName: displayName,
+        guesses: Math.trunc(Number(guessCount)),
+        date: serverTimestamp(),
+        createdAtMs: Date.now(),
+        ...(sr == null ? {} : { successRate: sr }),
+        dilemmaScoreAtPlay: Number(totalScore) || 0
+      };
+
+      await setDoc(rowRef, payload, { merge: true });
+
+      try {
+        await setDoc(
+          doc(db, "users", currentUid),
+          { dilemmaScore: Number(totalScore) || 0, kScore: Number(totalScore) || 0, scoreUpdatedAt: serverTimestamp() },
+          { merge: true }
+        );
+      } catch {}
+
+      await loadLeaderboard();
+    } catch (e) {
+      console.warn("ensureLeaderboardRow failed:", e);
     }
   }
 
-  const pillEl = mountPill();
+  /* ---- loadLeaderboard(): right-aligned mini-pill + backfill ---- */
+  async function loadLeaderboard() {
+    try {
+      const snap = await getDocs(collection(db, "games", GAME_ID, "leaderboard"));
+      const entries = [];
+      const needSR = [];
+      const needScore = [];
 
+      snap.forEach(d => {
+        const v = d.data() || {};
+        const guessesNum = Number(v.guesses);
+        if (!Number.isFinite(guessesNum) || guessesNum < 1 || guessesNum > 6) return;
+
+        const name = (typeof v.userName === "string" && v.userName.trim()) ? v.userName.trim() : "Onbekend";
+        const ts = v.date?.seconds ? v.date.seconds * 1000 : (typeof v.createdAtMs === "number" ? v.createdAtMs : 0);
+
+        const srVal    = Number.isFinite(Number(v.successRate)) ? Math.trunc(Number(v.successRate)) : null;
+        const scoreVal = Number.isFinite(Number(v.dilemmaScoreAtPlay)) ? Number(v.dilemmaScoreAtPlay) : null;
+
+        entries.push({ uid: d.id, name, guesses: guessesNum, when: ts, sr: srVal, score: scoreVal });
+        if (srVal == null) needSR.push(d.id);
+        if (scoreVal == null) needScore.push(d.id);
+      });
+
+      if (needSR.length) {
+        const results = await Promise.allSettled(needSR.map(uid => getDoc(doc(db, "users", uid))));
+        results.forEach((res, i) => {
+          if (res.status !== "fulfilled") return;
+          const s = res.value;
+          if (!s.exists()) return;
+          const u = s.data() || {};
+          const gp = Number(u.gamesPlayed || 0);
+          const w  = Number(u.wins || 0);
+          const sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
+          const ent = entries.find(e => e.uid === needSR[i]);
+          if (ent) ent.sr = sr;
+        });
+      }
+
+      if (needScore.length) {
+        const userDocs = await Promise.allSettled(needScore.map(uid => getDoc(doc(db, "users", uid))));
+        const toCompute = [];
+        userDocs.forEach((res, i) => {
+          const uid = needScore[i];
+          const ent = entries.find(e => e.uid === uid);
+          if (!ent) return;
+          if (res.status === "fulfilled" && res.value.exists()) {
+            const u = res.value.data() || {};
+            const k = Number(u.dilemmaScore);
+            if (Number.isFinite(k)) ent.score = k; else toCompute.push(uid);
+          } else {
+            toCompute.push(uid);
+          }
+        });
+
+        if (toCompute.length) {
+          const computed = await Promise.allSettled(toCompute.map(uid => computeDilemmaTotal(uid)));
+          computed.forEach((res, i) => {
+            const uid = toCompute[i];
+            const ent = entries.find(e => e.uid === uid);
+            if (!ent) return;
+            if (res.status === "fulfilled" && Number.isFinite(res.value)) ent.score = Number(res.value);
+          });
+        }
+
+        await Promise.allSettled(
+          entries
+            .filter(e => Number.isFinite(e.score))
+            .map(e =>
+              setDoc(doc(db, "games", GAME_ID, "leaderboard", e.uid),
+                    { dilemmaScoreAtPlay: Number(e.score) },
+                    { merge: true })
+            )
+        );
+      }
+
+      const fmt = (n)=> typeof n === 'number' ? n.toLocaleString('af-ZA') : n;
+
+      leaderboardList.innerHTML = "";
+      if (!entries.length) {
+        leaderboardList.innerHTML = `<li class="bg-green-100 font-medium px-2 py-1 rounded">Jy kan eerste op die leierbord wees!</li>`;
+        return;
+      }
+
+      entries.sort((a, b) => (a.guesses - b.guesses) || (a.when - b.when));
+
+      entries.forEach((e, idx) => {
+        const li = document.createElement("li");
+        li.className = "flex items-center justify-between gap-2";
+        if (idx === 0) li.classList.add("font-bold","bg-green-100");
+
+        const left = document.createElement("span");
+        const guessLabel = e.guesses === 1 ? 'raai' : 'raaie';
+        const rateText = Number.isFinite(e.sr) ? ` (${e.sr}%)` : '';
+        left.innerHTML = `<strong>${e.name}${rateText}</strong>: ${fmt(e.guesses)} ${guessLabel}`;
+
+        const right = document.createElement("span");
+        if (Number.isFinite(e.score)) {
+          right.className = "inline-flex items-center px-2 py-0.5 rounded-full text-white text-[12px] font-bold bg-gradient-to-b from-orange-500 to-orange-700";
+          right.textContent = fmt(e.score);
+        }
+
+        li.appendChild(left);
+        if (right.textContent) li.appendChild(right);
+        leaderboardList.appendChild(li);
+      });
+    } catch (err) {
+      console.error("Kon nie leierbord laai nie:", err);
+      leaderboardList.innerHTML = `<li class="text-red-600">Kon nie leierbord laai nie.</li>`;
+    }
+  }
+
+  /* ---- Share: bottom + modal ---- */
+  let lastSummary = null;
+
+  function shareTextFromSummary(summary) {
+    const link = SHARE_TEXT_URL;
+    if (!summary) return `Kom speel vandag se DILEMMA op Kriptiek: ${link}`;
+    if (summary.didWin) {
+      const woord = summary.guesses === 1 ? 'raaiskoot' : 'raaiskote';
+      return `Ek het hierdie DILEMMA in ${summary.guesses} ${woord} opgelos. Probeer self by ${link}`;
+    }
+    return `Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${link}`;
+  }
+  function openWhatsApp(text){
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    const w = window.open(url, '_blank', 'noopener,noreferrer');
+    if(!w && navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>alert("Skakel gekopieer!")); }
+  }
+
+  function wireShareDropdown(triggerBtn, menuEl){
+    if (!triggerBtn) return;
+    triggerBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      document.querySelectorAll('.share-menu-local').forEach(m => { if(m!==menuEl) m.classList.add('hidden'); });
+      menuEl.classList.toggle('hidden');
+    });
+    document.addEventListener('click', (e) => {
+      if (!menuEl.contains(e.target) && e.target !== triggerBtn) menuEl.classList.add('hidden');
+    });
+    window.addEventListener('scroll', () => menuEl.classList.add('hidden'));
+    window.addEventListener('resize', () => menuEl.classList.add('hidden'));
+  }
+  function bindMenuActions(menuEl, {waBtn, copyBtn, sysBtn}){
+    const text = () => shareTextFromSummary(lastSummary);
+    waBtn.onclick = () => { openWhatsApp(text()); menuEl.classList.add('hidden'); };
+    copyBtn.onclick = async () => {
+      try { await navigator.clipboard.writeText(text()); alert("Skakel gekopieer!"); }
+      catch(_) {}
+      menuEl.classList.add('hidden');
+    };
+    sysBtn.onclick = async () => {
+      try { if (navigator.share) await navigator.share({ text: text() }); else openWhatsApp(text()); }
+      catch {}
+      menuEl.classList.add('hidden');
+    };
+  }
+
+  /* ---- Game end flows ---- */
+  async function gameCompleted(guessCount) {
+    gameOver = true;
+    const woord = guessCount === 1 ? 'raaiskoot' : 'raaiskote';
+
+    statusLine.textContent = `Jy het hierdie Dilemma in ${guessCount} ${woord} opgelos`;
+    statusLine.style.display = "block";
+
+    resultMsg.textContent = `Veels geluk, ${displayName}, jy het die woord in ${guessCount} ${woord} gekry!`;
+    modal.style.display = "flex";
+
+    lastSummary = { didWin:true, guesses:guessCount };
+
+    saveLocalProgress(true);
+    localStorage.setItem(`${doneKey}-result`, `win:${guessCount}`);
+    await setDoc(doc(db, "userGames", currentUid, "plays", GAME_ID),
+      { finished:true, result:"win", guesses:Math.trunc(Number(guessCount)), finishedAt: serverTimestamp() },
+      { merge:true });
+    await submitScore(guessCount, true);
+    await loadLeaderboard();
+    document.querySelectorAll(".key").forEach(k => k.disabled = true);
+  }
+
+  async function gameFailed() {
+    gameOver = true;
+
+    statusLine.textContent = `Jy kon nie hierdie Dilemma oplos nie`;
+    statusLine.style.display = "block";
+
+    resultMsg.textContent = `Jammer, ${displayName}! Vandag se oplossing is ${targetWord}.`;
+    modal.style.display = "flex";
+
+    lastSummary = { didWin:false, guesses:null };
+
+    saveLocalProgress(true);
+    localStorage.setItem(`${doneKey}-result`, `loss`);
+    await setDoc(doc(db, "userGames", currentUid, "plays", GAME_ID),
+      { finished:true, result:"loss", guesses:6, finishedAt: serverTimestamp() },
+      { merge:true });
+    await submitScore(6, false);
+    await loadLeaderboard();
+    document.querySelectorAll(".key").forEach(k => k.disabled = true);
+  }
+
+  /* ---- Modal + keyboard ---- */
+  const closeBtn = document.getElementById("closeModalBtn");
+  closeBtn.onclick = () => { modal.style.display = "none"; };
+  document.addEventListener("keydown", e => {
+    if (e.key === "Enter") handleEnter();
+    else if (e.key === "Backspace") handleBackspace();
+    else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
+  });
+
+  /* ---- Guess orchestration ---- */
+  function checkGuessWithFlip(guess) {
+    const states = computeStates(guess);
+    applyStatesWithFlip(currentRow, guess, states);
+
+    setTimeout(async () => {
+      saveLocalProgress(false);
+      if (guess === targetWord) {
+        await gameCompleted(currentRow + 1);
+      } else {
+        currentRow++;
+        currentCol = 0;
+        if (currentRow >= 6) {
+          await gameFailed();
+        } else {
+          saveLocalProgress(false);
+        }
+      }
+    }, gridCols * 350 + 20);
+  }
+
+  /* ---- Auth gate + init (PATCHED) ---- */
   onAuthStateChanged(auth, async (user) => {
+    if (RESET_REQUESTED) return;
+
+    // Default: hide status & keep game enabled until we *know*
+    statusLine.textContent = "";
+    statusLine.style.display = "none";
+
     if (!user) {
-      pillEl.textContent = "Meld aan om jou Dilemma-telling te sien";
-      pillEl.classList.add("opacity-80");
+      renderAuthRequired();
+      await loadLeaderboard();
       return;
     }
 
+    currentUid = user.uid;
+
     try {
-      const uref = doc(db, "users", user.uid);
-      const usnap = await getDoc(uref);
-      if (usnap.exists()) {
-        const d = usnap.data() || {};
-        const saved = Number(d.dilemmaScore ?? d.kScore);
-        if (Number.isFinite(saved)) pillEl.textContent = `JOU DILEMMA-TELLING: ${fmt(saved)}`;
+      const uDoc = await getDoc(doc(db, "users", currentUid));
+      const nm = uDoc.exists() ? uDoc.data()?.userName : null;
+      if (typeof nm === "string" && nm.trim()) {
+        displayName = nm.trim();
+        localStorage.setItem("userName", displayName);
+      }
+    } catch {}
+    playerNameEl.textContent = displayName;
+
+    try {
+      await loadGameData();
+    } catch (e) {
+      console.warn(e);
+      return;
+    }
+
+    createGrid();
+    createKeyboard();
+    restoreLocalProgress();
+
+    const barR = document.getElementById('barR');
+    if (barR) barR.classList.remove('hidden');
+
+    wireShareDropdown(document.getElementById("modalShareBtn"), mMenu);
+    bindMenuActions(mMenu, { waBtn: mWA, copyBtn: mCopy, sysBtn: mSys });
+    wireShareDropdown(tileShareBtn, pMenu);
+    bindMenuActions(pMenu, { waBtn: pWA, copyBtn: pCopy, sysBtn: pSys });
+
+    // Decide whether the game is already finished for *today*
+    let summary = null;
+
+    // 1) Firestore doc for today takes precedence
+    try {
+      const fsSnap = await getDoc(doc(db, "userGames", currentUid, "plays", GAME_ID));
+      if (fsSnap?.exists() && isTodayGameId(fsSnap.id)) {
+        const d = fsSnap.data() || {};
+        if (d.finished === true && (d.result === "win" || d.result === "loss")) {
+          summary = { didWin: d.result === "win", guesses: Number(d.guesses) || null };
+        }
       }
     } catch {}
 
-    try {
-      const total = await computeDilemmaTotal(user.uid);
-      pillEl.textContent = `JOU DILEMMA-TELLING: ${fmt(total)}`;
-      await persistIfChanged(user.uid, total);
-    } catch (e) {
-      console.error(e);
-      if (!/\d/.test(pillEl.textContent)) {
-        pillEl.textContent = "Dilemma-telling: —";
-        pillEl.title = "Kon nie jou telling haal nie";
+    // 2) Otherwise, only accept a local loss/win explicitly for today
+    if (!summary) {
+      const local = readLocalResult();
+      if (local && (local.didWin || localLossForToday())) {
+        summary = local;
+      } else {
+        // safe win-only inference from saved rows (never infers a loss)
+        summary = deriveLocalSummaryFromProgress();
       }
     }
+
+    if (summary) {
+      lastSummary = summary;
+      statusLine.textContent = summary.didWin
+        ? `Jy het hierdie Dilemma in ${summary.guesses} ${(summary.guesses===1?'raaiskoot':'raaiskote')} opgelos`
+        : `Jy kon nie hierdie Dilemma oplos nie`;
+      statusLine.style.display = "block";
+      disableGame();
+      await ensureLeaderboardRow(summary);
+    }
+
+    await loadLeaderboard();
   });
-</script>
+  </script>
 
-<!-- BuyMeACoffee CTA above leaderboard (fixed class typo) -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const target =
-    Array.from(document.querySelectorAll('h1,h2,h3,h4,section,div'))
-      .find(el => /Vandag se bestes/i.test(el.textContent.trim()))
-    || document.getElementById('leaderboard')
-    || document.querySelector('[data-leaderboard], .leaderboard');
+  <!-- DILEMMA SCORE PILL (inline on the game page) -->
+  <script type="module">
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, collection, query, orderBy, limit, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
-  if (!target || !target.parentElement) return;
+    const firebaseConfig = {
+      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+      authDomain: "kriptiek-c9ea2.firebaseapp.com",
+      projectId: "kriptiek-c9ea2",
+      storageBucket: "kriptiek-c9ea2.appspot.com",
+      messagingSenderId: "620450620939",
+      appId: "1:620450620939:web:e93a18ac23b53b33db890e"
+    };
 
-  const wrap = document.createElement('div');
-  wrap.className = 'my-4';
-  wrap.innerHTML = `
-    <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800">
-      <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
-         onclick="window.gtag && gtag('event','bmac_click',{from:'dilemma-leaderboard'})"
-         class="flex items-center justify-center w-full px-5 py-3
-                bg-yellow-500 hover:bg-yellow-600 text-white font-bold
-                rounded-xl shadow-md transition duration-200"
-         aria-label="Help ons om Kriptiek gratis te hou">
-        <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
-      </a>
-    </div>
-  `;
-  target.parentElement.insertBefore(wrap, target);
-});
-</script>
+    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
+    const STREAK_THRESHOLD = 5;
+    const STREAK_MULTIPLIER = 1.10;
+    const SUPPORTER_MULTIPLIER = 1.10;
+
+    function mountPill() {
+      const pill = document.createElement("span");
+      pill.id = "pillDilemmaInline";
+      pill.className = "inline-flex items-center gap-2 px-3.5 py-2 rounded-full font-extrabold text-white bg-gradient-to-b from-orange-500 to-orange-700 shadow";
+      pill.textContent = "JOU DILEMMA-TELLING: —";
+      const anchors = [
+        document.getElementById("game-meta"),
+        document.querySelector("#hudRight"),
+        document.querySelector("#hud"),
+        document.querySelector("header .container, header .max-w-6xl, header")
+      ].filter(Boolean);
+      const target = anchors[0] || document.querySelector("main") || document.body;
+      if (anchors[0]) anchors[0].appendChild(pill);
+      else {
+        const wrap = document.createElement("div");
+        wrap.className = "max-w-6xl mx-auto px-4 mt-3 mb-2";
+        wrap.appendChild(pill);
+        target.prepend(wrap);
+      }
+      return pill;
+    }
+
+    function fmt(n){ return typeof n === "number" ? n.toLocaleString("af-ZA") : n; }
+
+    async function computeDilemmaTotal(uid) {
+      const uref = doc(db, "users", uid);
+      const usnap = await getDoc(uref);
+      let supporterActive = false;
+      if (usnap.exists()) {
+        const d = usnap.data();
+        if (d?.supporterActive === true) supporterActive = true;
+        if (d?.supporterUntil?.toMillis && d.supporterUntil.toMillis() > Date.now()) supporterActive = true;
+      }
+
+      const qy = query(collection(db, "userGames", uid, "plays"), orderBy("finishedAt", "desc"), limit(200));
+      const snap = await getDocs(qy);
+
+      const byDate = new Map();
+      snap.forEach(ds => {
+        const d = ds.data();
+        const date = ds.id.replace(/^Game/, "");
+        byDate.set(date, { win: d?.result === "win" || d?.finished === true, guesses: Number(d?.guesses || 0) });
+      });
+
+      const dates = Array.from(byDate.keys()).sort();
+      let cur=0, prev=null;
+      for (const d of dates) {
+        const consec = prev && (new Date(d) - new Date(prev) === 24*60*60*1000);
+        if (!consec) cur=0;
+        const p = byDate.get(d);
+        if (p?.win) cur++; else cur=0;
+        prev=d;
+      }
+
+      const dist = {1:0,2:0,3:0,4:0,5:0,6:0,fail:0};
+      for (const p of byDate.values()) {
+        if (p.win) {
+          const g = Math.min(Math.max(1, p.guesses || 6), 6);
+          dist[g] += 1;
+        } else {
+          dist.fail += 1;
+        }
+      }
+
+      const subtotal =
+        dist[1]*BASE_POINTS[1] + dist[2]*BASE_POINTS[2] + dist[3]*BASE_POINTS[3] +
+        dist[4]*BASE_POINTS[4] + dist[5]*BASE_POINTS[5] + dist[6]*BASE_POINTS[6] +
+        dist.fail*BASE_POINTS.fail;
+
+      const streakMult = cur >= STREAK_THRESHOLD ? STREAK_MULTIPLIER : 1;
+      const supporterMult = supporterActive ? SUPPORTER_MULTIPLIER : 1;
+      const streakBonus = Math.round(subtotal * (streakMult - 1));
+      const supporterBonus = Math.round((subtotal + streakBonus) * (supporterMult - 1));
+      return subtotal + streakBonus + supporterBonus;
+    }
+
+    async function persistIfChanged(uid, value) {
+      const uref = doc(db, "users", uid);
+      const snap = await getDoc(uref);
+      const prev = snap.exists() ? (Number(snap.data()?.dilemmaScore ?? snap.data()?.kScore) || 0) : null;
+      if (prev !== value) {
+        await setDoc(uref, {
+          dilemmaScore: value,
+          kScore: value,
+          scoreUpdatedAt: serverTimestamp()
+        }, { merge: true });
+      }
+    }
+
+    const pillEl = mountPill();
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        pillEl.textContent = "Meld aan om jou Dilemma-telling te sien";
+        pillEl.classList.add("opacity-80");
+        return;
+      }
+
+      try {
+        const uref = doc(db, "users", user.uid);
+        const usnap = await getDoc(uref);
+        if (usnap.exists()) {
+          const d = usnap.data() || {};
+          const saved = Number(d.dilemmaScore ?? d.kScore);
+          if (Number.isFinite(saved)) pillEl.textContent = `JOU DILEMMA-TELLING: ${fmt(saved)}`;
+        }
+      } catch {}
+
+      try {
+        const total = await computeDilemmaTotal(user.uid);
+        pillEl.textContent = `JOU DILEMMA-TELLING: ${fmt(total)}`;
+        await persistIfChanged(user.uid, total);
+      } catch (e) {
+        console.error(e);
+        if (!/\d/.test(pillEl.textContent)) {
+          pillEl.textContent = "Dilemma-telling: —";
+          pillEl.title = "Kon nie jou telling haal nie";
+        }
+      }
+    });
+  </script>
+
+  <!-- BuyMeACoffee CTA above leaderboard (fixed class) -->
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const target =
+      Array.from(document.querySelectorAll('h1,h2,h3,h4,section,div'))
+        .find(el => /Vandag se bestes/i.test(el.textContent.trim()))
+      || document.getElementById('leaderboard')
+      || document.querySelector('[data-leaderboard], .leaderboard');
+
+    if (!target || !target.parentElement) return;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'my-4';
+    wrap.innerHTML = `
+      <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800">
+        <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
+           onclick="window.gtag && gtag('event','bmac_click',{from:'dilemma-leaderboard'})"
+           class="flex items-center justify-center w-full px-5 py-3
+                  bg-yellow-500 hover:bg-yellow-600 text-white font-bold
+                  rounded-xl shadow-md transition duration-200"
+           aria-label="Help ons om Kriptiek gratis te hou">
+          <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
+        </a>
+      </div>
+    `;
+    target.parentElement.insertBefore(wrap, target);
+  });
+  </script>
 
 </body>
 </html>
