@@ -930,21 +930,27 @@
       if(lbUnsubLegacy){ lbUnsubLegacy(); lbUnsubLegacy = null; }
       if(lbUnsubNew){ lbUnsubNew(); lbUnsubNew = null; }
 
-      // LEGACY stream (preferred if it has data)
-      const legacyQ = query(
-        collection(db, 'leaderboards','slimstiek','dates', currentDate, 'entries'),
-        orderBy('score','desc'),
-        orderBy('ts','asc'),
-        limit(25)
-      );
-      lbUnsubLegacy = onSnapshot(legacyQ, (snap)=>{
-        lastLegacyRows = snap.docs.map(d => normalizeRow(d));
-        decideAndRender();
-      }, (err)=>{
-        console.warn('Legacy LB stream failed:', err);
-        lastLegacyRows = [];
-        decideAndRender();
-      });
+      // LEGACY stream (preferred if it has data) — no composite index required
+const legacyCol = collection(db, 'leaderboards','slimstiek','dates', currentDate, 'entries');
+const legacyQ   = query(legacyCol, orderBy('score','desc'), limit(50));
+
+lbUnsubLegacy = onSnapshot(legacyQ, (snap)=>{
+  // Normalize; tolerate missing ts
+  lastLegacyRows = snap.docs.map(d => ({
+    id: d.id,
+    userName: d.data().userName || 'Onbekend',
+    score: Number(d.data().score) || 0,
+    kSlim_total: Number(d.data().kSlim_total || 0),
+    tsMillis: d.data().ts?.toMillis?.() ? d.data().ts.toMillis() : 9e15
+  }));
+  decideAndRender();                 // will prefer legacy if it has rows
+}, (err)=>{
+  console.warn('Legacy LB stream failed:', err);
+  // Fallback: try un-ordered read and sort client-side (handles missing indexes/fields)
+  lastLegacyRows = [];
+  decideAndRender();
+});
+
 
       // NEW stream (fallback if legacy empty)
       const newQ = query(
