@@ -15,7 +15,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
   <title>SLIMSTIEK – Kriptiek</title>
 
-  <!-- Open Graph / Twitter -->
+  <!-- Canonical & Open Graph / Twitter -->
   <link rel="canonical" href="https://www.kriptiek.com/slimstiek.html" />
   <meta property="og:site_name" content="Kriptiek" />
   <meta property="og:title" content="SLIMSTIEK – Kriptiek" />
@@ -65,9 +65,8 @@
       100%{box-shadow:0 0 0 rgba(255,221,0,0)}
     }
 
-    /* Grid wrapper */
-    .game-wrap{position:relative}
     /* GRID */
+    .game-wrap{position:relative}
     #grid{
       position:relative; display:grid;
       grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(10,1fr);
@@ -150,7 +149,7 @@
     /* N-R gate */
     #nrGate{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:60;}
 
-    /* Slimstiek K-pill (teal) */
+    /* SLIMSTIEK pill (teal to match tile) */
     .k-pill{
       display:inline-flex;align-items:center;gap:.35rem;
       background:#0f766e;color:#fff;font-weight:800;
@@ -171,6 +170,11 @@
       <div class="letter-box">K</div>
     </div>
     <p class="welcome" id="welcomeLine">Welkom terug, <span id="playerName" class="font-semibold text-green-700">Speler</span>!</p>
+    <!-- NEW: page-level Slimstiek-telling -->
+    <p id="kSlimLine" class="welcome hidden">
+      Jou <b>SLIMSTIEK-telling</b> vandag:
+      <span class="k-pill" id="kSlimPill">+0</span>
+    </p>
   </header>
 
   <main class="flex-1">
@@ -313,15 +317,8 @@
           <li>
             <p class="font-semibold">3. Punte</p>
             <ul class="list-disc pl-6">
-              <li>
-                <strong>+10 punte</strong> vir elke <em>paar</em> blokke wat verdwyn,
-                <strong>vermenigvuldig met die boonste ry</strong> waarin daardie paar voorkom.
-                (<em>Die heel onderste ry is ry 1; as die boonste van die twee blokke in ry 2 is, word die punte met 2 vermenigvuldig.</em>)
-              </li>
-              <li>
-                <strong>+50 punte ekstra</strong> as <em>die letter en die kleur</em> van die twee blokke dieselfde is,
-                ook vermenigvuldig met die boonste ry waarin dit gebeur.
-              </li>
+              <li><strong>+10 punte</strong> vir elke <em>paar</em> blokke wat verdwyn, <strong>vermenigvuldig met die boonste ry</strong> waarin daardie paar voorkom.</li>
+              <li><strong>+50 punte ekstra</strong> as <em>die letter en die kleur</em> van die twee blokke dieselfde is, ook vermenigvuldig met die boonste ry waarin dit gebeur.</li>
               <li><strong>+100 bonuspunte</strong> sodra jy die teikenwoord gebou kry – die spel eindig dan ook.</li>
             </ul>
           </li>
@@ -378,6 +375,8 @@
     /* ---- DOM ---- */
     const welcomeLine   = document.getElementById('welcomeLine');
     const playerNameEl  = document.getElementById('playerName');
+    const kSlimLine     = document.getElementById('kSlimLine');
+    const kSlimPill     = document.getElementById('kSlimPill');
 
     const targetEl   = document.getElementById('target');
     const gridEl     = document.getElementById('grid');
@@ -415,11 +414,24 @@
     const SITE_ORIGIN = location.hostname.endsWith('kriptiek.com') ? location.origin : 'https://www.kriptiek.com';
     const qs = new URLSearchParams(location.search);
 
+    // Robust ZA date (handles older engines)
     function todayKeySAST(){
-      const parts = new Intl.DateTimeFormat('en-CA', { timeZone:'Africa/Johannesburg', year:'numeric', month:'2-digit', day:'2-digit' }).formatToParts(new Date());
-      const y = parts.find(p=>p.type==='year').value;
-      const m = parts.find(p=>p.type==='month').value;
-      const d = parts.find(p=>p.type==='day').value;
+      try {
+        const fmt = new Intl.DateTimeFormat('en-CA', {
+          timeZone:'Africa/Johannesburg', year:'numeric', month:'2-digit', day:'2-digit'
+        });
+        if (fmt.formatToParts){
+          const parts = fmt.formatToParts(new Date());
+          const y = parts.find(p=>p.type==='year')?.value;
+          const m = parts.find(p=>p.type==='month')?.value;
+          const d = parts.find(p=>p.type==='day')?.value;
+          if (y && m && d) return `${y}-${m}-${d}`;
+        }
+        const s = new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Johannesburg'}).format(new Date());
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+      } catch {}
+      const now = new Date(); const za = new Date(now.getTime() + 2*60*60*1000);
+      const y = za.getUTCFullYear(), m = String(za.getUTCMonth()+1).padStart(2,'0'), d = String(za.getUTCDate()).padStart(2,'0');
       return `${y}-${m}-${d}`;
     }
 
@@ -458,9 +470,7 @@
       DAILY_CAP_PER_GAME: 200,
       SUPPORTER_MULTIPLIER: 1.10
     };
-    function zaTimeOn(dateStr, hhmm){
-      return new Date(`${dateStr}T${hhmm}:00+02:00`);
-    }
+    function zaTimeOn(dateStr, hhmm){ return new Date(`${dateStr}T${hhmm}:00+02:00`); }
 
     /* ---- Auth ---- */
     let user=null, currentUserName='Speler';
@@ -493,19 +503,40 @@
       return 'Speler';
     }
 
+    function renderSlimPill(val){
+      const n = Number(val||0);
+      if (n > 0){
+        kSlimPill.textContent = `+${n}`;
+        kSlimLine.classList.remove('hidden');
+      } else {
+        kSlimLine.classList.add('hidden');
+      }
+    }
+
     if(auth){
       onAuthStateChanged(auth, async (u)=>{
         user=u||null; currentUserName = await resolveUserName(user);
         playerNameEl.textContent=currentUserName; setBarsForUser(user); if(!user) showNRGate();
+
+        // If already finished earlier today, show existing telling
+        if (user && db){
+          try {
+            const S_ID = `Slim${currentDate}`;
+            const snap = await getDoc(doc(db, `userGames/${user.uid}/plays/${S_ID}`));
+            if (snap.exists()){ renderSlimPill(snap.data()?.kSlim_total || 0); }
+          } catch {}
+        } else {
+          renderSlimPill(0);
+        }
       });
-    } else { setBarsForUser(null); showNRGate(); }
+    } else { setBarsForUser(null); showNRGate(); renderSlimPill(0); }
 
     /* ---- Pixel-perfect grid sizing ---- */
     function resizeGrid(){
       const wrap = gridEl.parentElement;
       const availCss = Math.min(320, Math.floor(wrap.clientWidth));
       const dpr = Math.max(1, window.devicePixelRatio || 1);
-      const toDp=v=>Math.round(v*dpr), toCss=v=>v/dpr, snap=v=>Math.floor(v/8)* 8;
+      const toDp=v=>Math.round(v*dpr), toCss=v=>v/dpr, snap=v=>Math.floor(v/8)*8;
 
       const availDp=toDp(availCss);
       const snappedDp=Math.max(toDp(240), snap(availDp));
@@ -532,7 +563,7 @@
     let grid=Array.from({length:H},()=>Array(W).fill(null));
     let cur=null, nxt=null;
     let paused=false, ended=false, moving=false;
-    let gInt=null;                 // drop-tick only
+    let gInt=null; // drop tick
     let score=0, bestScore=null;
     let lbUnsub=null;
 
@@ -567,23 +598,19 @@
       return { color, letter, x:Math.floor(W/2), y:0 };
     }
 
-    /* ---- Scoring (revised) ---- */
-    const SCORING = Object.freeze({
-      PAIR_POINTS: 10,     // letter OR color match
-      BOTH_BONUS:  50,     // extra if both letter AND color match
-      WORD_BONUS:  100     // when word completes (game ends)
-    });
+    /* ---- Scoring ---- */
+    const SCORING = Object.freeze({ PAIR_POINTS:10, BOTH_BONUS:50, WORD_BONUS:100 });
     function setScore(v){ score=Math.max(0, v|0); scoreText.textContent=score; }
     function addScore(v){ setScore(score + (v|0)); }
 
-    /* ---- Row hint ---- */
+    /* Row hint */
     function updateRowHint(){
       const y = cur ? Math.max(0, Math.min(H-1, cur.y)) : H-1;
       const mult = H - y; // bottom = 1
       rowMultLabel.textContent = String(mult);
     }
 
-    /* ---- Floating score badges ---- */
+    /* FX (float scores) */
     function cellSizePx(){
       const raw = getComputedStyle(document.documentElement).getPropertyValue('--cellSize') || '32px';
       return Number(String(raw).replace('px','').trim()) || 32;
@@ -604,7 +631,7 @@
       spawnFloatAt(cx, cy, `+${points} ×${mult}`);
     }
 
-    /* ---- Movement ---- */
+    /* Movement */
     async function move(dx,dy){
       if(!cur||paused||ended||moving) return;
       moving=true; clearBlock(cur);
@@ -633,19 +660,15 @@
       updateRowHint();
     }
 
-    // Row-multiplied scoring (+10 per pair, +50 both, times row multiplier) + float badges
     async function matchAndDrop(){
       const toDel=new Set();
       let pairScoreTotal = 0;
+      const rowNumber = (y) => H - y;
 
-      const rowNumber = (y) => H - y; // bottom row = 1, top row = H
-
-      // count pairs using RIGHT and DOWN edges only
       for(let y=0;y<H;y++){
         for(let x=0;x<W;x++){
           const a=grid[y][x];
           if(!a || partOfTarget(a.letter)) continue;
-
           for(const [dx,dy] of [[1,0],[0,1]]){
             const nx=x+dx, ny=y+dy;
             if(nx<0||nx>=W||ny<0||ny>=H) continue;
@@ -654,31 +677,22 @@
 
             const sameLetter = a.letter===b.letter;
             const sameColor  = a.color===b.color;
-
             if(sameLetter || sameColor){
-              const upperY = Math.min(y, ny);
-              const mult   = rowNumber(upperY);
-
+              const mult = rowNumber(Math.min(y,ny));
               let pairPts = SCORING.PAIR_POINTS;
               if(sameLetter && sameColor) pairPts += SCORING.BOTH_BONUS;
-
               const added = pairPts * mult;
               pairScoreTotal += added;
-
-              spawnFloatForPair(x, y, nx, ny, added, mult);
-
-              toDel.add(`${x},${y}`);
-              toDel.add(`${nx},${ny}`);
+              spawnFloatForPair(x,y,nx,ny,added,mult);
+              toDel.add(`${x},${y}`); toDel.add(`${nx},${ny}`);
             }
           }
         }
       }
 
       if(!toDel.size) return;
-
       addScore(pairScoreTotal);
 
-      // animate & remove
       await Promise.all(Array.from(toDel).map(key=>new Promise(res=>{
         const [x,y]=key.split(',').map(Number);
         const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
@@ -726,7 +740,7 @@
       }
     }
 
-    /* ---- Control ---- */
+    /* Control */
     function start(){
       ended=false; over.style.display='none'; shareMenu.classList.add('hidden');
       setScore(0);
@@ -746,31 +760,26 @@
     btnRight.addEventListener('click',()=>move(1,0));
     btnDown .addEventListener('click', ()=>hardDrop());
 
-    /* ---- Keyboard controls (arrows + space + P) ---- */
+    /* Keyboard */
     window.addEventListener('keydown', (e) => {
       const gateOpen  = nrGate && nrGate.style.display === 'flex';
       const modalOpen = over   && over.style.display   === 'flex';
       if (gateOpen || modalOpen) return;
-
       const tag = (document.activeElement && document.activeElement.tagName) || '';
       if (['INPUT','TEXTAREA','SELECT'].includes(tag)) return;
 
       switch (e.key) {
-        case 'ArrowLeft':
-          e.preventDefault(); move(-1,0); break;
-        case 'ArrowRight':
-          e.preventDefault(); move(1,0); break;
+        case 'ArrowLeft': e.preventDefault(); move(-1,0); break;
+        case 'ArrowRight':e.preventDefault(); move(1,0); break;
         case 'ArrowDown':
         case ' ':
-        case 'Spacebar':
-          e.preventDefault(); hardDrop(); break;
+        case 'Spacebar':  e.preventDefault(); hardDrop(); break;
         case 'p':
-        case 'P':
-          e.preventDefault(); togglePause(); break;
+        case 'P':         e.preventDefault(); togglePause(); break;
       }
     });
 
-    /* ---- Share (points-only) ---- */
+    /* Share (points) */
     let stickyPayload = null;
     function buildWinShareText(payload){
       const sc = Number(payload?.score ?? score) || 0;
@@ -843,7 +852,7 @@
       }catch{}
     }
 
-    /* ---- Local leaderboard (fallback) ---- */
+    /* Local leaderboard (fallback) */
     const LB_LOCAL_KEY = d => `slimstiekLocalLB:${d}`;
     function getLocalLB(date){ try{ return JSON.parse(localStorage.getItem(LB_LOCAL_KEY(date))) || []; }catch{ return []; } }
     function setLocalLB(date, arr){ try{ localStorage.setItem(LB_LOCAL_KEY(date), JSON.stringify(arr)); }catch{} }
@@ -863,111 +872,109 @@
       });
     }
 
-    /* ---- Live leaderboard with K-pill & stable tiebreak ---- */
+    /* Live leaderboard (new path with legacy fallback) */
     function startLiveLeaderboardFS(){
-      if(!db){
-        renderLocalLB(currentDate);
-        return;
-      }
+      if(!db){ renderLocalLB(currentDate); return; }
       if(lbUnsub){ lbUnsub(); lbUnsub = null; }
 
-      const qy = query(
+      const hydrate = (docs) => {
+        lbList.innerHTML = '';
+        if (!docs.length){
+          bestText.textContent = '—';
+          lbList.innerHTML = `<li class="bg-green-100 font-medium">Wees eerste op die leierbord!</li>`;
+          return;
+        }
+        docs.sort((a,b)=>{
+          const sa = Number(a.score)||0, sb = Number(b.score)||0;
+          if (sa !== sb) return sb - sa;
+          const ta = a.ts?.toMillis?.() ? a.ts.toMillis() : 9e15;
+          const tb = b.ts?.toMillis?.() ? b.ts.toMillis() : 9e15;
+          return ta - tb;
+        });
+        const top = docs.slice(0,10);
+        if (top.length) bestText.textContent = String(top[0].score ?? '—');
+        top.forEach(v=>{
+          const you  = user && v.id === user?.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
+          const pill = (Number(v.kSlim_total||0) > 0) ? ` <span class="k-pill">+${Number(v.kSlim_total)}</span>` : '';
+          const li = document.createElement('li');
+          li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>${you}: ${(v.score??0)} punte${pill}`;
+          lbList.appendChild(li);
+        });
+      };
+
+      const qNew = query(
         collection(db, 'slimstiekGames', GAME_ID, 'leaderboard'),
         orderBy('score','desc'),
         orderBy('ts','asc'),
         limit(25)
       );
 
-      lbUnsub = onSnapshot(qy, (snap)=>{
-        lbList.innerHTML = '';
-
-        if (snap.empty){
-          bestText.textContent = '—';
-          lbList.innerHTML = `<li class="bg-green-100 font-medium">Wees eerste op die leierbord!</li>`;
-          return;
-        }
-
+      lbUnsub = onSnapshot(qNew, (snap)=>{
         const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-        // Stable client tie-break: score DESC, timestamp ASC
-        rows.sort((a,b)=>{
-          const sa = Number(a.score) || 0;
-          const sb = Number(b.score) || 0;
-          if (sa !== sb) return sb - sa;
-          const ta = a.ts?.toMillis?.() ? a.ts.toMillis() : 9e15;
-          const tb = b.ts?.toMillis?.() ? b.ts.toMillis() : 9e15;
-          return ta - tb;
-        });
-
-        const top = rows.slice(0,10);
-
-        if (top.length) bestText.textContent = String(top[0].score ?? '—');
-
-        top.forEach(v=>{
-          const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
-          const pill = (Number(v.kSlim_total||0) > 0)
-            ? ` <span class="k-pill">+${Number(v.kSlim_total)}</span>`
-            : '';
-          const li = document.createElement('li');
-          li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>${you}: ${(v.score??0)} punte${pill}`;
-          lbList.appendChild(li);
-        });
+        if (rows.length) { hydrate(rows); return; }
+        // fallback: legacy read once
+        const qLegacy = query(
+          collection(db,'leaderboards','slimstiek','dates', currentDate, 'entries'),
+          orderBy('score','desc'),
+          orderBy('ts','asc'),
+          limit(25)
+        );
+        getDocs(qLegacy).then(s2=>{
+          const rows2 = s2.docs.map(d => ({ id: d.id, ...d.data() }));
+          hydrate(rows2);
+        }).catch(err=>{ console.warn('Legacy LB read failed:', err); renderLocalLB(currentDate); });
       }, (err)=>{
-        console.warn('LB stream failed, falling back to local:', err);
-        renderLocalLB(currentDate);
+        console.warn('New LB stream failed, trying legacy:', err);
+        const qLegacy = query(
+          collection(db,'leaderboards','slimstiek','dates', currentDate, 'entries'),
+          orderBy('score','desc'),
+          orderBy('ts','asc'),
+          limit(25)
+        );
+        getDocs(qLegacy).then(s2=>{
+          const rows2 = s2.docs.map(d => ({ id: d.id, ...d.data() }));
+          hydrate(rows2);
+        }).catch(e=>{ console.warn('Legacy LB read failed too:', e); renderLocalLB(currentDate); });
       });
     }
 
-    /* ---- Submit to leaderboard (mirror to legacy path too) ---- */
+    /* Submit to leaderboard (write both paths) */
     async function submitToLB(scoreVal){
       const row = { userName: currentUserName, score: scoreVal|0 };
       const arr = getLocalLB(currentDate);
       const idx = arr.findIndex(r => (r.userName||'') === (row.userName||''));
-      if (idx >= 0){
-        if (row.score > (arr[idx].score||0)) arr[idx] = row;
-      } else {
-        arr.push(row);
-      }
+      if (idx >= 0){ if (row.score > (arr[idx].score||0)) arr[idx] = row; }
+      else { arr.push(row); }
       setLocalLB(currentDate, arr);
 
       if(!db || !user) return;
       try{
-        // Primary (new) path
+        // New path
         const newRef  = doc(db, 'slimstiekGames', GAME_ID, 'leaderboard', user.uid);
         const newSnap = await getDoc(newRef);
         const prev = newSnap.exists() ? newSnap.data() : null;
         const isBetter = !prev || ((row.score|0) > (prev.score|0));
 
         if (isBetter){
-          await setDoc(newRef, {
-            userName: currentUserName.slice(0,24),
-            score: row.score|0,
-            ts: serverTimestamp()
-          }, { merge:true });
+          await setDoc(newRef, { userName: currentUserName.slice(0,24), score: row.score|0, ts: serverTimestamp() }, { merge:true });
         } else {
           await setDoc(newRef, { userName: currentUserName.slice(0,24) }, { merge:true });
         }
 
-        // Legacy mirror (archives/ranking)
+        // Legacy mirror
         const legacyRef = doc(db,'leaderboards','slimstiek','dates', currentDate, 'entries', user.uid);
         const legSnap   = await getDoc(legacyRef);
         const legPrev   = legSnap.exists() ? legSnap.data() : null;
         const legBetter = !legPrev || ((row.score|0) > (legPrev.score|0));
         if (legBetter){
-          await setDoc(legacyRef, {
-            userName: currentUserName.slice(0,24),
-            score: row.score|0,
-            ts: serverTimestamp()
-          }, { merge:true });
+          await setDoc(legacyRef, { userName: currentUserName.slice(0,24), score: row.score|0, ts: serverTimestamp() }, { merge:true });
         } else {
           await setDoc(legacyRef, { userName: currentUserName.slice(0,24) }, { merge:true });
         }
-      } catch (e){
-        console.warn('FS LB write failed (ok):', e);
-      }
+      } catch (e){ console.warn('FS LB write failed (ok):', e); }
     }
 
-    /* ==== Mirror Slimstiek points into userGames/plays & expose for pill ==== */
+    /* Mirror Slimstiek points (compute → private play → update DOM → expose to both rows) */
     async function mirrorSlimstiekPoints(){
       if (!db || !user) return;
 
@@ -977,8 +984,7 @@
         const uSnap = await getDoc(doc(db, "users", user.uid));
         if (uSnap.exists()){
           const u = uSnap.data();
-          supporterActive = !!(u?.supporterActive === true ||
-            (u?.supporterUntil?.toMillis && u.supporterUntil.toMillis() > Date.now()));
+          supporterActive = !!(u?.supporterActive === true || (u?.supporterUntil?.toMillis && u.supporterUntil.toMillis() > Date.now()));
         }
       } catch {}
 
@@ -1003,7 +1009,7 @@
 
       const now = new Date();
 
-      // EARLY: first 10 entries after 07:00 ZA, once (legacy list for consistency)
+      // EARLY: first 10 entries after 07:00 ZA (legacy list for consistency)
       if (kEarly === 0 && haveBest && now >= zaTimeOn(currentDate, K_CONF.EARLY_BIRD_WINDOW_START)) {
         try {
           const qEarly = query(
@@ -1017,12 +1023,10 @@
         } catch {}
       }
 
-      // IMPROVE: grant once the first time you have a recorded best
-      if (kImprove === 0 && haveBest) {
-        kImprove = K_CONF.IMPROVE_POINTS;
-      }
+      // IMPROVE: grant once when you have a recorded best
+      if (kImprove === 0 && haveBest) { kImprove = K_CONF.IMPROVE_POINTS; }
 
-      // PLACE: only after cutoff; rank by score DESC then ts ASC (legacy list)
+      // PLACE: after cutoff only
       if (kPlace === 0 && now >= zaTimeOn(currentDate, K_CONF.CUTOFF_TIME)) {
         try {
           const qRank = query(
@@ -1033,9 +1037,7 @@
           );
           const rSnap = await getDocs(qRank);
           const pos = rSnap.docs.findIndex(d => d.id === user.uid);
-          if (pos >= 0 && pos < K_CONF.FINAL_POINTS.length) {
-            kPlace = K_CONF.FINAL_POINTS[pos];
-          }
+          if (pos >= 0 && pos < K_CONF.FINAL_POINTS.length) { kPlace = K_CONF.FINAL_POINTS[pos]; }
         } catch {}
       }
 
@@ -1053,18 +1055,15 @@
         updatedAt: serverTimestamp()
       }, { merge:true });
 
+      // update page pill immediately
+      renderSlimPill(kTotal);
+
       // expose on BOTH rows for public pill
-      try {
-        const legacyBestRef = doc(db, 'leaderboards','slimstiek','dates', currentDate, 'entries', user.uid);
-        await setDoc(legacyBestRef, { kSlim_total: kTotal }, { merge: true });
-      } catch {}
-      try {
-        const newBestRef2 = doc(db, 'slimstiekGames', GAME_ID, 'leaderboard', user.uid);
-        await setDoc(newBestRef2, { kSlim_total: kTotal }, { merge: true });
-      } catch {}
+      try { await setDoc(doc(db,'leaderboards','slimstiek','dates', currentDate, 'entries', user.uid), { kSlim_total: kTotal }, { merge:true }); } catch {}
+      try { await setDoc(doc(db,'slimstiekGames', GAME_ID, 'leaderboard', user.uid), { kSlim_total: kTotal }, { merge:true }); } catch {}
     }
 
-    /* ---- Game end ---- */
+    /* End of game */
     function end(win){
       clearInterval(gInt);
       ended=true;
@@ -1082,7 +1081,7 @@
       if(!user) showNRGate();
     }
 
-    /* ---- Daily word ---- */
+    /* Daily word */
     async function resolveTargetWord(){
       if(db){
         try{
@@ -1097,7 +1096,7 @@
       return 'TUTS';
     }
 
-    /* ---- Load ---- */
+    /* Load */
     async function loadGame(){
       TARGET = (await resolveTargetWord()) || 'TUTS';
 
@@ -1111,14 +1110,11 @@
       startLiveLeaderboardFS();
       updateRowHint();
 
-      if (user) { mirrorSlimstiekPoints(); }
+      if (user) { mirrorSlimstiekPoints(); } // backfill if already finished
     }
 
-    /* ---- Init ---- */
-    function init(){
-      initTileShareDropdowns();
-      loadGame();
-    }
+    /* Init */
+    function init(){ initTileShareDropdowns(); loadGame(); }
     init();
   </script>
   <!-- Buy Me a Coffee CTA above leaderboard -->
@@ -1131,7 +1127,7 @@
     const wrap = document.createElement('div');
     wrap.className = 'my-4';
     wrap.innerHTML = `
-      <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-8 00 text-center">
+      <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800 text-center">
         <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
            onclick="window.gtag && gtag('event','bmac_click',{from:'slimstiek-leaderboard'})"
            class="inline-flex items-center justify-center px-5 py-3
