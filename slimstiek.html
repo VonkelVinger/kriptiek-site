@@ -874,7 +874,7 @@
           <div class="flex items-center justify-between">
             <div><strong>${row.userName||'Speler'}</strong>: ${(row.score|0)} punte</div>
             <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-white" style="background:#065f46">
-              <span>🧠</span><span class="font-bold">${pillVal}</span>
+              <span class="font-bold">${pillVal}</span>
             </div>
           </div>`;
         lbList.appendChild(li);
@@ -910,7 +910,7 @@
               <div class="flex items-center justify-between">
                 <div><strong>${(v.userName||'Onbekend')}</strong>: ${(v.score??0)} punte</div>
                 <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-white" style="background:#065f46">
-                  <span>🧠</span><span class="font-bold">${Number(v._pill)||0}</span>
+                  <span class="font-bold">${Number(v._pill)||0}</span>
                 </div>
               </div>`;
             lbList.appendChild(li);
