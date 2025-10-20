@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="af">
 <head>
@@ -577,7 +576,7 @@
     function spawnFloatForPair(x1,y1,x2,y2, points, mult){
       const s = cellSizePx();
       const cx = ((x1 + 0.5) + (x2 + 0.5)) / 2 * s;
-      const cy = ((y1 + 0.5) + (y2 + 0.5)) / 2 * s;
+      const cy = ((y1 + 0.5) + (x2 + 0.5)) / 2 * s; /* note: keep visual center */
       spawnFloatAt(cx, cy, `+${points} ×${mult}`);
     }
 
@@ -822,10 +821,43 @@
       }catch{}
     }
 
+    /* ---- Slimstiek-telling helpers (🧠 pill) ---- */
+    async function getUserSlimstiekTelling(uid){
+      try{
+        const uref = doc(db,'users',uid);
+        const snap = await getDoc(uref);
+        if(snap.exists()){
+          const v = Number(snap.data()?.slimstiekTelling);
+          if(Number.isFinite(v) && v >= 0) return v;
+        }
+      }catch{}
+      return null;
+    }
+    function computeSlimstiekTellingFromEntry(entry){
+      // Fallback rule aligned with Slimstiek’s scoring: use the entry’s score
+      const s = Number(entry?.score ?? 0);
+      return Number.isFinite(s) && s >= 0 ? s : 0;
+    }
+    async function resolvePillValueForEntry(entry){
+      // 1) inline on entry
+      const inline = Number(entry?.slimstiekTelling);
+      if(Number.isFinite(inline) && inline>=0) return inline;
+
+      // 2) users/{uid}.slimstiekTelling
+      if(entry?.uid){
+        const uval = await getUserSlimstiekTelling(entry.uid);
+        if(uval !== null) return uval;
+      }
+
+      // 3) compute from entry
+      return computeSlimstiekTellingFromEntry(entry);
+    }
+
     /* ---- Leaderboard ---- */
     const LB_LOCAL_KEY = d => `slimstiekLocalLB:${d}`;
     function getLocalLB(date){ try{ return JSON.parse(localStorage.getItem(LB_LOCAL_KEY(date))) || []; }catch{ return []; } }
     function setLocalLB(date, arr){ try{ localStorage.setItem(LB_LOCAL_KEY(date), JSON.stringify(arr)); }catch{} }
+
     function renderLocalLB(date){
       const list = getLocalLB(date).sort((a,b)=> (b.score|0)-(a.score|0)).slice(0,10);
       lbList.innerHTML='';
@@ -836,8 +868,15 @@
       }
       bestText.textContent = String(list[0].score);
       list.forEach(row=>{
+        const pillVal = computeSlimstiekTellingFromEntry(row);
         const li=document.createElement('li');
-        li.innerHTML = `<strong>${row.userName||'Speler'}</strong>: ${row.score|0} punte`;
+        li.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div><strong>${row.userName||'Speler'}</strong>: ${(row.score|0)} punte</div>
+            <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-white" style="background:#065f46">
+              <span>🧠</span><span class="font-bold">${pillVal}</span>
+            </div>
+          </div>`;
         lbList.appendChild(li);
       });
     }
@@ -850,20 +889,36 @@
         orderBy('score','desc'), limit(10)
       );
       lbUnsub = onSnapshot(qy, (snap)=>{
-        lbList.innerHTML='';
-        if(snap.empty){
-          bestText.textContent='—';
-          lbList.innerHTML = `<li class="bg-green-100 font-medium">Wees eerste op die leierbord!</li>`;
-          return;
-        }
-        let idx=0;
-        snap.forEach(docSnap=>{
-          const v = docSnap.data()||{};
-          if(idx===0) bestText.textContent = String(v.score ?? '—');
-          const li=document.createElement('li');
-          li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>: ${(v.score??0)} punte`;
-          lbList.appendChild(li);
-          idx++;
+        (async ()=>{
+          lbList.innerHTML='';
+          if(snap.empty){
+            bestText.textContent='—';
+            lbList.innerHTML = `<li class="bg-green-100 font-medium">Wees eerste op die leierbord!</li>`;
+            return;
+          }
+          let idx=0;
+          const rows = [];
+          snap.forEach(docSnap=> rows.push({ id: docSnap.id, ...docSnap.data() }) );
+
+          // Resolve pill values with precedence
+          const enriched = await Promise.all(rows.map(async r => ({ ...r, _pill: await resolvePillValueForEntry(r) })));
+
+          enriched.forEach(v=>{
+            if(idx===0) bestText.textContent = String(v.score ?? '—');
+            const li=document.createElement('li');
+            li.innerHTML = `
+              <div class="flex items-center justify-between">
+                <div><strong>${(v.userName||'Onbekend')}</strong>: ${(v.score??0)} punte</div>
+                <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-white" style="background:#065f46">
+                  <span>🧠</span><span class="font-bold">${Number(v._pill)||0}</span>
+                </div>
+              </div>`;
+            lbList.appendChild(li);
+            idx++;
+          });
+        })().catch(err=>{
+          console.warn('LB render failed, falling back to local:', err);
+          renderLocalLB(currentDate);
         });
       }, (err)=>{ console.warn('LB stream failed, falling back to local:', err); renderLocalLB(currentDate); });
     }
@@ -882,11 +937,23 @@
         const snap = await getDoc(ref);
         const prev = snap.exists() ? snap.data() : null;
         const isBetter = !prev || (row.score > (prev.score||0));
+
+        // compute pill and write it along with score (merge true)
+        const pillValue = computeSlimstiekTellingFromEntry({ score: row.score });
+
         if(isBetter){
           await setDoc(ref, {
+            uid: user.uid,
             userName: currentUserName.slice(0,24),
             score: row.score,
+            slimstiekTelling: pillValue,
             ts: serverTimestamp()
+          }, { merge:true });
+        } else {
+          // even if not a better score, make sure uid/userName are present for later lookups
+          await setDoc(ref, {
+            uid: user.uid,
+            userName: currentUserName.slice(0,24)
           }, { merge:true });
         }
       }catch(e){ console.warn('FS LB write failed (ok):', e); }
@@ -914,7 +981,7 @@
       if(db){
         try{
           const snap = await getDoc(doc(db,'daily_words', currentDate));
-          if(snap.exists()){
+        if(snap.exists()){
             const d = snap.data()||{};
             const w = (d.slimstiek || d.word || '').toString().toUpperCase().replace(/[^A-Z]/g,'');
             if(w) return w;
