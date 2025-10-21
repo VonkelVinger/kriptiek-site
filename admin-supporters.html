@@ -19,7 +19,7 @@
 
     <div id="panel" class="space-y-5 hidden">
       <div class="flex items-center gap-3 text-sm">
-        <a href="/profile.html" class="text-blue-700 underline">Gaan na profile.html</a>
+        <a href="/profile.html" class="text-blue-700 underline">Gaan na My Profiel</a>
       </div>
 
       <!-- Lookup -->
@@ -139,7 +139,7 @@
     // =========================
     onAuthStateChanged(auth, async (user)=>{
       if (!user) {
-        // NOTE: Return URL now correctly points back to THIS file name.
+        // Return URL correctly points back to THIS file name.
         window.location.href = "/login.html?return=/admin.supporters.html";
         return;
       }
@@ -354,7 +354,7 @@
       try {
         const until = new Date();
         until.setDate(until.getDate()+30);
-        // Also ensure email/emailLower exist on your user doc for future searches:
+        // Ensure email/emailLower for future searches:
         const payload = {
           support: { isPaid: true, paidUntil: Timestamp.fromDate(until) },
           updatedAt: serverTimestamp()
