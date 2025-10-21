@@ -25,6 +25,7 @@
       <!-- Lookup -->
       <section class="bg-gray-50 rounded p-3">
         <h2 class="font-semibold mb-2">Soek gebruiker</h2>
+
         <div class="grid grid-cols-1 gap-2">
           <label class="text-sm">Soek per e-pos (presiese pas):</label>
           <div class="flex gap-2">
@@ -32,11 +33,18 @@
             <button id="searchEmailBtn" class="btn bg-blue-600 hover:bg-blue-700">SOEK OP E-POS</button>
           </div>
 
-          <div class="text-xs text-gray-600">Of laai per UID:</div>
+          <div class="text-xs text-gray-600">Of werk direk met UID:</div>
           <div class="flex gap-2">
             <input id="uidInput" placeholder="Plak UID" class="flex-1 border rounded p-2"/>
             <button id="loadUidBtn" class="btn bg-gray-600 hover:bg-gray-700">LAAI PER UID</button>
           </div>
+          <details class="text-xs text-gray-600 mt-1">
+            <summary class="cursor-pointer select-none">Waar kry ek ’n UID?</summary>
+            <div class="mt-1">
+              • Firebase Console → Authentication → Users → **Add user** (sit e-pos + tydelike wagwoord).<br/>
+              • Na byvoeging, **kopieer die UID** uit die lys en plak dit hier bo.
+            </div>
+          </details>
         </div>
 
         <div id="resultsWrap" class="mt-3 hidden">
@@ -50,6 +58,10 @@
       <!-- Edit -->
       <section class="bg-gray-50 rounded p-3">
         <h2 class="font-semibold mb-2">Merk as ondersteuner</h2>
+        <p class="text-xs text-gray-600 mb-2">
+          Tip: Jy kan net **UID + e-pos** invul en dan **STOOR** klik — dit skep die /users/ dokument as dit nog nie bestaan nie.
+        </p>
+
         <div class="text-sm mb-2">
           <div>Gekose UID: <span id="currentUid" class="mono">—</span></div>
           <div>Naam: <span id="currentName">—</span></div>
@@ -93,8 +105,7 @@
     // CONFIG
     // =========================
     const ADMIN_UID = "jI7f0Wk4MqfPq7p69vjl8OlJUvS2";
-    // Optional public mirror collection name (set "" to disable this fallback)
-    const PUBLIC_MIRROR_COLLECTION = "publicUsers";
+    const PUBLIC_MIRROR_COLLECTION = "publicUsers"; // set "" to disable
 
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -138,7 +149,6 @@
     // =========================
     onAuthStateChanged(auth, async (user)=>{
       if (!user) {
-        // Return URL correctly points back to THIS file name.
         window.location.href = "/login.html?return=/admin.supporters.html";
         return;
       }
@@ -167,6 +177,10 @@
       currentEmail.textContent = "—";
       isPaid.checked = false;
       paidUntil.value = "";
+    }
+    function getTypedEmail() {
+      const raw = (emailInput.value || "").trim();
+      return raw || null;
     }
 
     // =========================
@@ -225,63 +239,35 @@
       let hits = [];
 
       try {
-        // 1) Preferred: users.emailLower
+        // 1) users.emailLower
         const q1 = query(collection(db,'users'), where('emailLower','==', needle));
         let snap = await getDocs(q1);
         snap.forEach(d => hits.push({ uid: d.id, source:'users', ...d.data() }));
 
-        // 2) Fallback: users.email (legacy)
+        // 2) users.email (legacy)
         if (hits.length === 0) {
           const q2 = query(collection(db,'users'), where('email','==', raw));
           snap = await getDocs(q2);
           snap.forEach(d => hits.push({ uid: d.id, source:'users', ...d.data() }));
         }
 
-        // 3) Optional fallback: public mirror collection (resolve UID)
+        // 3) public mirror (optional)
         if (hits.length === 0 && PUBLIC_MIRROR_COLLECTION) {
           try {
             const q3 = query(collection(db, PUBLIC_MIRROR_COLLECTION), where('emailLower','==', needle));
             const snap2 = await getDocs(q3);
             snap2.forEach(d => hits.push({ uid: d.id, source:'public', ...d.data() }));
-          } catch (mirrorErr) {
-            console.warn("Mirror lookup failed:", mirrorErr);
-          }
+          } catch {}
         }
 
-        // 4) NEW: Fallback to registrations (older users often only here)
+        // 4) registrations (older flow)
         if (hits.length === 0) {
           try {
             const regRef = collection(db, 'registrations');
-            // Try normalized first
             let rsnap = await getDocs(query(regRef, where('emailLower','==', needle)));
-            if (rsnap.empty) {
-              // Try raw (older docs may not have emailLower)
-              rsnap = await getDocs(query(regRef, where('email','==', raw)));
-            }
-            const regHits = [];
-            rsnap.forEach(d => regHits.push({ uid: d.id, source:'registrations', ...d.data() }));
-
-            if (regHits.length > 0) {
-              // Seed /users/{uid} with email/emailLower for future searches
-              for (const r of regHits) {
-                if (r.uid) {
-                  const payload = {
-                    email: r.email || raw,
-                    emailLower: (r.emailLower || raw.toLowerCase()),
-                    updatedAt: serverTimestamp()
-                  };
-                  try {
-                    await setDoc(doc(db,'users', r.uid), payload, { merge: true });
-                  } catch (seedErr) {
-                    console.warn("Seeding users doc failed for", r.uid, seedErr);
-                  }
-                  hits.push(r);
-                }
-              }
-            }
-          } catch (regErr) {
-            console.warn("Registrations lookup failed:", regErr);
-          }
+            if (rsnap.empty) rsnap = await getDocs(query(regRef, where('email','==', raw)));
+            rsnap.forEach(d => hits.push({ uid: d.id, source:'registrations', ...d.data() }));
+          } catch {}
         }
 
         if (hits.length === 0){
@@ -350,16 +336,37 @@
       }
     });
 
+    // =========================
+    // Save / Clear
+    // =========================
     saveBtn.addEventListener('click', async ()=> {
-      if (!selectedUid){
-        showMsg("Geen gebruiker gelaai nie.", "text-red-600"); return;
-      }
       try {
+        // Accept either a loaded selectedUid OR just a typed UID
+        const uid = selectedUid || (uidInput.value || "").trim();
+        if (!uid){
+          showMsg("Tik eers ’n UID in (of laai een).", "text-red-600"); return;
+        }
+
+        // Build payload
         let untilVal = paidUntil.value ? Timestamp.fromDate(new Date(paidUntil.value+"T23:59:59")) : null;
-        await setDoc(doc(db,'users', selectedUid), {
+        const payload = {
           support: { isPaid: !!isPaid.checked, paidUntil: untilVal },
           updatedAt: serverTimestamp()
-        }, { merge: true });
+        };
+
+        // Seed email/emailLower from the search box if present
+        const typed = getTypedEmail();
+        if (typed) {
+          payload.email = typed;
+          payload.emailLower = typed.toLowerCase();
+        }
+
+        // Create/update the user doc directly (admin is allowed by rules)
+        await setDoc(doc(db,'users', uid), payload, { merge: true });
+
+        // Load/refresh UI
+        await loadUser(uid);
+        uidInput.value = uid;
         showMsg("Gestoor.", "text-green-600");
       } catch (err) {
         console.error(err);
@@ -368,15 +375,17 @@
     });
 
     clearBtn.addEventListener('click', async ()=> {
-      if (!selectedUid){
-        showMsg("Geen gebruiker gelaai nie.", "text-red-600"); return;
-      }
       try {
-        await setDoc(doc(db,'users', selectedUid), {
+        const uid = selectedUid || (uidInput.value || "").trim();
+        if (!uid){
+          showMsg("Tik eers ’n UID in (of laai een).", "text-red-600"); return;
+        }
+        await setDoc(doc(db,'users', uid), {
           support: { isPaid: false, paidUntil: null },
           updatedAt: serverTimestamp()
         }, { merge: true });
-        isPaid.checked = false; paidUntil.value = "";
+        isPaid.checked = false; paidUntil.value="";
+        await loadUser(uid);
         showMsg("Merk as onbetaald voltooi.", "text-green-600");
       } catch (err) {
         console.error(err);
@@ -384,13 +393,13 @@
       }
     });
 
+    // Self test helper
     makeMeBtn.addEventListener('click', async ()=> {
       const user = auth.currentUser;
       if (!user) return;
       try {
         const until = new Date();
         until.setDate(until.getDate()+30);
-        // Ensure email/emailLower for future searches:
         const payload = {
           support: { isPaid: true, paidUntil: Timestamp.fromDate(until) },
           updatedAt: serverTimestamp()
