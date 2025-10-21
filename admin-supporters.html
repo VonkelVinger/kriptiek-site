@@ -35,7 +35,7 @@
           <div class="text-xs text-gray-600">Of laai per UID:</div>
           <div class="flex gap-2">
             <input id="uidInput" placeholder="Plak UID" class="flex-1 border rounded p-2"/>
-            <button id="loadUidBtn" class="btn bg-gray-600 hover:bg-gray-700">LAI PER UID</button>
+            <button id="loadUidBtn" class="btn bg-gray-600 hover:bg-gray-700">LAAI PER UID</button>
           </div>
         </div>
 
@@ -89,8 +89,13 @@
       collection, query, where, getDocs
     } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
+    // =========================
     // CONFIG
+    // =========================
     const ADMIN_UID = "jI7f0Wk4MqfPq7p69vjl8OlJUvS2";
+    // If you keep a public mirror of users, set its collection name here.
+    // Set to null/"" to disable that fallback.
+    const PUBLIC_MIRROR_COLLECTION = "publicUsers";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -104,7 +109,9 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    // =========================
     // UI refs
+    // =========================
     const gate = document.getElementById('gate');
     const panel = document.getElementById('panel');
     const emailInput = document.getElementById('emailInput');
@@ -127,9 +134,13 @@
 
     let selectedUid = null;
 
+    // =========================
+    // Auth gate
+    // =========================
     onAuthStateChanged(auth, async (user)=>{
       if (!user) {
-        window.location.href = "/login.html?return=/admin-supporters.html";
+        // NOTE: Return URL now correctly points back to THIS file name.
+        window.location.href = "/login.html?return=/admin.supporters.html";
         return;
       }
       if (user.uid !== ADMIN_UID) {
@@ -139,64 +150,117 @@
       panel.classList.remove('hidden');
     });
 
-    async function loadUser(uid){
-      lookupMsg.textContent = "";
-      resultsWrap.classList.add('hidden');
-      selectedUid = uid;
-      currentUid.textContent = uid || "—";
+    // =========================
+    // Helpers
+    // =========================
+    function showLookup(text, cls="text-gray-700") {
+      lookupMsg.textContent = text;
+      lookupMsg.className = `text-sm mt-2 ${cls}`;
+    }
+    function showMsg(text, cls="text-gray-700") {
+      msg.textContent = text;
+      msg.className = `text-sm mt-2 ${cls}`;
+    }
+    function clearSelectionUI() {
+      selectedUid = null;
+      currentUid.textContent = "—";
       currentName.textContent = "—";
       currentEmail.textContent = "—";
-      isPaid.checked = false; paidUntil.value = "";
+      isPaid.checked = false;
+      paidUntil.value = "";
+    }
+
+    // =========================
+    // Load by UID (robust)
+    // =========================
+    async function loadUser(uid){
+      showLookup("");
+      resultsWrap.classList.add('hidden');
+      clearSelectionUI();
 
       if (!uid) return;
 
-      const snap = await getDoc(doc(db,'users', uid));
-      if (!snap.exists()){
-        lookupMsg.textContent = "Geen userdoc vir dié UID nie.";
-        lookupMsg.className = "text-red-600";
-        return;
+      try {
+        const snap = await getDoc(doc(db,'users', uid));
+        if (!snap.exists()){
+          showLookup("Geen userdoc vir dié UID nie.", "text-red-600");
+          return;
+        }
+        selectedUid = uid;
+        currentUid.textContent = uid;
+        const data = snap.data()||{};
+        currentName.textContent = data.userName || "—";
+        currentEmail.textContent = data.email || "—";
+
+        const s = data.support || {};
+        isPaid.checked = !!s.isPaid;
+        if (s.paidUntil?.toDate){
+          const dt = s.paidUntil.toDate();
+          paidUntil.value = dt.toISOString().slice(0,10);
+        }
+        showLookup("Gelaai.", "text-green-600");
+      } catch (err) {
+        console.error(err);
+        if (err?.code === "permission-denied") {
+          showLookup("Geen toestemming om die gebruiker te lees nie (permission-denied).", "text-red-600");
+        } else {
+          showLookup("Kon nie gebruiker laai nie: " + (err.message || err), "text-red-600");
+        }
       }
-      const data = snap.data()||{};
-      currentName.textContent = data.userName || "—";
-      currentEmail.textContent = data.email || "—";
-      const s = data.support || {};
-      isPaid.checked = !!s.isPaid;
-      if (s.paidUntil?.toDate){
-        const dt = s.paidUntil.toDate();
-        paidUntil.value = dt.toISOString().slice(0,10);
-      }
-      lookupMsg.textContent = "Gelaai.";
-      lookupMsg.className = "text-green-600";
     }
 
+    // =========================
+    // Search by email (emailLower first, fallback to email & public mirror)
+    // =========================
     async function searchByEmail(email){
-      lookupMsg.textContent = "";
+      showLookup("");
       resultsList.innerHTML = "";
       resultsWrap.classList.add('hidden');
 
-      if (!email){
-        lookupMsg.textContent = "Tik ’n e-posadres.";
-        lookupMsg.className = "text-red-600";
-        return;
+      const raw = (email||"").trim();
+      if (!raw){
+        showLookup("Tik ’n e-posadres.", "text-red-600"); return;
       }
 
-      // Exact match on users.email
-      const q = query(collection(db,'users'), where('email','==', email));
-      const snap = await getDocs(q);
-      if (snap.empty){
-        lookupMsg.textContent = "Geen gebruiker met daardie e-pos gevind nie.";
-        lookupMsg.className = "text-red-600";
-        return;
-      }
+      const needle = raw.toLowerCase();
+      let hits = [];
 
-      const hits = [];
-      snap.forEach(d => hits.push({ uid: d.id, ...d.data() }));
+      try {
+        // Preferred: users.emailLower
+        const q1 = query(collection(db,'users'), where('emailLower','==', needle));
+        let snap = await getDocs(q1);
+        snap.forEach(d => hits.push({ uid: d.id, ...d.data() }));
 
-      if (hits.length === 1){
-        uidInput.value = hits[0].uid;
-        await loadUser(hits[0].uid);
-      } else {
-        // Multiple results — show chooser
+        // Fallback: users.email (legacy)
+        if (hits.length === 0) {
+          const q2 = query(collection(db,'users'), where('email','==', raw));
+          snap = await getDocs(q2);
+          snap.forEach(d => hits.push({ uid: d.id, ...d.data() }));
+        }
+
+        // Optional fallback: public mirror collection (resolve UID)
+        if (hits.length === 0 && PUBLIC_MIRROR_COLLECTION) {
+          try {
+            const q3 = query(collection(db, PUBLIC_MIRROR_COLLECTION), where('emailLower','==', needle));
+            const snap2 = await getDocs(q3);
+            snap2.forEach(d => hits.push({ uid: d.id, ...d.data() }));
+          } catch (mirrorErr) {
+            console.warn("Mirror lookup failed:", mirrorErr);
+          }
+        }
+
+        if (hits.length === 0){
+          showLookup("Geen gebruiker met daardie e-pos gevind nie.", "text-red-600");
+          return;
+        }
+
+        if (hits.length === 1){
+          uidInput.value = hits[0].uid;
+          await loadUser(hits[0].uid);
+          return;
+        }
+
+        // Multiple: chooser
         resultsWrap.classList.remove('hidden');
         resultsList.innerHTML = hits.map(h => `
           <li class="flex items-center justify-between bg-white border rounded p-2">
@@ -215,60 +279,98 @@
             resultsWrap.classList.add('hidden');
           });
         });
-        lookupMsg.textContent = `${hits.length} resultate — kies een.`;
-        lookupMsg.className = "text-yellow-700";
+        showLookup(`${hits.length} resultate — kies een.`, "text-yellow-700");
+
+      } catch (err) {
+        console.error(err);
+        if (err?.code === 'permission-denied') {
+          showLookup("Geen toestemming om die gebruikerslys te lees nie (permission-denied).", "text-red-600");
+        } else {
+          showLookup("Kon nie soek nie: " + (err.message || err), "text-red-600");
+        }
       }
     }
 
-    searchEmailBtn.addEventListener('click', async ()=>{
-      await searchByEmail(emailInput.value.trim());
+    // =========================
+    // Events
+    // =========================
+    searchEmailBtn.addEventListener('click', async ()=> {
+      await searchByEmail(emailInput.value);
+    });
+    emailInput.addEventListener('keydown', async (e)=>{
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        await searchByEmail(emailInput.value);
+      }
     });
 
-    loadUidBtn.addEventListener('click', async ()=>{
+    loadUidBtn.addEventListener('click', async ()=> {
       await loadUser(uidInput.value.trim());
     });
-
-    saveBtn.addEventListener('click', async ()=>{
-      if (!selectedUid){
-        msg.textContent = "Geen gebruiker gelaai nie.";
-        msg.className = "text-red-600"; return;
+    uidInput.addEventListener('keydown', async (e)=>{
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        await loadUser(uidInput.value.trim());
       }
-      let untilVal = paidUntil.value ? Timestamp.fromDate(new Date(paidUntil.value+"T23:59:59")) : null;
-      await setDoc(doc(db,'users', selectedUid), {
-        support: { isPaid: !!isPaid.checked, paidUntil: untilVal },
-        updatedAt: serverTimestamp()
-      }, { merge: true });
-      msg.textContent = "Gestoor.";
-      msg.className = "text-green-600";
     });
 
-    clearBtn.addEventListener('click', async ()=>{
+    saveBtn.addEventListener('click', async ()=> {
       if (!selectedUid){
-        msg.textContent = "Geen gebruiker gelaai nie.";
-        msg.className = "text-red-600"; return;
+        showMsg("Geen gebruiker gelaai nie.", "text-red-600"); return;
       }
-      await setDoc(doc(db,'users', selectedUid), {
-        support: { isPaid: false, paidUntil: null },
-        updatedAt: serverTimestamp()
-      }, { merge: true });
-      isPaid.checked = false; paidUntil.value="";
-      msg.textContent = "Merk as onbetaald voltooi.";
-      msg.className = "text-green-600";
+      try {
+        let untilVal = paidUntil.value ? Timestamp.fromDate(new Date(paidUntil.value+"T23:59:59")) : null;
+        await setDoc(doc(db,'users', selectedUid), {
+          support: { isPaid: !!isPaid.checked, paidUntil: untilVal },
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        showMsg("Gestoor.", "text-green-600");
+      } catch (err) {
+        console.error(err);
+        showMsg("Kon nie stoor nie: " + (err.message || err), "text-red-600");
+      }
     });
 
-    makeMeBtn.addEventListener('click', async ()=>{
+    clearBtn.addEventListener('click', async ()=> {
+      if (!selectedUid){
+        showMsg("Geen gebruiker gelaai nie.", "text-red-600"); return;
+      }
+      try {
+        await setDoc(doc(db,'users', selectedUid), {
+          support: { isPaid: false, paidUntil: null },
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        isPaid.checked = false; paidUntil.value = "";
+        showMsg("Merk as onbetaald voltooi.", "text-green-600");
+      } catch (err) {
+        console.error(err);
+        showMsg("Kon nie opdateer nie: " + (err.message || err), "text-red-600");
+      }
+    });
+
+    makeMeBtn.addEventListener('click', async ()=> {
       const user = auth.currentUser;
       if (!user) return;
-      const until = new Date();
-      until.setDate(until.getDate()+30);
-      await setDoc(doc(db,'users', user.uid), {
-        support: { isPaid: true, paidUntil: Timestamp.fromDate(until) },
-        updatedAt: serverTimestamp()
-      }, { merge: true });
-      uidInput.value = user.uid;
-      await loadUser(user.uid);
-      msg.textContent = "Jy is vir 30 dae as ondersteuner gemerk.";
-      msg.className = "text-green-600";
+      try {
+        const until = new Date();
+        until.setDate(until.getDate()+30);
+        // Also ensure email/emailLower exist on your user doc for future searches:
+        const payload = {
+          support: { isPaid: true, paidUntil: Timestamp.fromDate(until) },
+          updatedAt: serverTimestamp()
+        };
+        if (user.email) {
+          payload.email = user.email;
+          payload.emailLower = user.email.toLowerCase();
+        }
+        await setDoc(doc(db,'users', user.uid), payload, { merge: true });
+        uidInput.value = user.uid;
+        await loadUser(user.uid);
+        showMsg("Jy is vir 30 dae as ondersteuner gemerk.", "text-green-600");
+      } catch (err) {
+        console.error(err);
+        showMsg("Kon nie jou status opdateer nie: " + (err.message || err), "text-red-600");
+      }
     });
   </script>
 </body>
