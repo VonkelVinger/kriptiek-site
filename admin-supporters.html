@@ -93,8 +93,7 @@
     // CONFIG
     // =========================
     const ADMIN_UID = "jI7f0Wk4MqfPq7p69vjl8OlJUvS2";
-    // If you keep a public mirror of users, set its collection name here.
-    // Set to null/"" to disable that fallback.
+    // Optional public mirror collection name (set "" to disable this fallback)
     const PUBLIC_MIRROR_COLLECTION = "publicUsers";
 
     const firebaseConfig = {
@@ -210,7 +209,7 @@
     }
 
     // =========================
-    // Search by email (emailLower first, fallback to email & public mirror)
+    // Search by email with multi-source fallback
     // =========================
     async function searchByEmail(email){
       showLookup("");
@@ -226,26 +225,62 @@
       let hits = [];
 
       try {
-        // Preferred: users.emailLower
+        // 1) Preferred: users.emailLower
         const q1 = query(collection(db,'users'), where('emailLower','==', needle));
         let snap = await getDocs(q1);
-        snap.forEach(d => hits.push({ uid: d.id, ...d.data() }));
+        snap.forEach(d => hits.push({ uid: d.id, source:'users', ...d.data() }));
 
-        // Fallback: users.email (legacy)
+        // 2) Fallback: users.email (legacy)
         if (hits.length === 0) {
           const q2 = query(collection(db,'users'), where('email','==', raw));
           snap = await getDocs(q2);
-          snap.forEach(d => hits.push({ uid: d.id, ...d.data() }));
+          snap.forEach(d => hits.push({ uid: d.id, source:'users', ...d.data() }));
         }
 
-        // Optional fallback: public mirror collection (resolve UID)
+        // 3) Optional fallback: public mirror collection (resolve UID)
         if (hits.length === 0 && PUBLIC_MIRROR_COLLECTION) {
           try {
             const q3 = query(collection(db, PUBLIC_MIRROR_COLLECTION), where('emailLower','==', needle));
             const snap2 = await getDocs(q3);
-            snap2.forEach(d => hits.push({ uid: d.id, ...d.data() }));
+            snap2.forEach(d => hits.push({ uid: d.id, source:'public', ...d.data() }));
           } catch (mirrorErr) {
             console.warn("Mirror lookup failed:", mirrorErr);
+          }
+        }
+
+        // 4) NEW: Fallback to registrations (older users often only here)
+        if (hits.length === 0) {
+          try {
+            const regRef = collection(db, 'registrations');
+            // Try normalized first
+            let rsnap = await getDocs(query(regRef, where('emailLower','==', needle)));
+            if (rsnap.empty) {
+              // Try raw (older docs may not have emailLower)
+              rsnap = await getDocs(query(regRef, where('email','==', raw)));
+            }
+            const regHits = [];
+            rsnap.forEach(d => regHits.push({ uid: d.id, source:'registrations', ...d.data() }));
+
+            if (regHits.length > 0) {
+              // Seed /users/{uid} with email/emailLower for future searches
+              for (const r of regHits) {
+                if (r.uid) {
+                  const payload = {
+                    email: r.email || raw,
+                    emailLower: (r.emailLower || raw.toLowerCase()),
+                    updatedAt: serverTimestamp()
+                  };
+                  try {
+                    await setDoc(doc(db,'users', r.uid), payload, { merge: true });
+                  } catch (seedErr) {
+                    console.warn("Seeding users doc failed for", r.uid, seedErr);
+                  }
+                  hits.push(r);
+                }
+              }
+            }
+          } catch (regErr) {
+            console.warn("Registrations lookup failed:", regErr);
           }
         }
 
@@ -267,6 +302,7 @@
             <div class="text-sm">
               <div><span class="font-semibold">${h.userName || "—"}</span> · <span class="mono">${h.uid}</span></div>
               <div class="text-xs text-gray-600">${h.email || ""}</div>
+              <div class="text-[10px] text-gray-400">bron: ${h.source || "onbekend"}</div>
             </div>
             <button data-uid="${h.uid}" class="px-2 py-1 rounded bg-blue-600 text-white text-xs">KIES</button>
           </li>
