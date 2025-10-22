@@ -898,54 +898,14 @@
 
     /* ---- Live leaderboard with K-pill & fallback to legacy ---- */
     function startLiveLeaderboardFS(){
-      if(!db){
-        renderLocalLB(currentDate);
-        return;
-      }
-      if(lbUnsub){ lbUnsub(); lbUnsub = null; }
+      try { if (typeof lbUnsub === 'function') { lbUnsub(); } } catch {}
+      if (!db) { renderLocalLB(currentDate); return; }
 
-      const liveQ = query(
-        collection(db, 'slimstiekGames', `Game${currentDate}`, 'leaderboard'),
-        orderBy('score','desc'),
-        orderBy('ts','asc'),
-        limit(25)
-      );
+      // Live Slimstiek board
+      const colLive = collection(db, 'slimstiekGames', `Game${currentDate}`, 'leaderboard');
+      const qLive   = query(colLive, orderBy('score','desc'), orderBy('ts','asc'), limit(100));
 
-      lbUnsub = onSnapshot(liveQ, async (snap)=>{
-        lbList.innerHTML = '';
-
-        if (snap.empty){
-          // Fallback to legacy list (read-once)
-          try{
-            const legacy = await getDocs(query(
-              collection(db,'leaderboards','slimstiek','dates', currentDate, 'entries'),
-              orderBy('score','desc'),
-              orderBy('ts','asc'),
-              limit(10)
-            ));
-            lbList.innerHTML = '';
-            if (legacy.empty){
-              bestText.textContent = '—';
-              lbList.innerHTML = `<li class="bg-green-100 font-medium">Wees eerste op die leierbord!</li>`;
-              return;
-            }
-            const rows = legacy.docs.map(d => ({ id:d.id, ...d.data() }));
-            bestText.textContent = String(rows[0].score ?? '—');
-            rows.forEach(v=>{
-              const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
-              const pill = (Number(v.kSlim_total||0) > 0) ? ` <span class="k-pill">+${Number(v.kSlim_total)}</span>` : '';
-              const li = document.createElement('li');
-              li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>${you}: ${(v.score??0)} punte${pill}`;
-              lbList.appendChild(li);
-            });
-            return;
-          }catch(e){
-            console.warn('Legacy fallback failed:', e);
-            renderLocalLB(currentDate);
-            return;
-          }
-        }
-
+      lbUnsub = onSnapshot(qLive, (snap)=>{
         // Live rows present
         const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         rows.sort((a,b)=>{
@@ -961,6 +921,11 @@
         if (top.length) bestText.textContent = String(top[0].score ?? '—');
 
         lbList.innerHTML = '';
+        if (!top.length){
+          renderLocalLB(currentDate);
+          return;
+        }
+
         top.forEach(v=>{
           const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
           const pill = (Number(v.kSlim_total||0) > 0) ? ` <span class="k-pill">+${Number(v.kSlim_total)}</span>` : '';
