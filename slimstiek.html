@@ -21,12 +21,12 @@
   <meta property="og:description" content="Kom speel vandag se SLIMSTIEK op Kriptiek." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://www.kriptiek.com/slimstiek.html" />
-  <meta property="og:image" content="https://www.kriptiek.com/assets/S_SLIMSTIEK_12SEP.png" />
+  <meta property="og:image" content="https://www.kriptiek.com/assets/SLIMSTIEK_12SEP.png" />
   <meta property="og:image:alt" content="SLIMSTIEK knoppie" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="SLIMSTIEK – Kriptiek" />
   <meta name="twitter:description" content="Kom speel vandag se SLIMSTIEK op Kriptiek." />
-  <meta name="twitter:image" content="https://www.kriptiek.com/assets/S_SLIMSTIEK_12SEP.png" />
+  <meta name="twitter:image" content="https://www.kriptiek.com/assets/SLIMSTIEK_12SEP.png" />
 
   <!-- Tailwind + font -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -66,6 +66,7 @@
 
     /* Grid wrapper */
     .game-wrap{position:relative}
+
     /* GRID */
     #grid{
       position:relative; display:grid;
@@ -135,8 +136,7 @@
     .share-menu-local button:hover{background:#f3f4f6;}
 
     /* ACTION BARS */
-    .action-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;justify-items:center;align-items:center;}
-    .cols-3{ grid-template-columns:repeat(3,1fr); }
+    .action-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;justify-items:center;align-items:center;}
     .action-grid > a, .action-grid > button{
       display:grid; place-items:center; width:100%; aspect-ratio:1/1; max-width:120px;
       padding:0; margin:0; background:transparent !important; border:0; border-radius:0; line-height:0;
@@ -156,9 +156,6 @@
       border-radius:999px;padding:.15rem .5rem;
       font-size:.75rem;line-height:1;
     }
-
-    /* Admin panel */
-    #adminPanel{display:none}
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -182,7 +179,7 @@
       <div id="targetWrap"><div id="target"><span>—</span></div></div>
 
       <!-- small live row-multiplier hint -->
-      <div id="rowHint">Vermeningvuldiger: ×<b id="rowMultVal">1</b></div>
+      <div id="rowHint">Vermenigvuldiger: ×<b id="rowMultVal">1</b></div>
 
       <!-- GAME card -->
       <section class="card p-4">
@@ -251,7 +248,7 @@
         <!-- ACTION BARS -->
         <div class="controls mt-3" id="actionBars">
           <!-- Guests -->
-          <div id="barNR" class="action-grid cols-3">
+          <div id="barNR" class="action-grid">
             <a href="/register.html" title="Registreer">
               <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="120" height="120">
             </a>
@@ -274,7 +271,7 @@
           </div>
 
           <!-- Registered -->
-          <div id="barR" class="action-grid cols-3 hidden">
+          <div id="barR" class="action-grid hidden">
             <a href="/forum.html" title="Gesels saam">
               <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
             </a>
@@ -316,35 +313,16 @@
           <li>
             <p class="font-semibold">3. Punte</p>
             <ul class="list-disc pl-6">
-              <li><strong>+10 punte</strong> vir elke <em>paar</em> blokke wat verdwyn, <strong>vermenigvuldig met die boonste ry</strong> waarin daardie paar voorkom. (<em>Die heel onderste ry is ry 1; as die boonste van die twee blokke in ry 2 is, word die punte met 2 vermenigvuldig.</em>)</li>
-              <li><strong>+50 punte ekstra</strong> as <em>die letter en die kleur</em> van die twee blokke dieselfde is, ook vermenigvuldig met die boonste ry. Dit beteken: Hoe hoër jy die blokke laat opstapel, hoe meer punte kan jy aanteken—maar dan neem die risiko toe dat jy glad nie die woord gebou kan kry nie.</li>
-              <li><strong>+100 bonuspunte</strong> sodra jy die teikenwoord bou—die spel eindig dan.</li>
+              <li><strong>+10 punte</strong> vir elke <em>paar</em> blokke wat verdwyn, <strong>vermenigvuldig met die boonste ry</strong> waarin daardie paar voorkom. (Onderste ry = 1.)</li>
+              <li><strong>+50 punte ekstra</strong> as <em>die letter en die kleur</em> van die twee blokke dieselfde is, ook met die ry vermenigvuldig.</li>
+              <li><strong>+100 bonuspunte</strong> as jy die teikenwoord gebou het (die spel eindig).</li>
             </ul>
           </li>
           <li>
             <p class="font-semibold">4. Kontroles</p>
-            <p>Op jou toetsbord, gebruik die links- en regs-pyltjies om die blokke horisontaal te laat skuif, en die <strong>spasiebalk</strong> om die blok dadelik tot onder te laat val. Op 'n raakskerm, gebruik die knoppies op die skerm.</p>
+            <p>Op jou toetsbord: links/regs-pyltjies; <strong>spasie</strong> laat val. Op ’n raakskerm: gebruik die skermknoppies.</p>
           </li>
         </ol>
-      </section>
-
-      <!-- ADMIN: Backfill legacy -> live (visible to admins only) -->
-      <section id="adminPanel" class="mt-4 bg-white rounded shadow p-4">
-        <h2 class="text-xl font-bold mb-2">Admin: Slimstiek Backfill</h2>
-        <p class="text-sm text-gray-600 mb-3">Kopieer uit <code>leaderboards/slimstiek/dates/{YYYY-MM-DD}/entries</code> na <code>slimstiekGames/Game{YYYY-MM-DD}/leaderboard</code>. Skryf net as inkomende telling beter is.</p>
-        <div class="grid grid-cols-1 md:grid-cols-6 gap-2 items-end">
-          <label class="md:col-span-2 text-sm">Vanaf-datum (YYYY-MM-DD)
-            <input id="bfFrom" type="text" placeholder="2025-08-01" class="mt-1 w-full border rounded px-2 py-1">
-          </label>
-          <label class="md:col-span-2 text-sm">Tot-datum (YYYY-MM-DD)
-            <input id="bfTo" type="text" placeholder="2025-10-22" class="mt-1 w-full border rounded px-2 py-1">
-          </label>
-          <label class="md:col-span-1 inline-flex items-center gap-2">
-            <input id="bfDry" type="checkbox" class="w-4 h-4"> <span class="text-sm">Dry-run</span>
-          </label>
-          <button id="bfRun" class="btn md:col-span-1">RUN</button>
-        </div>
-        <pre id="bfLog" class="mt-3 bg-slate-50 p-2 rounded text-xs overflow-auto max-h-52">Ready.</pre>
       </section>
 
       <!-- LEADERBOARD -->
@@ -370,10 +348,10 @@
   </footer>
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
-    import { getAuth, onAuthStateChanged, signInAnonymously, getIdTokenResult } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
     import {
-      getFirestore, serverTimestamp, doc, getDoc, setDoc, writeBatch,
-      collection, query, orderBy, limit, onSnapshot, getDocs
+      getFirestore, serverTimestamp, doc, getDoc, setDoc,
+      collection, query, orderBy, limit, onSnapshot, getDocs, where
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
     /* ---- Firebase ---- */
@@ -387,7 +365,7 @@
     };
 
     let app, auth, db;
-    try{ app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); }catch(e){ console.warn('Firebase init failed (ok for local fallback):', e); }
+    try{ app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); }catch(e){ console.warn('Firebase init failed (local preview ok):', e); }
 
     /* ---- DOM ---- */
     const welcomeLine   = document.getElementById('welcomeLine');
@@ -425,14 +403,6 @@
 
     const rowMultLabel = document.getElementById('rowMultVal');
 
-    // Admin Backfill DOM
-    const adminPanel = document.getElementById('adminPanel');
-    const bfFrom = document.getElementById('bfFrom');
-    const bfTo   = document.getElementById('bfTo');
-    const bfDry  = document.getElementById('bfDry');
-    const bfRun  = document.getElementById('bfRun');
-    const bfLog  = document.getElementById('bfLog');
-
     /* ---- Helpers ---- */
     const SITE_ORIGIN = location.hostname.endsWith('kriptiek.com') ? location.origin : 'https://www.kriptiek.com';
     const qs = new URLSearchParams(location.search);
@@ -449,16 +419,14 @@
     let currentDate = (/^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : todayKeySAST());
     const GAME_ID = `Game${currentDate}`;
 
-    // Canonical URL normalization
+    // Canonical URL normalization (?date=YYYY-MM-DD)
     try {
       const urlObj = new URL(window.location.href);
       urlObj.searchParams.set('date', currentDate);
       urlObj.hash = '';
       const canonical = urlObj.pathname + '?' + urlObj.searchParams.toString();
       const current = window.location.pathname + window.location.search + window.location.hash;
-      if (current !== canonical) {
-        history.replaceState(null, '', canonical);
-      }
+      if (current !== canonical) history.replaceState(null, '', canonical);
     } catch {}
 
     const shareKey = () => `slimstiekShare:${currentDate}`;
@@ -480,13 +448,10 @@
       DAILY_CAP_PER_GAME: 200,
       SUPPORTER_MULTIPLIER: 1.10
     };
-    function zaTimeOn(dateStr, hhmm){
-      // Create a Date at ZA local time for comparisons
-      return new Date(`${dateStr}T${hhmm}:00+02:00`);
-    }
+    function zaTimeOn(dateStr, hhmm){ return new Date(`${dateStr}T${hhmm}:00+02:00`); }
 
     /* ---- Auth ---- */
-    let user=null, currentUserName='Speler', isAdminClient=false;
+    let user=null, currentUserName='Speler';
     function setBarsForUser(u){
       if(u){ barR.classList.remove('hidden'); barNR.classList.add('hidden'); welcomeLine.style.display=''; }
       else{ barNR.classList.remove('hidden'); barR.classList.add('hidden'); welcomeLine.style.display='none'; }
@@ -494,10 +459,7 @@
     function showNRGate(){ nrGate.style.display='flex'; }
     function hideNRGate(){ nrGate.style.display='none'; }
     let guestGateBypassOnce=false;
-    async function chooseGuest(){
-      // Keep your non-anon choice; still close the gate and let them play.
-      guestGateBypassOnce = true; hideNRGate();
-    }
+    function chooseGuest(){ guestGateBypassOnce = true; hideNRGate(); }
     function goRegister(){
       const returnUrl = location.pathname + location.search;
       sessionStorage.setItem('returnAfterAuth', returnUrl);
@@ -521,36 +483,8 @@
 
     if(auth){
       onAuthStateChanged(auth, async (u)=>{
-        user=u||null;
-        currentUserName = await resolveUserName(user);
-        playerNameEl.textContent=currentUserName;
-        setBarsForUser(user);
-        if(!user) showNRGate();
-
-        // Determine admin via custom claim or specific UID
-      // Determine admin: custom claim OR allowlist OR ?admin=1
-isAdminClient = false;
-try{
-  if (user) {
-    const t = await getIdTokenResult(user, true);
-    const claimAdmin = t?.claims?.admin === true;
-
-    // 👉 Put your real UID(s) here
-    const UID_ALLOW = new Set([
-      "jI7f0Wk4MqfPq7p69vjl8OlJUvS2", // existing
-      // "YOUR_REAL_UID_HERE",
-    ]);
-
-    const allowlistAdmin = UID_ALLOW.has(user.uid);
-    const queryOverride  = (new URLSearchParams(location.search)).get('admin') === '1';
-
-    isAdminClient = claimAdmin || allowlistAdmin || queryOverride;
-  }
-} catch (e) {
-  console.warn('Admin check failed:', e);
-}
-adminPanel.style.display = isAdminClient ? '' : 'none';
-
+        user=u||null; currentUserName = await resolveUserName(user);
+        playerNameEl.textContent=currentUserName; setBarsForUser(user); if(!user) showNRGate();
       });
     } else { setBarsForUser(null); showNRGate(); }
 
@@ -621,7 +555,7 @@ adminPanel.style.display = isAdminClient ? '' : 'none';
       return { color, letter, x:Math.floor(W/2), y:0 };
     }
 
-    /* ---- Scoring (revised) ---- */
+    /* ---- Scoring (Slimstiek) ---- */
     const SCORING = Object.freeze({
       PAIR_POINTS: 10,     // letter OR color match
       BOTH_BONUS:  50,     // extra if both letter AND color match
@@ -802,27 +736,21 @@ adminPanel.style.display = isAdminClient ? '' : 'none';
 
     /* ---- Keyboard controls (arrows + space + P) ---- */
     window.addEventListener('keydown', (e) => {
-      // ignore while overlays are open
       const gateOpen  = nrGate && nrGate.style.display === 'flex';
       const modalOpen = over   && over.style.display   === 'flex';
       if (gateOpen || modalOpen) return;
 
-      // ignore when typing in fields (future-proof)
       const tag = (document.activeElement && document.activeElement.tagName) || '';
       if (['INPUT','TEXTAREA','SELECT'].includes(tag)) return;
 
       switch (e.key) {
-        case 'ArrowLeft':
-          e.preventDefault(); move(-1,0); break;
-        case 'ArrowRight':
-          e.preventDefault(); move(1,0); break;
+        case 'ArrowLeft':  e.preventDefault(); move(-1,0); break;
+        case 'ArrowRight': e.preventDefault(); move( 1,0); break;
         case 'ArrowDown':
         case ' ':
-        case 'Spacebar':
-          e.preventDefault(); hardDrop(); break;
+        case 'Spacebar':   e.preventDefault(); hardDrop(); break;
         case 'p':
-        case 'P':
-          e.preventDefault(); togglePause(); break;
+        case 'P':          e.preventDefault(); togglePause(); break;
       }
     });
 
@@ -830,7 +758,7 @@ adminPanel.style.display = isAdminClient ? '' : 'none';
     let stickyPayload = null;
     function buildWinShareText(payload){
       const sc = Number(payload?.score ?? score) || 0;
-      return `Ek het ${sc} punte gekry met SLIMSTIEK op Kriptiek vandag: ${buildShareUrl(currentDate)}`;
+      return `Ek het ${sc} punte in SLIMSTIEK op Kriptiek: ${buildShareUrl(currentDate)}`;
     }
     function toggleShareMenu(){ shareMenu.classList.toggle('hidden'); }
     modalShareBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleShareMenu(); });
@@ -844,9 +772,9 @@ adminPanel.style.display = isAdminClient ? '' : 'none';
 
     async function trySystemShare(text){
       try{
-        const res = await fetch(`${SITE_ORIGIN}/assets/S_SLIMSTIEK_12SEP.png`);
+        const res = await fetch(`${SITE_ORIGIN}/assets/SLIMSTIEK_12SEP.png`);
         const blob = await res.blob();
-        const files = [new File([blob],'S_SLIMSTIEK_12SEP.png',{type:blob.type})];
+        const files = [new File([blob],'SLIMSTIEK_12SEP.png',{type:blob.type})];
         if(navigator.canShare && navigator.canShare({files})){
           await navigator.share({ title:'SLIMSTIEK – Kriptiek', text, files });
           return true;
@@ -931,7 +859,7 @@ adminPanel.style.display = isAdminClient ? '' : 'none';
         collection(db, 'slimstiekGames', GAME_ID, 'leaderboard'),
         orderBy('score','desc'),
         orderBy('ts','asc'),
-        limit(25) // read a few extra; we’ll slice to 10 after stable sort
+        limit(25)
       );
 
       lbUnsub = onSnapshot(qy, (snap)=>{
@@ -945,7 +873,6 @@ adminPanel.style.display = isAdminClient ? '' : 'none';
 
         const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-        // Stable client tie-break: score DESC, timestamp ASC
         rows.sort((a,b)=>{
           const sa = Number(a.score) || 0;
           const sb = Number(b.score) || 0;
@@ -969,15 +896,16 @@ adminPanel.style.display = isAdminClient ? '' : 'none';
           lbList.appendChild(li);
         });
       }, (err)=>{
-        console.error('LB stream failed, falling back to local:', err);
+        console.warn('LB stream failed, falling back to local:', err);
         renderLocalLB(currentDate);
       });
     }
 
-    /* ---- Submit to leaderboard (mirror to legacy path too) ---- */
+    /* ---- Submit to leaderboard (new + legacy mirror) ---- */
     async function submitToLB(scoreVal){
-      // Always keep a local fallback list (for offline/local dev)
       const row = { userName: currentUserName, score: scoreVal|0 };
+
+      // Local fallback
       const arr = getLocalLB(currentDate);
       const idx = arr.findIndex(r => (r.userName||'') === (row.userName||''));
       if (idx >= 0){
@@ -989,39 +917,29 @@ adminPanel.style.display = isAdminClient ? '' : 'none';
 
       if(!db || !user) return;
       try{
-        // Primary (new) path — live board
+        // New path (for live)
         const newRef  = doc(db, 'slimstiekGames', GAME_ID, 'leaderboard', user.uid);
-        const newSnap = await getDoc(newRef);
-        const prev = newSnap.exists() ? newSnap.data() : null;
-        const isBetter = !prev || ((row.score|0) > (prev.score|0));
-
-        if (isBetter){
-          await setDoc(newRef, {
-            userName: currentUserName.slice(0,24),
-            score: row.score|0,
-            ts: serverTimestamp()
-          }, { merge:true });
+        const snapNew = await getDoc(newRef);
+        const prev    = snapNew.exists() ? snapNew.data() : null;
+        const better  = !prev || ((row.score|0) > (prev.score|0));
+        if (better){
+          await setDoc(newRef, { userName: row.userName.slice(0,24), score: row.score|0, ts: serverTimestamp() }, { merge:true });
         } else {
-          // keep display name fresh
-          await setDoc(newRef, { userName: currentUserName.slice(0,24) }, { merge:true });
+          await setDoc(newRef, { userName: row.userName.slice(0,24) }, { merge:true });
         }
 
-        // Legacy mirror (for archives / ranking / K systems that still read it)
+        // Legacy mirror (archives/rankers)
         const legacyRef = doc(db,'leaderboards','slimstiek','dates', currentDate, 'entries', user.uid);
         const legSnap   = await getDoc(legacyRef);
         const legPrev   = legSnap.exists() ? legSnap.data() : null;
         const legBetter = !legPrev || ((row.score|0) > (legPrev.score|0));
         if (legBetter){
-          await setDoc(legacyRef, {
-            userName: currentUserName.slice(0,24),
-            score: row.score|0,
-            ts: serverTimestamp()
-          }, { merge:true });
+          await setDoc(legacyRef, { userName: row.userName.slice(0,24), score: row.score|0, ts: serverTimestamp() }, { merge:true });
         } else {
-          await setDoc(legacyRef, { userName: currentUserName.slice(0,24) }, { merge:true });
+          await setDoc(legacyRef, { userName: row.userName.slice(0,24) }, { merge:true });
         }
       } catch (e){
-        console.error('FS LB write FAILED:', e);
+        console.warn('Firestore LB write failed (ok):', e);
       }
     }
 
@@ -1040,14 +958,13 @@ adminPanel.style.display = isAdminClient ? '' : 'none';
         }
       } catch {}
 
-      // Have a best today? — check the **new** LB path first
+      // Have a best today? (check new LB)
       const newBestRef = doc(db,'slimstiekGames', GAME_ID, 'leaderboard', user.uid);
       const newBestSnap = await getDoc(newBestRef);
       const haveBest = newBestSnap.exists();
 
-      // read existing k fields (daily)
-      const S_ID = `Slim${currentDate}`;
-      const playRef = doc(db, `userGames/${user.uid}/plays/${S_ID}`);
+      // read existing k fields (daily) — standard GameYYYY-MM-DD id
+      const playRef = doc(db, `userGames/${user.uid}/plays/${GAME_ID}`);
       const playSnap = await getDoc(playRef);
       let kEarly=0, kImprove=0, kPlace=0, kTotal=0;
 
@@ -1061,7 +978,7 @@ adminPanel.style.display = isAdminClient ? '' : 'none';
 
       const now = new Date();
 
-      // EARLY: first 10 entries after 07:00 ZA, once (use legacy list for consistency)
+      // EARLY: first 10 entries after 07:00 ZA (use legacy list to match forum/archives)
       if (kEarly === 0 && haveBest && now >= zaTimeOn(currentDate, K_CONF.EARLY_BIRD_WINDOW_START)) {
         try {
           const qEarly = query(
@@ -1075,12 +992,12 @@ adminPanel.style.display = isAdminClient ? '' : 'none';
         } catch {}
       }
 
-      // IMPROVE: grant once the first time you have a recorded best
+      // IMPROVE: grant once when you have a recorded best
       if (kImprove === 0 && haveBest) {
         kImprove = K_CONF.IMPROVE_POINTS;
       }
 
-      // PLACE: only after cutoff; rank by score DESC then ts ASC (legacy list)
+      // PLACE: after cutoff; rank by score DESC then ts ASC (legacy)
       if (kPlace === 0 && now >= zaTimeOn(currentDate, K_CONF.CUTOFF_TIME)) {
         try {
           const qRank = query(
@@ -1112,14 +1029,8 @@ adminPanel.style.display = isAdminClient ? '' : 'none';
       }, { merge:true });
 
       // expose on BOTH rows for public pill
-      try {
-        const legacyBestRef = doc(db, 'leaderboards','slimstiek','dates', currentDate, 'entries', user.uid);
-        await setDoc(legacyBestRef, { kSlim_total: kTotal }, { merge: true });
-      } catch {}
-      try {
-        const newBestRef2 = doc(db, 'slimstiekGames', GAME_ID, 'leaderboard', user.uid);
-        await setDoc(newBestRef2, { kSlim_total: kTotal }, { merge: true });
-      } catch {}
+      try { await setDoc(doc(db, 'leaderboards','slimstiek','dates', currentDate, 'entries', user.uid), { kSlim_total: kTotal }, { merge: true }); } catch {}
+      try { await setDoc(doc(db, 'slimstiekGames', GAME_ID, 'leaderboard', user.uid), { kSlim_total: kTotal }, { merge: true }); } catch {}
     }
 
     /* ---- Game end ---- */
@@ -1169,110 +1080,16 @@ adminPanel.style.display = isAdminClient ? '' : 'none';
       startLiveLeaderboardFS();
       updateRowHint();
 
-      if (user) { mirrorSlimstiekPoints(); } // backfill-on-load if you already have a best
+      if (user) { mirrorSlimstiekPoints(); } // backfill on load if you already have a best
     }
-
-    /* ===== Admin Backfill (legacy -> live) ===== */
-    function logBF(msg){ bfLog.textContent += `\n${msg}`; bfLog.scrollTop = bfLog.scrollHeight; }
-    function validDateStr(s){ return /^\d{4}-\d{2}-\d{2}$/.test(s); }
-    function* dateRange(fromStr, toStr){
-      const d = new Date(fromStr + "T00:00:00Z");
-      const end = new Date(toStr + "T00:00:00Z");
-      for(; d <= end; d.setUTCDate(d.getUTCDate() + 1)){
-        const y = d.getUTCFullYear();
-        const m = String(d.getUTCMonth()+1).padStart(2,'0');
-        const day = String(d.getUTCDate()).padStart(2,'0');
-        yield `${y}-${m}-${day}`;
-      }
-    }
-    async function runBackfill(fromStr, toStr, dryRun){
-      if(!isAdminClient){ alert('Net beskikbaar vir admins.'); return; }
-      if(!db){ alert('Firestore nie beskikbaar nie.'); return; }
-      if(!validDateStr(fromStr) || !validDateStr(toStr)){ alert('Ongeldige datums.'); return; }
-
-      logBF(`Begin backfill ${fromStr} → ${toStr} ${dryRun?'(dry-run)':''}`);
-      let totalReads = 0, totalWrites = 0, totalSkipped = 0;
-
-      for(const dateStr of dateRange(fromStr, toStr)){
-        const srcColl = collection(db,'leaderboards','slimstiek','dates', dateStr, 'entries');
-        const snap = await getDocs(srcColl);
-        totalReads += snap.size;
-        if(snap.empty){ logBF(`[${dateStr}] geen legacy-rye`); continue; }
-
-        // Prepare rows
-        const rows = snap.docs.map(d=>{
-          const v = d.data()||{};
-          return {
-            uid: d.id,
-            userName: typeof v.userName === 'string' ? v.userName : 'Onbekend',
-            score: Number.isFinite(v.score) ? v.score : 0,
-            ts: v.ts,
-            kSlim_total: Number.isFinite(v.kSlim_total) ? v.kSlim_total : undefined
-          };
-        });
-
-        // Compare with existing live docs
-        const liveBase = collection(db,'slimstiekGames', `Game${dateStr}`, 'leaderboard');
-        // Read existing in small groups to limit concurrency
-        const chunkSize = 200;
-        let toWrite = [];
-        for(let i=0;i<rows.length;i+=chunkSize){
-          const chunk = rows.slice(i,i+chunkSize);
-          const reads = await Promise.all(chunk.map(r => getDoc(doc(liveBase.path, r.uid))));
-          reads.forEach((existSnap, idx)=>{
-            const r = chunk[idx];
-            const exists = existSnap.exists();
-            const current = exists ? existSnap.data() : null;
-            const currentScore = current && Number.isFinite(current.score) ? current.score : -1;
-            if(!exists || r.score > currentScore){
-              toWrite.push(r);
-            } else {
-              totalSkipped++;
-            }
-          });
-        }
-
-        if(!toWrite.length){ logBF(`[${dateStr}] niks om te skryf nie (bestaande beter/ongewys)`); continue; }
-        if(dryRun){ logBF(`[${dateStr}] sou ${toWrite.length} ry(e) skryf`); continue; }
-
-        // Batched writes (≤500 ops per batch)
-        for(let i=0;i<toWrite.length;i+=400){
-          const batch = writeBatch(db);
-          const slice = toWrite.slice(i,i+400);
-          slice.forEach(r=>{
-            const ref = doc(db,'slimstiekGames', `Game${dateStr}`, 'leaderboard', r.uid);
-            const data = {
-              userName: r.userName,
-              score: r.score,
-              ts: (r.ts && typeof r.ts.toMillis === 'function') ? r.ts : serverTimestamp()
-            };
-            if(Number.isFinite(r.kSlim_total)) data.kSlim_total = r.kSlim_total;
-            batch.set(ref, data, { merge:true });
-          });
-          await batch.commit();
-          totalWrites += slice.length;
-        }
-        logBF(`[${dateStr}] geskryf: ${toWrite.length}, oorgeslaan: ${rows.length - toWrite.length}`);
-      }
-
-      logBF(`Klaar. Reads=${totalReads} Writes=${totalWrites} Skipped=${totalSkipped} ${dryRun?'(dry-run)':''}`);
-    }
-
-    bfRun?.addEventListener('click', ()=>{
-      const f = bfFrom.value.trim();
-      const t = bfTo.value.trim();
-      const dry = !!bfDry.checked;
-      runBackfill(f,t,dry);
-    });
 
     /* ---- Init ---- */
     function init(){
-      initTileShareDropdowns();
+      document.querySelectorAll('.share-tile-wrap').forEach(wireShareTile);
       loadGame();
     }
     init();
   </script>
-
   <!-- Buy Me a Coffee CTA above leaderboard -->
   <script>
   document.addEventListener('DOMContentLoaded', () => {
