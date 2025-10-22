@@ -21,12 +21,12 @@
   <meta property="og:description" content="Kom speel vandag se SLIMSTIEK op Kriptiek." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://www.kriptiek.com/slimstiek.html" />
-  <meta property="og:image" content="https://www.kriptiek.com/assets/SLIMSTIEK_12SEP.png" />
+  <meta property="og:image" content="https://www.kriptiek.com/assets/S_SLIMSTIEK_12SEP.png" />
   <meta property="og:image:alt" content="SLIMSTIEK knoppie" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="SLIMSTIEK – Kriptiek" />
   <meta name="twitter:description" content="Kom speel vandag se SLIMSTIEK op Kriptiek." />
-  <meta name="twitter:image" content="https://www.kriptiek.com/assets/SLIMSTIEK_12SEP.png" />
+  <meta name="twitter:image" content="https://www.kriptiek.com/assets/S_SLIMSTIEK_12SEP.png" />
 
   <!-- Tailwind + font -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -64,7 +64,6 @@
       100%{box-shadow:0 0 0 rgba(255,221,0,0)}
     }
 
-    /* Grid wrapper */
     .game-wrap{position:relative}
 
     /* GRID */
@@ -136,7 +135,8 @@
     .share-menu-local button:hover{background:#f3f4f6;}
 
     /* ACTION BARS */
-    .action-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;justify-items:center;align-items:center;}
+    .action-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;justify-items:center;align-items:center;}
+    .cols-3{ grid-template-columns:repeat(3,1fr); }
     .action-grid > a, .action-grid > button{
       display:grid; place-items:center; width:100%; aspect-ratio:1/1; max-width:120px;
       padding:0; margin:0; background:transparent !important; border:0; border-radius:0; line-height:0;
@@ -156,6 +156,9 @@
       border-radius:999px;padding:.15rem .5rem;
       font-size:.75rem;line-height:1;
     }
+
+    /* Admin pane (small) */
+    #adminPanel{display:none}
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -175,11 +178,23 @@
   <main class="flex-1">
     <div class="max-w-3xl mx-auto px-4 py-4">
 
+      <!-- Admin backfill mini-panel -->
+      <section id="adminPanel" class="mb-3">
+        <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900 flex items-center gap-2 flex-wrap">
+          <strong>Admin:</strong>
+          <label class="flex items-center gap-1">Datum: <input id="adminDate" type="date" class="border rounded px-2 py-1 text-sm"></label>
+          <button id="btnBFOne" class="btn px-3 py-1">Backfill dag</button>
+          <label class="flex items-center gap-1">Tot: <input id="adminDateTo" type="date" class="border rounded px-2 py-1 text-sm"></label>
+          <button id="btnBFRange" class="btn px-3 py-1">Backfill reeks</button>
+          <span id="bfMsg" class="text-xs opacity-80"></span>
+        </div>
+      </section>
+
       <div class="headline">TEIKENWOORD:</div>
       <div id="targetWrap"><div id="target"><span>—</span></div></div>
 
       <!-- small live row-multiplier hint -->
-      <div id="rowHint">Vermenigvuldiger: ×<b id="rowMultVal">1</b></div>
+      <div id="rowHint">Vermeningvuldiger: ×<b id="rowMultVal">1</b></div>
 
       <!-- GAME card -->
       <section class="card p-4">
@@ -248,7 +263,7 @@
         <!-- ACTION BARS -->
         <div class="controls mt-3" id="actionBars">
           <!-- Guests -->
-          <div id="barNR" class="action-grid">
+          <div id="barNR" class="action-grid cols-3">
             <a href="/register.html" title="Registreer">
               <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="120" height="120">
             </a>
@@ -271,7 +286,7 @@
           </div>
 
           <!-- Registered -->
-          <div id="barR" class="action-grid hidden">
+          <div id="barR" class="action-grid cols-3 hidden">
             <a href="/forum.html" title="Gesels saam">
               <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
             </a>
@@ -313,14 +328,14 @@
           <li>
             <p class="font-semibold">3. Punte</p>
             <ul class="list-disc pl-6">
-              <li><strong>+10 punte</strong> vir elke <em>paar</em> blokke wat verdwyn, <strong>vermenigvuldig met die boonste ry</strong> waarin daardie paar voorkom. (Onderste ry = 1.)</li>
-              <li><strong>+50 punte ekstra</strong> as <em>die letter en die kleur</em> van die twee blokke dieselfde is, ook met die ry vermenigvuldig.</li>
-              <li><strong>+100 bonuspunte</strong> as jy die teikenwoord gebou het (die spel eindig).</li>
+              <li><strong>+10 punte</strong> vir elke <em>paar</em> blokke wat verdwyn, <strong>vermenigvuldig met die boonste ry</strong> waarin daardie paar voorkom. (<em>Die heel onderste ry is ry 1; as die boonste van die twee blokke in ry 2 is, word die punte met 2 vermenigvuldig.</em>)</li>
+              <li><strong>+50 punte ekstra</strong> as <em>die letter en die kleur</em> van die twee blokke dieselfde is, ook vermenigvuldig met die boonste ry.</li>
+              <li><strong>+100 bonuspunte</strong> sodra jy die teikenwoord gebou kry – die spel eindig dan ook.</li>
             </ul>
           </li>
           <li>
             <p class="font-semibold">4. Kontroles</p>
-            <p>Op jou toetsbord: links/regs-pyltjies; <strong>spasie</strong> laat val. Op ’n raakskerm: gebruik die skermknoppies.</p>
+            <p>Op jou toetsbord, gebruik die links- en regs-pyltjies om die blokke horisontaal te laat skuif, en die <strong>spasiebalk</strong> om die blok dadelik tot onder te laat val. Op 'n raakskerm, gebruik die knoppies op die skerm.</p>
           </li>
         </ol>
       </section>
@@ -346,12 +361,13 @@
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
+
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
-    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
+    import { getAuth, onAuthStateChanged, getIdTokenResult } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
     import {
       getFirestore, serverTimestamp, doc, getDoc, setDoc,
-      collection, query, orderBy, limit, onSnapshot, getDocs, where
+      collection, query, orderBy, limit, onSnapshot, getDocs
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
     /* ---- Firebase ---- */
@@ -365,7 +381,7 @@
     };
 
     let app, auth, db;
-    try{ app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); }catch(e){ console.warn('Firebase init failed (local preview ok):', e); }
+    try{ app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); }catch(e){ console.warn('Firebase init failed (ok for local fallback):', e); }
 
     /* ---- DOM ---- */
     const welcomeLine   = document.getElementById('welcomeLine');
@@ -402,6 +418,12 @@
     const gateRegLink = document.getElementById('gateRegLink');
 
     const rowMultLabel = document.getElementById('rowMultVal');
+    const adminPanel = document.getElementById('adminPanel');
+    const dAdmin = document.getElementById('adminDate');
+    const dAdminTo = document.getElementById('adminDateTo');
+    const btnBFOne = document.getElementById('btnBFOne');
+    const btnBFRange = document.getElementById('btnBFRange');
+    const bfMsg = document.getElementById('bfMsg');
 
     /* ---- Helpers ---- */
     const SITE_ORIGIN = location.hostname.endsWith('kriptiek.com') ? location.origin : 'https://www.kriptiek.com';
@@ -419,14 +441,16 @@
     let currentDate = (/^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : todayKeySAST());
     const GAME_ID = `Game${currentDate}`;
 
-    // Canonical URL normalization (?date=YYYY-MM-DD)
+    // Canonical URL normalization
     try {
       const urlObj = new URL(window.location.href);
       urlObj.searchParams.set('date', currentDate);
       urlObj.hash = '';
       const canonical = urlObj.pathname + '?' + urlObj.searchParams.toString();
       const current = window.location.pathname + window.location.search + window.location.hash;
-      if (current !== canonical) history.replaceState(null, '', canonical);
+      if (current !== canonical) {
+        history.replaceState(null, '', canonical);
+      }
     } catch {}
 
     const shareKey = () => `slimstiekShare:${currentDate}`;
@@ -448,10 +472,13 @@
       DAILY_CAP_PER_GAME: 200,
       SUPPORTER_MULTIPLIER: 1.10
     };
-    function zaTimeOn(dateStr, hhmm){ return new Date(`${dateStr}T${hhmm}:00+02:00`); }
+    function zaTimeOn(dateStr, hhmm){
+      return new Date(`${dateStr}T${hhmm}:00+02:00`);
+    }
 
     /* ---- Auth ---- */
-    let user=null, currentUserName='Speler';
+    let user=null, currentUserName='Speler', isAdminClient=false;
+
     function setBarsForUser(u){
       if(u){ barR.classList.remove('hidden'); barNR.classList.add('hidden'); welcomeLine.style.display=''; }
       else{ barNR.classList.remove('hidden'); barR.classList.add('hidden'); welcomeLine.style.display='none'; }
@@ -485,8 +512,30 @@
       onAuthStateChanged(auth, async (u)=>{
         user=u||null; currentUserName = await resolveUserName(user);
         playerNameEl.textContent=currentUserName; setBarsForUser(user); if(!user) showNRGate();
+
+        // Determine admin: custom claim OR allowlist OR ?admin=1
+        isAdminClient = false;
+        try{
+          if (user) {
+            const t = await getIdTokenResult(user, true);
+            const claimAdmin = t?.claims?.admin === true;
+
+            // 👉 Update with your actual admin UIDs if needed
+            const UID_ALLOW = new Set([
+              "jI7f0Wk4MqfPq7p69vjl8OlJUvS2"
+            ]);
+
+            const allowlistAdmin = UID_ALLOW.has(user.uid);
+            const queryOverride  = (new URLSearchParams(location.search)).get('admin') === '1';
+
+            isAdminClient = claimAdmin || allowlistAdmin || queryOverride;
+          }
+        } catch (e) {
+          console.warn('Admin check failed:', e);
+        }
+        adminPanel.style.display = isAdminClient ? '' : 'none';
       });
-    } else { setBarsForUser(null); showNRGate(); }
+    } else { setBarsForUser(null); showNRGate(); adminPanel.style.display='none'; }
 
     /* ---- Pixel-perfect grid sizing ---- */
     function resizeGrid(){
@@ -555,7 +604,7 @@
       return { color, letter, x:Math.floor(W/2), y:0 };
     }
 
-    /* ---- Scoring (Slimstiek) ---- */
+    /* ---- Scoring (revised) ---- */
     const SCORING = Object.freeze({
       PAIR_POINTS: 10,     // letter OR color match
       BOTH_BONUS:  50,     // extra if both letter AND color match
@@ -745,10 +794,10 @@
 
       switch (e.key) {
         case 'ArrowLeft':  e.preventDefault(); move(-1,0); break;
-        case 'ArrowRight': e.preventDefault(); move( 1,0); break;
+        case 'ArrowRight': e.preventDefault(); move(1,0); break;
         case 'ArrowDown':
         case ' ':
-        case 'Spacebar':   e.preventDefault(); hardDrop(); break;
+        case 'Spacebar':   e.preventDefault(); hardDrop();  break;
         case 'p':
         case 'P':          e.preventDefault(); togglePause(); break;
       }
@@ -758,7 +807,7 @@
     let stickyPayload = null;
     function buildWinShareText(payload){
       const sc = Number(payload?.score ?? score) || 0;
-      return `Ek het ${sc} punte in SLIMSTIEK op Kriptiek: ${buildShareUrl(currentDate)}`;
+      return `Ek het ${sc} punte gekry met SLIMSTIEK op Kriptiek vandag: ${buildShareUrl(currentDate)}`;
     }
     function toggleShareMenu(){ shareMenu.classList.toggle('hidden'); }
     modalShareBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleShareMenu(); });
@@ -772,9 +821,9 @@
 
     async function trySystemShare(text){
       try{
-        const res = await fetch(`${SITE_ORIGIN}/assets/SLIMSTIEK_12SEP.png`);
+        const res = await fetch(`${SITE_ORIGIN}/assets/S_SLIMSTIEK_12SEP.png`);
         const blob = await res.blob();
-        const files = [new File([blob],'SLIMSTIEK_12SEP.png',{type:blob.type})];
+        const files = [new File([blob],'S_SLIMSTIEK_12SEP.png',{type:blob.type})];
         if(navigator.canShare && navigator.canShare({files})){
           await navigator.share({ title:'SLIMSTIEK – Kriptiek', text, files });
           return true;
@@ -847,7 +896,7 @@
       });
     }
 
-    /* ---- Live leaderboard with K-pill & stable tiebreak ---- */
+    /* ---- Live leaderboard with K-pill & fallback to legacy ---- */
     function startLiveLeaderboardFS(){
       if(!db){
         renderLocalLB(currentDate);
@@ -855,24 +904,50 @@
       }
       if(lbUnsub){ lbUnsub(); lbUnsub = null; }
 
-      const qy = query(
-        collection(db, 'slimstiekGames', GAME_ID, 'leaderboard'),
+      const liveQ = query(
+        collection(db, 'slimstiekGames', `Game${currentDate}`, 'leaderboard'),
         orderBy('score','desc'),
         orderBy('ts','asc'),
         limit(25)
       );
 
-      lbUnsub = onSnapshot(qy, (snap)=>{
+      lbUnsub = onSnapshot(liveQ, async (snap)=>{
         lbList.innerHTML = '';
 
         if (snap.empty){
-          bestText.textContent = '—';
-          lbList.innerHTML = `<li class="bg-green-100 font-medium">Wees eerste op die leierbord!</li>`;
-          return;
+          // Fallback to legacy list (read-once)
+          try{
+            const legacy = await getDocs(query(
+              collection(db,'leaderboards','slimstiek','dates', currentDate, 'entries'),
+              orderBy('score','desc'),
+              orderBy('ts','asc'),
+              limit(10)
+            ));
+            lbList.innerHTML = '';
+            if (legacy.empty){
+              bestText.textContent = '—';
+              lbList.innerHTML = `<li class="bg-green-100 font-medium">Wees eerste op die leierbord!</li>`;
+              return;
+            }
+            const rows = legacy.docs.map(d => ({ id:d.id, ...d.data() }));
+            bestText.textContent = String(rows[0].score ?? '—');
+            rows.forEach(v=>{
+              const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
+              const pill = (Number(v.kSlim_total||0) > 0) ? ` <span class="k-pill">+${Number(v.kSlim_total)}</span>` : '';
+              const li = document.createElement('li');
+              li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>${you}: ${(v.score??0)} punte${pill}`;
+              lbList.appendChild(li);
+            });
+            return;
+          }catch(e){
+            console.warn('Legacy fallback failed:', e);
+            renderLocalLB(currentDate);
+            return;
+          }
         }
 
+        // Live rows present
         const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
         rows.sort((a,b)=>{
           const sa = Number(a.score) || 0;
           const sb = Number(b.score) || 0;
@@ -883,29 +958,25 @@
         });
 
         const top = rows.slice(0,10);
-
         if (top.length) bestText.textContent = String(top[0].score ?? '—');
 
+        lbList.innerHTML = '';
         top.forEach(v=>{
           const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
-          const pill = (Number(v.kSlim_total||0) > 0)
-            ? ` <span class="k-pill">+${Number(v.kSlim_total)}</span>`
-            : '';
+          const pill = (Number(v.kSlim_total||0) > 0) ? ` <span class="k-pill">+${Number(v.kSlim_total)}</span>` : '';
           const li = document.createElement('li');
           li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>${you}: ${(v.score??0)} punte${pill}`;
           lbList.appendChild(li);
         });
       }, (err)=>{
-        console.warn('LB stream failed, falling back to local:', err);
+        console.error('LB stream failed, falling back to local:', err);
         renderLocalLB(currentDate);
       });
     }
 
-    /* ---- Submit to leaderboard (new + legacy mirror) ---- */
+    /* ---- Submit to leaderboard (write to LIVE + LEGACY) ---- */
     async function submitToLB(scoreVal){
       const row = { userName: currentUserName, score: scoreVal|0 };
-
-      // Local fallback
       const arr = getLocalLB(currentDate);
       const idx = arr.findIndex(r => (r.userName||'') === (row.userName||''));
       if (idx >= 0){
@@ -916,34 +987,46 @@
       setLocalLB(currentDate, arr);
 
       if(!db || !user) return;
+
       try{
-        // New path (for live)
-        const newRef  = doc(db, 'slimstiekGames', GAME_ID, 'leaderboard', user.uid);
-        const snapNew = await getDoc(newRef);
-        const prev    = snapNew.exists() ? snapNew.data() : null;
-        const better  = !prev || ((row.score|0) > (prev.score|0));
-        if (better){
-          await setDoc(newRef, { userName: row.userName.slice(0,24), score: row.score|0, ts: serverTimestamp() }, { merge:true });
+        // LIVE path
+        const liveRef  = doc(db, 'slimstiekGames', `Game${currentDate}`, 'leaderboard', user.uid);
+        const liveSnap = await getDoc(liveRef);
+        const livePrev = liveSnap.exists() ? liveSnap.data() : null;
+        const betterLive = !livePrev || ((row.score|0) > (livePrev.score|0));
+
+        if (betterLive){
+          await setDoc(liveRef, {
+            userName: currentUserName.slice(0,24),
+            score: row.score|0,
+            ts: serverTimestamp()
+          }, { merge:true });
         } else {
-          await setDoc(newRef, { userName: row.userName.slice(0,24) }, { merge:true });
+          await setDoc(liveRef, { userName: currentUserName.slice(0,24) }, { merge:true });
         }
 
-        // Legacy mirror (archives/rankers)
+        // LEGACY path
         const legacyRef = doc(db,'leaderboards','slimstiek','dates', currentDate, 'entries', user.uid);
         const legSnap   = await getDoc(legacyRef);
         const legPrev   = legSnap.exists() ? legSnap.data() : null;
-        const legBetter = !legPrev || ((row.score|0) > (legPrev.score|0));
-        if (legBetter){
-          await setDoc(legacyRef, { userName: row.userName.slice(0,24), score: row.score|0, ts: serverTimestamp() }, { merge:true });
+        const betterLeg = !legPrev || ((row.score|0) > (legPrev.score|0));
+
+        if (betterLeg){
+          await setDoc(legacyRef, {
+            userName: currentUserName.slice(0,24),
+            score: row.score|0,
+            ts: serverTimestamp()
+          }, { merge:true });
         } else {
-          await setDoc(legacyRef, { userName: row.userName.slice(0,24) }, { merge:true });
+          await setDoc(legacyRef, { userName: currentUserName.slice(0,24) }, { merge:true });
         }
       } catch (e){
-        console.warn('Firestore LB write failed (ok):', e);
+        console.error('FS LB write FAILED:', e);
+        try { alert('Kon nie jou telling na die leierbord skryf nie. (Sien Console vir detail)'); } catch {}
       }
     }
 
-    /* ==== Mirror Slimstiek points into userGames/plays & expose for pill ==== */
+    /* ==== Mirror Slimstiek K-pill into userGames + expose on both boards ==== */
     async function mirrorSlimstiekPoints(){
       if (!db || !user) return;
 
@@ -958,13 +1041,14 @@
         }
       } catch {}
 
-      // Have a best today? (check new LB)
-      const newBestRef = doc(db,'slimstiekGames', GAME_ID, 'leaderboard', user.uid);
-      const newBestSnap = await getDoc(newBestRef);
-      const haveBest = newBestSnap.exists();
+      // Have a best today?
+      const liveBestRef = doc(db,'slimstiekGames', `Game${currentDate}`, 'leaderboard', user.uid);
+      const liveBestSnap = await getDoc(liveBestRef);
+      const haveBest = liveBestSnap.exists();
 
-      // read existing k fields (daily) — standard GameYYYY-MM-DD id
-      const playRef = doc(db, `userGames/${user.uid}/plays/${GAME_ID}`);
+      // read existing k fields (daily)
+      const S_ID = `Slim${currentDate}`;
+      const playRef = doc(db, `userGames/${user.uid}/plays/${S_ID}`);
       const playSnap = await getDoc(playRef);
       let kEarly=0, kImprove=0, kPlace=0, kTotal=0;
 
@@ -978,7 +1062,7 @@
 
       const now = new Date();
 
-      // EARLY: first 10 entries after 07:00 ZA (use legacy list to match forum/archives)
+      // EARLY: first 10 entries after 07:00 ZA (legacy list for consistency)
       if (kEarly === 0 && haveBest && now >= zaTimeOn(currentDate, K_CONF.EARLY_BIRD_WINDOW_START)) {
         try {
           const qEarly = query(
@@ -992,12 +1076,12 @@
         } catch {}
       }
 
-      // IMPROVE: grant once when you have a recorded best
+      // IMPROVE: grant once the first time you have a recorded best
       if (kImprove === 0 && haveBest) {
         kImprove = K_CONF.IMPROVE_POINTS;
       }
 
-      // PLACE: after cutoff; rank by score DESC then ts ASC (legacy)
+      // PLACE: only after cutoff; rank by score DESC then ts ASC (legacy list)
       if (kPlace === 0 && now >= zaTimeOn(currentDate, K_CONF.CUTOFF_TIME)) {
         try {
           const qRank = query(
@@ -1020,17 +1104,19 @@
       kTotal = Math.min(Math.round(base * mult), K_CONF.DAILY_CAP_PER_GAME);
 
       // persist privately
-      await setDoc(playRef, {
-        kSlim_early:   kEarly,
-        kSlim_improve: kImprove,
-        kSlim_place:   kPlace,
-        kSlim_total:   kTotal,
-        updatedAt: serverTimestamp()
-      }, { merge:true });
+      try {
+        await setDoc(playRef, {
+          kSlim_early:   kEarly,
+          kSlim_improve: kImprove,
+          kSlim_place:   kPlace,
+          kSlim_total:   kTotal,
+          updatedAt: serverTimestamp()
+        }, { merge:true });
+      } catch (e) { console.warn('Play mirror failed:', e); }
 
       // expose on BOTH rows for public pill
-      try { await setDoc(doc(db, 'leaderboards','slimstiek','dates', currentDate, 'entries', user.uid), { kSlim_total: kTotal }, { merge: true }); } catch {}
-      try { await setDoc(doc(db, 'slimstiekGames', GAME_ID, 'leaderboard', user.uid), { kSlim_total: kTotal }, { merge: true }); } catch {}
+      try { await setDoc(doc(db,'leaderboards','slimstiek','dates', currentDate, 'entries', user.uid), { kSlim_total: kTotal }, { merge: true }); } catch {}
+      try { await setDoc(doc(db,'slimstiekGames', `Game${currentDate}`, 'leaderboard', user.uid), { kSlim_total: kTotal }, { merge: true }); } catch {}
     }
 
     /* ---- Game end ---- */
@@ -1041,7 +1127,7 @@
 
       if(bestScore==null || score > bestScore) bestScore = score;
       submitToLB(score);
-      mirrorSlimstiekPoints();  // mirror on finish
+      mirrorSlimstiekPoints();  // writes pill fields
       enableStickyShare({ score });
 
       winMsg.innerHTML = `Veels geluk, <strong>${currentUserName}</strong>! Jy het <strong>${TARGET}</strong> voltooi vir <strong>${score}</strong> punte.`;
@@ -1083,13 +1169,97 @@
       if (user) { mirrorSlimstiekPoints(); } // backfill on load if you already have a best
     }
 
+    /* ---- Admin backfill helpers ---- */
+    function pad(n){ return String(n).padStart(2,'0'); }
+    function isoDay(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+
+    async function backfillOne(dateStr){
+      if(!db){ alert('Geen Firestore in hierdie omgewing.'); return; }
+      bfMsg.textContent = `Backfill ${dateStr}…`;
+
+      const liveCol   = collection(db,'slimstiekGames', `Game${dateStr}`, 'leaderboard');
+      const legacyCol = collection(db,'leaderboards','slimstiek','dates', dateStr, 'entries');
+
+      try{
+        // Read both sides
+        const [liveSnap, legacySnap] = await Promise.all([
+          getDocs(query(liveCol, orderBy('score','desc'), orderBy('ts','asc'), limit(1000))),
+          getDocs(query(legacyCol, orderBy('score','desc'), orderBy('ts','asc'), limit(1000)))
+        ]);
+
+        const liveMap = new Map(liveSnap.docs.map(d=>[d.id, {id:d.id, ...d.data()}]));
+        const legMap  = new Map(legacySnap.docs.map(d=>[d.id, {id:d.id, ...d.data()}]));
+
+        const uids = new Set([...liveMap.keys(), ...legMap.keys()]);
+
+        // For each UID, create/merge both sides; fetch pill from userGames if available
+        for (const uid of uids){
+          const liveRow = liveMap.get(uid) || {};
+          const legRow  = legMap.get(uid)  || {};
+
+          // pick the better score, otherwise prefer any available
+          const liveScore = Number(liveRow.score||0);
+          const legScore  = Number(legRow.score||0);
+          const pickLive  = liveScore >= legScore;
+          const base = pickLive ? liveRow : legRow;
+
+          // best known fields
+          const userName = (base.userName || liveRow.userName || legRow.userName || 'Onbekend').toString().slice(0,24);
+          const scoreVal = Number(base.score||0)|0;
+          const tsVal    = base.ts || liveRow.ts || legRow.ts || serverTimestamp();
+
+          // find pill from userGames
+          let kTotal = Number(base.kSlim_total||0);
+          if (!kTotal){
+            try{
+              const playSnap = await getDoc(doc(db, 'userGames', uid, 'plays', `Slim${dateStr}`));
+              if (playSnap.exists()){
+                const pd = playSnap.data();
+                kTotal = Number(pd?.kSlim_total||0);
+              }
+            }catch{}
+          }
+
+          const writeObj = { userName, score:scoreVal, ts:tsVal };
+          if (kTotal>0) writeObj.kSlim_total = kTotal;
+
+          // write both sides (merge)
+          try { await setDoc(doc(db,'slimstiekGames', `Game${dateStr}`, 'leaderboard', uid), writeObj, { merge:true }); } catch(e){ console.warn('live set fail', uid, e); }
+          try { await setDoc(doc(db,'leaderboards','slimstiek','dates', dateStr, 'entries', uid), writeObj, { merge:true }); } catch(e){ console.warn('legacy set fail', uid, e); }
+        }
+
+        bfMsg.textContent = `Klaar vir ${dateStr} ✔`;
+      }catch(e){
+        console.error('Backfill failed:', e);
+        bfMsg.textContent = `Backfill fout – kyk Console`;
+        alert('Backfill het misluk. Sien Console vir detail.');
+      }
+    }
+
+    function eachDayISO(fromISO, toISO){
+      const out=[]; const s = new Date(fromISO+'T00:00:00+02:00'); const e = new Date(toISO+'T00:00:00+02:00');
+      for(let d=new Date(s); d<=e; d.setDate(d.getDate()+1)) out.push(isoDay(d));
+      return out;
+    }
+
+    btnBFOne?.addEventListener('click', async ()=>{
+      const d = dAdmin.value || currentDate; await backfillOne(d); startLiveLeaderboardFS();
+    });
+    btnBFRange?.addEventListener('click', async ()=>{
+      const a = dAdmin.value || currentDate;
+      const b = dAdminTo.value || a;
+      for (const day of eachDayISO(a,b)){ await backfillOne(day); }
+      startLiveLeaderboardFS();
+    });
+
     /* ---- Init ---- */
     function init(){
-      document.querySelectorAll('.share-tile-wrap').forEach(wireShareTile);
+      initTileShareDropdowns();
       loadGame();
     }
     init();
   </script>
+
   <!-- Buy Me a Coffee CTA above leaderboard -->
   <script>
   document.addEventListener('DOMContentLoaded', () => {
