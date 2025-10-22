@@ -528,14 +528,29 @@
         if(!user) showNRGate();
 
         // Determine admin via custom claim or specific UID
-        isAdminClient = false;
-        try{
-          if(user){
-            const t = await getIdTokenResult(user, true);
-            isAdminClient = !!(t?.claims?.admin === true || user.uid === "jI7f0Wk4MqfPq7p69vjl8OlJUvS2");
-          }
-        }catch{}
-        adminPanel.style.display = isAdminClient ? '' : 'none';
+      // Determine admin: custom claim OR allowlist OR ?admin=1
+isAdminClient = false;
+try{
+  if (user) {
+    const t = await getIdTokenResult(user, true);
+    const claimAdmin = t?.claims?.admin === true;
+
+    // 👉 Put your real UID(s) here
+    const UID_ALLOW = new Set([
+      "jI7f0Wk4MqfPq7p69vjl8OlJUvS2", // existing
+      // "YOUR_REAL_UID_HERE",
+    ]);
+
+    const allowlistAdmin = UID_ALLOW.has(user.uid);
+    const queryOverride  = (new URLSearchParams(location.search)).get('admin') === '1';
+
+    isAdminClient = claimAdmin || allowlistAdmin || queryOverride;
+  }
+} catch (e) {
+  console.warn('Admin check failed:', e);
+}
+adminPanel.style.display = isAdminClient ? '' : 'none';
+
       });
     } else { setBarsForUser(null); showNRGate(); }
 
