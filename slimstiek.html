@@ -2,15 +2,15 @@
 <html lang="af">
 <head>
 
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-S9V4CMP1FP"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-S9V4CMP1FP');
-</script>
-  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9V4CMP1FP"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-S9V4CMP1FP');
+  </script>
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
   <title>SLIMSTIEK – Kriptiek</title>
@@ -21,12 +21,12 @@
   <meta property="og:description" content="Kom speel vandag se SLIMSTIEK op Kriptiek." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://www.kriptiek.com/slimstiek.html" />
-  <meta property="og:image" content="https://www.kriptiek.com/assets/S_SLIMSTIEK_12SEP.png" />
+  <meta property="og:image" content="https://www.kriptiek.com/assets/SLIMSTIEK_12SEP.png" />
   <meta property="og:image:alt" content="SLIMSTIEK knoppie" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="SLIMSTIEK – Kriptiek" />
   <meta name="twitter:description" content="Kom speel vandag se SLIMSTIEK op Kriptiek." />
-  <meta name="twitter:image" content="https://www.kriptiek.com/assets/S_SLIMSTIEK_12SEP.png" />
+  <meta name="twitter:image" content="https://www.kriptiek.com/assets/SLIMSTIEK_12SEP.png" />
 
   <!-- Tailwind + font -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -66,6 +66,7 @@
 
     /* Grid wrapper */
     .game-wrap{position:relative}
+
     /* GRID */
     #grid{
       position:relative; display:grid;
@@ -119,7 +120,7 @@
     @media (min-width:640px){.dir-btn{min-width:72px;min-height:72px;font-size:28px}}
 
     .pill{background:#0c4a3e;color:#fff;font-weight:700;padding:6px 10px;border-radius:8px;text-align:center;}
-    #leaderboardList li{padding:.35rem .5rem;border-radius:.375rem;}
+    #leaderboardList li{padding:.35rem .5rem;border-radius:.375rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}
     #leaderboardList li:nth-child(odd){background:#f3f4f6;}
     #leaderboardList li:first-child{background:#d1fae5;font-weight:700;}
 
@@ -135,8 +136,7 @@
     .share-menu-local button:hover{background:#f3f4f6;}
 
     /* ACTION BARS */
-    .action-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;justify-items:center;align-items:center;}
-    .cols-3{ grid-template-columns:repeat(3,1fr); }
+    .action-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;justify-items:center;align-items:center;}
     .action-grid > a, .action-grid > button{
       display:grid; place-items:center; width:100%; aspect-ratio:1/1; max-width:120px;
       padding:0; margin:0; background:transparent !important; border:0; border-radius:0; line-height:0;
@@ -148,6 +148,14 @@
 
     /* N-R gate */
     #nrGate{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:60;}
+
+    /* Slimstiek K-pill (teal) */
+    .k-pill{
+      display:inline-flex;align-items:center;gap:.35rem;
+      background:#0f766e;color:#fff;font-weight:800;
+      border-radius:999px;padding:.15rem .5rem;
+      font-size:.75rem;line-height:1;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -171,7 +179,7 @@
       <div id="targetWrap"><div id="target"><span>—</span></div></div>
 
       <!-- small live row-multiplier hint -->
-      <div id="rowHint">Vermeningvuldiger: ×<b id="rowMultVal">1</b></div>
+      <div id="rowHint">Vermenigvuldiger: ×<b id="rowMultVal">1</b></div>
 
       <!-- GAME card -->
       <section class="card p-4">
@@ -240,7 +248,7 @@
         <!-- ACTION BARS -->
         <div class="controls mt-3" id="actionBars">
           <!-- Guests -->
-          <div id="barNR" class="action-grid cols-3">
+          <div id="barNR" class="action-grid">
             <a href="/register.html" title="Registreer">
               <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="120" height="120">
             </a>
@@ -263,7 +271,7 @@
           </div>
 
           <!-- Registered -->
-          <div id="barR" class="action-grid cols-3 hidden">
+          <div id="barR" class="action-grid hidden">
             <a href="/forum.html" title="Gesels saam">
               <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
             </a>
@@ -305,21 +313,14 @@
           <li>
             <p class="font-semibold">3. Punte</p>
             <ul class="list-disc pl-6">
-              <li>
-                <strong>+10 punte</strong> vir elke <em>paar</em> blokke wat verdwyn,
-                <strong>vermenigvuldig met die boonste ry</strong> waarin daardie paar voorkom.
-                (<em>Die heel onderste ry is ry 1; as die boonste van die twee blokke in ry 2 is, word die punte met 2 vermenigvuldig.</em>)
-              </li>
-              <li>
-                <strong>+50 punte ekstra</strong> as <em>die letter en die kleur</em> van die twee blokke dieselfde is,
-                ook vermenigvuldig met die boonste ry waarin dit gebeur. Dit beteken: Hoe hoër jy die blokke laat opstapel, hoe meer punte kan jy aanteken, maar dan neem die risiko ook toe dat jy glad nie die woord gebou kan kry nie.
-              </li>
-              <li><strong>+100 bonuspunte</strong> sodra jy die teikenwoord gebou kry – die spel eindig dan ook.</li>
+              <li><strong>+10 punte</strong> vir elke <em>paar</em> blokke wat verdwyn, <strong>vermenigvuldig met die boonste ry</strong> waarin daardie paar voorkom. (Onderste ry = 1.)</li>
+              <li><strong>+50 punte ekstra</strong> as <em>die letter en die kleur</em> van die twee blokke dieselfde is, ook met die ry vermenigvuldig.</li>
+              <li><strong>+100 bonuspunte</strong> as jy die teikenwoord gebou het (die spel eindig).</li>
             </ul>
           </li>
           <li>
             <p class="font-semibold">4. Kontroles</p>
-            <p>Op jou toetsbord, gebruik die links- en regs-pyltjies om die blokke horisontaal te laat skuif, en die <strong>spasiebalk</strong> om die blok dadelik tot onder te laat val. Op 'n raakskerm, gebruik die knoppies op die skerm.</p>
+            <p>Op jou toetsbord: links/regs-pyltjies; <strong>spasie</strong> laat val. Op ’n raakskerm: gebruik die skermknoppies.</p>
           </li>
         </ol>
       </section>
@@ -345,13 +346,12 @@
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
-
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
     import {
       getFirestore, serverTimestamp, doc, getDoc, setDoc,
-      collection, query, orderBy, limit, onSnapshot
+      collection, query, orderBy, limit, onSnapshot, getDocs, where
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
     /* ---- Firebase ---- */
@@ -365,7 +365,7 @@
     };
 
     let app, auth, db;
-    try{ app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); }catch(e){ console.warn('Firebase init failed (ok for local fallback):', e); }
+    try{ app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); }catch(e){ console.warn('Firebase init failed (local preview ok):', e); }
 
     /* ---- DOM ---- */
     const welcomeLine   = document.getElementById('welcomeLine');
@@ -417,17 +417,16 @@
 
     const dateParam = qs.get('date');
     let currentDate = (/^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : todayKeySAST());
+    const GAME_ID = `Game${currentDate}`;
 
-    // --- Canonical URL normalization (after currentDate is known) ---
+    // Canonical URL normalization (?date=YYYY-MM-DD)
     try {
       const urlObj = new URL(window.location.href);
       urlObj.searchParams.set('date', currentDate);
       urlObj.hash = '';
       const canonical = urlObj.pathname + '?' + urlObj.searchParams.toString();
       const current = window.location.pathname + window.location.search + window.location.hash;
-      if (current !== canonical) {
-        history.replaceState(null, '', canonical);
-      }
+      if (current !== canonical) history.replaceState(null, '', canonical);
     } catch {}
 
     const shareKey = () => `slimstiekShare:${currentDate}`;
@@ -437,6 +436,19 @@
       return url.toString();
     }
     function shareTextLinkOnly(){ return `Kyk of jy my telling op vandag se SLIMSTIEK kan klop: ${buildShareUrl(currentDate)}`; }
+
+    /* ==== K mirror config & ZA helpers ==== */
+    const K_CONF = {
+      EARLY_BIRD_WINDOW_START: "07:00",
+      CUTOFF_TIME: "23:55",
+      LEADERBOARD_SIZE: 10,
+      EARLY_BIRD_POINTS: 20,
+      IMPROVE_POINTS: 30,
+      FINAL_POINTS: [120,90,70,60,50,40,30,25,20,15],
+      DAILY_CAP_PER_GAME: 200,
+      SUPPORTER_MULTIPLIER: 1.10
+    };
+    function zaTimeOn(dateStr, hhmm){ return new Date(`${dateStr}T${hhmm}:00+02:00`); }
 
     /* ---- Auth ---- */
     let user=null, currentUserName='Speler';
@@ -543,7 +555,7 @@
       return { color, letter, x:Math.floor(W/2), y:0 };
     }
 
-    /* ---- Scoring (revised) ---- */
+    /* ---- Scoring (Slimstiek) ---- */
     const SCORING = Object.freeze({
       PAIR_POINTS: 10,     // letter OR color match
       BOTH_BONUS:  50,     // extra if both letter AND color match
@@ -576,7 +588,7 @@
     function spawnFloatForPair(x1,y1,x2,y2, points, mult){
       const s = cellSizePx();
       const cx = ((x1 + 0.5) + (x2 + 0.5)) / 2 * s;
-      const cy = ((y1 + 0.5) + (x2 + 0.5)) / 2 * s; /* note: keep visual center */
+      const cy = ((y1 + 0.5) + (y2 + 0.5)) / 2 * s;
       spawnFloatAt(cx, cy, `+${points} ×${mult}`);
     }
 
@@ -724,27 +736,21 @@
 
     /* ---- Keyboard controls (arrows + space + P) ---- */
     window.addEventListener('keydown', (e) => {
-      // ignore while overlays are open
       const gateOpen  = nrGate && nrGate.style.display === 'flex';
       const modalOpen = over   && over.style.display   === 'flex';
       if (gateOpen || modalOpen) return;
 
-      // ignore when typing in fields (future-proof)
       const tag = (document.activeElement && document.activeElement.tagName) || '';
       if (['INPUT','TEXTAREA','SELECT'].includes(tag)) return;
 
       switch (e.key) {
-        case 'ArrowLeft':
-          e.preventDefault(); move(-1,0); break;
-        case 'ArrowRight':
-          e.preventDefault(); move(1,0); break;
+        case 'ArrowLeft':  e.preventDefault(); move(-1,0); break;
+        case 'ArrowRight': e.preventDefault(); move( 1,0); break;
         case 'ArrowDown':
         case ' ':
-        case 'Spacebar':
-          e.preventDefault(); hardDrop(); break;
+        case 'Spacebar':   e.preventDefault(); hardDrop(); break;
         case 'p':
-        case 'P':
-          e.preventDefault(); togglePause(); break;
+        case 'P':          e.preventDefault(); togglePause(); break;
       }
     });
 
@@ -752,7 +758,7 @@
     let stickyPayload = null;
     function buildWinShareText(payload){
       const sc = Number(payload?.score ?? score) || 0;
-      return `Ek het ${sc} punte gekry met SLIMSTIEK op Kriptiek vandag: ${buildShareUrl(currentDate)}`;
+      return `Ek het ${sc} punte in SLIMSTIEK op Kriptiek: ${buildShareUrl(currentDate)}`;
     }
     function toggleShareMenu(){ shareMenu.classList.toggle('hidden'); }
     modalShareBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleShareMenu(); });
@@ -766,9 +772,9 @@
 
     async function trySystemShare(text){
       try{
-        const res = await fetch(`${SITE_ORIGIN}/assets/S_SLIMSTIEK_12SEP.png`);
+        const res = await fetch(`${SITE_ORIGIN}/assets/SLIMSTIEK_12SEP.png`);
         const blob = await res.blob();
-        const files = [new File([blob],'S_SLIMSTIEK_12SEP.png',{type:blob.type})];
+        const files = [new File([blob],'SLIMSTIEK_12SEP.png',{type:blob.type})];
         if(navigator.canShare && navigator.canShare({files})){
           await navigator.share({ title:'SLIMSTIEK – Kriptiek', text, files });
           return true;
@@ -821,43 +827,10 @@
       }catch{}
     }
 
-    /* ---- Slimstiek-telling helpers (🧠 pill) ---- */
-    async function getUserSlimstiekTelling(uid){
-      try{
-        const uref = doc(db,'users',uid);
-        const snap = await getDoc(uref);
-        if(snap.exists()){
-          const v = Number(snap.data()?.slimstiekTelling);
-          if(Number.isFinite(v) && v >= 0) return v;
-        }
-      }catch{}
-      return null;
-    }
-    function computeSlimstiekTellingFromEntry(entry){
-      // Fallback rule aligned with Slimstiek’s scoring: use the entry’s score
-      const s = Number(entry?.score ?? 0);
-      return Number.isFinite(s) && s >= 0 ? s : 0;
-    }
-    async function resolvePillValueForEntry(entry){
-      // 1) inline on entry
-      const inline = Number(entry?.slimstiekTelling);
-      if(Number.isFinite(inline) && inline>=0) return inline;
-
-      // 2) users/{uid}.slimstiekTelling
-      if(entry?.uid){
-        const uval = await getUserSlimstiekTelling(entry.uid);
-        if(uval !== null) return uval;
-      }
-
-      // 3) compute from entry
-      return computeSlimstiekTellingFromEntry(entry);
-    }
-
-    /* ---- Leaderboard ---- */
+    /* ---- Local leaderboard (fallback) ---- */
     const LB_LOCAL_KEY = d => `slimstiekLocalLB:${d}`;
     function getLocalLB(date){ try{ return JSON.parse(localStorage.getItem(LB_LOCAL_KEY(date))) || []; }catch{ return []; } }
     function setLocalLB(date, arr){ try{ localStorage.setItem(LB_LOCAL_KEY(date), JSON.stringify(arr)); }catch{} }
-
     function renderLocalLB(date){
       const list = getLocalLB(date).sort((a,b)=> (b.score|0)-(a.score|0)).slice(0,10);
       lbList.innerHTML='';
@@ -868,95 +841,196 @@
       }
       bestText.textContent = String(list[0].score);
       list.forEach(row=>{
-        const pillVal = computeSlimstiekTellingFromEntry(row);
         const li=document.createElement('li');
-        li.innerHTML = `
-          <div class="flex items-center justify-between">
-            <div><strong>${row.userName||'Speler'}</strong>: ${(row.score|0)} punte</div>
-            <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-white" style="background:#065f46">
-              <span class="font-bold">${pillVal}</span>
-            </div>
-          </div>`;
+        li.innerHTML = `<strong>${row.userName||'Speler'}</strong>: ${row.score|0} punte`;
         lbList.appendChild(li);
       });
     }
 
+    /* ---- Live leaderboard with K-pill & stable tiebreak ---- */
     function startLiveLeaderboardFS(){
-      if(!db){ renderLocalLB(currentDate); return; }
-      if(lbUnsub){ lbUnsub(); lbUnsub=null; }
+      if(!db){
+        renderLocalLB(currentDate);
+        return;
+      }
+      if(lbUnsub){ lbUnsub(); lbUnsub = null; }
+
       const qy = query(
-        collection(db,'leaderboards','slimstiek','dates', currentDate, 'entries'),
-        orderBy('score','desc'), limit(10)
+        collection(db, 'slimstiekGames', GAME_ID, 'leaderboard'),
+        orderBy('score','desc'),
+        orderBy('ts','asc'),
+        limit(25)
       );
+
       lbUnsub = onSnapshot(qy, (snap)=>{
-        (async ()=>{
-          lbList.innerHTML='';
-          if(snap.empty){
-            bestText.textContent='—';
-            lbList.innerHTML = `<li class="bg-green-100 font-medium">Wees eerste op die leierbord!</li>`;
-            return;
-          }
-          let idx=0;
-          const rows = [];
-          snap.forEach(docSnap=> rows.push({ id: docSnap.id, ...docSnap.data() }) );
+        lbList.innerHTML = '';
 
-          // Resolve pill values with precedence
-          const enriched = await Promise.all(rows.map(async r => ({ ...r, _pill: await resolvePillValueForEntry(r) })));
+        if (snap.empty){
+          bestText.textContent = '—';
+          lbList.innerHTML = `<li class="bg-green-100 font-medium">Wees eerste op die leierbord!</li>`;
+          return;
+        }
 
-          enriched.forEach(v=>{
-            if(idx===0) bestText.textContent = String(v.score ?? '—');
-            const li=document.createElement('li');
-            li.innerHTML = `
-              <div class="flex items-center justify-between">
-                <div><strong>${(v.userName||'Onbekend')}</strong>: ${(v.score??0)} punte</div>
-                <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-white" style="background:#065f46">
-                  <span class="font-bold">${Number(v._pill)||0}</span>
-                </div>
-              </div>`;
-            lbList.appendChild(li);
-            idx++;
-          });
-        })().catch(err=>{
-          console.warn('LB render failed, falling back to local:', err);
-          renderLocalLB(currentDate);
+        const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        rows.sort((a,b)=>{
+          const sa = Number(a.score) || 0;
+          const sb = Number(b.score) || 0;
+          if (sa !== sb) return sb - sa;
+          const ta = a.ts?.toMillis?.() ? a.ts.toMillis() : 9e15;
+          const tb = b.ts?.toMillis?.() ? b.ts.toMillis() : 9e15;
+          return ta - tb;
         });
-      }, (err)=>{ console.warn('LB stream failed, falling back to local:', err); renderLocalLB(currentDate); });
+
+        const top = rows.slice(0,10);
+
+        if (top.length) bestText.textContent = String(top[0].score ?? '—');
+
+        top.forEach(v=>{
+          const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
+          const pill = (Number(v.kSlim_total||0) > 0)
+            ? ` <span class="k-pill">+${Number(v.kSlim_total)}</span>`
+            : '';
+          const li = document.createElement('li');
+          li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>${you}: ${(v.score??0)} punte${pill}`;
+          lbList.appendChild(li);
+        });
+      }, (err)=>{
+        console.warn('LB stream failed, falling back to local:', err);
+        renderLocalLB(currentDate);
+      });
     }
 
+    /* ---- Submit to leaderboard (new + legacy mirror) ---- */
     async function submitToLB(scoreVal){
       const row = { userName: currentUserName, score: scoreVal|0 };
+
+      // Local fallback
       const arr = getLocalLB(currentDate);
       const idx = arr.findIndex(r => (r.userName||'') === (row.userName||''));
-      if(idx>=0){ if (row.score > (arr[idx].score||0)) arr[idx] = row; }
-      else{ arr.push(row); }
+      if (idx >= 0){
+        if (row.score > (arr[idx].score||0)) arr[idx] = row;
+      } else {
+        arr.push(row);
+      }
       setLocalLB(currentDate, arr);
 
       if(!db || !user) return;
       try{
-        const ref = doc(db,'leaderboards','slimstiek','dates', currentDate, 'entries', user.uid);
-        const snap = await getDoc(ref);
-        const prev = snap.exists() ? snap.data() : null;
-        const isBetter = !prev || (row.score > (prev.score||0));
-
-        // compute pill and write it along with score (merge true)
-        const pillValue = computeSlimstiekTellingFromEntry({ score: row.score });
-
-        if(isBetter){
-          await setDoc(ref, {
-            uid: user.uid,
-            userName: currentUserName.slice(0,24),
-            score: row.score,
-            slimstiekTelling: pillValue,
-            ts: serverTimestamp()
-          }, { merge:true });
+        // New path (for live)
+        const newRef  = doc(db, 'slimstiekGames', GAME_ID, 'leaderboard', user.uid);
+        const snapNew = await getDoc(newRef);
+        const prev    = snapNew.exists() ? snapNew.data() : null;
+        const better  = !prev || ((row.score|0) > (prev.score|0));
+        if (better){
+          await setDoc(newRef, { userName: row.userName.slice(0,24), score: row.score|0, ts: serverTimestamp() }, { merge:true });
         } else {
-          // even if not a better score, make sure uid/userName are present for later lookups
-          await setDoc(ref, {
-            uid: user.uid,
-            userName: currentUserName.slice(0,24)
-          }, { merge:true });
+          await setDoc(newRef, { userName: row.userName.slice(0,24) }, { merge:true });
         }
-      }catch(e){ console.warn('FS LB write failed (ok):', e); }
+
+        // Legacy mirror (archives/rankers)
+        const legacyRef = doc(db,'leaderboards','slimstiek','dates', currentDate, 'entries', user.uid);
+        const legSnap   = await getDoc(legacyRef);
+        const legPrev   = legSnap.exists() ? legSnap.data() : null;
+        const legBetter = !legPrev || ((row.score|0) > (legPrev.score|0));
+        if (legBetter){
+          await setDoc(legacyRef, { userName: row.userName.slice(0,24), score: row.score|0, ts: serverTimestamp() }, { merge:true });
+        } else {
+          await setDoc(legacyRef, { userName: row.userName.slice(0,24) }, { merge:true });
+        }
+      } catch (e){
+        console.warn('Firestore LB write failed (ok):', e);
+      }
+    }
+
+    /* ==== Mirror Slimstiek points into userGames/plays & expose for pill ==== */
+    async function mirrorSlimstiekPoints(){
+      if (!db || !user) return;
+
+      // supporter flag
+      let supporterActive = false;
+      try {
+        const uSnap = await getDoc(doc(db, "users", user.uid));
+        if (uSnap.exists()){
+          const u = uSnap.data();
+          supporterActive = !!(u?.supporterActive === true ||
+            (u?.supporterUntil?.toMillis && u.supporterUntil.toMillis() > Date.now()));
+        }
+      } catch {}
+
+      // Have a best today? (check new LB)
+      const newBestRef = doc(db,'slimstiekGames', GAME_ID, 'leaderboard', user.uid);
+      const newBestSnap = await getDoc(newBestRef);
+      const haveBest = newBestSnap.exists();
+
+      // read existing k fields (daily) — standard GameYYYY-MM-DD id
+      const playRef = doc(db, `userGames/${user.uid}/plays/${GAME_ID}`);
+      const playSnap = await getDoc(playRef);
+      let kEarly=0, kImprove=0, kPlace=0, kTotal=0;
+
+      if (playSnap.exists()){
+        const d = playSnap.data();
+        kEarly   = Number(d?.kSlim_early   || 0);
+        kImprove = Number(d?.kSlim_improve || 0);
+        kPlace   = Number(d?.kSlim_place   || 0);
+        kTotal   = Number(d?.kSlim_total   || 0);
+      }
+
+      const now = new Date();
+
+      // EARLY: first 10 entries after 07:00 ZA (use legacy list to match forum/archives)
+      if (kEarly === 0 && haveBest && now >= zaTimeOn(currentDate, K_CONF.EARLY_BIRD_WINDOW_START)) {
+        try {
+          const qEarly = query(
+            collection(db,'leaderboards','slimstiek','dates', currentDate, 'entries'),
+            orderBy('ts','asc'),
+            limit(10)
+          );
+          const eSnap = await getDocs(qEarly);
+          const inTop10 = eSnap.docs.some(d => d.id === user.uid);
+          if (inTop10) kEarly = K_CONF.EARLY_BIRD_POINTS;
+        } catch {}
+      }
+
+      // IMPROVE: grant once when you have a recorded best
+      if (kImprove === 0 && haveBest) {
+        kImprove = K_CONF.IMPROVE_POINTS;
+      }
+
+      // PLACE: after cutoff; rank by score DESC then ts ASC (legacy)
+      if (kPlace === 0 && now >= zaTimeOn(currentDate, K_CONF.CUTOFF_TIME)) {
+        try {
+          const qRank = query(
+            collection(db,'leaderboards','slimstiek','dates', currentDate, 'entries'),
+            orderBy('score','desc'),
+            orderBy('ts','asc'),
+            limit(K_CONF.LEADERBOARD_SIZE)
+          );
+          const rSnap = await getDocs(qRank);
+          const pos = rSnap.docs.findIndex(d => d.id === user.uid);
+          if (pos >= 0 && pos < K_CONF.FINAL_POINTS.length) {
+            kPlace = K_CONF.FINAL_POINTS[pos];
+          }
+        } catch {}
+      }
+
+      // TOTAL with supporter multiplier + daily cap
+      const base = kEarly + kImprove + kPlace;
+      const mult = supporterActive ? K_CONF.SUPPORTER_MULTIPLIER : 1;
+      kTotal = Math.min(Math.round(base * mult), K_CONF.DAILY_CAP_PER_GAME);
+
+      // persist privately
+      await setDoc(playRef, {
+        kSlim_early:   kEarly,
+        kSlim_improve: kImprove,
+        kSlim_place:   kPlace,
+        kSlim_total:   kTotal,
+        updatedAt: serverTimestamp()
+      }, { merge:true });
+
+      // expose on BOTH rows for public pill
+      try { await setDoc(doc(db, 'leaderboards','slimstiek','dates', currentDate, 'entries', user.uid), { kSlim_total: kTotal }, { merge: true }); } catch {}
+      try { await setDoc(doc(db, 'slimstiekGames', GAME_ID, 'leaderboard', user.uid), { kSlim_total: kTotal }, { merge: true }); } catch {}
     }
 
     /* ---- Game end ---- */
@@ -967,6 +1041,7 @@
 
       if(bestScore==null || score > bestScore) bestScore = score;
       submitToLB(score);
+      mirrorSlimstiekPoints();  // mirror on finish
       enableStickyShare({ score });
 
       winMsg.innerHTML = `Veels geluk, <strong>${currentUserName}</strong>! Jy het <strong>${TARGET}</strong> voltooi vir <strong>${score}</strong> punte.`;
@@ -981,7 +1056,7 @@
       if(db){
         try{
           const snap = await getDoc(doc(db,'daily_words', currentDate));
-        if(snap.exists()){
+          if(snap.exists()){
             const d = snap.data()||{};
             const w = (d.slimstiek || d.word || '').toString().toUpperCase().replace(/[^A-Z]/g,'');
             if(w) return w;
@@ -1004,40 +1079,41 @@
       maybeEnableStickyShareFromStorage();
       startLiveLeaderboardFS();
       updateRowHint();
+
+      if (user) { mirrorSlimstiekPoints(); } // backfill on load if you already have a best
     }
 
     /* ---- Init ---- */
     function init(){
-      initTileShareDropdowns();
+      document.querySelectorAll('.share-tile-wrap').forEach(wireShareTile);
       loadGame();
     }
     init();
   </script>
+  <!-- Buy Me a Coffee CTA above leaderboard -->
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const list = document.getElementById('leaderboardList');
+    const section = list ? list.closest('section') : null;
+    if (!section || !section.parentElement) return;
 
-<!-- 🟡 Buy Me a Coffee CTA above leaderboard -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const list = document.getElementById('leaderboardList');
-  const section = list ? list.closest('section') : null;
-  if (!section || !section.parentElement) return;
-
-  const wrap = document.createElement('div');
-  wrap.className = 'my-4';
-  wrap.innerHTML = `
-    <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800 text-center">
-      <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
-         onclick="gtag && gtag('event','bmac_click',{from:'slimstiek-leaderboard'})"
-         class="inline-flex items-center justify-center px-5 py-3
-                bg-yellow-500 hover:bg-yellow-600 text-white font-bold
-                rounded-xl shadow-md transition duration-200"
-         aria-label="Help ons om Kriptiek gratis te hou">
-        <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
-      </a>
-    </div>
-  `;
-  section.parentElement.insertBefore(wrap, section);
-});
-</script>
+    const wrap = document.createElement('div');
+    wrap.className = 'my-4';
+    wrap.innerHTML = `
+      <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800 text-center">
+        <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
+           onclick="gtag && gtag('event','bmac_click',{from:'slimstiek-leaderboard'})"
+           class="inline-flex items-center justify-center px-5 py-3
+                  bg-yellow-500 hover:bg-yellow-600 text-white font-bold
+                  rounded-xl shadow-md transition duration-200"
+           aria-label="Help ons om Kriptiek gratis te hou">
+          <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
+        </a>
+      </div>
+    `;
+    section.parentElement.insertBefore(wrap, section);
+  });
+  </script>
 
 </body>
 </html>
