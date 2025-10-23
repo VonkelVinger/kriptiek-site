@@ -29,6 +29,18 @@
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900">
 
+  <!-- ✅ Inject your existing Firebase config here (copied from index.html) -->
+  <script>
+    window.firebaseConfig = {
+      apiKey: "AIzaSyDjo4E4QoRPDJZQVCZzsu4ogR1U6QHYG6A",
+      authDomain: "kriptiek.firebaseapp.com",
+      projectId: "kriptiek",
+      storageBucket: "kriptiek.appspot.com",
+      messagingSenderId: "40740172923",
+      appId: "1:40740172923:web:a6bb0d7463b5441f3a9cc4"
+    };
+  </script>
+
   <header class="bg-slate-900 text-white">
     <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
       <h1 class="text-xl md:text-2xl font-bold">SLIMSTIEK – Admin</h1>
@@ -101,12 +113,7 @@
       getFirestore, doc, getDoc, collection, getDocs, query, orderBy, limit
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    const firebaseConfig = window.firebaseConfig || window._firebaseConfig;
-    if (!firebaseConfig || !firebaseConfig.projectId) {
-      document.body.innerHTML = "<div class='p-8 text-red-600 text-center font-semibold'>FOUT: Firebase-konfigurasie ontbreek of is nie beskikbaar nie.</div>";
-      throw new Error("Missing firebaseConfig");
-    }
-
+    const firebaseConfig = window.firebaseConfig;
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
@@ -138,7 +145,7 @@
     function hideStatus(){statusBox.classList.add('hidden');}
     function toZADateString(d){
       const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Johannesburg',year:'numeric',month:'2-digit',day:'2-digit'})
-        .formatToParts(d).reduce((a,p)=>{a[p.type]=p.value;return a;},{});return `${parts.year}-${parts.month}-${parts.day}`;}
+        .formatToParts(d).reduce((a,p)=>{a[p.type]=p.value;return a;},{});return`${parts.year}-${parts.month}-${parts.day}`;}
     function gameIdFromDateStr(s){return`Game${s}`;}
     function getParam(n){return new URL(location.href).searchParams.get(n);}
     async function checkIsAdmin(uid){
