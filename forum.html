@@ -82,31 +82,7 @@
   </section>
 
   <main class="max-w-xl mx-auto p-6 relative z-10">
-    <!-- 🏆 Dilemma Top-25 (live) -->
-    <section class="mb-6 bg-white rounded-xl shadow p-4">
-      <div class="flex items-baseline justify-between">
-        <h2 class="text-lg font-bold text-blue-700">DILEMMA SE TOP-25</h2>
-        <span class="text-xs text-gray-500">(Word minstens een keer per dag aangepas)</span>
-      </div>
-
-      <table class="w-full text-sm mt-2">
-        <thead class="text-left text-gray-500">
-          <tr>
-            <th class="py-2">#</th>
-            <th>Speler</th>
-            <th class="text-right">Dilemma-telling</th>
-          </tr>
-        </thead>
-        <tbody id="lb25Body">
-          <tr><td colspan="3" class="py-3 text-center text-gray-400">Laai tans…</td></tr>
-        </tbody>
-      </table>
-
-      <!-- Optional: show only Top-10 first on small screens -->
-      <button id="lbToggleBtn" class="mt-3 text-xs text-blue-700 hover:underline hidden">
-        Wys Top-25
-      </button>
-    </section>
+    <!-- 👇 Dilemma Top-25 REMOVED -->
 
     <div id="new-post" class="mb-6">
       <h2 class="text-lg font-semibold mb-2">Jou nuwe plasing</h2>
@@ -174,56 +150,7 @@
     const userName = localStorage.getItem("userName") || "Anoniem";
     document.getElementById("userDisplayName").textContent = (localStorage.getItem("userName") || "BESOEKER");
 
-    // ====== Top-25 (live) ======
-    async function loadTop25() {
-      const body = document.getElementById('lb25Body');
-      const toggleBtn = document.getElementById('lbToggleBtn');
-
-      try {
-        // Simple query: no composite index required
-        const qRef = query(collection(db, 'publicUsers'),
-                           orderBy('dilemmaScore', 'desc'),
-                           limit(25));
-        const snap = await getDocs(qRef);
-
-        if (snap.empty) {
-          body.innerHTML = `<tr><td colspan="3" class="py-3 text-center text-gray-400">Nog geen spelers met ’n telling nie.</td></tr>`;
-          return;
-        }
-
-        const rowsHtml = snap.docs.map((d, i) => {
-          const x = d.data();
-          const rank = i + 1;
-          const name = x.displayName || 'Onbekend';
-          const score = Math.round(Number(x.dilemmaScore || 0));
-          const avatar = x.avatarUrl ? `<img src="${x.avatarUrl}" class="w-6 h-6 rounded-full" alt="">` : '';
-          const classMore = rank > 10 ? 'lb-more hidden' : '';
-          return `
-            <tr class="border-t ${classMore}">
-              <td class="py-2 pr-3 text-gray-400">${rank}</td>
-              <td class="py-2"><div class="flex items-center gap-2">${avatar}<span class="font-medium">${name}</span></div></td>
-              <td class="py-2 text-right font-semibold">${score}</td>
-            </tr>`;
-        }).join('');
-
-        body.innerHTML = rowsHtml;
-
-        // Toggle 11–25 on small screens
-        const hasMore = body.querySelectorAll('.lb-more').length > 0;
-        if (hasMore) {
-          toggleBtn.classList.remove('hidden');
-          let expanded = false;
-          toggleBtn.onclick = () => {
-            expanded = !expanded;
-            body.querySelectorAll('.lb-more').forEach(tr => tr.classList.toggle('hidden', !expanded));
-            toggleBtn.textContent = expanded ? 'Wys slegs Top-10' : 'Wys almal 25';
-          };
-        }
-      } catch (e) {
-        body.innerHTML = `<tr><td colspan="3" class="py-3 text-center text-red-500">Kon nie leierbord laai nie.</td></tr>`;
-        console.error('Top-25 load error:', e);
-      }
-    }
+    // ====== Top-25 code REMOVED ======
 
     const postLimit = 5;
     let lastVisible = null;
@@ -278,7 +205,7 @@
           timestamp: serverTimestamp()
         });
 
-        // 👇 voorkom dat jou eie nuwe plasing die banner laat wys
+        // voorkom dat jou eie nuwe plasing die banner laat wys
         latestDocId = ref.id;
 
         document.getElementById('postTitle').value = '';
@@ -362,7 +289,7 @@
       if (lastVisible) qRef = query(postsRef, orderBy("timestamp", "desc"), startAfter(lastVisible), limit(postLimit));
       const snap = await getDocs(qRef);
 
-      // ✅ On the very first load, remember current "top" so the banner doesn't flash
+      // On the very first load, remember current "top" so the banner doesn't flash
       if (reset && !lastVisible && snap.docs.length && latestDocId === null) {
         latestDocId = snap.docs[0].id;
       }
@@ -417,9 +344,7 @@
             <textarea class="w-full p-2 border rounded mb-1 reply-input" rows="2" maxlength="500" placeholder="Jou antwoord..."></textarea>
             <button class="send-reply bg-blue-600 text-white px-2 py-1 rounded text-sm" data-id="${docSnap.id}">Stuur</button>
           </div>
-          <div class="replies text-sm mt-2 space-y-1" id="replies-${docSnap.id}">
-            <div class="text-gray-400 text-xs">Laai antwoorde…</div>
-          </div>
+          <div class="replies text-sm mt-2 space-y-1" id="replies-${docSnap.id}"></div>
         `;
         container.appendChild(div);
 
@@ -538,7 +463,6 @@
     document.getElementById("searchInput").value = "";
 
     // Initial load + start the live watcher
-    loadTop25();       // ⬅️ new
     loadPosts(true);
     startLiveWatcher();
   </script>
