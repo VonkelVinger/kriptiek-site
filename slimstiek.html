@@ -484,6 +484,30 @@ console.log("[Slimstiek] GAME_ID:", GAME_ID);
       return new Date(`${dateStr}T${hhmm}:00+02:00`);
     }
 
+    /* ========= (1) Sanitizer + Logger + STS tag (add once) ========= */
+    // Strip undefined/NaN/out-of-range values before writing to Firestore,
+    // and log exactly what we are sending + where.
+    function cleanForFS(obj){
+      const out = {};
+      for (const [k,v] of Object.entries(obj)){
+        if (v === undefined) continue;
+        if (typeof v === 'number' && !Number.isFinite(v)) continue;
+        out[k] = v;
+      }
+      return out;
+    }
+    function logFSWrite(ref, data, label="FS write"){
+      // JSON.stringify will fail on serverTimestamp; so show keys/types instead:
+      const summary = {};
+      for (const [k,v] of Object.entries(data)){
+        summary[k] = (v && v.__isServerTimestamp) ? 'serverTimestamp()' : (typeof v);
+      }
+      console.log(`[${label}]`, ref.path, summary, data);
+    }
+    // Wrapper so we can tag serverTimestamp() for debug display:
+    import { serverTimestamp as __serverTimestampForSTS } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
+    function STS(){ const s = __serverTimestampForSTS(); s.__isServerTimestamp = true; return s; }
+
     /* ---- Auth ---- */
     let user=null, currentUserName='Speler', isAdminClient=false;
 
@@ -962,9 +986,13 @@ console.log("[Slimstiek] GAME_ID:", GAME_ID);
       }, (err)=>{ console.error('LEGACY LB stream failed:', err); legacyRows = []; renderMerged(); });
     }
 
-    /* ---- Submit to leaderboard (write to LIVE + LEGACY) ---- */
+    /* ---- Submit to leaderboard (SAFE + LOGGED; LIVE only) ---- */
     async function submitToLB(scoreVal){
-      const row = { userName: currentUserName, score: scoreVal|0 };
+      const safeScore = Number.isFinite(scoreVal) ? (scoreVal|0) : 0;
+      const safeName  = (currentUserName || 'Speler').toString().slice(0,24);
+
+      // Local fallback remains
+      const row = { userName: safeName, score: safeScore };
       const arr = getLocalLB(currentDate);
       const idx = arr.findIndex(r => (r.userName||'') === (row.userName||''));
       if (idx >= 0){
@@ -977,36 +1005,26 @@ console.log("[Slimstiek] GAME_ID:", GAME_ID);
       if(!db || !user) return;
 
       try{
-        // LIVE path
-        const liveRef  = doc(db, 'slimstiekGames', `Game${currentDate}`, 'leaderboard', user.uid);
+        const liveRef  = doc(db, 'slimstiekGames', GAME_ID, 'leaderboard', user.uid);
         const liveSnap = await getDoc(liveRef);
         const livePrev = liveSnap.exists() ? liveSnap.data() : null;
-        const betterLive = !livePrev || ((row.score|0) > (livePrev.score|0));
+        const betterLive = !livePrev || (safeScore > (livePrev.score|0));
 
-        if (betterLive){
-          await setDoc(liveRef, { userName: currentUserName.slice(0,24), score: row.score|0, ts: serverTimestamp() }, { merge:true });
-        } else {
-          await setDoc(liveRef, { userName: currentUserName.slice(0,24) }, { merge:true });
-        }
+        const writeObj = betterLive
+          ? { userName: safeName, score: safeScore, ts: STS() }
+          : { userName: safeName };
 
-        // LEGACY path
-        const legacyRef = doc(db,'leaderboards','slimstiek','dates', currentDate, 'entries', user.uid);
-        const legSnap   = await getDoc(legacyRef);
-        const legPrev   = legSnap.exists() ? legSnap.data() : null;
-        const betterLeg = !legPrev || ((row.score|0) > (legPrev.score|0));
+        const cleaned = cleanForFS(writeObj);
+        logFSWrite(liveRef, cleaned, "submitToLB");
 
-        if (betterLeg){
-          await setDoc(legacyRef, { userName: currentUserName.slice(0,24), score: row.score|0, ts: serverTimestamp() }, { merge:true });
-        } else {
-          await setDoc(legacyRef, { userName: currentUserName.slice(0,24) }, { merge:true });
-        }
+        await setDoc(liveRef, cleaned, { merge:true });
       } catch (e){
-        console.error('FS LB write FAILED:', e);
+        console.error('FS LB write FAILED (live):', e);
         try { alert('Kon nie jou telling na die leierbord skryf nie. (Sien Console vir detail)'); } catch {}
       }
     }
 
-    /* ==== Mirror Slimstiek K-pill into userGames + expose on both boards ==== */
+    /* ==== Mirror Slimstiek K-pill into userGames + expose on LIVE ==== */
     async function mirrorSlimstiekPoints(){
       if (!db || !user) return;
 
@@ -1042,7 +1060,7 @@ console.log("[Slimstiek] GAME_ID:", GAME_ID);
 
       const now = new Date();
 
-      // EARLY: first 10 entries after 07:00 ZA (legacy list for consistency)
+      // EARLY: first 10 entries after 07:00 ZA (legacy list for consistency - read only)
       if (kEarly === 0 && haveBest && now >= zaTimeOn(currentDate, K_CONF.EARLY_BIRD_WINDOW_START)) {
         try {
           const qEarly = query(
@@ -1059,7 +1077,7 @@ console.log("[Slimstiek] GAME_ID:", GAME_ID);
       // IMPROVE: grant once the first time you have a recorded best
       if (kImprove === 0 && haveBest) kImprove = K_CONF.IMPROVE_POINTS;
 
-      // PLACE: only after cutoff; rank by score DESC then ts ASC (legacy list)
+      // PLACE: only after cutoff; rank by score DESC then ts ASC (legacy list - read only)
       if (kPlace === 0 && now >= zaTimeOn(currentDate, K_CONF.CUTOFF_TIME)) {
         try {
           const qRank = query(
@@ -1090,9 +1108,21 @@ console.log("[Slimstiek] GAME_ID:", GAME_ID);
         }, { merge:true });
       } catch (e) { console.warn('Play mirror failed:', e); }
 
-      // expose on BOTH rows for public pill
-      try { await setDoc(doc(db,'leaderboards','slimstiek','dates', currentDate, 'entries', user.uid), { kSlim_total: kTotal }, { merge: true }); } catch {}
-      try { await setDoc(doc(db,'slimstiekGames', `Game${currentDate}`, 'leaderboard', user.uid), { kSlim_total: kTotal }, { merge: true }); } catch {}
+      // === SAFE + LOGGED pill writes (LIVE only; legacy write removed) ===
+      const pillObj = cleanForFS({ kSlim_total: Number.isFinite(kTotal) ? kTotal : 0 });
+
+      // BestRef (live)
+      try {
+        logFSWrite(liveBestRef, pillObj, "mirrorSlimstiekPoints (bestRef)");
+        await setDoc(liveBestRef, pillObj, { merge:true });
+      } catch (e) { console.warn('Live bestRef pill write failed:', e); }
+
+      // Public exposure on LIVE board (same doc path, kept for clarity)
+      try {
+        const livePubRef = doc(db,'slimstiekGames', GAME_ID, 'leaderboard', user.uid);
+        logFSWrite(livePubRef, pillObj, "mirrorSlimstiekPoints (live public)");
+        await setDoc(livePubRef, pillObj, { merge:true });
+      } catch (e) { console.warn('Live public pill write failed:', e); }
     }
 
     /* ---- Game end ---- */
