@@ -14,6 +14,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
   <title>SLIMSTIEK – Admin | Kriptiek</title>
 
+  <!-- Open Graph -->
   <link rel="canonical" href="https://www.kriptiek.com/slimstiek-admin.html" />
   <meta property="og:site_name" content="Kriptiek" />
   <meta property="og:title" content="SLIMSTIEK – Admin" />
@@ -23,33 +24,31 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    html, body { font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; }
+    html,body{font-family:'Montserrat',system-ui,sans-serif}
   </style>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900">
-  <!-- Header -->
+
   <header class="bg-slate-900 text-white">
     <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-      <h1 class="text-xl md:text-2xl font-bold tracking-wide">SLIMSTIEK – Admin</h1>
+      <h1 class="text-xl md:text-2xl font-bold">SLIMSTIEK – Admin</h1>
       <div class="flex items-center gap-3">
         <span id="whoami" class="text-sm opacity-80">Tekenstatus: kontroleer…</span>
+        <button id="signInBtn"  class="hidden px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm">Meld aan</button>
         <button id="signOutBtn" class="hidden px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm">Meld af</button>
       </div>
     </div>
   </header>
 
-  <!-- Main -->
   <main class="max-w-5xl mx-auto px-4 py-6">
-    <!-- Access / status -->
     <div id="statusBox" class="mb-6 p-4 rounded-xl bg-yellow-50 border border-yellow-200 text-yellow-900 hidden"></div>
 
-    <!-- Controls -->
     <section class="mb-6">
       <div class="grid gap-3 md:grid-cols-2 items-end">
         <div>
           <label for="dateInput" class="block text-sm font-semibold text-slate-700">Kies datum (YYYY-MM-DD)</label>
           <input id="dateInput" type="date" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-700">
-          <p class="mt-1 text-xs text-slate-500">Verstek: vandag (ZA-tydsone). URL-param <code>?date=YYYY-MM-DD</code> word ook ondersteun.</p>
+          <p class="mt-1 text-xs text-slate-500">Verstek vandag (ZA-tydsone). URL-param <code>?date=YYYY-MM-DD</code> word ook ondersteun.</p>
         </div>
         <div class="flex gap-2">
           <button id="loadBtn" class="h-10 px-4 rounded-xl bg-slate-900 text-white hover:bg-slate-800">Laai</button>
@@ -58,10 +57,9 @@
       </div>
     </section>
 
-    <!-- Game summary -->
     <section id="gameCard" class="hidden mb-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div class="p-4 md:p-5">
-        <h2 class="text-lg font-bold text-slate-900">Speletjie</h2>
+        <h2 class="text-lg font-bold">Speletjie</h2>
         <div class="mt-2 grid gap-2 text-sm">
           <div><span class="font-semibold">Game ID:</span> <span id="gameIdTxt" class="font-mono"></span></div>
           <div><span class="font-semibold">Bestaan:</span> <span id="existsTxt"></span></div>
@@ -71,11 +69,10 @@
       </div>
     </section>
 
-    <!-- Leaderboard -->
     <section id="boardCard" class="hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div class="p-4 md:p-5">
         <div class="flex items-center justify-between">
-          <h2 class="text-lg font-bold text-slate-900">Leaderboard</h2>
+          <h2 class="text-lg font-bold">Leaderboard</h2>
           <span id="rowCount" class="text-xs text-slate-500"></span>
         </div>
         <div class="mt-3 overflow-x-auto">
@@ -97,192 +94,121 @@
     </section>
   </main>
 
-  <!-- Firebase + Admin logic -->
   <script type="module">
     import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import {
-      getFirestore, doc, getDoc, collection, getDocs, query, orderBy, limit, Timestamp
+      getFirestore, doc, getDoc, collection, getDocs, query, orderBy, limit
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    /* ---------- Firebase init ----------
-       This file will use an existing global config if present.
-       If not, paste your config into firebaseConfig below. */
-    const fallbackConfig = {
-      // PASTE YOUR FIREBASE CONFIG HERE IF window.firebaseConfig IS NOT PRESENT
-      // apiKey: "...",
-      // authDomain: "...",
-      // projectId: "...",
-      // storageBucket: "...",
-      // messagingSenderId: "...",
-      // appId: "..."
-    };
-    const firebaseConfig = (window.firebaseConfig || window._firebaseConfig || fallbackConfig);
+    const firebaseConfig = window.firebaseConfig || window._firebaseConfig;
+    if (!firebaseConfig || !firebaseConfig.projectId) {
+      document.body.innerHTML = "<div class='p-8 text-red-600 text-center font-semibold'>FOUT: Firebase-konfigurasie ontbreek of is nie beskikbaar nie.</div>";
+      throw new Error("Missing firebaseConfig");
+    }
+
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
-    /* ---------- DOM helpers ---------- */
-    const statusBox = document.getElementById('statusBox');
-    const whoami   = document.getElementById('whoami');
-    const signOutBtn = document.getElementById('signOutBtn');
+    const whoami=document.getElementById('whoami');
+    const signInBtn=document.getElementById('signInBtn');
+    const signOutBtn=document.getElementById('signOutBtn');
+    const statusBox=document.getElementById('statusBox');
+    const dateInput=document.getElementById('dateInput');
+    const loadBtn=document.getElementById('loadBtn');
+    const todayBtn=document.getElementById('todayBtn');
+    const gameCard=document.getElementById('gameCard');
+    const gameIdTxt=document.getElementById('gameIdTxt');
+    const existsTxt=document.getElementById('existsTxt');
+    const wordTxt=document.getElementById('wordTxt');
+    const metaTxt=document.getElementById('metaTxt');
+    const boardCard=document.getElementById('boardCard');
+    const boardTbody=document.getElementById('boardTbody');
+    const rowCount=document.getElementById('rowCount');
+    const boardNote=document.getElementById('boardNote');
 
-    const dateInput = document.getElementById('dateInput');
-    const loadBtn   = document.getElementById('loadBtn');
-    const todayBtn  = document.getElementById('todayBtn');
-
-    const gameCard  = document.getElementById('gameCard');
-    const gameIdTxt = document.getElementById('gameIdTxt');
-    const existsTxt = document.getElementById('existsTxt');
-    const wordTxt   = document.getElementById('wordTxt');
-    const metaTxt   = document.getElementById('metaTxt');
-
-    const boardCard = document.getElementById('boardCard');
-    const boardTbody = document.getElementById('boardTbody');
-    const rowCount = document.getElementById('rowCount');
-    const boardNote = document.getElementById('boardNote');
-
-    function showStatus(msg, tone='warn') {
+    function showStatus(msg,t='warn'){
       statusBox.classList.remove('hidden');
-      statusBox.classList.toggle('bg-yellow-50', tone==='warn');
-      statusBox.classList.toggle('bg-red-50', tone==='error');
-      statusBox.classList.toggle('bg-green-50', tone==='ok');
-      statusBox.textContent = msg;
+      statusBox.classList.toggle('bg-yellow-50',t==='warn');
+      statusBox.classList.toggle('bg-red-50',t==='error');
+      statusBox.classList.toggle('bg-green-50',t==='ok');
+      statusBox.textContent=msg;
     }
-    function hideStatus() { statusBox.classList.add('hidden'); }
-
-    function toZADateString(d) {
-      // Always resolve date in Africa/Johannesburg
-      const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Johannesburg', year: 'numeric', month: '2-digit', day: '2-digit' })
-        .formatToParts(d).reduce((a,p)=>{a[p.type]=p.value;return a;}, {});
-      return `${parts.year}-${parts.month}-${parts.day}`;
-    }
-    function gameIdFromDateStr(yyyy_mm_dd) { return `Game${yyyy_mm_dd}`; }
-
-    function getParam(name) {
-      const u = new URL(location.href);
-      return u.searchParams.get(name);
-    }
-
-    /* ---------- Admin gate ---------- */
-    async function checkIsAdmin(uid) {
-      if (!uid) return false;
-      if (uid === "jI7f0Wk4MqfPq7p69vjl8OlJUvS2") return true; // hardcoded admin
-      const snap = await getDoc(doc(db, "admins", uid));
+    function hideStatus(){statusBox.classList.add('hidden');}
+    function toZADateString(d){
+      const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Johannesburg',year:'numeric',month:'2-digit',day:'2-digit'})
+        .formatToParts(d).reduce((a,p)=>{a[p.type]=p.value;return a;},{});return `${parts.year}-${parts.month}-${parts.day}`;}
+    function gameIdFromDateStr(s){return`Game${s}`;}
+    function getParam(n){return new URL(location.href).searchParams.get(n);}
+    async function checkIsAdmin(uid){
+      if(!uid)return false;
+      if(uid==="jI7f0Wk4MqfPq7p69vjl8OlJUvS2")return true;
+      const snap=await getDoc(doc(db,"admins",uid));
       return snap.exists();
     }
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        whoami.textContent = "Nie aangemeld nie";
-        showStatus("Meld asseblief aan as admin om die blad te gebruik.", 'warn');
+    onAuthStateChanged(auth,async(user)=>{
+      if(!user){
+        whoami.textContent="Nie aangemeld nie";
+        signInBtn.classList.remove('hidden');
+        signInBtn.onclick=()=>location.href="/login.html?return=/slimstiek-admin.html";
+        showStatus("Meld asseblief aan as admin om die blad te gebruik.",'warn');
         return;
       }
-      whoami.textContent = `Ingeteken: ${user.email || user.uid}`;
+      whoami.textContent=`Ingeteken: ${user.email||user.uid}`;
       signOutBtn.classList.remove('hidden');
-      signOutBtn.onclick = () => signOut(auth);
-
-      try {
-        const ok = await checkIsAdmin(user.uid);
-        if (!ok) {
-          showStatus("Jy het nie admin-toegang nie.", 'error');
-          return;
-        }
-        hideStatus();
-        bootstrapUI();
-      } catch (e) {
-        console.error(e);
-        showStatus("Kon nie admin-status bevestig nie: " + (e.message || e.code), 'error');
-      }
+      signOutBtn.onclick=()=>signOut(auth);
+      const ok=await checkIsAdmin(user.uid).catch(()=>false);
+      if(!ok){showStatus("Jy het nie admin-toegang nie.",'error');return;}
+      hideStatus();bootstrapUI();
     });
 
-    /* ---------- UI bootstrap ---------- */
-    function bootstrapUI() {
-      // default date: URL ?date=YYYY-MM-DD or today ZA
-      const p = getParam('date');
-      dateInput.value = p || toZADateString(new Date());
-      loadBtn.onclick = () => loadForDate(dateInput.value);
-      todayBtn.onclick = () => {
-        dateInput.value = toZADateString(new Date());
-        loadForDate(dateInput.value);
-      };
+    function bootstrapUI(){
+      const p=getParam('date');
+      dateInput.value=p||toZADateString(new Date());
+      loadBtn.onclick=()=>loadForDate(dateInput.value);
+      todayBtn.onclick=()=>{dateInput.value=toZADateString(new Date());loadForDate(dateInput.value);};
       loadForDate(dateInput.value);
     }
 
-    async function loadForDate(dateStr) {
-      boardNote.textContent = "";
-      boardTbody.innerHTML = "";
-      rowCount.textContent = "";
-      wordTxt.textContent = "";
-      metaTxt.textContent = "";
-
-      const gid = gameIdFromDateStr(dateStr);
-      gameIdTxt.textContent = gid;
-
-      // Game doc
-      const gRef = doc(db, "slimstiekGames", gid);
-      const gSnap = await getDoc(gRef);
+    async function loadForDate(dateStr){
+      boardNote.textContent="";boardTbody.innerHTML="";rowCount.textContent="";wordTxt.textContent="";metaTxt.textContent="";
+      const gid=gameIdFromDateStr(dateStr);
+      gameIdTxt.textContent=gid;
+      const gSnap=await getDoc(doc(db,"slimstiekGames",gid));
       gameCard.classList.remove('hidden');
-      existsTxt.textContent = gSnap.exists() ? "Ja" : "Nee";
-      if (gSnap.exists()) {
-        const d = gSnap.data();
-        wordTxt.textContent = d?.target || d?.word || "(onbekend)";
-        const extras = { status: d?.status, createdAt: d?.createdAt?.toDate?.()?.toISOString?.() || d?.createdAt, updatedAt: d?.updatedAt?.toDate?.()?.toISOString?.() || d?.updatedAt };
-        metaTxt.textContent = JSON.stringify(extras);
-      } else {
-        wordTxt.textContent = "";
-        metaTxt.textContent = "";
+      existsTxt.textContent=gSnap.exists()?"Ja":"Nee";
+      if(gSnap.exists()){
+        const d=gSnap.data();
+        wordTxt.textContent=d?.target||d?.word||"(onbekend)";
+        metaTxt.textContent=JSON.stringify({status:d?.status,createdAt:d?.createdAt?.toDate?.()?.toISOString?.()||d?.createdAt,updatedAt:d?.updatedAt?.toDate?.()?.toISOString?.()||d?.updatedAt});
       }
-
-      // Leaderboard (prefer order by timeMs asc, fallback to client sort)
       boardCard.classList.remove('hidden');
-      try {
-        const q1 = query(
-          collection(db, "slimstiekGames", gid, "leaderboard"),
-          orderBy("timeMs", "asc"),
-          orderBy("createdAtMs", "asc"),
-          limit(500)
-        );
-        const ss = await getDocs(q1);
-        renderBoard(ss.docs.map(d=>({ id:d.id, ...d.data() })));
-      } catch (err) {
-        console.warn("Index/order fallback:", err.code || err.message);
-        // Fallback: fetch unsorted then sort in JS
-        const ss = await getDocs(collection(db, "slimstiekGames", gid, "leaderboard"));
-        const rows = ss.docs.map(d=>({ id:d.id, ...d.data() }));
-        rows.sort((a,b)=>{
-          const at = (a.timeMs ?? 9e15) - (b.timeMs ?? 9e15);
-          if (at !== 0) return at;
-          return (a.createdAtMs ?? 9e15) - (b.createdAtMs ?? 9e15);
-        });
-        boardNote.textContent = "Let wel: geen indeks gevind vir sortering nie; val terug na kliënt-kant sortering.";
+      try{
+        const q1=query(collection(db,"slimstiekGames",gid,"leaderboard"),orderBy("timeMs","asc"),orderBy("createdAtMs","asc"),limit(500));
+        const ss=await getDocs(q1);
+        renderBoard(ss.docs.map(d=>({id:d.id,...d.data()})));
+      }catch(err){
+        const ss=await getDocs(collection(db,"slimstiekGames",gid,"leaderboard"));
+        const rows=ss.docs.map(d=>({id:d.id,...d.data()}));
+        rows.sort((a,b)=>((a.timeMs??9e15)-(b.timeMs??9e15))||((a.createdAtMs??9e15)-(b.createdAtMs??9e15)));
+        boardNote.textContent="Geen indeks gevind vir sortering nie – plaaslike sortering gebruik.";
         renderBoard(rows);
       }
     }
 
-    function renderBoard(rows) {
-      rowCount.textContent = rows.length ? `${rows.length} inskrywings` : "Geen inskrywings";
-      boardTbody.innerHTML = rows.map(r => {
-        const created = r.createdAt?.toDate?.()?.toISOString?.() ||
-                        (r.createdAtMs ? new Date(r.createdAtMs).toISOString() : "");
-        const name = r.userName || r.name || "(naamloos)";
-        const extra = r.details || r.result || r.guesses || "";
-        const time = (typeof r.timeMs === 'number') ? r.timeMs : "";
-        return `
-          <tr class="align-top">
-            <td class="px-3 py-2">${escapeHtml(name)}</td>
-            <td class="px-3 py-2 font-mono text-xs">${escapeHtml(r.uid || r.id || '')}</td>
-            <td class="px-3 py-2">${time}</td>
-            <td class="px-3 py-2">${escapeHtml(String(extra))}</td>
-            <td class="px-3 py-2 text-xs">${escapeHtml(created)}</td>
-          </tr>
-        `;
+    function renderBoard(rows){
+      rowCount.textContent=rows.length?`${rows.length} inskrywings`:"Geen inskrywings";
+      boardTbody.innerHTML=rows.map(r=>{
+        const created=r.createdAt?.toDate?.()?.toISOString?.()||(r.createdAtMs?new Date(r.createdAtMs).toISOString():"");
+        const name=r.userName||r.name||"(naamloos)";
+        const extra=r.details||r.result||r.guesses||"";
+        const time=typeof r.timeMs==='number'?r.timeMs:"";
+        return`<tr class="align-top"><td class="px-3 py-2">${e(name)}</td><td class="px-3 py-2 font-mono text-xs">${e(r.uid||r.id||'')}</td><td class="px-3 py-2">${time}</td><td class="px-3 py-2">${e(String(extra))}</td><td class="px-3 py-2 text-xs">${e(created)}</td></tr>`;
       }).join('');
     }
-
-    function escapeHtml(s) {
-      return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-    }
+    function e(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
   </script>
 </body>
 </html>
