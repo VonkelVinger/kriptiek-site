@@ -149,24 +149,22 @@
     /* N-R gate */
     #nrGate{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:60;}
 
-    /* Slimstiek K-pill (teal) */
     /* Slimstiek K-pill (teal, right-aligned like Blitstiek) */
-.k-pill {
-  margin-left: auto;             /* push pill to the far right */
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #0f766e;
-  color: #fff;
-  font-weight: 800;
-  border-radius: 999px;
-  padding: 0.15rem 0.55rem;
-  font-size: 0.75rem;
-  line-height: 1;
-  min-width: 1.8rem;
-  text-align: center;
-}
-
+    .k-pill {
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #0f766e;
+      color: #fff;
+      font-weight: 800;
+      border-radius: 999px;
+      padding: 0.15rem 0.55rem;
+      font-size: 0.75rem;
+      line-height: 1;
+      min-width: 1.8rem;
+      text-align: center;
+    }
 
     /* Admin pane (small) */
     #adminPanel{display:none}
@@ -899,7 +897,6 @@
     }
 
     function renderMerged(){
-      // prefer whichever side has data; merge when both do
       const map = rowsToMap([...liveRows, ...legacyRows]);
       const combined = Array.from(map.values())
         .sort((a,b)=> (b.score|0)-(a.score|0) || (a.ts||9e15)-(b.ts||9e15))
@@ -907,7 +904,6 @@
 
       lbList.innerHTML = '';
       if (!combined.length){
-        // as a last resort, show local fallback
         const local = getLocalLB(currentDate).sort((a,b)=> (b.score|0)-(a.score|0)).slice(0,10);
         if (!local.length){
           bestText.textContent='—';
@@ -927,9 +923,9 @@
 
       combined.slice(0,10).forEach(v=>{
         const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
-const pill = (Number(v.kSlim_total||0) > 0)
-  ? `<span class="k-pill">${Number(v.kSlim_total)}</span>`
-  : '';
+        const pill = (Number(v.kSlim_total||0) > 0)
+          ? `<span class="k-pill">${Number(v.kSlim_total)}</span>`
+          : '';
         const li = document.createElement('li');
         li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>${you}: ${(v.score??0)} punte${pill}`;
         lbList.appendChild(li);
@@ -937,13 +933,12 @@ const pill = (Number(v.kSlim_total||0) > 0)
     }
 
     function subscribeMergedLeaderboard(){
-      // clean previous
       try{ if(typeof unsubLive==='function') unsubLive(); }catch{}
       try{ if(typeof unsubLegacy==='function') unsubLegacy(); }catch{}
       liveRows = []; legacyRows = [];
 
       if (!db){
-        renderMerged(); // will fall back to local
+        renderMerged();
         return;
       }
 
@@ -967,7 +962,6 @@ const pill = (Number(v.kSlim_total||0) > 0)
     /* ---- Submit to leaderboard (write to LIVE + LEGACY) ---- */
     async function submitToLB(scoreVal){
       const row = { userName: currentUserName, score: scoreVal|0 };
-      // local cache (very last fallback)
       const arr = getLocalLB(currentDate);
       const idx = arr.findIndex(r => (r.userName||'') === (row.userName||''));
       if (idx >= 0){
@@ -1116,18 +1110,36 @@ const pill = (Number(v.kSlim_total||0) > 0)
       if(!user) showNRGate();
     }
 
-    /* ---- Daily word ---- */
+    /* ---- Daily word (FIXED: check slimstiekGames/GameYYYY-MM-DD first) ---- */
     async function resolveTargetWord(){
-      if(db){
+      // Helper to sanitize and upper-case a word field
+      const norm = (s) => (s || '').toString().toUpperCase().replace(/[^A-Z]/g,'').trim();
+
+      if (db){
+        // 1) Primary: slimstiekGames/GameYYYY-MM-DD with target/slimstiek/word
         try{
-          const snap = await getDoc(doc(db,'daily_words', currentDate));
-          if(snap.exists()){
-            const d = snap.data()||{};
-            const w = (d.slimstiek || d.word || '').toString().toUpperCase().replace(/[^A-Z]/g,'');
-            if(w) return w;
+          const liveDocRef = doc(db, 'slimstiekGames', `Game${currentDate}`);
+          const liveSnap = await getDoc(liveDocRef);
+          if (liveSnap.exists()){
+            const d = liveSnap.data() || {};
+            const w = norm(d.target || d.slimstiek || d.word);
+            if (w) return w;
           }
-        }catch(e){ console.warn('Daily word fetch failed, using fallback:', e); }
+        }catch(e){ console.warn('SlimstiekGames fetch failed:', e); }
+
+        // 2) Fallback: daily_words/YYYY-MM-DD with slimstiek/word
+        try{
+          const dwRef = doc(db,'daily_words', currentDate);
+          const dwSnap = await getDoc(dwRef);
+          if (dwSnap.exists()){
+            const d = dwSnap.data() || {};
+            const w = norm(d.slimstiek || d.word);
+            if (w) return w;
+          }
+        }catch(e){ console.warn('daily_words fetch failed:', e); }
       }
+
+      // 3) Final fallback
       return 'TUTS';
     }
 
@@ -1230,6 +1242,7 @@ const pill = (Number(v.kSlim_total||0) > 0)
     }
     init();
   </script>
+
   <!-- Buy Me a Coffee CTA above leaderboard -->
   <script>
   document.addEventListener('DOMContentLoaded', () => {
