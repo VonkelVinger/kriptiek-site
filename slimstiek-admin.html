@@ -1,207 +1,288 @@
 <!DOCTYPE html>
 <html lang="af">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>SLIMSTIEK Admin – Kriptiek</title>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9V4CMP1FP"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-S9V4CMP1FP');
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+  <title>SLIMSTIEK – Admin | Kriptiek</title>
+
+  <link rel="canonical" href="https://www.kriptiek.com/slimstiek-admin.html" />
+  <meta property="og:site_name" content="Kriptiek" />
+  <meta property="og:title" content="SLIMSTIEK – Admin" />
+  <meta property="og:description" content="Administrasie-paneel vir Slimstiek." />
+  <meta property="og:type" content="website" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet"/>
-  <style>body{font-family:'Montserrat',sans-serif;background:#f8f5f2}</style>
+  <style>
+    html, body { font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; }
+  </style>
 </head>
-<body class="min-h-screen p-4">
-  <main class="max-w-xl mx-auto bg-white rounded-xl shadow p-4">
-    <h1 class="text-2xl font-bold mb-4">SLIMSTIEK: Stel dag se woord</h1>
-
-    <div id="adminGate" class="hidden p-3 mb-4 rounded bg-red-50 text-red-700 text-sm">
-      Jy is nie aangemeld as admin nie. Meld asb. aan met jou admin-rekening.
+<body class="min-h-screen bg-slate-50 text-slate-900">
+  <!-- Header -->
+  <header class="bg-slate-900 text-white">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+      <h1 class="text-xl md:text-2xl font-bold tracking-wide">SLIMSTIEK – Admin</h1>
+      <div class="flex items-center gap-3">
+        <span id="whoami" class="text-sm opacity-80">Tekenstatus: kontroleer…</span>
+        <button id="signOutBtn" class="hidden px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm">Meld af</button>
+      </div>
     </div>
+  </header>
 
-    <label class="block mb-3">Datum (ZA):
-      <input id="date" type="date" class="mt-1 w-full border rounded px-3 py-2"/>
-    </label>
+  <!-- Main -->
+  <main class="max-w-5xl mx-auto px-4 py-6">
+    <!-- Access / status -->
+    <div id="statusBox" class="mb-6 p-4 rounded-xl bg-yellow-50 border border-yellow-200 text-yellow-900 hidden"></div>
 
-    <label class="block mb-3">Slimstiek woord:
-      <input id="sword" type="text" maxlength="8" placeholder="bv. TUTS" class="mt-1 w-full border rounded px-3 py-2 uppercase"/>
-    </label>
+    <!-- Controls -->
+    <section class="mb-6">
+      <div class="grid gap-3 md:grid-cols-2 items-end">
+        <div>
+          <label for="dateInput" class="block text-sm font-semibold text-slate-700">Kies datum (YYYY-MM-DD)</label>
+          <input id="dateInput" type="date" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-slate-700">
+          <p class="mt-1 text-xs text-slate-500">Verstek: vandag (ZA-tydsone). URL-param <code>?date=YYYY-MM-DD</code> word ook ondersteun.</p>
+        </div>
+        <div class="flex gap-2">
+          <button id="loadBtn" class="h-10 px-4 rounded-xl bg-slate-900 text-white hover:bg-slate-800">Laai</button>
+          <button id="todayBtn" class="h-10 px-4 rounded-xl bg-slate-200 hover:bg-slate-300">Vandag</button>
+        </div>
+      </div>
+    </section>
 
-    <label class="inline-flex items-center gap-2 mb-4">
-      <input id="copyBoth" type="checkbox" class="h-4 w-4">
-      <span>Gebruik dieselfde woord vir Blitstiek</span>
-    </label>
+    <!-- Game summary -->
+    <section id="gameCard" class="hidden mb-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div class="p-4 md:p-5">
+        <h2 class="text-lg font-bold text-slate-900">Speletjie</h2>
+        <div class="mt-2 grid gap-2 text-sm">
+          <div><span class="font-semibold">Game ID:</span> <span id="gameIdTxt" class="font-mono"></span></div>
+          <div><span class="font-semibold">Bestaan:</span> <span id="existsTxt"></span></div>
+          <div><span class="font-semibold">Teikenwoord:</span> <span id="wordTxt" class="font-mono"></span></div>
+          <div><span class="font-semibold">Bykomende data:</span> <span id="metaTxt"></span></div>
+        </div>
+      </div>
+    </section>
 
-    <div class="flex gap-2">
-      <button id="save" class="px-4 py-2 bg-green-700 text-white rounded font-bold">Stoor</button>
-      <button id="load" class="px-4 py-2 bg-gray-700 text-white rounded font-bold">Laai</button>
-    </div>
-
-    <p id="msg" class="mt-3 text-sm text-gray-700"></p>
-
-    <hr class="my-4"/>
-
-    <div class="text-sm text-gray-600">
-      <p class="font-semibold mb-1">Wat gebeur wanneer jy stoor?</p>
-      <ul class="list-disc pl-5 space-y-1">
-        <li><code>daily_words/{YYYY-MM-DD}</code> kry <code>{ slimstiek, blitstiek?, word? }</code></li>
-        <li><code>slimstiekGames/GameYYYY-MM-DD</code> kry die kanonieke Slimstiek-dokument met admin-metadata</li>
-        <li>(As gekies) <code>blitstiekGames/GameYYYY-MM-DD</code> kry ’n minimale mirrordokument vir Blitstiek</li>
-      </ul>
-    </div>
+    <!-- Leaderboard -->
+    <section id="boardCard" class="hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div class="p-4 md:p-5">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-bold text-slate-900">Leaderboard</h2>
+          <span id="rowCount" class="text-xs text-slate-500"></span>
+        </div>
+        <div class="mt-3 overflow-x-auto">
+          <table class="min-w-full text-sm">
+            <thead class="bg-slate-100 text-slate-700">
+              <tr>
+                <th class="text-left px-3 py-2">Naam</th>
+                <th class="text-left px-3 py-2">UID</th>
+                <th class="text-left px-3 py-2">Tyd (ms)</th>
+                <th class="text-left px-3 py-2">Raaisels / Besonderhede</th>
+                <th class="text-left px-3 py-2">Geskep</th>
+              </tr>
+            </thead>
+            <tbody id="boardTbody" class="divide-y divide-slate-200"></tbody>
+          </table>
+        </div>
+        <p id="boardNote" class="mt-3 text-xs text-slate-500"></p>
+      </div>
+    </section>
   </main>
+
+  <!-- Firebase + Admin logic -->
   <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import {
-      getFirestore, doc, getDoc, setDoc, serverTimestamp
-    } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
-    import { getAuth, onAuthStateChanged, getIdTokenResult } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
+      getFirestore, doc, getDoc, collection, getDocs, query, orderBy, limit, Timestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    const config = {
-      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
-      authDomain: "kriptiek-c9ea2.firebaseapp.com",
-      projectId: "kriptiek-c9ea2",
-      storageBucket: "kriptiek-c9ea2.appspot.com",
-      messagingSenderId: "620450620939",
-      appId: "1:620450620939:web:e93a18ac23b53b33db890e"
+    /* ---------- Firebase init ----------
+       This file will use an existing global config if present.
+       If not, paste your config into firebaseConfig below. */
+    const fallbackConfig = {
+      // PASTE YOUR FIREBASE CONFIG HERE IF window.firebaseConfig IS NOT PRESENT
+      // apiKey: "...",
+      // authDomain: "...",
+      // projectId: "...",
+      // storageBucket: "...",
+      // messagingSenderId: "...",
+      // appId: "..."
     };
-
-    const app  = initializeApp(config);
-    const db   = getFirestore(app);
+    const firebaseConfig = (window.firebaseConfig || window._firebaseConfig || fallbackConfig);
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db   = getFirestore(app);
 
-    const ADMIN_UID = "jI7f0Wk4MqfPq7p69vjl8OlJUvS2";
+    /* ---------- DOM helpers ---------- */
+    const statusBox = document.getElementById('statusBox');
+    const whoami   = document.getElementById('whoami');
+    const signOutBtn = document.getElementById('signOutBtn');
 
-    const dateEl = document.getElementById('date');
-    const swordEl= document.getElementById('sword');
-    const bothEl = document.getElementById('copyBoth');
-    const saveEl = document.getElementById('save');
-    const loadEl = document.getElementById('load');
-    const msgEl  = document.getElementById('msg');
-    const adminGate = document.getElementById('adminGate');
+    const dateInput = document.getElementById('dateInput');
+    const loadBtn   = document.getElementById('loadBtn');
+    const todayBtn  = document.getElementById('todayBtn');
 
-    function todayKeySAST(){
-      const parts = new Intl.DateTimeFormat('en-CA',{
-        timeZone:'Africa/Johannesburg',year:'numeric',month:'2-digit',day:'2-digit'
-      }).formatToParts(new Date());
-      const y = parts.find(p=>p.type==='year').value;
-      const m = parts.find(p=>p.type==='month').value;
-      const d = parts.find(p=>p.type==='day').value;
-      return `${y}-${m}-${d}`;
+    const gameCard  = document.getElementById('gameCard');
+    const gameIdTxt = document.getElementById('gameIdTxt');
+    const existsTxt = document.getElementById('existsTxt');
+    const wordTxt   = document.getElementById('wordTxt');
+    const metaTxt   = document.getElementById('metaTxt');
+
+    const boardCard = document.getElementById('boardCard');
+    const boardTbody = document.getElementById('boardTbody');
+    const rowCount = document.getElementById('rowCount');
+    const boardNote = document.getElementById('boardNote');
+
+    function showStatus(msg, tone='warn') {
+      statusBox.classList.remove('hidden');
+      statusBox.classList.toggle('bg-yellow-50', tone==='warn');
+      statusBox.classList.toggle('bg-red-50', tone==='error');
+      statusBox.classList.toggle('bg-green-50', tone==='ok');
+      statusBox.textContent = msg;
     }
-    dateEl.value = todayKeySAST();
+    function hideStatus() { statusBox.classList.add('hidden'); }
 
-    function normWord(v){ return (v||'').toUpperCase().replace(/[^A-Z]/g,'').slice(1-1,8); }
+    function toZADateString(d) {
+      // Always resolve date in Africa/Johannesburg
+      const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Johannesburg', year: 'numeric', month: '2-digit', day: '2-digit' })
+        .formatToParts(d).reduce((a,p)=>{a[p.type]=p.value;return a;}, {});
+      return `${parts.year}-${parts.month}-${parts.day}`;
+    }
+    function gameIdFromDateStr(yyyy_mm_dd) { return `Game${yyyy_mm_dd}`; }
 
-    let currentUser = null;
-    let isAdminUser = false;
+    function getParam(name) {
+      const u = new URL(location.href);
+      return u.searchParams.get(name);
+    }
 
-    onAuthStateChanged(auth, async (u)=>{
-      currentUser = u || null;
-      isAdminUser = false;
-      if(!u){
-        adminGate.classList.remove('hidden');
-        msgEl.textContent = 'Meld asseblief aan om te kan stoor.';
+    /* ---------- Admin gate ---------- */
+    async function checkIsAdmin(uid) {
+      if (!uid) return false;
+      if (uid === "jI7f0Wk4MqfPq7p69vjl8OlJUvS2") return true; // hardcoded admin
+      const snap = await getDoc(doc(db, "admins", uid));
+      return snap.exists();
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        whoami.textContent = "Nie aangemeld nie";
+        showStatus("Meld asseblief aan as admin om die blad te gebruik.", 'warn');
         return;
       }
-      try{
-        const token = await getIdTokenResult(u);
-        isAdminUser = (u.uid === ADMIN_UID) || !!token.claims.admin;
-      }catch{ /* ignore */ }
-      if(!isAdminUser){
-        adminGate.classList.remove('hidden');
-        msgEl.textContent = 'Jy is aangemeld, maar nie as admin nie.';
-      }else{
-        adminGate.classList.add('hidden');
-        msgEl.textContent = '';
+      whoami.textContent = `Ingeteken: ${user.email || user.uid}`;
+      signOutBtn.classList.remove('hidden');
+      signOutBtn.onclick = () => signOut(auth);
+
+      try {
+        const ok = await checkIsAdmin(user.uid);
+        if (!ok) {
+          showStatus("Jy het nie admin-toegang nie.", 'error');
+          return;
+        }
+        hideStatus();
+        bootstrapUI();
+      } catch (e) {
+        console.error(e);
+        showStatus("Kon nie admin-status bevestig nie: " + (e.message || e.code), 'error');
       }
     });
 
-    function gameIdFromDate(date){ return `Game${date}`; }
-
-    // Prefer canonical Slimstiek doc; fall back to daily_words
-    loadEl.onclick = async ()=>{
-      const date = dateEl.value;
-      msgEl.textContent='Laai...';
-      if(!date){ msgEl.textContent='Kies eers ’n datum.'; return; }
-
-      const gid = gameIdFromDate(date);
-      const slimRef = doc(db,'slimstiekGames', gid);
-      const dailyRef = doc(db,'daily_words', date);
-
-      try{
-        const slimSnap = await getDoc(slimRef);
-        if(slimSnap.exists()){
-          const d = slimSnap.data()||{};
-          swordEl.value = (d.target || d.word || '').toUpperCase();
-          msgEl.textContent = 'Gelaai uit slimstiekGames ✅';
-          return;
-        }
-        const dailySnap = await getDoc(dailyRef);
-        if(dailySnap.exists()){
-          const d = dailySnap.data()||{};
-          swordEl.value = (d.slimstiek || d.word || '').toUpperCase();
-          msgEl.textContent = 'Gelaai uit daily_words ✅';
-          return;
-        }
-        swordEl.value = '';
-        msgEl.textContent='Geen inskrywing vir dié datum nie.';
-      }catch(e){
-        console.warn(e);
-        msgEl.textContent='Kon nie laai nie.';
-      }
-    };
-
-    saveEl.onclick = async ()=>{
-      const date = dateEl.value;
-      let w = normWord(swordEl.value);
-      if(!date){ msgEl.textContent='Kies eers ’n datum.'; return; }
-      if(!/^[A-Z]{1,8}$/.test(w)){ msgEl.textContent='Gee ’n woord (A–Z, tot 8).'; return; }
-      if(!currentUser || !isAdminUser){ msgEl.textContent='Slegs admin kan stoor.'; return; }
-
-      const gid = gameIdFromDate(date);
-      const nowTS = serverTimestamp();
-
-      // 1) daily_words mirror (what you had before)
-      const dailyPayload = { slimstiek: w, word: w, updatedAt: nowTS };
-      if(bothEl.checked){ dailyPayload.blitstiek = w; }
-
-      // 2) canonical Slimstiek game doc (used by archive & future game page)
-      const slimPayload = {
-        adminCreated: true,
-        createdBy: currentUser.uid,
-        date,
-        gameId: gid,
-        target: w,
-        word: w,
-        status: 'active',
-        createdAtMs: nowTS,
-        updatedAtMs: nowTS
+    /* ---------- UI bootstrap ---------- */
+    function bootstrapUI() {
+      // default date: URL ?date=YYYY-MM-DD or today ZA
+      const p = getParam('date');
+      dateInput.value = p || toZADateString(new Date());
+      loadBtn.onclick = () => loadForDate(dateInput.value);
+      todayBtn.onclick = () => {
+        dateInput.value = toZADateString(new Date());
+        loadForDate(dateInput.value);
       };
+      loadForDate(dateInput.value);
+    }
 
-      // 3) optional Blitstiek mirror (minimal)
-      const blitsPayload = {
-        adminCreated: true,
-        createdBy: currentUser.uid,
-        date,
-        gameId: gid,
-        target: w,
-        word: w,
-        status: 'active',
-        createdAtMs: nowTS,
-        updatedAtMs: nowTS
-      };
+    async function loadForDate(dateStr) {
+      boardNote.textContent = "";
+      boardTbody.innerHTML = "";
+      rowCount.textContent = "";
+      wordTxt.textContent = "";
+      metaTxt.textContent = "";
 
-      try{
-        // writes
-        await Promise.all([
-          setDoc(doc(db,'daily_words', date), dailyPayload, { merge:true }),
-          setDoc(doc(db,'slimstiekGames', gid), slimPayload, { merge:true }),
-          bothEl.checked ? setDoc(doc(db,'blitstiekGames', gid), blitsPayload, { merge:true }) : Promise.resolve()
-        ]);
-        msgEl.textContent='Gestoor ✅';
-      }catch(e){
-        console.warn(e);
-        msgEl.textContent='Kon nie stoor nie.';
+      const gid = gameIdFromDateStr(dateStr);
+      gameIdTxt.textContent = gid;
+
+      // Game doc
+      const gRef = doc(db, "slimstiekGames", gid);
+      const gSnap = await getDoc(gRef);
+      gameCard.classList.remove('hidden');
+      existsTxt.textContent = gSnap.exists() ? "Ja" : "Nee";
+      if (gSnap.exists()) {
+        const d = gSnap.data();
+        wordTxt.textContent = d?.target || d?.word || "(onbekend)";
+        const extras = { status: d?.status, createdAt: d?.createdAt?.toDate?.()?.toISOString?.() || d?.createdAt, updatedAt: d?.updatedAt?.toDate?.()?.toISOString?.() || d?.updatedAt };
+        metaTxt.textContent = JSON.stringify(extras);
+      } else {
+        wordTxt.textContent = "";
+        metaTxt.textContent = "";
       }
-    };
+
+      // Leaderboard (prefer order by timeMs asc, fallback to client sort)
+      boardCard.classList.remove('hidden');
+      try {
+        const q1 = query(
+          collection(db, "slimstiekGames", gid, "leaderboard"),
+          orderBy("timeMs", "asc"),
+          orderBy("createdAtMs", "asc"),
+          limit(500)
+        );
+        const ss = await getDocs(q1);
+        renderBoard(ss.docs.map(d=>({ id:d.id, ...d.data() })));
+      } catch (err) {
+        console.warn("Index/order fallback:", err.code || err.message);
+        // Fallback: fetch unsorted then sort in JS
+        const ss = await getDocs(collection(db, "slimstiekGames", gid, "leaderboard"));
+        const rows = ss.docs.map(d=>({ id:d.id, ...d.data() }));
+        rows.sort((a,b)=>{
+          const at = (a.timeMs ?? 9e15) - (b.timeMs ?? 9e15);
+          if (at !== 0) return at;
+          return (a.createdAtMs ?? 9e15) - (b.createdAtMs ?? 9e15);
+        });
+        boardNote.textContent = "Let wel: geen indeks gevind vir sortering nie; val terug na kliënt-kant sortering.";
+        renderBoard(rows);
+      }
+    }
+
+    function renderBoard(rows) {
+      rowCount.textContent = rows.length ? `${rows.length} inskrywings` : "Geen inskrywings";
+      boardTbody.innerHTML = rows.map(r => {
+        const created = r.createdAt?.toDate?.()?.toISOString?.() ||
+                        (r.createdAtMs ? new Date(r.createdAtMs).toISOString() : "");
+        const name = r.userName || r.name || "(naamloos)";
+        const extra = r.details || r.result || r.guesses || "";
+        const time = (typeof r.timeMs === 'number') ? r.timeMs : "";
+        return `
+          <tr class="align-top">
+            <td class="px-3 py-2">${escapeHtml(name)}</td>
+            <td class="px-3 py-2 font-mono text-xs">${escapeHtml(r.uid || r.id || '')}</td>
+            <td class="px-3 py-2">${time}</td>
+            <td class="px-3 py-2">${escapeHtml(String(extra))}</td>
+            <td class="px-3 py-2 text-xs">${escapeHtml(created)}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
   </script>
 </body>
 </html>
