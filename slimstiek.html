@@ -150,12 +150,23 @@
     #nrGate{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:60;}
 
     /* Slimstiek K-pill (teal) */
-    .k-pill{
-      display:inline-flex;align-items:center;gap:.35rem;
-      background:#0f766e;color:#fff;font-weight:800;
-      border-radius:999px;padding:.15rem .5rem;
-      font-size:.75rem;line-height:1;
-    }
+    /* Slimstiek K-pill (teal, right-aligned like Blitstiek) */
+.k-pill {
+  margin-left: auto;             /* push pill to the far right */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f766e;
+  color: #fff;
+  font-weight: 800;
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.75rem;
+  line-height: 1;
+  min-width: 1.8rem;
+  text-align: center;
+}
+
 
     /* Admin pane (small) */
     #adminPanel{display:none}
@@ -916,7 +927,9 @@
 
       combined.slice(0,10).forEach(v=>{
         const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
-        const pill = (Number(v.kSlim_total||0) > 0) ? ` <span class="k-pill">+${Number(v.kSlim_total)}</span>` : '';
+const pill = (Number(v.kSlim_total||0) > 0)
+  ? `<span class="k-pill">${Number(v.kSlim_total)}</span>`
+  : '';
         const li = document.createElement('li');
         li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>${you}: ${(v.score??0)} punte${pill}`;
         lbList.appendChild(li);
