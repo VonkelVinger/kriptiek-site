@@ -174,13 +174,12 @@
     </div>
     <p class="welcome" id="welcomeLine">Welkom terug, <span id="playerName" class="font-semibold text-green-700">Speler</span>!</p>
   </header>
-
   <main class="flex-1">
     <div class="max-w-3xl mx-auto px-4 py-4">
 
       <!-- Admin backfill mini-panel -->
       <section id="adminPanel" class="mb-3">
-        <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900 flex items-center gap-2 flex-wrap">
+        <div class="rounded-lg border border-emerald-2 00 bg-emerald-50 p-3 text-sm text-emerald-900 flex items-center gap-2 flex-wrap">
           <strong>Admin:</strong>
           <label class="flex items-center gap-1">Datum: <input id="adminDate" type="date" class="border rounded px-2 py-1 text-sm"></label>
           <button id="btnBFOne" class="btn px-3 py-1">Backfill dag</button>
@@ -361,7 +360,6 @@
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
-
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import { getAuth, onAuthStateChanged, getIdTokenResult } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
@@ -441,16 +439,14 @@
     let currentDate = (/^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : todayKeySAST());
     const GAME_ID = `Game${currentDate}`;
 
-    // Canonical URL normalization
+    // Canonical URL normalization (force ?date=YYYY-MM-DD)
     try {
       const urlObj = new URL(window.location.href);
       urlObj.searchParams.set('date', currentDate);
       urlObj.hash = '';
       const canonical = urlObj.pathname + '?' + urlObj.searchParams.toString();
       const current = window.location.pathname + window.location.search + window.location.hash;
-      if (current !== canonical) {
-        history.replaceState(null, '', canonical);
-      }
+      if (current !== canonical) history.replaceState(null, '', canonical);
     } catch {}
 
     const shareKey = () => `slimstiekShare:${currentDate}`;
@@ -519,21 +515,17 @@
           if (user) {
             const t = await getIdTokenResult(user, true);
             const claimAdmin = t?.claims?.admin === true;
-
-            // 👉 Update with your actual admin UIDs if needed
-            const UID_ALLOW = new Set([
-              "jI7f0Wk4MqfPq7p69vjl8OlJUvS2"
-            ]);
-
+            const UID_ALLOW = new Set(["jI7f0Wk4MqfPq7p69vjl8OlJUvS2"]);
             const allowlistAdmin = UID_ALLOW.has(user.uid);
             const queryOverride  = (new URLSearchParams(location.search)).get('admin') === '1';
-
             isAdminClient = claimAdmin || allowlistAdmin || queryOverride;
           }
-        } catch (e) {
-          console.warn('Admin check failed:', e);
-        }
+        } catch (e) { console.warn('Admin check failed:', e); }
         adminPanel.style.display = isAdminClient ? '' : 'none';
+
+        // after auth settles, ensure merged leaderboard subscription is live
+        subscribeMergedLeaderboard();
+        if (user) mirrorSlimstiekPoints(); // backfill pills if you already have a best
       });
     } else { setBarsForUser(null); showNRGate(); adminPanel.style.display='none'; }
 
@@ -571,7 +563,6 @@
     let paused=false, ended=false, moving=false;
     let gInt=null;                 // drop-tick only
     let score=0, bestScore=null;
-    let lbUnsub=null;
 
     function drawGrid(){
       gridEl.innerHTML='';
@@ -604,12 +595,8 @@
       return { color, letter, x:Math.floor(W/2), y:0 };
     }
 
-    /* ---- Scoring (revised) ---- */
-    const SCORING = Object.freeze({
-      PAIR_POINTS: 10,     // letter OR color match
-      BOTH_BONUS:  50,     // extra if both letter AND color match
-      WORD_BONUS:  100     // when word completes (game ends)
-    });
+    /* ---- Scoring ---- */
+    const SCORING = Object.freeze({ PAIR_POINTS: 10, BOTH_BONUS: 50, WORD_BONUS: 100 });
     function setScore(v){ score=Math.max(0, v|0); scoreText.textContent=score; }
     function addScore(v){ setScore(score + (v|0)); }
 
@@ -670,19 +657,15 @@
       updateRowHint();
     }
 
-    // Row-multiplied scoring (+10 per pair, +50 both, times row multiplier) + float badges
     async function matchAndDrop(){
       const toDel=new Set();
       let pairScoreTotal = 0;
+      const rowNumber = (y) => H - y; // bottom row = 1
 
-      const rowNumber = (y) => H - y; // bottom row = 1, top row = H
-
-      // count pairs using RIGHT and DOWN edges only
       for(let y=0;y<H;y++){
         for(let x=0;x<W;x++){
           const a=grid[y][x];
           if(!a || partOfTarget(a.letter)) continue;
-
           for(const [dx,dy] of [[1,0],[0,1]]){
             const nx=x+dx, ny=y+dy;
             if(nx<0||nx>=W||ny<0||ny>=H) continue;
@@ -783,7 +766,7 @@
     btnRight.addEventListener('click',()=>move(1,0));
     btnDown .addEventListener('click', ()=>hardDrop());
 
-    /* ---- Keyboard controls (arrows + space + P) ---- */
+    /* ---- Keyboard controls ---- */
     window.addEventListener('keydown', (e) => {
       const gateOpen  = nrGate && nrGate.style.display === 'flex';
       const modalOpen = over   && over.style.display   === 'flex';
@@ -876,72 +859,102 @@
       }catch{}
     }
 
-    /* ---- Local leaderboard (fallback) ---- */
+    /* ---- Local leaderboard (fallback only if both FS paths fail) ---- */
     const LB_LOCAL_KEY = d => `slimstiekLocalLB:${d}`;
     function getLocalLB(date){ try{ return JSON.parse(localStorage.getItem(LB_LOCAL_KEY(date))) || []; }catch{ return []; } }
     function setLocalLB(date, arr){ try{ localStorage.setItem(LB_LOCAL_KEY(date), JSON.stringify(arr)); }catch{} }
-    function renderLocalLB(date){
-      const list = getLocalLB(date).sort((a,b)=> (b.score|0)-(a.score|0)).slice(0,10);
-      lbList.innerHTML='';
-      if(!list.length){
-        bestText.textContent='—';
-        lbList.innerHTML = `<li class="bg-green-100 font-medium">Wees eerste op die leierbord!</li>`;
+
+    /* ---------- NEW: Merged LIVE + LEGACY leaderboard renderer ---------- */
+    let unsubLive = null, unsubLegacy = null;
+    let liveRows = [], legacyRows = [];
+
+    function rowsToMap(rows){
+      const m = new Map();
+      rows.forEach(r=>{
+        const id = r.id || r.uid || r.userId || r._id;
+        if(!id) return;
+        const prev = m.get(id) || { id };
+        const score = Number(r.score||0);
+        const ts = r.ts?.toMillis?.() ? r.ts.toMillis() : (r.ts?.seconds ? r.ts.seconds*1000 : 9e15);
+        const userName = (r.userName || prev.userName || 'Onbekend').toString().slice(0,24);
+        const kSlim_total = Number(r.kSlim_total || prev.kSlim_total || 0);
+
+        // keep best score; tie-breaker earliest ts
+        const better = (!prev.score) || (score > (prev.score||0)) || (score === (prev.score||0) && ts < (prev.ts||9e15));
+        const merged = better ? { id, score, ts, userName, kSlim_total } : prev;
+        m.set(id, merged);
+      });
+      return m;
+    }
+
+    function renderMerged(){
+      // prefer whichever side has data; merge when both do
+      const map = rowsToMap([...liveRows, ...legacyRows]);
+      const combined = Array.from(map.values())
+        .sort((a,b)=> (b.score|0)-(a.score|0) || (a.ts||9e15)-(b.ts||9e15))
+        .slice(0, 100);
+
+      lbList.innerHTML = '';
+      if (!combined.length){
+        // as a last resort, show local fallback
+        const local = getLocalLB(currentDate).sort((a,b)=> (b.score|0)-(a.score|0)).slice(0,10);
+        if (!local.length){
+          bestText.textContent='—';
+          lbList.innerHTML = `<li class="bg-green-100 font-medium">Wees eerste op die leierbord!</li>`;
+          return;
+        }
+        bestText.textContent = String(local[0].score);
+        local.forEach(row=>{
+          const li=document.createElement('li');
+          li.innerHTML = `<strong>${row.userName||'Speler'}</strong>: ${row.score|0} punte`;
+          lbList.appendChild(li);
+        });
         return;
       }
-      bestText.textContent = String(list[0].score);
-      list.forEach(row=>{
-        const li=document.createElement('li');
-        li.innerHTML = `<strong>${row.userName||'Speler'}</strong>: ${row.score|0} punte`;
+
+      bestText.textContent = String(combined[0].score ?? '—');
+
+      combined.slice(0,10).forEach(v=>{
+        const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
+        const pill = (Number(v.kSlim_total||0) > 0) ? ` <span class="k-pill">+${Number(v.kSlim_total)}</span>` : '';
+        const li = document.createElement('li');
+        li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>${you}: ${(v.score??0)} punte${pill}`;
         lbList.appendChild(li);
       });
     }
 
-    /* ---- Live leaderboard with K-pill & fallback to legacy ---- */
-    function startLiveLeaderboardFS(){
-      try { if (typeof lbUnsub === 'function') { lbUnsub(); } } catch {}
-      if (!db) { renderLocalLB(currentDate); return; }
+    function subscribeMergedLeaderboard(){
+      // clean previous
+      try{ if(typeof unsubLive==='function') unsubLive(); }catch{}
+      try{ if(typeof unsubLegacy==='function') unsubLegacy(); }catch{}
+      liveRows = []; legacyRows = [];
 
-      // Live Slimstiek board
+      if (!db){
+        renderMerged(); // will fall back to local
+        return;
+      }
+
+      // LIVE: slimstiekGames/GameYYYY-MM-DD/leaderboard
       const colLive = collection(db, 'slimstiekGames', `Game${currentDate}`, 'leaderboard');
-      const qLive   = query(colLive, orderBy('score','desc'), orderBy('ts','asc'), limit(100));
+      const qLive   = query(colLive, orderBy('score','desc'), orderBy('ts','asc'), limit(200));
+      unsubLive = onSnapshot(qLive, (snap)=>{
+        liveRows = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+        renderMerged();
+      }, (err)=>{ console.error('LIVE LB stream failed:', err); liveRows = []; renderMerged(); });
 
-      lbUnsub = onSnapshot(qLive, (snap)=>{
-        // Live rows present
-        const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        rows.sort((a,b)=>{
-          const sa = Number(a.score) || 0;
-          const sb = Number(b.score) || 0;
-          if (sa !== sb) return sb - sa;
-          const ta = a.ts?.toMillis?.() ? a.ts.toMillis() : 9e15;
-          const tb = b.ts?.toMillis?.() ? b.ts.toMillis() : 9e15;
-          return ta - tb;
-        });
-
-        const top = rows.slice(0,10);
-        if (top.length) bestText.textContent = String(top[0].score ?? '—');
-
-        lbList.innerHTML = '';
-        if (!top.length){
-          renderLocalLB(currentDate);
-          return;
-        }
-
-        top.forEach(v=>{
-          const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
-          const pill = (Number(v.kSlim_total||0) > 0) ? ` <span class="k-pill">+${Number(v.kSlim_total)}</span>` : '';
-          const li = document.createElement('li');
-          li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>${you}: ${(v.score??0)} punte${pill}`;
-          lbList.appendChild(li);
-        });
-      }, (err)=>{
-        console.error('LB stream failed, falling back to local:', err);
-        renderLocalLB(currentDate);
-      });
+      // LEGACY: leaderboards/slimstiek/dates/YYYY-MM-DD/entries
+      const colLegacy = collection(db,'leaderboards','slimstiek','dates', currentDate, 'entries');
+      const qLegacy   = query(colLegacy, orderBy('score','desc'), orderBy('ts','asc'), limit(200));
+      unsubLegacy = onSnapshot(qLegacy, (snap)=>{
+        legacyRows = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+        renderMerged();
+      }, (err)=>{ console.error('LEGACY LB stream failed:', err); legacyRows = []; renderMerged(); });
     }
 
     /* ---- Submit to leaderboard (write to LIVE + LEGACY) ---- */
     async function submitToLB(scoreVal){
       const row = { userName: currentUserName, score: scoreVal|0 };
+      // local cache (very last fallback)
       const arr = getLocalLB(currentDate);
       const idx = arr.findIndex(r => (r.userName||'') === (row.userName||''));
       if (idx >= 0){
@@ -961,11 +974,7 @@
         const betterLive = !livePrev || ((row.score|0) > (livePrev.score|0));
 
         if (betterLive){
-          await setDoc(liveRef, {
-            userName: currentUserName.slice(0,24),
-            score: row.score|0,
-            ts: serverTimestamp()
-          }, { merge:true });
+          await setDoc(liveRef, { userName: currentUserName.slice(0,24), score: row.score|0, ts: serverTimestamp() }, { merge:true });
         } else {
           await setDoc(liveRef, { userName: currentUserName.slice(0,24) }, { merge:true });
         }
@@ -977,11 +986,7 @@
         const betterLeg = !legPrev || ((row.score|0) > (legPrev.score|0));
 
         if (betterLeg){
-          await setDoc(legacyRef, {
-            userName: currentUserName.slice(0,24),
-            score: row.score|0,
-            ts: serverTimestamp()
-          }, { merge:true });
+          await setDoc(legacyRef, { userName: currentUserName.slice(0,24), score: row.score|0, ts: serverTimestamp() }, { merge:true });
         } else {
           await setDoc(legacyRef, { userName: currentUserName.slice(0,24) }, { merge:true });
         }
@@ -1042,9 +1047,7 @@
       }
 
       // IMPROVE: grant once the first time you have a recorded best
-      if (kImprove === 0 && haveBest) {
-        kImprove = K_CONF.IMPROVE_POINTS;
-      }
+      if (kImprove === 0 && haveBest) kImprove = K_CONF.IMPROVE_POINTS;
 
       // PLACE: only after cutoff; rank by score DESC then ts ASC (legacy list)
       if (kPlace === 0 && now >= zaTimeOn(currentDate, K_CONF.CUTOFF_TIME)) {
@@ -1057,9 +1060,7 @@
           );
           const rSnap = await getDocs(qRank);
           const pos = rSnap.docs.findIndex(d => d.id === user.uid);
-          if (pos >= 0 && pos < K_CONF.FINAL_POINTS.length) {
-            kPlace = K_CONF.FINAL_POINTS[pos];
-          }
+          if (pos >= 0 && pos < K_CONF.FINAL_POINTS.length) kPlace = K_CONF.FINAL_POINTS[pos];
         } catch {}
       }
 
@@ -1128,10 +1129,10 @@
       drawGrid();
 
       maybeEnableStickyShareFromStorage();
-      startLiveLeaderboardFS();
+      subscribeMergedLeaderboard();
       updateRowHint();
 
-      if (user) { mirrorSlimstiekPoints(); } // backfill on load if you already have a best
+      if (user) { mirrorSlimstiekPoints(); }
     }
 
     /* ---- Admin backfill helpers ---- */
@@ -1146,7 +1147,6 @@
       const legacyCol = collection(db,'leaderboards','slimstiek','dates', dateStr, 'entries');
 
       try{
-        // Read both sides
         const [liveSnap, legacySnap] = await Promise.all([
           getDocs(query(liveCol, orderBy('score','desc'), orderBy('ts','asc'), limit(1000))),
           getDocs(query(legacyCol, orderBy('score','desc'), orderBy('ts','asc'), limit(1000)))
@@ -1154,26 +1154,20 @@
 
         const liveMap = new Map(liveSnap.docs.map(d=>[d.id, {id:d.id, ...d.data()}]));
         const legMap  = new Map(legacySnap.docs.map(d=>[d.id, {id:d.id, ...d.data()}]));
-
         const uids = new Set([...liveMap.keys(), ...legMap.keys()]);
 
-        // For each UID, create/merge both sides; fetch pill from userGames if available
         for (const uid of uids){
           const liveRow = liveMap.get(uid) || {};
           const legRow  = legMap.get(uid)  || {};
-
-          // pick the better score, otherwise prefer any available
           const liveScore = Number(liveRow.score||0);
           const legScore  = Number(legRow.score||0);
           const pickLive  = liveScore >= legScore;
           const base = pickLive ? liveRow : legRow;
 
-          // best known fields
           const userName = (base.userName || liveRow.userName || legRow.userName || 'Onbekend').toString().slice(0,24);
           const scoreVal = Number(base.score||0)|0;
           const tsVal    = base.ts || liveRow.ts || legRow.ts || serverTimestamp();
 
-          // find pill from userGames
           let kTotal = Number(base.kSlim_total||0);
           if (!kTotal){
             try{
@@ -1188,7 +1182,6 @@
           const writeObj = { userName, score:scoreVal, ts:tsVal };
           if (kTotal>0) writeObj.kSlim_total = kTotal;
 
-          // write both sides (merge)
           try { await setDoc(doc(db,'slimstiekGames', `Game${dateStr}`, 'leaderboard', uid), writeObj, { merge:true }); } catch(e){ console.warn('live set fail', uid, e); }
           try { await setDoc(doc(db,'leaderboards','slimstiek','dates', dateStr, 'entries', uid), writeObj, { merge:true }); } catch(e){ console.warn('legacy set fail', uid, e); }
         }
@@ -1208,13 +1201,13 @@
     }
 
     btnBFOne?.addEventListener('click', async ()=>{
-      const d = dAdmin.value || currentDate; await backfillOne(d); startLiveLeaderboardFS();
+      const d = dAdmin.value || currentDate; await backfillOne(d); subscribeMergedLeaderboard();
     });
     btnBFRange?.addEventListener('click', async ()=>{
       const a = dAdmin.value || currentDate;
       const b = dAdminTo.value || a;
       for (const day of eachDayISO(a,b)){ await backfillOne(day); }
-      startLiveLeaderboardFS();
+      subscribeMergedLeaderboard();
     });
 
     /* ---- Init ---- */
@@ -1224,7 +1217,6 @@
     }
     init();
   </script>
-
   <!-- Buy Me a Coffee CTA above leaderboard -->
   <script>
   document.addEventListener('DOMContentLoaded', () => {
@@ -1237,7 +1229,7 @@
     wrap.innerHTML = `
       <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800 text-center">
         <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
-           onclick="gtag && gtag('event','bmac_click',{from:'slimstiek-leaderboard'})"
+           onclick="window.gtag && gtag('event','bmac_click',{from:'slimstiek-leaderboard'})"
            class="inline-flex items-center justify-center px-5 py-3
                   bg-yellow-500 hover:bg-yellow-600 text-white font-bold
                   rounded-xl shadow-md transition duration-200"
