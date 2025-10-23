@@ -55,11 +55,11 @@
         <p id="lookupMsg" class="text-sm mt-2"></p>
       </section>
 
-      <!-- Edit -->
+      <!-- Edit: Supporter flags -->
       <section class="bg-gray-50 rounded p-3">
         <h2 class="font-semibold mb-2">Merk as ondersteuner</h2>
         <p class="text-xs text-gray-600 mb-2">
-          Tip: Jy kan net **UID + e-pos** invul en dan **STOOR** klik — dit skep die /users/ dokument as dit nog nie bestaan nie.
+          Tip: Jy kan net <b>UID + e-pos</b> invul en dan <b>STOOR</b> klik — dit skep die <code>/users/</code> dokument as dit nog nie bestaan nie.
         </p>
 
         <div class="text-sm mb-2">
@@ -84,6 +84,22 @@
         <p id="msg" class="text-sm mt-2"></p>
       </section>
 
+      <!-- Change username -->
+      <section class="bg-gray-50 rounded p-3">
+        <h2 class="font-semibold mb-2">Verander gebruikersnaam</h2>
+        <div class="grid grid-cols-1 gap-2">
+          <input id="newName" type="text" class="border rounded p-2" placeholder="Nuwe naam… (bv. Lenieblou)"/>
+          <div class="flex gap-2">
+            <button id="changeNameBtn" class="btn bg-blue-600 hover:bg-blue-700">OPDATEER NAAM</button>
+            <button id="copyNameToMirrorBtn" class="btn bg-slate-600 hover:bg-slate-700">SINKRONISEER SPIËGEL</button>
+          </div>
+          <p class="text-xs text-gray-600">
+            Let wel: Hierdie bladsy pas <code>users/{uid}.userName</code> aan. As jy ook Firebase Auth se
+            <code>displayName</code> wil bywerk, activeer later die (opsionele) Cloud Function roep hieronder in die kode.
+          </p>
+        </div>
+      </section>
+
       <!-- Quick self-mark for testing -->
       <section class="bg-gray-50 rounded p-3">
         <h2 class="font-semibold mb-2">Vinnig: Maak MÝ ’n ondersteuner (30 dae)</h2>
@@ -98,8 +114,10 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
     import {
       getFirestore, doc, getDoc, setDoc, serverTimestamp, Timestamp,
-      collection, query, where, getDocs
+      collection, query, where, getDocs, updateDoc
     } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    // If you add a callable later to update Auth displayName, also import:
+    // import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-functions.js";
 
     // =========================
     // CONFIG
@@ -118,6 +136,7 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    // const functions = getFunctions(app); // enable when you add a callable
 
     // =========================
     // UI refs
@@ -140,6 +159,11 @@
     const saveBtn = document.getElementById('saveBtn');
     const clearBtn = document.getElementById('clearBtn');
     const msg = document.getElementById('msg');
+
+    const newName = document.getElementById('newName');
+    const changeNameBtn = document.getElementById('changeNameBtn');
+    const copyNameToMirrorBtn = document.getElementById('copyNameToMirrorBtn');
+
     const makeMeBtn = document.getElementById('makeMeBtn');
 
     let selectedUid = null;
@@ -149,7 +173,8 @@
     // =========================
     onAuthStateChanged(auth, async (user)=>{
       if (!user) {
-        window.location.href = "/login.html?return=/admin.supporters.html";
+        // fixed redirect path (dash, not dot)
+        window.location.href = "/login.html?return=/admin-supporters.html";
         return;
       }
       if (user.uid !== ADMIN_UID) {
@@ -177,10 +202,14 @@
       currentEmail.textContent = "—";
       isPaid.checked = false;
       paidUntil.value = "";
+      newName.value = "";
     }
     function getTypedEmail() {
       const raw = (emailInput.value || "").trim();
       return raw || null;
+    }
+    function validUid(val){
+      return typeof val === 'string' && val.length >= 10; // simple sanity check
     }
 
     // =========================
@@ -197,6 +226,9 @@
         const snap = await getDoc(doc(db,'users', uid));
         if (!snap.exists()){
           showLookup("Geen userdoc vir dié UID nie.", "text-red-600");
+          // still set the UID display so admin can create/update
+          currentUid.textContent = uid;
+          selectedUid = uid;
           return;
         }
         selectedUid = uid;
@@ -204,6 +236,7 @@
         const data = snap.data()||{};
         currentName.textContent = data.userName || "—";
         currentEmail.textContent = data.email || "—";
+        newName.value = data.userName || "";
 
         const s = data.support || {};
         isPaid.checked = !!s.isPaid;
@@ -314,7 +347,7 @@
     }
 
     // =========================
-    // Events
+    // Events (lookup)
     // =========================
     searchEmailBtn.addEventListener('click', async ()=> {
       await searchByEmail(emailInput.value);
@@ -337,34 +370,40 @@
     });
 
     // =========================
-    // Save / Clear
+    // Save / Clear supporter flags
     // =========================
     saveBtn.addEventListener('click', async ()=> {
       try {
-        // Accept either a loaded selectedUid OR just a typed UID
         const uid = selectedUid || (uidInput.value || "").trim();
-        if (!uid){
-          showMsg("Tik eers ’n UID in (of laai een).", "text-red-600"); return;
+        if (!validUid(uid)){
+          showMsg("Tik eers ’n geldige UID in (of laai een).", "text-red-600"); return;
         }
 
-        // Build payload
         let untilVal = paidUntil.value ? Timestamp.fromDate(new Date(paidUntil.value+"T23:59:59")) : null;
         const payload = {
           support: { isPaid: !!isPaid.checked, paidUntil: untilVal },
           updatedAt: serverTimestamp()
         };
 
-        // Seed email/emailLower from the search box if present
         const typed = getTypedEmail();
         if (typed) {
           payload.email = typed;
           payload.emailLower = typed.toLowerCase();
         }
 
-        // Create/update the user doc directly (admin is allowed by rules)
         await setDoc(doc(db,'users', uid), payload, { merge: true });
 
-        // Load/refresh UI
+        // optional mirror
+        if (PUBLIC_MIRROR_COLLECTION) {
+          await setDoc(doc(db, PUBLIC_MIRROR_COLLECTION, uid), {
+            support: payload.support,
+            email: payload.email || currentEmail.textContent || null,
+            emailLower: (payload.email || currentEmail.textContent || "").toLowerCase() || null,
+            userName: currentName.textContent || null,
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+        }
+
         await loadUser(uid);
         uidInput.value = uid;
         showMsg("Gestoor.", "text-green-600");
@@ -377,13 +416,21 @@
     clearBtn.addEventListener('click', async ()=> {
       try {
         const uid = selectedUid || (uidInput.value || "").trim();
-        if (!uid){
-          showMsg("Tik eers ’n UID in (of laai een).", "text-red-600"); return;
+        if (!validUid(uid)){
+          showMsg("Tik eers ’n geldige UID in (of laai een).", "text-red-600"); return;
         }
         await setDoc(doc(db,'users', uid), {
           support: { isPaid: false, paidUntil: null },
           updatedAt: serverTimestamp()
         }, { merge: true });
+
+        if (PUBLIC_MIRROR_COLLECTION) {
+          await setDoc(doc(db, PUBLIC_MIRROR_COLLECTION, uid), {
+            support: { isPaid: false, paidUntil: null },
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+        }
+
         isPaid.checked = false; paidUntil.value="";
         await loadUser(uid);
         showMsg("Merk as onbetaald voltooi.", "text-green-600");
@@ -393,7 +440,77 @@
       }
     });
 
+    // =========================
+    // Change username
+    // =========================
+    async function changeUserName(uid, newUserName){
+      if (!validUid(uid)) {
+        showMsg("Geen geldige UID nie.", "text-red-600"); return;
+      }
+      const trimmed = (newUserName || "").trim();
+      if (!trimmed) {
+        showMsg("Tik ’n nuwe naam.", "text-red-600"); return;
+      }
+      try {
+        await setDoc(doc(db, 'users', uid), {
+          userName: trimmed,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+
+        // OPTIONAL: also update a public mirror
+        if (PUBLIC_MIRROR_COLLECTION) {
+          await setDoc(doc(db, PUBLIC_MIRROR_COLLECTION, uid), {
+            userName: trimmed,
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+        }
+
+        // OPTIONAL: if you add a callable to update Auth displayName, enable this:
+        /*
+        const call = httpsCallable(functions, 'updateUserDisplayName');
+        await call({ uid, newName: trimmed });
+        */
+
+        await loadUser(uid);
+        showMsg("Gebruikersnaam opgedateer.", "text-green-600");
+      } catch (err) {
+        console.error(err);
+        showMsg("Kon nie gebruikersnaam opdateer nie: " + (err.message || err), "text-red-600");
+      }
+    }
+
+    changeNameBtn.addEventListener('click', async ()=>{
+      const uid = selectedUid || (uidInput.value || "").trim();
+      await changeUserName(uid, newName.value);
+    });
+
+    copyNameToMirrorBtn.addEventListener('click', async ()=>{
+      try {
+        const uid = selectedUid || (uidInput.value || "").trim();
+        if (!validUid(uid)) {
+          showMsg("Geen geldige UID nie.", "text-red-600"); return;
+        }
+        const snap = await getDoc(doc(db,'users', uid));
+        const nm = (snap.exists() && snap.data().userName) ? snap.data().userName : (newName.value || "").trim();
+        if (!nm) { showMsg("Geen naam om te sinkroniseer nie.", "text-red-600"); return; }
+        if (PUBLIC_MIRROR_COLLECTION) {
+          await setDoc(doc(db, PUBLIC_MIRROR_COLLECTION, uid), {
+            userName: nm,
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+          showMsg("Spieël opgedateer.", "text-green-600");
+        } else {
+          showMsg("Geen spieël-versameling ingestel nie.", "text-yellow-700");
+        }
+      } catch (err) {
+        console.error(err);
+        showMsg("Kon nie spieël opdateer nie: " + (err.message || err), "text-red-600");
+      }
+    });
+
+    // =========================
     // Self test helper
+    // =========================
     makeMeBtn.addEventListener('click', async ()=> {
       const user = auth.currentUser;
       if (!user) return;
@@ -409,6 +526,17 @@
           payload.emailLower = user.email.toLowerCase();
         }
         await setDoc(doc(db,'users', user.uid), payload, { merge: true });
+
+        if (PUBLIC_MIRROR_COLLECTION) {
+          await setDoc(doc(db, PUBLIC_MIRROR_COLLECTION, user.uid), {
+            support: payload.support,
+            email: payload.email || null,
+            emailLower: payload.emailLower || null,
+            userName: null,
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+        }
+
         uidInput.value = user.uid;
         await loadUser(user.uid);
         showMsg("Jy is vir 30 dae as ondersteuner gemerk.", "text-green-600");
