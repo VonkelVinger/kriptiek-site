@@ -47,7 +47,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     // use global config from your live site
     const app = initializeApp(window.firebaseConfig);
@@ -71,15 +71,29 @@
       status.className = ok ? "mt-4 text-green-700 font-semibold" : "mt-4 text-red-700 font-semibold";
     }
 
+    async function writeDailyWords(gid, word) {
+      // keep legacy reader satisfied
+      const plain = gid.replace(/^Game/, ""); // GameYYYY-MM-DD -> YYYY-MM-DD
+      await setDoc(doc(db,"daily_words", plain), {
+        slimstiek: word,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+    }
+
     async function saveWord(forBoth){
       const date = dateInput.value;
       const word = targetInput.value.trim().toUpperCase();
       if(!date || !word){show("Datum of woord ontbreek.");return;}
       const gid = "Game"+date;
       try{
-        await setDoc(doc(db,"slimstiekGames",gid),{target:word,word:word,status:"active"},{merge:true});
+        // Slimstiek main doc
+        await setDoc(doc(db,"slimstiekGames",gid), { target:word, word:word, status:"active" }, { merge:true });
+
+        // Legacy helper so old fetch doesn’t fall back to TUTS
+        await writeDailyWords(gid, word);
+
         if(forBoth){
-          await setDoc(doc(db,"blitstiekGames",gid),{target:word,word:word,status:"active"},{merge:true});
+          await setDoc(doc(db,"blitstiekGames",gid), { target:word, word:word, status:"active" }, { merge:true });
           show(`Teikenwoord "${word}" gestel vir Slimstiek én Blitstiek (${date}).`,true);
         }else{
           show(`Teikenwoord "${word}" gestel vir Slimstiek (${date}).`,true);
