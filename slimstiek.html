@@ -1144,20 +1144,57 @@ console.log("[Slimstiek] GAME_ID:", GAME_ID);
     }
 
     /* ---- Daily word (FIXED: check slimstiekGames/GameYYYY-MM-DD first) ---- */
-    async function resolveTargetWord(){
-      // Helper to sanitize and upper-case a word field
-      const norm = (s) => (s || '').toString().toUpperCase().replace(/[^A-Z]/g,'').trim();
+    /* ---- Daily word (read slimstiekGames, then daily_words; no silent TUTS) ---- */
+try {
+  TARGET = await resolveTargetWord();
+} catch (e) {
+  console.error(e);
+  alert("Kon nie vandag se teikenwoord laai nie. Maak seker dit is in die admin gestel.");
+  TARGET = '????'; // visible error state (no silent TUTS)
+}
+  // allow Afrikaans letters + hyphen; upper-case final value
+  const norm = (s) => (s || '')
+    .toString()
+    .toUpperCase()
+    .replace(/[^A-ZÁÂÄÈÉÊËÌÍÎÏÒÓÔÖÙÚÛÜŸ\-]/g,'')
+    .trim();
 
-      if (db){
-        // 1) Primary: slimstiekGames/GameYYYY-MM-DD with target/slimstiek/word
-        try{
-          const liveDocRef = doc(db, 'slimstiekGames', `Game${currentDate}`);
-          const liveSnap = await getDoc(liveDocRef);
-          if (liveSnap.exists()){
-            const d = liveSnap.data() || {};
-            const w = norm(d.target || d.slimstiek || d.word);
-            if (w) return w;
-          }
+  const gid = `Game${currentDate}`;
+
+  if (db){
+    // 1) Primary: slimstiekGames/GameYYYY-MM-DD (accept common aliases)
+    try{
+      const liveRef = doc(db, 'slimstiekGames', gid);
+      const liveSnap = await getDoc(liveRef);
+      if (liveSnap.exists()){
+        const d = liveSnap.data() || {};
+        const w = norm(d.target || d.word || d.targetWord || d.answer || d.solution || d.slimstiek);
+        console.log('[Slimstiek] live doc', gid, '→', w, d);
+        if (w) return w;
+      } else {
+        console.log('[Slimstiek] live doc missing:', gid);
+      }
+    }catch(e){ console.warn('SlimstiekGames fetch failed:', e); }
+
+    // 2) Fallback: daily_words/YYYY-MM-DD
+    try{
+      const dwRef = doc(db, 'daily_words', currentDate);
+      const dwSnap = await getDoc(dwRef);
+      if (dwSnap.exists()){
+        const d = dwSnap.data() || {};
+        const w = norm(d.slimstiek || d.word || d.target);
+        console.log('[Slimstiek] daily_words', currentDate, '→', w, d);
+        if (w) return w;
+      } else {
+        console.log('[Slimstiek] daily_words missing:', currentDate);
+      }
+    }catch(e){ console.warn('daily_words fetch failed:', e); }
+  }
+
+  // 3) No silent TUTS — surface the problem
+  throw new Error(`Geen teikenwoord gevind vir ${currentDate}.`);
+}
+
         }catch(e){ console.warn('SlimstiekGames fetch failed:', e); }
 
         // 2) Fallback: daily_words/YYYY-MM-DD with slimstiek/word
