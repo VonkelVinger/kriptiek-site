@@ -188,7 +188,7 @@
 
       <!-- Admin backfill mini-panel -->
       <section id="adminPanel" class="mb-3">
-        <div class="rounded-lg border border-emerald-2 00 bg-emerald-50 p-3 text-sm text-emerald-900 flex items-center gap-2 flex-wrap">
+        <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900 flex items-center gap-2 flex-wrap">
           <strong>Admin:</strong>
           <label class="flex items-center gap-1">Datum: <input id="adminDate" type="date" class="border rounded px-2 py-1 text-sm"></label>
           <button id="btnBFOne" class="btn px-3 py-1">Backfill dag</button>
@@ -447,10 +447,10 @@
     const dateParam = qs.get('date');
     let currentDate = (/^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : todayKeySAST());
     const GAME_ID = `Game${currentDate}`;
-const gameId  = GAME_ID;        // alias for internal code/tests
-window.gameId = GAME_ID;        // lets you type `gameId` in DevTools
-console.log("[Slimstiek] GAME_ID:", GAME_ID);
-    
+    const gameId  = GAME_ID;        // alias for internal code/tests
+    window.gameId = GAME_ID;        // lets you type `gameId` in DevTools
+    console.log("[Slimstiek] GAME_ID:", GAME_ID);
+
     // Canonical URL normalization (force ?date=YYYY-MM-DD)
     try {
       const urlObj = new URL(window.location.href);
@@ -485,8 +485,6 @@ console.log("[Slimstiek] GAME_ID:", GAME_ID);
     }
 
     /* ========= (1) Sanitizer + Logger + STS tag (add once) ========= */
-    // Strip undefined/NaN/out-of-range values before writing to Firestore,
-    // and log exactly what we are sending + where.
     function cleanForFS(obj){
       const out = {};
       for (const [k,v] of Object.entries(obj)){
@@ -497,14 +495,12 @@ console.log("[Slimstiek] GAME_ID:", GAME_ID);
       return out;
     }
     function logFSWrite(ref, data, label="FS write"){
-      // JSON.stringify will fail on serverTimestamp; so show keys/types instead:
       const summary = {};
       for (const [k,v] of Object.entries(data)){
         summary[k] = (v && v.__isServerTimestamp) ? 'serverTimestamp()' : (typeof v);
       }
       console.log(`[${label}]`, ref.path, summary, data);
     }
-    // Wrapper so we can tag serverTimestamp() for debug display:
     import { serverTimestamp as __serverTimestampForSTS } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
     function STS(){ const s = __serverTimestampForSTS(); s.__isServerTimestamp = true; return s; }
 
@@ -915,7 +911,6 @@ console.log("[Slimstiek] GAME_ID:", GAME_ID);
         const userName = (r.userName || prev.userName || 'Onbekend').toString().slice(0,24);
         const kSlim_total = Number(r.kSlim_total || prev.kSlim_total || 0);
 
-        // keep best score; tie-breaker earliest ts
         const better = (!prev.score) || (score > (prev.score||0)) || (score === (prev.score||0) && ts < (prev.ts||9e15));
         const merged = better ? { id, score, ts, userName, kSlim_total } : prev;
         m.set(id, merged);
@@ -1143,79 +1138,62 @@ console.log("[Slimstiek] GAME_ID:", GAME_ID);
       if(!user) showNRGate();
     }
 
-    /* ---- Daily word (FIXED: check slimstiekGames/GameYYYY-MM-DD first) ---- */
-    /* ---- Daily word (read slimstiekGames, then daily_words; no silent TUTS) ---- */
-try {
-  TARGET = await resolveTargetWord();
-} catch (e) {
-  console.error(e);
-  alert("Kon nie vandag se teikenwoord laai nie. Maak seker dit is in die admin gestel.");
-  TARGET = '????'; // visible error state (no silent TUTS)
-}
-  // allow Afrikaans letters + hyphen; upper-case final value
-  const norm = (s) => (s || '')
-    .toString()
-    .toUpperCase()
-    .replace(/[^A-ZÁÂÄÈÉÊËÌÍÎÏÒÓÔÖÙÚÛÜŸ\-]/g,'')
-    .trim();
+    /* ---- Daily word resolver: LIVE → daily_words; never silent TUTS ---- */
+    async function resolveTargetWord(){
+      const norm = (s) => (s || '')
+        .toString()
+        .toUpperCase()
+        .replace(/[^A-ZÁÂÄÈÉÊËÌÍÎÏÒÓÔÖÙÚÛÜŸ\-]/g,'')
+        .trim();
 
-  const gid = `Game${currentDate}`;
-
-  if (db){
-    // 1) Primary: slimstiekGames/GameYYYY-MM-DD (accept common aliases)
-    try{
-      const liveRef = doc(db, 'slimstiekGames', gid);
-      const liveSnap = await getDoc(liveRef);
-      if (liveSnap.exists()){
-        const d = liveSnap.data() || {};
-        const w = norm(d.target || d.word || d.targetWord || d.answer || d.solution || d.slimstiek);
-        console.log('[Slimstiek] live doc', gid, '→', w, d);
-        if (w) return w;
-      } else {
-        console.log('[Slimstiek] live doc missing:', gid);
-      }
-    }catch(e){ console.warn('SlimstiekGames fetch failed:', e); }
-
-    // 2) Fallback: daily_words/YYYY-MM-DD
-    try{
-      const dwRef = doc(db, 'daily_words', currentDate);
-      const dwSnap = await getDoc(dwRef);
-      if (dwSnap.exists()){
-        const d = dwSnap.data() || {};
-        const w = norm(d.slimstiek || d.word || d.target);
-        console.log('[Slimstiek] daily_words', currentDate, '→', w, d);
-        if (w) return w;
-      } else {
-        console.log('[Slimstiek] daily_words missing:', currentDate);
-      }
-    }catch(e){ console.warn('daily_words fetch failed:', e); }
-  }
-
-  // 3) No silent TUTS — surface the problem
-  throw new Error(`Geen teikenwoord gevind vir ${currentDate}.`);
-}
-
-        }catch(e){ console.warn('SlimstiekGames fetch failed:', e); }
-
-        // 2) Fallback: daily_words/YYYY-MM-DD with slimstiek/word
-        try{
-          const dwRef = doc(db,'daily_words', currentDate);
-          const dwSnap = await getDoc(dwRef);
-          if (dwSnap.exists()){
-            const d = dwSnap.data() || {};
-            const w = norm(d.slimstiek || d.word);
-            if (w) return w;
-          }
-        }catch(e){ console.warn('daily_words fetch failed:', e); }
+      if (!db){
+        // No Firestore in this environment
+        return 'TUTS';
       }
 
-      // 3) Final fallback
-      return 'TUTS';
+      const gid = `Game${currentDate}`;
+
+      // 1) Primary: slimstiekGames/GameYYYY-MM-DD (accept common aliases)
+      try{
+        const liveRef = doc(db, 'slimstiekGames', gid);
+        const liveSnap = await getDoc(liveRef);
+        if (liveSnap.exists()){
+          const d = liveSnap.data() || {};
+          const w = norm(d.target || d.word || d.targetWord || d.answer || d.solution || d.slimstiek);
+          console.log('[Slimstiek] live doc', gid, '→', w, d);
+          if (w) return w;
+        } else {
+          console.log('[Slimstiek] live doc missing:', gid);
+        }
+      }catch(e){ console.warn('SlimstiekGames fetch failed:', e); }
+
+      // 2) Fallback: daily_words/YYYY-MM-DD
+      try{
+        const dwRef = doc(db, 'daily_words', currentDate);
+        const dwSnap = await getDoc(dwRef);
+        if (dwSnap.exists()){
+          const d = dwSnap.data() || {};
+          const w = norm(d.slimstiek || d.word || d.target);
+          console.log('[Slimstiek] daily_words', currentDate, '→', w, d);
+          if (w) return w;
+        } else {
+          console.log('[Slimstiek] daily_words missing:', currentDate);
+        }
+      }catch(e){ console.warn('daily_words fetch failed:', e); }
+
+      // 3) Surface the problem for Admins/players
+      throw new Error(`Geen teikenwoord gevind vir ${currentDate}.`);
     }
 
     /* ---- Load ---- */
     async function loadGame(){
-      TARGET = (await resolveTargetWord()) || 'TUTS';
+      try {
+        TARGET = await resolveTargetWord();
+      } catch (e) {
+        console.error(e);
+        alert("Kon nie vandag se teikenwoord laai nie. Maak seker dit is in die admin gestel.");
+        TARGET = '????'; // visible error state (no silent TUTS)
+      }
 
       targetEl.innerHTML='';
       (TARGET || '—').split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
