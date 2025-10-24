@@ -896,7 +896,7 @@
     function getLocalLB(date){ try{ return JSON.parse(localStorage.getItem(LB_LOCAL_KEY(date))) || []; }catch{ return []; } }
     function setLocalLB(date, arr){ try{ localStorage.setItem(LB_LOCAL_KEY(date), JSON.stringify(arr)); }catch{} }
 
-    /* ---------- NEW: Merged LIVE + LEGACY leaderboard renderer ---------- */
+    /* ---------- Merged LIVE + LEGACY leaderboard renderer ---------- */
     let unsubLive = null, unsubLegacy = null;
     let liveRows = [], legacyRows = [];
 
@@ -935,7 +935,7 @@
         bestText.textContent = String(local[0].score);
         local.forEach(row=>{
           const li=document.createElement('li');
-          li.innerHTML = `<strong>${row.userName||'Speler'}</strong>: ${row.score|0} punte`;
+          li.innerHTML = `<span class="flex-1"><strong>${row.userName||'Speler'}</strong>: ${row.score|0} punte</span>`;
           lbList.appendChild(li);
         });
         return;
@@ -945,11 +945,10 @@
 
       combined.slice(0,10).forEach(v=>{
         const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
-        const pill = (Number(v.kSlim_total||0) > 0)
-          ? `<span class="k-pill">${Number(v.kSlim_total)}</span>`
-          : '';
-        const li = document.createElement('li');
-        li.innerHTML = `<strong>${(v.userName||'Onbekend')}</strong>${you}: ${(v.score??0)} punte${pill}`;
+        const li  = document.createElement('li');
+        const left = `<span class="flex-1"><strong>${(v.userName||'Onbekend')}</strong>${you}: ${(v.score??0)} punte</span>`;
+        const pill = (Number(v.kSlim_total||0) > 0) ? `<span class="k-pill">${Number(v.kSlim_total)}</span>` : '';
+        li.innerHTML = left + pill;
         lbList.appendChild(li);
       });
     }
@@ -980,7 +979,6 @@
         renderMerged();
       }, (err)=>{ console.error('LEGACY LB stream failed:', err); legacyRows = []; renderMerged(); });
     }
-
     /* ---- Submit to leaderboard (SAFE + LOGGED; LIVE only) ---- */
     async function submitToLB(scoreVal){
       const safeScore = Number.isFinite(scoreVal) ? (scoreVal|0) : 0;
@@ -1138,7 +1136,7 @@
       if(!user) showNRGate();
     }
 
-    /* ---- Daily word resolver: LIVE → daily_words; never silent TUTS ---- */
+    /* ---- Daily word resolver (SINGLE SOURCE OF TRUTH): slimstiekGames → daily_words → games ---- */
     async function resolveTargetWord(){
       const norm = (s) => (s || '')
         .toString()
@@ -1146,26 +1144,46 @@
         .replace(/[^A-ZÁÂÄÈÉÊËÌÍÎÏÒÓÔÖÙÚÛÜŸ\-]/g,'')
         .trim();
 
+      const pickFromDoc = (d) => {
+        if (!d || typeof d !== 'object') return '';
+        const keys = Object.keys(d);
+        const preferred = ['target','targetWord','word','solution','answer','slimstiek'];
+        for (const want of preferred){
+          const found = keys.find(k => k.toLowerCase() === want.toLowerCase());
+          if (found && typeof d[found] === 'string') {
+            const w = norm(d[found]);
+            if (w) return w;
+          }
+        }
+        for (const k of keys){
+          if (typeof d[k] === 'string'){
+            const w = norm(d[k]);
+            if (w && w.length >= 3 && w.length <= 12) return w;
+          }
+        }
+        return '';
+      };
+
       if (!db){
-        // No Firestore in this environment
-        return 'TUTS';
+        // HARD FAIL in production – handled by loadGame() catcher
+        throw new Error('[Slimstiek] Firestore is not available (no db).');
       }
 
       const gid = `Game${currentDate}`;
 
-      // 1) Primary: slimstiekGames/GameYYYY-MM-DD (accept common aliases)
+      // 1) Primary: slimstiekGames/GameYYYY-MM-DD
       try{
         const liveRef = doc(db, 'slimstiekGames', gid);
         const liveSnap = await getDoc(liveRef);
         if (liveSnap.exists()){
           const d = liveSnap.data() || {};
-          const w = norm(d.target || d.word || d.targetWord || d.answer || d.solution || d.slimstiek);
-          console.log('[Slimstiek] live doc', gid, '→', w, d);
+          const w = pickFromDoc(d);
+          console.log('[Slimstiek] slimstiekGames', gid, '→', w, d);
           if (w) return w;
         } else {
-          console.log('[Slimstiek] live doc missing:', gid);
+          console.log('[Slimstiek] slimstiekGames missing:', gid);
         }
-      }catch(e){ console.warn('SlimstiekGames fetch failed:', e); }
+      }catch(e){ console.warn('slimstiekGames fetch failed:', e); }
 
       // 2) Fallback: daily_words/YYYY-MM-DD
       try{
@@ -1173,7 +1191,7 @@
         const dwSnap = await getDoc(dwRef);
         if (dwSnap.exists()){
           const d = dwSnap.data() || {};
-          const w = norm(d.slimstiek || d.word || d.target);
+          const w = pickFromDoc(d);
           console.log('[Slimstiek] daily_words', currentDate, '→', w, d);
           if (w) return w;
         } else {
@@ -1181,7 +1199,21 @@
         }
       }catch(e){ console.warn('daily_words fetch failed:', e); }
 
-      // 3) Surface the problem for Admins/players
+      // 3) Safety: games/GameYYYY-MM-DD (in case it was saved there)
+      try{
+        const gRef = doc(db, 'games', gid);
+        const gSnap = await getDoc(gRef);
+        if (gSnap.exists()){
+          const d = gSnap.data() || {};
+          const w = pickFromDoc(d);
+          console.log('[Slimstiek] games', gid, '→', w, d);
+          if (w) return w;
+        } else {
+          console.log('[Slimstiek] games missing:', gid);
+        }
+      }catch(e){ console.warn('games fetch failed:', e); }
+
+      // Surface the problem; caller shows alert
       throw new Error(`Geen teikenwoord gevind vir ${currentDate}.`);
     }
 
@@ -1192,7 +1224,7 @@
       } catch (e) {
         console.error(e);
         alert("Kon nie vandag se teikenwoord laai nie. Maak seker dit is in die admin gestel.");
-        TARGET = '????'; // visible error state (no silent TUTS)
+        TARGET = '????'; // visible error state
       }
 
       targetEl.innerHTML='';
