@@ -20,6 +20,20 @@
     input,button{outline:none}
     code{background:#f1f5f9;padding:.15rem .35rem;border-radius:.4rem}
   </style>
+
+  <!-- ✅ CONFIG SAFETY NET
+       If your pages already define window.firebaseConfig globally, this block is ignored.
+       Otherwise, PASTE YOUR REAL FIREBASE WEB CONFIG inside firebaseConfigInline = {...}
+       (The object with apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId.)
+  -->
+  <script>
+    (function ensureFirebaseConfig(){
+      const firebaseConfigInline = null; // <-- PASTE YOUR REAL CONFIG OBJECT HERE (or leave null to use global)
+      if (!window.firebaseConfig && firebaseConfigInline) {
+        window.firebaseConfig = firebaseConfigInline;
+      }
+    })();
+  </script>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen">
 
@@ -28,6 +42,8 @@
   </header>
 
   <main class="max-w-xl mx-auto p-6">
+    <div id="fatal" class="hidden mb-4 p-3 rounded-xl bg-red-100 text-red-800 text-sm font-semibold"></div>
+
     <p class="mb-4 text-sm text-slate-600">Stel hier die volgende dag se teikenwoord vir Slimstiek en/of Blitstiek.</p>
 
     <div class="grid gap-4">
@@ -79,17 +95,29 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      getFirestore, doc, setDoc, getDoc, serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    // -- Config & services (expects window.firebaseConfig on the page origin) --
-    if (!window.firebaseConfig) {
-      console.error("Missing window.firebaseConfig");
+    const fatalEl  = document.getElementById('fatal');
+    function fatal(msg){
+      fatalEl.textContent = msg;
+      fatalEl.classList.remove('hidden');
+      throw new Error(msg);
     }
-    const app = initializeApp(window.firebaseConfig || {});
-    const auth = getAuth(app);
-    const db   = getFirestore(app);
+
+    // ---- CONFIG GUARD ----
+    if (!window.firebaseConfig || !window.firebaseConfig.apiKey) {
+      fatal("Firebase konfigurasie ontbreek of is ongeldig. Voeg jou web-config by in die gemerkte blok (apiKey, authDomain, projectId, appId, ens.).");
+    }
+
+    // Initialize
+    let app, auth, db;
+    try {
+      app = initializeApp(window.firebaseConfig);
+      auth = getAuth(app);
+      db   = getFirestore(app);
+    } catch (e) {
+      fatal("Kon nie Firebase initialiseer nie: " + (e.message || e));
+    }
 
     // -- UI refs --
     const statusEl     = document.getElementById('status');
@@ -104,39 +132,28 @@
     const vBlit        = document.getElementById('vBlit');
     const vDaily       = document.getElementById('vDaily');
 
-    // -- Default date = tomorrow in ZA timezone --
+    // -- Default date = tomorrow in ZA timezone (YYYY-MM-DD) --
     const tz = 'Africa/Johannesburg';
-    function fmtDate(d){
-      // yyyy-mm-dd as required by input[type=date]
+    function yyyyMmDd(d){
       return new Intl.DateTimeFormat('en-CA', { timeZone: tz, year:'numeric', month:'2-digit', day:'2-digit' }).format(d);
     }
     (function setDefaultDate(){
       const now = new Date();
-      // add one civil day, not 24h, to better align with ZA local day
-      const tomorrow = new Date(now);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      dateInput.value = fmtDate(tomorrow);
+      const tmr = new Date(now);
+      tmr.setDate(tmr.getDate() + 1);
+      dateInput.value = yyyyMmDd(tmr); // value is yyyy-mm-dd; UI may render with slashes but .value stays dashed
     })();
 
     // -- Helpers --
-    function ok(msg){
-      statusEl.textContent = msg;
-      statusEl.className = "text-green-700 font-semibold";
-    }
-    function err(msg){
-      statusEl.textContent = msg;
-      statusEl.className = "text-red-700 font-semibold";
-    }
+    function ok(msg){ statusEl.textContent = msg; statusEl.className = "text-green-700 font-semibold"; }
+    function err(msg){ statusEl.textContent = msg; statusEl.className = "text-red-700 font-semibold"; }
     function clearVerify(){
       boxVerify.classList.add('hidden');
-      vSlim.textContent = "";
-      vBlit.textContent = "";
-      vDaily.textContent = "";
+      vSlim.textContent = vBlit.textContent = vDaily.textContent = "";
     }
 
     function wordPayload(word, dateStr){
       return {
-        // canonical
         target: word,
         word: word,
         date: dateStr,
@@ -144,7 +161,6 @@
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         source: "slimstiek-admin v2025-10-25",
-        // common aliases for older/newer clients
         targetWord: word,
         answer: word,
         solution: word
@@ -179,7 +195,7 @@
     async function saveWord({ toSlim=false, toBlit=false }){
       clearVerify();
 
-      const date = (dateInput.value || "").trim();
+      const date = (dateInput.value || "").trim(); // expected yyyy-mm-dd from input[type=date]
       const raw  = (targetInput.value || "").trim();
       const word = raw.toUpperCase();
 
@@ -191,11 +207,9 @@
       const payload = wordPayload(word, date);
 
       try{
-        // Auth guard: show message early if not signed in
         const user = auth.currentUser;
         if (!user) return err("Meld asseblief aan as admin op Kriptiek.");
 
-        // Perform writes
         if (toSlim) await setDoc(doc(db,"slimstiekGames",gid), payload, { merge:true });
         if (toBlit) await setDoc(doc(db,"blitstiekGames",gid), payload, { merge:true });
 
@@ -204,7 +218,6 @@
         const which = toSlim && toBlit ? "Slimstiek én Blitstiek" : (toSlim ? "Slimstiek" : "Blitstiek");
         ok(`Teikenwoord “${word}” gestel vir ${which} (${date}).`);
 
-        // Readback verification (shows exactly what’s in Firestore)
         await verifyReadback(date, toSlim, toBlit);
 
       }catch(e){
@@ -214,11 +227,11 @@
     }
 
     // Buttons
-    btnSlim.onclick = ()=>saveWord({ toSlim:true, toBlit:false });
-    btnBlit.onclick = ()=>saveWord({ toSlim:false, toBlit:true });
-    btnBoth.onclick = ()=>saveWord({ toSlim:true, toBlit:true });
+    document.getElementById('saveSlimstiek').onclick = ()=>saveWord({ toSlim:true, toBlit:false });
+    document.getElementById('saveBlitstiek').onclick = ()=>saveWord({ toSlim:false, toBlit:true });
+    document.getElementById('saveBoth').onclick      = ()=>saveWord({ toSlim:true, toBlit:true });
 
-    // Basic sign-in message
+    // Sign-in hint
     onAuthStateChanged(auth, user=>{
       if(!user){ err("Meld asseblief aan as admin op Kriptiek."); }
       else { statusEl.textContent = ""; statusEl.className = "text-sm"; }
