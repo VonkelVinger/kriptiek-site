@@ -11,68 +11,141 @@
   </script>
 
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DILEMMA SE TOP-25 – Kriptiek</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+  <title>DILEMMA-TOP25 – Kriptiek</title>
 
-  <!-- Styles -->
+  <!-- Canonical & Open Graph / Twitter -->
+  <link rel="canonical" href="https://www.kriptiek.com/dilemmalys.html" />
+  <meta property="og:site_name" content="Kriptiek" />
+  <meta property="og:title" content="DILEMMA-TOP25 – Kriptiek" />
+  <meta property="og:description" content="Sien vandag se Top-25 Dilemma-tellers op Kriptiek." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.kriptiek.com/dilemmalys.html" />
+  <meta property="og:image" content="https://www.kriptiek.com/assets/DILEMMA_12SEP.png?v=6" />
+  <meta property="og:image:alt" content="DILEMMA knoppie" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="DILEMMA-TOP25 – Kriptiek" />
+  <meta name="twitter:description" content="Sien vandag se Top-25 Dilemma-tellers op Kriptiek." />
+  <meta name="twitter:image" content="https://www.kriptiek.com/assets/DILEMMA_12SEP.png?v=6" />
+
+  <!-- Tailwind + font -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
 
   <style>
-    body { font-family: 'Montserrat', sans-serif; }
-
-    /* Header logo (matches index.html) */
-    .logo-container {
-      position: relative; display: flex; justify-content: center; align-items: center;
-      width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
-      isolation: isolate;
-    }
-    .logo-container::before{
-      content:""; position:absolute; inset:-2px; border-radius:1rem;
-      background:conic-gradient(from 180deg at 50% 50%, #1e3a8a, #334155, #1e3a8a);
-      animation:spin 14s linear infinite; z-index:0; padding:2px;
-      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-      -webkit-mask-composite: xor; mask-composite: exclude;
-    }
-    @keyframes spin{ to{ transform:rotate(1turn); } }
-    @media (prefers-reduced-motion: reduce){ .logo-container::before{ animation:none; } }
-
-    .crossword-grid { display: grid; grid-template-columns: repeat(8, minmax(40px, 1fr)); gap: 4px; position: relative; z-index: 10; }
-    .letter-box {
-      width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
-      background-color: #374151; color: white; font-size: 1.8rem; font-weight: bold; border: 2px solid #1f2937; border-radius: 0.375rem;
-      text-transform: uppercase; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
-    }
-    .flipped-k { transform: scaleX(-1); }
-
-    .background-crossword {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
-      opacity: 0.5; z-index: 1; pointer-events: none; animation: bgFloat 30s linear infinite;
-    }
-    @keyframes bgFloat{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } 100%{ transform:translateY(0); } }
-    .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
-
-    /* Ranglys UI */
-    .pill{ background:#f97316; color:#fff; padding:.25rem .6rem; border-radius:9999px; font-weight:700; font-size:.875rem; }
-    .leader-card{ max-width:680px; margin:1rem auto 0; background:#fff; border-radius:1rem; box-shadow:0 10px 20px rgba(0,0,0,.06); overflow:hidden; }
-    .row{ display:flex; align-items:center; justify-content:space-between; padding:.75rem 1rem; border-bottom:1px solid #e5e7eb; }
-    .row:nth-child(odd){ background:#ffffff; }
-    .row:nth-child(even){ background:#f9fafb; }
-    .rank{ width:2rem; text-align:right; font-weight:700; color:#6b7280; }
-    .name{ font-weight:700; color:#111827; }
-
-    .fade-in { animation: fade .35s ease-out; }
-    @keyframes fade { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+    body{font-family:'Montserrat',sans-serif;background:#f9fafb;color:#1f2937;}
+    header{background:#ffffff;box-shadow:0 2px 4px rgba(0,0,0,.1);padding:1rem 0;}
+    .logo-container{display:flex;justify-content:center;align-items:center;margin-bottom:.5rem;}
+    .letter-box{width:40px;height:40px;margin:2px;display:flex;justify-content:center;align-items:center;background:#374151;color:#fff;font-size:1.5rem;font-weight:700;border-radius:4px;}
+    .pill{display:inline-flex;align-items:center;gap:.5rem;padding:.5rem .9rem;border-radius:9999px;font-weight:800;color:#fff;background:linear-gradient(to bottom,#f97316,#c2410c);}
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:.75rem;box-shadow:0 8px 24px rgba(0,0,0,.06);}
+    .table th{font-weight:700;text-transform:uppercase;font-size:.75rem;letter-spacing:.03em;color:#6b7280;}
+    .rank{width:2.25rem;text-align:right;font-variant-numeric:tabular-nums;}
+    .num{font-variant-numeric:tabular-nums;}
+    .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.5rem .9rem;border-radius:.6rem;font-weight:700;}
+    .btn-blue{background:#1e3a8a;color:#fff;}
+    .btn-gray{background:#e5e7eb;color:#374151;}
+    .chip{font-size:.75rem;padding:.15rem .5rem;border-radius:9999px;background:#eef2ff;color:#1e3a8a;font-weight:700;}
   </style>
+</head>
+<body class="min-h-screen flex flex-col">
+  <header>
+    <div class="max-w-5xl mx-auto px-4">
+      <div class="logo-container">
+        <div class="letter-box">D</div><div class="letter-box">I</div><div class="letter-box">L</div>
+        <div class="letter-box">E</div><div class="letter-box">M</div><div class="letter-box">M</div>
+        <div class="letter-box">A</div>
+      </div>
+      <h1 class="text-center text-2xl md:text-3xl font-extrabold tracking-tight text-[#1e3a8a]">
+        DILEMMA-TOP25
+      </h1>
+      <p class="text-center text-sm text-gray-500 mt-1">Algehele Dilemma-tellers (met presies dieselfde berekening as die speletjie).</p>
+    </div>
+  </header>
 
-  <!-- Firebase (v11 modular to match index.html) -->
+  <main class="flex-grow">
+    <div class="max-w-5xl mx-auto px-4">
+      <!-- Your pill -->
+      <section class="mt-4">
+        <div id="yourPillWrap" class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <span id="yourPill" class="pill">JOU DILEMMA-TELLING: —</span>
+            <span id="srChip" class="chip hidden"></span>
+          </div>
+          <div class="flex items-center gap-2">
+            <a href="/dilemmagame.html" class="btn btn-blue">Speel vandag se Dilemma</a>
+            <button id="btnHerlaai" class="btn btn-gray" type="button">Herlaai</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- BMAC CTA -->
+      <section class="mt-4">
+        <div class="card p-4">
+          <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
+             onclick="window.gtag && gtag('event','bmac_click',{from:'dilemma-top25'})"
+             class="flex items-center justify-center w-full px-5 py-3 bg-yellow-500 hover:bg-yellow-600 text-white font-bold rounded-xl shadow transition">
+            HELP ONS OM KRIPTIEK GRATIS TE HOU
+          </a>
+        </div>
+      </section>
+
+      <!-- Top 25 -->
+      <section class="mt-6 card overflow-hidden">
+        <div class="flex items-center justify-between px-4 pt-4">
+          <h2 class="text-xl font-bold">TOP-25 DILEMMA-TELLERS</h2>
+          <div class="text-xs text-gray-500">
+            Opgedateer: <span id="updatedAt">—</span>
+          </div>
+        </div>
+        <div class="p-4 overflow-x-auto">
+          <table class="table w-full">
+            <thead>
+              <tr class="text-left border-b border-gray-200">
+                <th class="rank py-2 pr-2">#</th>
+                <th class="py-2 pr-2">Naam</th>
+                <th class="py-2 pr-2">Sukses%</th>
+                <th class="py-2 pr-2">Wenlopie</th>
+                <th class="py-2 pr-2">Beste</th>
+                <th class="py-2 pr-2">Gespeel</th>
+                <th class="py-2 pr-2">Laas opg.</th>
+                <th class="py-2 pr-0 text-right">Dilemma-telling</th>
+              </tr>
+            </thead>
+            <tbody id="top25Body"></tbody>
+          </table>
+          <p id="emptyState" class="text-center text-gray-500 py-6 hidden">Geen inskrywings om te wys nie.</p>
+        </div>
+      </section>
+
+      <!-- Footer links row -->
+      <section class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <a href="/index.html" class="btn btn-gray justify-center">Tuis</a>
+        <a href="/profile.html" class="btn btn-gray justify-center">My profiel</a>
+        <a href="/forum.html" class="btn btn-gray justify-center">Gesels saam</a>
+        <a href="/dilemma-argief.html" class="btn btn-gray justify-center">Dilemma-argief</a>
+      </section>
+    </div>
+  </main>
+
+  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500 mt-8">
+    &copy; 2025 Kriptiek. Alle regte voorbehou. |
+    <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
+    <a href="/terms.html" class="underline">Voorwaardes</a> |
+    <a href="/faq.html" class="underline">Gereelde vrae</a> |
+    <a href="/about.html" class="underline">Oor Kriptiek</a> |
+    <a href="/contact.html" class="underline">Kontak ons</a>
+  </footer>
+  <!-- Firebase + Score module -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import {
-      getFirestore, collection, getDocs
-    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getFirestore, collection, query, orderBy, limit, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { computeDilemmaTotal, persistDilemmaTotalIfChanged } from "/scripts/dilemma-score.js";
 
+    /* ---- Config (same as game page) ---- */
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
       authDomain: "kriptiek-c9ea2.firebaseapp.com",
@@ -82,157 +155,187 @@
       appId: "1:620450620939:web:e93a18ac23b53b33db890e"
     };
 
-    const app = initializeApp(firebaseConfig);
+    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
     const db  = getFirestore(app);
+    const auth = getAuth(app);
 
-    // --- Correct Dilemma base points (no fail penalty possible from public data) ---
-    const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100 };
+    /* ---- UI refs ---- */
+    const pill     = document.getElementById("yourPill");
+    const srChip   = document.getElementById("srChip");
+    const updated  = document.getElementById("updatedAt");
+    const tbody    = document.getElementById("top25Body");
+    const empty    = document.getElementById("emptyState");
+    const btnReload= document.getElementById("btnHerlaai");
 
-    function normalizeGuesses(data){
-      // guesses might be under different keys in some older rows
-      let g = data?.guesses;
-      if (g == null) g = data?.guessCount;
-      if (g == null) g = data?.tries;
-      g = Number(g);
-      return Number.isFinite(g) ? g : null;
-    }
-
-    function pointsFromGuesses(guesses){
-      const g = Number(guesses);
-      if (!Number.isFinite(g)) return 0;
-      const clamped = Math.min(Math.max(g, 1), 6);
-      return BASE_POINTS[clamped] || 0;
-    }
-
-    async function loadOverallDilemma(){
-      const listEl = document.getElementById('leaderboard');
-      listEl.innerHTML = '<div class="p-6 text-center text-gray-500">Laai …</div>';
-
-      // Aggregate totals from all games/*/leaderboard/*
-      const totals = new Map(); // uid -> { name, points }
+    const fmt = (n) => typeof n === "number" ? n.toLocaleString("af-ZA") : n;
+    const fmtDate = (ts) => {
       try{
-        const gamesSnap = await getDocs(collection(db, "games"));
-        for (const gameDoc of gamesSnap.docs){
-          const lbSnap = await getDocs(collection(db, "games", gameDoc.id, "leaderboard"));
-          lbSnap.forEach(rowDoc => {
-            const data = rowDoc.data() || {};
-            const uid  = rowDoc.id;
+        const d = ts?.toDate ? ts.toDate() : (ts instanceof Date ? ts : new Date());
+        return d.toLocaleString("af-ZA");
+      }catch{ return "—"; }
+    };
 
-            // Prefer an explicit stored points field ONLY if it matches your scale
-            // Otherwise compute from guesses with the 150..100 base.
-            let pts = Number(data.dailyPoints);
-            if (!Number.isFinite(pts) || pts <= 0 || pts > 200) {
-              const g = normalizeGuesses(data);
-              pts = pointsFromGuesses(g);
-            }
+    btnReload?.addEventListener("click", () => location.reload());
 
-            if (pts <= 0) return;
+    /* ---- Your pill (uses EXACT same compute function) ---- */
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        pill.textContent = "Meld aan om jou Dilemma-telling te sien";
+        pill.classList.add("opacity-80");
+        srChip.classList.add("hidden");
+        return;
+      }
 
-            const latestName = (data.userName || data.name || 'Speler') + '';
-            const prev = totals.get(uid) || { name: latestName, points:0 };
-
-            // keep most recent non-empty name
-            const mergedName = (latestName && latestName !== 'Speler') ? latestName : prev.name;
-            totals.set(uid, { name: mergedName, points: prev.points + pts });
-          });
+      try {
+        // Optional: show existing saved score immediately if present
+        const uref = doc(db, "users", user.uid);
+        const usnap = await getDoc(uref);
+        if (usnap.exists()) {
+          const u = usnap.data() || {};
+          const saved = Number(u.dilemmaScore ?? u.kScore);
+          if (Number.isFinite(saved)) pill.textContent = `JOU DILEMMA-TELLING: ${fmt(saved)}`;
+          const gp = Number(u.gamesPlayed || 0), w = Number(u.wins || 0);
+          if (gp > 0) {
+            srChip.textContent = `SR: ${Math.round((w/gp)*100)}%`;
+            srChip.classList.remove("hidden");
+          }
         }
-      }catch(err){
-        console.error('Dilemma-: lees fout:', err);
-        listEl.innerHTML = '<div class="p-6 text-center text-red-600">Kon nie die  laai nie.</div>';
-        return;
+      } catch {}
+
+      try {
+        const total = await computeDilemmaTotal(db, user.uid);
+        pill.textContent = `JOU DILEMMA-TELLING: ${fmt(total)}`;
+        await persistDilemmaTotalIfChanged(db, user.uid, total);
+      } catch (e) {
+        console.error("[dilemmalys] computeDilemmaTotal failed:", e);
+      }
+    });
+
+    /* ---- Top-25: merge by dilemmaScore / kScore to be robust ----
+       We fetch both ordered lists (each limited) and then:
+       - Compute effectiveScore = Number(d.dilemmaScore ?? d.kScore) || 0
+       - Derive SR% from wins/gamesPlayed
+       - Sort in JS by effectiveScore desc, then bestStreak desc, then updatedAt desc
+       - Render first 25 with right-aligned pill like the game page
+    ---------------------------------------------------------------- */
+    async function loadTop25() {
+      const take = 60; // get a wider pool, then cut to 25 after merging
+      const q1 = query(collection(db, "users"), orderBy("dilemmaScore", "desc"), limit(take));
+      const q2 = query(collection(db, "users"), orderBy("kScore", "desc"),        limit(take));
+
+      const [s1, s2] = await Promise.allSettled([ getDocs(q1), getDocs(q2) ]);
+      const map = new Map();
+
+      function ingest(snap) {
+        snap.forEach(d => {
+          const v = d.data() || {};
+          const id = d.id;
+          const name = typeof v.userName === "string" && v.userName.trim() ? v.userName.trim() : "Onbekend";
+          const effectiveScore = Number(v.dilemmaScore ?? v.kScore) || 0;
+          const gamesPlayed = Number(v.gamesPlayed || 0);
+          const wins = Number(v.wins || 0);
+          const sr = gamesPlayed > 0 ? Math.round((wins/gamesPlayed)*100) : 0;
+          const streak = Number(v.streak || 0);
+          const best = Number(v.bestStreak || 0);
+          const updatedAt = v.scoreUpdatedAt || v.updatedAt || v.createdAt || null;
+
+          const prev = map.get(id) || { id, name, effectiveScore: 0, gamesPlayed: 0, wins: 0, sr: 0, streak: 0, best: 0, updatedAt: null };
+          // keep max of effectiveScore, and newest updatedAt
+          const next = {
+            id,
+            name,
+            effectiveScore: Math.max(prev.effectiveScore, effectiveScore),
+            gamesPlayed: Math.max(prev.gamesPlayed, gamesPlayed),
+            wins: Math.max(prev.wins, wins),
+            sr: Math.max(prev.sr, sr),
+            streak: Math.max(prev.streak, streak),
+            best: Math.max(prev.best, best),
+            updatedAt: (!prev.updatedAt || (updatedAt?.seconds||0) > (prev.updatedAt?.seconds||0)) ? updatedAt : prev.updatedAt
+          };
+          map.set(id, next);
+        });
       }
 
-      const rows = Array.from(totals.entries())
-        .map(([uid, v]) => ({ uid, userName: v.name || 'Speler', total: Number(v.points||0) }))
-        .filter(x => x.total > 0)
-        .sort((a,b) => b.total - a.total)
-        .slice(0, 25);
+      if (s1.status === "fulfilled") ingest(s1.value);
+      if (s2.status === "fulfilled") ingest(s2.value);
 
-      if (rows.length === 0){
-        listEl.innerHTML = '<div class="p-6 text-center text-gray-500">Nog geen inskrywings.</div>';
-        return;
+      // assemble & sort
+      const rows = Array.from(map.values())
+        .filter(r => Number.isFinite(r.effectiveScore) && r.effectiveScore > 0);
+
+      rows.sort((a,b) =>
+        (b.effectiveScore - a.effectiveScore) ||
+        (b.best - a.best) ||
+        ((b.updatedAt?.seconds||0) - (a.updatedAt?.seconds||0))
+      );
+
+      const top = rows.slice(0, 25);
+
+      // render
+      tbody.innerHTML = "";
+      if (!top.length) {
+        empty.classList.remove("hidden");
+      } else {
+        empty.classList.add("hidden");
+        top.forEach((r, idx) => {
+          const tr = document.createElement("tr");
+          if (idx === 0) tr.className = "bg-green-50";
+
+          const tdRank = document.createElement("td");
+          tdRank.className = "rank py-2 pr-2 text-gray-500";
+          tdRank.textContent = String(idx+1);
+
+          const tdName = document.createElement("td");
+          tdName.className = "py-2 pr-2 font-semibold";
+          tdName.textContent = r.name;
+
+          const tdSR = document.createElement("td");
+          tdSR.className = "py-2 pr-2 num";
+          tdSR.textContent = r.sr ? `${r.sr}%` : "—";
+
+          const tdStreak = document.createElement("td");
+          tdStreak.className = "py-2 pr-2 num";
+          tdStreak.textContent = r.streak || 0;
+
+          const tdBest = document.createElement("td");
+          tdBest.className = "py-2 pr-2 num";
+          tdBest.textContent = r.best || 0;
+
+          const tdPlayed = document.createElement("td");
+          tdPlayed.className = "py-2 pr-2 num";
+          tdPlayed.textContent = r.gamesPlayed || 0;
+
+          const tdUpdated = document.createElement("td");
+          tdUpdated.className = "py-2 pr-2";
+          tdUpdated.textContent = r.updatedAt ? fmtDate(r.updatedAt) : "—";
+
+          const tdScore = document.createElement("td");
+          tdScore.className = "py-2 pl-2 pr-0 text-right";
+          const pill = document.createElement("span");
+          pill.className = "inline-flex items-center px-2 py-0.5 rounded-full text-white text-[12px] font-bold bg-gradient-to-b from-orange-500 to-orange-700";
+          pill.textContent = fmt(r.effectiveScore);
+          tdScore.appendChild(pill);
+
+          tr.appendChild(tdRank);
+          tr.appendChild(tdName);
+          tr.appendChild(tdSR);
+          tr.appendChild(tdStreak);
+          tr.appendChild(tdBest);
+          tr.appendChild(tdPlayed);
+          tr.appendChild(tdUpdated);
+          tr.appendChild(tdScore);
+          tbody.appendChild(tr);
+        });
       }
 
-      const frag = document.createDocumentFragment();
-      rows.forEach((u, i) => {
-        const div = document.createElement('div'); div.className = 'row fade-in';
-        const left = document.createElement('div'); left.className = 'flex items-center space-x-3';
-        const r = document.createElement('div'); r.className = 'rank'; r.textContent = (i+1) + '.';
-        const n = document.createElement('div'); n.className = 'name'; n.textContent = u.userName;
-        left.appendChild(r); left.appendChild(n);
-        const pill = document.createElement('div'); pill.className = 'pill'; pill.textContent = String(u.total);
-        div.appendChild(left); div.appendChild(pill);
-        frag.appendChild(div);
-      });
-      listEl.innerHTML = '';
-      listEl.appendChild(frag);
+      // page updated timestamp
+      updated.textContent = new Date().toLocaleString("af-ZA");
     }
 
-    document.addEventListener('DOMContentLoaded', loadOverallDilemma);
-  </script>
-</head>
-
-<body class="bg-gray-100 min-h-screen flex flex-col">
-  <!-- Header (matches index.html) -->
-  <header class="bg-white shadow p-4">
-    <div class="logo-container">
-      <div id="backgroundCrossword" class="background-crossword"></div>
-      <div class="crossword-grid">
-        <div class="letter-box flipped-k">K</div>
-        <div class="letter-box flipped-k">R</div>
-        <div class="letter-box">I</div>
-        <div class="letter-box flipped-k">P</div>
-        <div class="letter-box">T</div>
-        <div class="letter-box">I</div>
-        <div class="letter-box flipped-k">E</div>
-        <div class="letter-box">K</div>
-      </div>
-    </div>
-  </header>
-
-  <main class="flex-grow py-10 sm:py-12 md:py-16 px-6 text-center relative">
-    <div class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(80%_50%_at_50%_0%,rgba(30,58,138,.08),transparent_60%)]"></div>
-
-    <h1 class="text-3xl font-bold text-[#1e3a8a] mb-4">DILEMMA SE TOP-25</h1>
-
-    <section class="leader-card">
-      <div id="leaderboard" role="list"></div>
-    </section>
-  </main>
-
-  <!-- Footer (same as index.html) -->
-  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
-    &copy; 2025 Kriptiek. Alle regte voorbehou. |
-    <a href="/profile.html" class="underline">My profiel</a> |
-    <a href="/forum.html" class="underline">Gesels saam</a> |
-    <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
-    <a href="/terms.html" class="underline">Voorwaardes</a> |
-    <a href="/faq.html" class="underline">Gereelde vrae</a> |
-    <a href="/about.html" class="underline">Oor Kriptiek</a> |
-    <a href="/contact.html" class="underline">Kontak ons</a>
-  </footer>
-
-  <!-- Background letters (same as index.html) -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const backgroundCrossword = document.getElementById('backgroundCrossword');
-      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      function getRandomLetter() { return letters[Math.floor(Math.random() * letters.length)]; }
-      function generateBackgroundGrid() {
-        if (!backgroundCrossword) return;
-        backgroundCrossword.innerHTML = '';
-        const numRows = Math.ceil(backgroundCrossword.offsetHeight / 30);
-        const numCols = Math.ceil(backgroundCrossword.offsetWidth / 30);
-        const totalCells = (numRows * numCols) || 300;
-        for (let i = 0; i < totalCells; i++) {
-          const bg = document.createElement('div');
-          bg.className = 'bg-letter-box';
-          bg.textContent = getRandomLetter();
-          backgroundCrossword.appendChild(bg);
-        }
-      }
-      generateBackgroundGrid();
-      window.addEventListener('resize', generateBackgroundGrid);
+    loadTop25().catch(e => {
+      console.error("[dilemmalys] loadTop25 failed:", e);
+      tbody.innerHTML = "";
+      empty.classList.remove("hidden");
     });
   </script>
 </body>
