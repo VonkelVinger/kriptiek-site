@@ -20,6 +20,8 @@
 
   <style>
     body { font-family: 'Montserrat', sans-serif; }
+
+    /* Header logo (matches index.html) */
     .logo-container {
       position: relative; display: flex; justify-content: center; align-items: center;
       width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
@@ -59,12 +61,17 @@
     .row:nth-child(even){ background:#f9fafb; }
     .rank{ width:2rem; text-align:right; font-weight:700; color:#6b7280; }
     .name{ font-weight:700; color:#111827; }
+
+    .fade-in { animation: fade .35s ease-out; }
+    @keyframes fade { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
   </style>
 
   <!-- Firebase (v11 modular to match index.html) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getFirestore, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import {
+      getFirestore, collection, getDocs, doc, getDoc
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -78,64 +85,87 @@
     const app = initializeApp(firebaseConfig);
     const db  = getFirestore(app);
 
-    // Load top 25 by dilemmaPoints (desc)
-    async function loadRanglys(){
-      const listEl   = document.getElementById('leaderboard');
-      const toggle   = document.getElementById('toggleBtn');
-      let show25     = false;
-
-      function makeRow(rank, name, pts){
-        const div = document.createElement('div'); div.className = 'row';
-        const left = document.createElement('div'); left.className = 'flex items-center space-x-3';
-        const r = document.createElement('div'); r.className = 'rank'; r.textContent = rank + '.';
-        const n = document.createElement('div'); n.className = 'name'; n.textContent = name || 'Speler';
-        left.appendChild(r); left.appendChild(n);
-        const pill = document.createElement('div'); pill.className = 'pill'; pill.textContent = String(pts ?? 0);
-        div.appendChild(left); div.appendChild(pill);
-        return div;
-      }
-
-      let all = [];
-      try{
-        const q = query(collection(db, "users"), orderBy("dilemmaPoints", "desc"), limit(25));
-        const snap = await getDocs(q);
-        all = snap.docs.map(d=>{
-          const x = d.data()||{};
-          return { userName: x.userName || 'Speler', dilemmaPoints: Number(x.dilemmaPoints || 0) };
-        }).filter(u => u.dilemmaPoints > 0); // hide zeros by default
-      }catch(err){
-        console.error("Dilemma-ranglys load error:", err);
-      }
-
-      function render(){
-        listEl.innerHTML = '';
-        const count = Math.min(show25 ? 25 : 10, all.length);
-        if (count === 0){
-          const empty = document.createElement('div');
-          empty.className = 'p-6 text-center text-gray-500';
-          empty.textContent = 'Nog geen inskrywings.';
-          listEl.appendChild(empty);
-          toggle.style.display = 'none';
-          return;
-        }
-        for(let i=0;i<count;i++){
-          const u = all[i];
-          listEl.appendChild(makeRow(i+1, u.userName, u.dilemmaPoints));
-        }
-        toggle.style.display = all.length > 10 ? 'inline-flex' : 'none';
-        toggle.textContent  = show25 ? 'Wys minder' : 'Wys meer';
-      }
-
-      toggle.addEventListener('click', ()=>{ show25 = !show25; render(); });
-      render();
+    // Fallback if a leaderboard row lacks dailyPoints
+    function pointsFromGuesses(guesses){
+      const g = Number(guesses);
+      if (g === 1) return 50;
+      if (g === 2) return 40;
+      if (g === 3) return 30;
+      if (g === 4) return 20;
+      if (g === 5) return 15;
+      if (g === 6) return 10;
+      return 0; // fail/invalid
     }
 
-    document.addEventListener('DOMContentLoaded', loadRanglys);
+    async function loadOverallDilemma(){
+      const listEl = document.getElementById('leaderboard');
+      listEl.innerHTML = '<div class="p-6 text-center text-gray-500">Laai ranglys…</div>';
+
+      // Aggregate totals from all games/*/leaderboard/*
+      const totals = new Map(); // uid -> { name, points }
+      try{
+        const gamesSnap = await getDocs(collection(db, "games"));
+        // For each game, read the leaderboard subcollection
+        for (const gameDoc of gamesSnap.docs){
+          const lbSnap = await getDocs(collection(db, "games", gameDoc.id, "leaderboard"));
+          lbSnap.forEach(rowDoc => {
+            const data = rowDoc.data() || {};
+            const uid  = rowDoc.id;
+            const name = (data.userName || data.name || 'Speler').toString();
+            // Prefer stored dailyPoints; otherwise derive from guesses if available
+            let pts = Number(data.dailyPoints);
+            if (!Number.isFinite(pts) || pts < 0) {
+              if (data.guesses != null) pts = pointsFromGuesses(data.guesses);
+              else pts = 0;
+            }
+            if (pts > 0){
+              const prev = totals.get(uid) || { name, points:0 };
+              // keep most recent non-empty name
+              const mergedName = (name && name !== 'Speler') ? name : prev.name;
+              totals.set(uid, { name: mergedName, points: prev.points + pts });
+            }
+          });
+        }
+      }catch(err){
+        console.error('Dilemma-ranglys: lees fout:', err);
+        listEl.innerHTML = '<div class="p-6 text-center text-red-600">Kon nie die ranglys laai nie.</div>';
+        return;
+      }
+
+      // Transform, sort desc, take top 25
+      const rows = Array.from(totals.entries())
+        .map(([uid, v]) => ({ uid, userName: v.name || 'Speler', total: Number(v.points||0) }))
+        .filter(x => x.total > 0)
+        .sort((a,b) => b.total - a.total)
+        .slice(0, 25);
+
+      // Render
+      if (rows.length === 0){
+        listEl.innerHTML = '<div class="p-6 text-center text-gray-500">Nog geen inskrywings.</div>';
+        return;
+      }
+
+      const frag = document.createDocumentFragment();
+      rows.forEach((u, i) => {
+        const div = document.createElement('div'); div.className = 'row fade-in';
+        const left = document.createElement('div'); left.className = 'flex items-center space-x-3';
+        const r = document.createElement('div'); r.className = 'rank'; r.textContent = (i+1) + '.';
+        const n = document.createElement('div'); n.className = 'name'; n.textContent = u.userName;
+        left.appendChild(r); left.appendChild(n);
+        const pill = document.createElement('div'); pill.className = 'pill'; pill.textContent = String(u.total);
+        div.appendChild(left); div.appendChild(pill);
+        frag.appendChild(div);
+      });
+      listEl.innerHTML = '';
+      listEl.appendChild(frag);
+    }
+
+    document.addEventListener('DOMContentLoaded', loadOverallDilemma);
   </script>
 </head>
 
 <body class="bg-gray-100 min-h-screen flex flex-col">
-  <!-- Header (identical look to index.html) -->
+  <!-- Header (matches index.html) -->
   <header class="bg-white shadow p-4">
     <div class="logo-container">
       <div id="backgroundCrossword" class="background-crossword"></div>
@@ -160,10 +190,6 @@
     <section class="leader-card">
       <div id="leaderboard" role="list"></div>
     </section>
-
-    <div class="flex justify-center">
-      <button id="toggleBtn" class="mt-4 mb-10 bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition">Wys meer</button>
-    </div>
   </main>
 
   <!-- Footer (same as index.html) -->
