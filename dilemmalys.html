@@ -14,7 +14,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
   <title>DILEMMA-TOP25 – Kriptiek</title>
 
-  <!-- Canonical & Open Graph / Twitter -->
+  <!-- Canonical & OG -->
   <link rel="canonical" href="https://www.kriptiek.com/dilemmalys.html" />
   <meta property="og:site_name" content="Kriptiek" />
   <meta property="og:title" content="DILEMMA-TOP25 – Kriptiek" />
@@ -26,111 +26,107 @@
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="DILEMMA-TOP25 – Kriptiek" />
-  <meta name="twitter:description" content="Sien vandag se Top-25 Dilemma-tellers op Kriptiek." />
-  <meta name="twitter:image" content="https://www.kriptiek.com/assets/DILEMMA_12SEP.png?v=6" />
 
-  <!-- Tailwind + font -->
+  <!-- Tailwind + Montserrat -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
 
   <style>
-    body{font-family:'Montserrat',sans-serif;background:#f9fafb;color:#1f2937;}
-    header{background:#ffffff;box-shadow:0 2px 4px rgba(0,0,0,.1);padding:1rem 0;}
-    .logo-container{display:flex;justify-content:center;align-items:center;margin-bottom:.5rem;}
-    .letter-box{width:40px;height:40px;margin:2px;display:flex;justify-content:center;align-items:center;background:#374151;color:#fff;font-size:1.5rem;font-weight:700;border-radius:4px;}
-    .pill{display:inline-flex;align-items:center;gap:.5rem;padding:.5rem .9rem;border-radius:9999px;font-weight:800;color:#fff;background:linear-gradient(to bottom,#f97316,#c2410c);}
-    .card{background:#fff;border:1px solid #e5e7eb;border-radius:.75rem;box-shadow:0 8px 24px rgba(0,0,0,.06);}
-    .table th{font-weight:700;text-transform:uppercase;font-size:.75rem;letter-spacing:.03em;color:#6b7280;}
-    .rank{width:2.25rem;text-align:right;font-variant-numeric:tabular-nums;}
-    .num{font-variant-numeric:tabular-nums;}
-    .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.5rem .9rem;border-radius:.6rem;font-weight:700;}
-    .btn-blue{background:#1e3a8a;color:#fff;}
-    .btn-gray{background:#e5e7eb;color:#374151;}
-    .chip{font-size:.75rem;padding:.15rem .5rem;border-radius:9999px;background:#eef2ff;color:#1e3a8a;font-weight:700;}
+    :root{
+      --k-blue:#1e3a8a;
+      --k-blue-d:#172c6a;
+    }
+    body{font-family:'Montserrat',sans-serif;background:#f3f4f6;color:#111827;}
+    header{background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+    .letter-box{width:38px;height:38px;margin:2px;display:inline-grid;place-items:center;background:#374151;color:#fff;font-weight:800;border-radius:6px}
+    .k-card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
+    .k-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.55rem .9rem;border-radius:10px;font-weight:800}
+    .k-btn-blue{background:var(--k-blue);color:#fff}
+    .k-btn-blue:hover{background:var(--k-blue-d)}
+    .k-btn-ghost{background:#eef2ff;color:var(--k-blue)}
+    .k-pill{display:inline-flex;align-items:center;padding:.35rem .7rem;border-radius:9999px;font-weight:900;color:#fff;background:linear-gradient(to bottom,#f97316,#c2410c);}
+    .tbl th{font-weight:800;font-size:.72rem;letter-spacing:.03em;color:#6b7280;text-transform:uppercase}
+    .num{font-variant-numeric:tabular-nums}
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
+
   <header>
-    <div class="max-w-5xl mx-auto px-4">
-      <div class="logo-container">
+    <div class="max-w-5xl mx-auto px-4 py-4 text-center">
+      <div class="inline-flex items-center gap-1 mb-2">
         <div class="letter-box">D</div><div class="letter-box">I</div><div class="letter-box">L</div>
         <div class="letter-box">E</div><div class="letter-box">M</div><div class="letter-box">M</div>
         <div class="letter-box">A</div>
       </div>
-      <h1 class="text-center text-2xl md:text-3xl font-extrabold tracking-tight text-[#1e3a8a]">
-        DILEMMA-TOP25
-      </h1>
-      <p class="text-center text-sm text-gray-500 mt-1">Algehele Dilemma-tellers (met presies dieselfde berekening as die speletjie).</p>
+      <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight text-[color:var(--k-blue)]">DILEMMA-TOP25</h1>
+      <p class="text-xs md:text-sm text-gray-500 mt-1">Algehele Dilemma-tellers (presies dieselfde berekening as die speletjie).</p>
     </div>
   </header>
 
   <main class="flex-grow">
     <div class="max-w-5xl mx-auto px-4">
-      <!-- Your pill -->
-      <section class="mt-4">
-        <div id="yourPillWrap" class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <!-- YOU row -->
+      <section class="mt-4 k-card p-4">
+        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div class="flex items-center gap-2">
-            <span id="yourPill" class="pill">JOU DILEMMA-TELLING: —</span>
-            <span id="srChip" class="chip hidden"></span>
+            <span id="yourPill" class="k-pill">JOU DILEMMA-TELLING: —</span>
+            <span id="srChip" class="hidden text-xs font-extrabold text-[color:var(--k-blue)] bg-indigo-50 rounded-full px-2 py-1">SR: —%</span>
           </div>
           <div class="flex items-center gap-2">
-            <a href="/dilemmagame.html" class="btn btn-blue">Speel vandag se Dilemma</a>
-            <button id="btnHerlaai" class="btn btn-gray" type="button">Herlaai</button>
+            <a class="k-btn k-btn-blue" href="/dilemmagame.html">Speel vandag se Dilemma</a>
+            <button id="btnHerlaai" class="k-btn k-btn-ghost" type="button">Herlaai</button>
           </div>
         </div>
       </section>
 
       <!-- BMAC CTA -->
       <section class="mt-4">
-        <div class="card p-4">
+        <div class="k-card p-4">
           <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
              onclick="window.gtag && gtag('event','bmac_click',{from:'dilemma-top25'})"
-             class="flex items-center justify-center w-full px-5 py-3 bg-yellow-500 hover:bg-yellow-600 text-white font-bold rounded-xl shadow transition">
+             class="w-full inline-flex items-center justify-center k-btn k-btn-blue" style="background:#f59e0b">
             HELP ONS OM KRIPTIEK GRATIS TE HOU
           </a>
         </div>
       </section>
 
-      <!-- Top 25 -->
-      <section class="mt-6 card overflow-hidden">
+      <!-- TOP-25 table -->
+      <section class="mt-6 k-card overflow-hidden">
         <div class="flex items-center justify-between px-4 pt-4">
-          <h2 class="text-xl font-bold">TOP-25 DILEMMA-TELLERS</h2>
-          <div class="text-xs text-gray-500">
-            Opgedateer: <span id="updatedAt">—</span>
-          </div>
+          <h2 class="text-xl font-extrabold">TOP-25 DILEMMA-TELLERS</h2>
+          <div class="text-xs text-gray-500">Opgedateer: <span id="updatedAt">—</span></div>
         </div>
         <div class="p-4 overflow-x-auto">
-          <table class="table w-full">
+          <table class="tbl w-full">
             <thead>
               <tr class="text-left border-b border-gray-200">
-                <th class="rank py-2 pr-2">#</th>
+                <th class="py-2 pr-2">#</th>
                 <th class="py-2 pr-2">Naam</th>
                 <th class="py-2 pr-2">Sukses%</th>
                 <th class="py-2 pr-2">Wenlopie</th>
                 <th class="py-2 pr-2">Beste</th>
                 <th class="py-2 pr-2">Gespeel</th>
                 <th class="py-2 pr-2">Laas opg.</th>
-                <th class="py-2 pr-0 text-right">Dilemma-telling</th>
+                <th class="py-2 pl-2 text-right">Dilemma-telling</th>
               </tr>
             </thead>
-            <tbody id="top25Body"></tbody>
+            <tbody id="top25Body" class="text-sm"></tbody>
           </table>
           <p id="emptyState" class="text-center text-gray-500 py-6 hidden">Geen inskrywings om te wys nie.</p>
         </div>
       </section>
 
-      <!-- Footer links row -->
+      <!-- Footer buttons -->
       <section class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
-        <a href="/index.html" class="btn btn-gray justify-center">Tuis</a>
-        <a href="/profile.html" class="btn btn-gray justify-center">My profiel</a>
-        <a href="/forum.html" class="btn btn-gray justify-center">Gesels saam</a>
-        <a href="/dilemma-argief.html" class="btn btn-gray justify-center">Dilemma-argief</a>
+        <a href="/index.html" class="k-btn k-btn-ghost justify-center">Tuis</a>
+        <a href="/profile.html" class="k-btn k-btn-ghost justify-center">My profiel</a>
+        <a href="/forum.html" class="k-btn k-btn-ghost justify-center">Gesels saam</a>
+        <a href="/dilemma-argief.html" class="k-btn k-btn-ghost justify-center">Dilemma-argief</a>
       </section>
     </div>
   </main>
 
-  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500 mt-8">
+  <footer class="bg-white shadow p-4 text-center text-xs md:text-sm text-gray-500 mt-8">
     &copy; 2025 Kriptiek. Alle regte voorbehou. |
     <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
     <a href="/terms.html" class="underline">Voorwaardes</a> |
@@ -141,11 +137,11 @@
   <!-- Firebase + Score module -->
   <script type="module">
     import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getFirestore, collection, query, orderBy, limit, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import { getFirestore, collection, query, orderBy, limit, getDocs, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
     import { computeDilemmaTotal, persistDilemmaTotalIfChanged } from "/scripts/dilemma-score.js";
 
-    /* ---- Config (same as game page) ---- */
+    /* Firebase (same as game) */
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
       authDomain: "kriptiek-c9ea2.firebaseapp.com",
@@ -154,20 +150,19 @@
       messagingSenderId: "620450620939",
       appId: "1:620450620939:web:e93a18ac23b53b33db890e"
     };
-
-    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-    const db  = getFirestore(app);
+    const app  = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+    const db   = getFirestore(app);
     const auth = getAuth(app);
 
-    /* ---- UI refs ---- */
-    const pill     = document.getElementById("yourPill");
-    const srChip   = document.getElementById("srChip");
-    const updated  = document.getElementById("updatedAt");
-    const tbody    = document.getElementById("top25Body");
-    const empty    = document.getElementById("emptyState");
-    const btnReload= document.getElementById("btnHerlaai");
+    /* UI refs */
+    const pill      = document.getElementById("yourPill");
+    const srChip    = document.getElementById("srChip");
+    const updatedEl = document.getElementById("updatedAt");
+    const tbody     = document.getElementById("top25Body");
+    const empty     = document.getElementById("emptyState");
+    document.getElementById("btnHerlaai")?.addEventListener("click", () => location.reload());
 
-    const fmt = (n) => typeof n === "number" ? n.toLocaleString("af-ZA") : n;
+    const fmt = (n)=> typeof n === "number" ? n.toLocaleString("af-ZA") : n;
     const fmtDate = (ts) => {
       try{
         const d = ts?.toDate ? ts.toDate() : (ts instanceof Date ? ts : new Date());
@@ -175,9 +170,7 @@
       }catch{ return "—"; }
     };
 
-    btnReload?.addEventListener("click", () => location.reload());
-
-    /* ---- Your pill (uses EXACT same compute function) ---- */
+    /* Your pill */
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         pill.textContent = "Meld aan om jou Dilemma-telling te sien";
@@ -186,8 +179,8 @@
         return;
       }
 
+      // Show existing quickly
       try {
-        // Optional: show existing saved score immediately if present
         const uref = doc(db, "users", user.uid);
         const usnap = await getDoc(uref);
         if (usnap.exists()) {
@@ -202,6 +195,7 @@
         }
       } catch {}
 
+      // Compute authoritative value
       try {
         const total = await computeDilemmaTotal(db, user.uid);
         pill.textContent = `JOU DILEMMA-TELLING: ${fmt(total)}`;
@@ -211,82 +205,94 @@
       }
     });
 
-    /* ---- Top-25: merge by dilemmaScore / kScore to be robust ----
-       We fetch both ordered lists (each limited) and then:
-       - Compute effectiveScore = Number(d.dilemmaScore ?? d.kScore) || 0
-       - Derive SR% from wins/gamesPlayed
-       - Sort in JS by effectiveScore desc, then bestStreak desc, then updatedAt desc
-       - Render first 25 with right-aligned pill like the game page
-    ---------------------------------------------------------------- */
+    /* Top-25
+       1) Pull two ordered pools (dilemmaScore desc, kScore desc)
+       2) If a user has 0/undefined, compute on the fly for up to N users
+       3) Persist any newly computed totals (so pages converge)
+       4) Sort by effectiveScore desc, then bestStreak desc, then updatedAt desc
+    */
     async function loadTop25() {
-      const take = 60; // get a wider pool, then cut to 25 after merging
+      const take = 80; // wider pool, trim later
       const q1 = query(collection(db, "users"), orderBy("dilemmaScore", "desc"), limit(take));
       const q2 = query(collection(db, "users"), orderBy("kScore", "desc"),        limit(take));
 
       const [s1, s2] = await Promise.allSettled([ getDocs(q1), getDocs(q2) ]);
       const map = new Map();
 
-      function ingest(snap) {
+      function ingest(snap){
         snap.forEach(d => {
           const v = d.data() || {};
           const id = d.id;
-          const name = typeof v.userName === "string" && v.userName.trim() ? v.userName.trim() : "Onbekend";
-          const effectiveScore = Number(v.dilemmaScore ?? v.kScore) || 0;
-          const gamesPlayed = Number(v.gamesPlayed || 0);
-          const wins = Number(v.wins || 0);
-          const sr = gamesPlayed > 0 ? Math.round((wins/gamesPlayed)*100) : 0;
+          const name = (typeof v.userName === "string" && v.userName.trim()) ? v.userName.trim() : "Onbekend";
+          const score = Number(v.dilemmaScore ?? v.kScore) || 0;
+          const gp = Number(v.gamesPlayed || 0);
+          const w  = Number(v.wins || 0);
+          const sr = gp > 0 ? Math.round((w/gp)*100) : 0;
           const streak = Number(v.streak || 0);
-          const best = Number(v.bestStreak || 0);
+          const best   = Number(v.bestStreak || 0);
           const updatedAt = v.scoreUpdatedAt || v.updatedAt || v.createdAt || null;
 
-          const prev = map.get(id) || { id, name, effectiveScore: 0, gamesPlayed: 0, wins: 0, sr: 0, streak: 0, best: 0, updatedAt: null };
-          // keep max of effectiveScore, and newest updatedAt
-          const next = {
-            id,
-            name,
-            effectiveScore: Math.max(prev.effectiveScore, effectiveScore),
-            gamesPlayed: Math.max(prev.gamesPlayed, gamesPlayed),
-            wins: Math.max(prev.wins, wins),
-            sr: Math.max(prev.sr, sr),
-            streak: Math.max(prev.streak, streak),
-            best: Math.max(prev.best, best),
-            updatedAt: (!prev.updatedAt || (updatedAt?.seconds||0) > (prev.updatedAt?.seconds||0)) ? updatedAt : prev.updatedAt
-          };
-          map.set(id, next);
+          const prev = map.get(id);
+          if (!prev) {
+            map.set(id, { id, name, score, gp, w, sr, streak, best, updatedAt });
+          } else {
+            // Keep max score and newest timestamp
+            prev.score = Math.max(prev.score, score);
+            prev.gp    = Math.max(prev.gp, gp);
+            prev.w     = Math.max(prev.w, w);
+            prev.sr    = Math.max(prev.sr, sr);
+            prev.streak= Math.max(prev.streak, streak);
+            prev.best  = Math.max(prev.best, best);
+            if (!prev.updatedAt || (updatedAt?.seconds||0) > (prev.updatedAt?.seconds||0)) prev.updatedAt = updatedAt;
+          }
         });
       }
 
       if (s1.status === "fulfilled") ingest(s1.value);
       if (s2.status === "fulfilled") ingest(s2.value);
 
-      // assemble & sort
+      // Compute on the fly for a small batch of missing scores
+      const candidates = Array.from(map.values()).filter(r => !Number.isFinite(r.score) || r.score <= 0).slice(0, 15);
+      if (candidates.length) {
+        const computed = await Promise.allSettled(candidates.map(r => computeDilemmaTotal(db, r.id)));
+        await Promise.allSettled(computed.map((res, i) => {
+          const r = candidates[i];
+          if (res.status === "fulfilled" && Number.isFinite(res.value)) {
+            const val = Number(res.value);
+            r.score = val;
+            return setDoc(doc(db,"users", r.id), { dilemmaScore: val, kScore: val, scoreUpdatedAt: serverTimestamp() }, { merge:true });
+          }
+        }));
+      }
+
+      // Prepare rows
       const rows = Array.from(map.values())
-        .filter(r => Number.isFinite(r.effectiveScore) && r.effectiveScore > 0);
+        .filter(r => Number.isFinite(r.score) && r.score > 0);
 
       rows.sort((a,b) =>
-        (b.effectiveScore - a.effectiveScore) ||
+        (b.score - a.score) ||
         (b.best - a.best) ||
         ((b.updatedAt?.seconds||0) - (a.updatedAt?.seconds||0))
       );
 
-      const top = rows.slice(0, 25);
+      const top = rows.slice(0,25);
 
-      // render
+      // Render
       tbody.innerHTML = "";
       if (!top.length) {
         empty.classList.remove("hidden");
       } else {
         empty.classList.add("hidden");
-        top.forEach((r, idx) => {
+        top.forEach((r, i) => {
           const tr = document.createElement("tr");
-          if (idx === 0) tr.className = "bg-green-50";
+          if (i===0) tr.className = "bg-green-50";
 
           const tdRank = document.createElement("td");
-          tdRank.className = "rank py-2 pr-2 text-gray-500";
-          tdRank.textContent = String(idx+1);
+          tdRank.className = "py-2 pr-2 text-gray-500 num";
+          tdRank.textContent = String(i+1);
 
           const tdName = document.createElement("td");
-          tdName.className = "py-2 pr-2 font-semibold";
+          tdName.className = "py-2 pr-2 font-extrabold";
           tdName.textContent = r.name;
 
           const tdSR = document.createElement("td");
@@ -303,17 +309,17 @@
 
           const tdPlayed = document.createElement("td");
           tdPlayed.className = "py-2 pr-2 num";
-          tdPlayed.textContent = r.gamesPlayed || 0;
+          tdPlayed.textContent = r.gp || 0;
 
           const tdUpdated = document.createElement("td");
           tdUpdated.className = "py-2 pr-2";
           tdUpdated.textContent = r.updatedAt ? fmtDate(r.updatedAt) : "—";
 
           const tdScore = document.createElement("td");
-          tdScore.className = "py-2 pl-2 pr-0 text-right";
+          tdScore.className = "py-2 pl-2 text-right";
           const pill = document.createElement("span");
-          pill.className = "inline-flex items-center px-2 py-0.5 rounded-full text-white text-[12px] font-bold bg-gradient-to-b from-orange-500 to-orange-700";
-          pill.textContent = fmt(r.effectiveScore);
+          pill.className = "k-pill text-[12px]";
+          pill.textContent = fmt(r.score);
           tdScore.appendChild(pill);
 
           tr.appendChild(tdRank);
@@ -328,8 +334,7 @@
         });
       }
 
-      // page updated timestamp
-      updated.textContent = new Date().toLocaleString("af-ZA");
+      updatedEl.textContent = new Date().toLocaleString("af-ZA");
     }
 
     loadTop25().catch(e => {
