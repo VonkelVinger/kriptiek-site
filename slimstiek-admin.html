@@ -26,14 +26,16 @@
        Otherwise, PASTE YOUR REAL FIREBASE WEB CONFIG inside firebaseConfigInline = {...}
        (The object with apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId.)
   -->
-  <script>
-    (function ensureFirebaseConfig(){
-      const firebaseConfigInline = null; // <-- PASTE YOUR REAL CONFIG OBJECT HERE (or leave null to use global)
-      if (!window.firebaseConfig && firebaseConfigInline) {
-        window.firebaseConfig = firebaseConfigInline;
-      }
-    })();
-  </script>
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+  authDomain: "kriptiek-c9ea2.firebaseapp.com",
+  projectId: "kriptiek-c9ea2",
+  storageBucket: "kriptiek-c9ea2.firebasestorage.app",
+  messagingSenderId: "620450620939",
+  appId: "1:620450620939:web:e93a18ac23b53b33db890e",
+  measurementId: "G-S9V4CMP1FP"
+};
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen">
 
