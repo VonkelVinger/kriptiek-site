@@ -11,174 +11,195 @@
   </script>
 
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DILEMMA-RANGLYS – Kriptiek</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Styles -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
 
   <style>
-    :root { color-scheme: light; }
-    body{ font-family: 'Montserrat', sans-serif; background:#f3f4f6; color:#1f2937; }
-    .pill{ background:#f97316; color:#fff; padding:.25rem .6rem; border-radius:9999px; font-weight:600; font-size:.875rem; }
-    .leader-card{ max-width:640px; margin:1rem auto 0; background:#fff; border-radius:1rem; box-shadow:0 10px 20px rgba(0,0,0,.06); overflow:hidden; }
+    body { font-family: 'Montserrat', sans-serif; }
+    .logo-container {
+      position: relative; display: flex; justify-content: center; align-items: center;
+      width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
+      isolation: isolate;
+    }
+    .logo-container::before{
+      content:""; position:absolute; inset:-2px; border-radius:1rem;
+      background:conic-gradient(from 180deg at 50% 50%, #1e3a8a, #334155, #1e3a8a);
+      animation:spin 14s linear infinite; z-index:0; padding:2px;
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+    }
+    @keyframes spin{ to{ transform:rotate(1turn); } }
+    @media (prefers-reduced-motion: reduce){ .logo-container::before{ animation:none; } }
+
+    .crossword-grid { display: grid; grid-template-columns: repeat(8, minmax(40px, 1fr)); gap: 4px; position: relative; z-index: 10; }
+    .letter-box {
+      width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
+      background-color: #374151; color: white; font-size: 1.8rem; font-weight: bold; border: 2px solid #1f2937; border-radius: 0.375rem;
+      text-transform: uppercase; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    }
+    .flipped-k { transform: scaleX(-1); }
+
+    .background-crossword {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
+      opacity: 0.5; z-index: 1; pointer-events: none; animation: bgFloat 30s linear infinite;
+    }
+    @keyframes bgFloat{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } 100%{ transform:translateY(0); } }
+    .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
+
+    /* Ranglys UI */
+    .pill{ background:#f97316; color:#fff; padding:.25rem .6rem; border-radius:9999px; font-weight:700; font-size:.875rem; }
+    .leader-card{ max-width:680px; margin:1rem auto 0; background:#fff; border-radius:1rem; box-shadow:0 10px 20px rgba(0,0,0,.06); overflow:hidden; }
     .row{ display:flex; align-items:center; justify-content:space-between; padding:.75rem 1rem; border-bottom:1px solid #e5e7eb; }
     .row:nth-child(odd){ background:#ffffff; }
     .row:nth-child(even){ background:#f9fafb; }
-    .rank{ width:2rem; text-align:right; font-weight:600; color:#6b7280; }
-    .name{ font-weight:600; color:#111827; }
+    .rank{ width:2rem; text-align:right; font-weight:700; color:#6b7280; }
+    .name{ font-weight:700; color:#111827; }
   </style>
+
+  <!-- Firebase (v11 modular to match index.html) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getFirestore, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+      authDomain: "kriptiek-c9ea2.firebaseapp.com",
+      projectId: "kriptiek-c9ea2",
+      storageBucket: "kriptiek-c9ea2.appspot.com",
+      messagingSenderId: "620450620939",
+      appId: "1:620450620939:web:e93a18ac23b53b33db890e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+
+    // Load top 25 by dilemmaPoints (desc)
+    async function loadRanglys(){
+      const listEl   = document.getElementById('leaderboard');
+      const toggle   = document.getElementById('toggleBtn');
+      let show25     = false;
+
+      function makeRow(rank, name, pts){
+        const div = document.createElement('div'); div.className = 'row';
+        const left = document.createElement('div'); left.className = 'flex items-center space-x-3';
+        const r = document.createElement('div'); r.className = 'rank'; r.textContent = rank + '.';
+        const n = document.createElement('div'); n.className = 'name'; n.textContent = name || 'Speler';
+        left.appendChild(r); left.appendChild(n);
+        const pill = document.createElement('div'); pill.className = 'pill'; pill.textContent = String(pts ?? 0);
+        div.appendChild(left); div.appendChild(pill);
+        return div;
+      }
+
+      let all = [];
+      try{
+        const q = query(collection(db, "users"), orderBy("dilemmaPoints", "desc"), limit(25));
+        const snap = await getDocs(q);
+        all = snap.docs.map(d=>{
+          const x = d.data()||{};
+          return { userName: x.userName || 'Speler', dilemmaPoints: Number(x.dilemmaPoints || 0) };
+        }).filter(u => u.dilemmaPoints > 0); // hide zeros by default
+      }catch(err){
+        console.error("Dilemma-ranglys load error:", err);
+      }
+
+      function render(){
+        listEl.innerHTML = '';
+        const count = Math.min(show25 ? 25 : 10, all.length);
+        if (count === 0){
+          const empty = document.createElement('div');
+          empty.className = 'p-6 text-center text-gray-500';
+          empty.textContent = 'Nog geen inskrywings.';
+          listEl.appendChild(empty);
+          toggle.style.display = 'none';
+          return;
+        }
+        for(let i=0;i<count;i++){
+          const u = all[i];
+          listEl.appendChild(makeRow(i+1, u.userName, u.dilemmaPoints));
+        }
+        toggle.style.display = all.length > 10 ? 'inline-flex' : 'none';
+        toggle.textContent  = show25 ? 'Wys minder' : 'Wys meer';
+      }
+
+      toggle.addEventListener('click', ()=>{ show25 = !show25; render(); });
+      render();
+    }
+
+    document.addEventListener('DOMContentLoaded', loadRanglys);
+  </script>
 </head>
 
-<body class="min-h-screen flex flex-col">
-
-  <!-- KRIPTIEK header (navy bar, flipped K) -->
-  <header class="bg-[#1f2937] text-white">
-    <div class="max-w-6xl mx-auto px-4 py-4">
-      <a href="/index.html" class="block w-fit mx-auto select-none">
-        <div class="flex items-center justify-center space-x-1 text-2xl font-bold tracking-widest">
-          <span class="transform -scale-x-100">K</span><span>R</span><span>I</span><span>P</span><span>T</span><span>I</span><span>E</span><span>K</span>
-        </div>
-      </a>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+  <!-- Header (identical look to index.html) -->
+  <header class="bg-white shadow p-4">
+    <div class="logo-container">
+      <div id="backgroundCrossword" class="background-crossword"></div>
+      <div class="crossword-grid">
+        <div class="letter-box flipped-k">K</div>
+        <div class="letter-box flipped-k">R</div>
+        <div class="letter-box">I</div>
+        <div class="letter-box flipped-k">P</div>
+        <div class="letter-box">T</div>
+        <div class="letter-box">I</div>
+        <div class="letter-box flipped-k">E</div>
+        <div class="letter-box">K</div>
+      </div>
     </div>
   </header>
 
-  <main class="flex-1 px-4">
-    <div class="max-w-6xl mx-auto">
-      <h1 class="text-center text-2xl md:text-3xl font-bold text-[#1e3a8a] mt-8">DILEMMA-RANGLYS</h1>
+  <main class="flex-grow py-10 sm:py-12 md:py-16 px-6 text-center relative">
+    <div class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(80%_50%_at_50%_0%,rgba(30,58,138,.08),transparent_60%)]"></div>
 
-      <!-- Leaderboard -->
-      <section class="leader-card" id="card">
-        <div id="leaderboard" role="list">
-          <!-- rows injected here -->
-        </div>
-      </section>
+    <h1 class="text-3xl font-bold text-[#1e3a8a] mb-4">DILEMMA-RANGLYS</h1>
 
-      <div class="flex justify-center">
-        <button id="toggleBtn"
-          class="mt-4 mb-10 bg-[#1e40af] text-white px-4 py-2 rounded-lg hover:bg-[#1e3a8a] transition">
-          Wys meer
-        </button>
-      </div>
+    <section class="leader-card">
+      <div id="leaderboard" role="list"></div>
+    </section>
+
+    <div class="flex justify-center">
+      <button id="toggleBtn" class="mt-4 mb-10 bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition">Wys meer</button>
     </div>
-    <!-- Firebase (compat to match your other pages) -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
-    <script>
-      // Use your existing config (same as index/dilemmagame)
-      (function initFirebase(){
-        try{
-          if(!firebase.apps.length){
-            firebase.initializeApp({
-              apiKey: "YOUR_API_KEY",
-              authDomain: "YOUR_AUTH_DOMAIN",
-              projectId: "YOUR_PROJECT_ID",
-              storageBucket: "YOUR_STORAGE_BUCKET",
-              messagingSenderId: "YOUR_SENDER_ID",
-              appId: "YOUR_APP_ID"
-            });
-          }
-        }catch(e){ console.warn("Firebase init warning:", e); }
-      })();
-
-      (function main(){
-        const db = firebase.firestore();
-        const listEl = document.getElementById('leaderboard');
-        const toggleBtn = document.getElementById('toggleBtn');
-
-        let allRows = [];     // up to 25
-        let show25 = false;   // default show 10
-
-        function row(rank, name, pts){
-          const div = document.createElement('div');
-          div.className = 'row';
-          const left = document.createElement('div');
-          left.className = 'flex items-center space-x-3';
-          const r = document.createElement('div');
-          r.className = 'rank';
-          r.textContent = rank + '.';
-          const n = document.createElement('div');
-          n.className = 'name';
-          n.textContent = name || 'Speler';
-          left.appendChild(r); left.appendChild(n);
-
-          const pill = document.createElement('div');
-          pill.className = 'pill';
-          pill.textContent = pts != null ? String(pts) : '0';
-
-          div.appendChild(left); div.appendChild(pill);
-          return div;
-        }
-
-        function render(){
-          listEl.innerHTML = '';
-          const count = Math.min(show25 ? 25 : 10, allRows.length);
-          if(count === 0){
-            const empty = document.createElement('div');
-            empty.className = 'p-6 text-center text-gray-500';
-            empty.textContent = 'Nog geen inskrywings.';
-            listEl.appendChild(empty);
-            toggleBtn.style.display = 'none';
-            return;
-          }
-          for(let i=0;i<count;i++){
-            const u = allRows[i];
-            listEl.appendChild(row(i+1, u.userName, u.dilemmaPoints));
-          }
-          toggleBtn.style.display = allRows.length > 10 ? 'inline-flex' : 'none';
-          toggleBtn.textContent = show25 ? 'Wys minder' : 'Wys meer';
-        }
-
-        async function load(){
-          try{
-            const snap = await db.collection('users')
-              .orderBy('dilemmaPoints','desc')
-              .limit(25)
-              .get();
-
-            allRows = snap.docs.map(d=>{
-              const x = d.data()||{};
-              return {
-                userName: x.userName || 'Speler',
-                dilemmaPoints: Number(x.dilemmaPoints || 0)
-              };
-            }).filter(u => u.dilemmaPoints > 0);
-
-            render();
-          }catch(err){
-            console.error('Dilemma-ranglys load error:', err);
-            listEl.innerHTML = '<div class="p-6 text-center text-red-600">Kon nie die ranglys laai nie.</div>';
-            toggleBtn.style.display = 'none';
-          }
-        }
-
-        toggleBtn.addEventListener('click', ()=>{
-          show25 = !show25;
-          render();
-        });
-
-        load();
-      })();
-    </script>
   </main>
 
-  <!-- Full footer -->
-  <footer class="bg-gray-100 text-gray-600 text-sm mt-auto">
-    <div class="max-w-6xl mx-auto px-4 py-8 grid gap-4 md:grid-cols-2">
-      <div>&copy; <span id="year"></span> Kriptiek</div>
-      <nav class="flex flex-wrap gap-x-5 gap-y-2 justify-start md:justify-end">
-        <a href="/index.html" class="hover:text-gray-800">Tuis</a>
-        <a href="/dilemmagame.html" class="hover:text-gray-800">Dilemma</a>
-        <a href="/blitstiek.html" class="hover:text-gray-800">Blitstiek</a>
-        <a href="/slimstiek.html" class="hover:text-gray-800">Slimstiek</a>
-        <a href="/gesels.html" class="hover:text-gray-800">Gesels saam</a>
-        <a href="/blitstiek-argief.html" class="hover:text-gray-800">Argief</a>
-        <a href="/privaatheid.html" class="hover:text-gray-800">Privaatheid</a>
-      </nav>
-    </div>
-    <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+  <!-- Footer (same as index.html) -->
+  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
+    &copy; 2025 Kriptiek. Alle regte voorbehou. |
+    <a href="/profile.html" class="underline">My profiel</a> |
+    <a href="/forum.html" class="underline">Gesels saam</a> |
+    <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
+    <a href="/terms.html" class="underline">Voorwaardes</a> |
+    <a href="/faq.html" class="underline">Gereelde vrae</a> |
+    <a href="/about.html" class="underline">Oor Kriptiek</a> |
+    <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
 
+  <!-- Background letters (same as index.html) -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const backgroundCrossword = document.getElementById('backgroundCrossword');
+      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      function getRandomLetter() { return letters[Math.floor(Math.random() * letters.length)]; }
+      function generateBackgroundGrid() {
+        if (!backgroundCrossword) return;
+        backgroundCrossword.innerHTML = '';
+        const numRows = Math.ceil(backgroundCrossword.offsetHeight / 30);
+        const numCols = Math.ceil(backgroundCrossword.offsetWidth / 30);
+        const totalCells = (numRows * numCols) || 300;
+        for (let i = 0; i < totalCells; i++) {
+          const bg = document.createElement('div');
+          bg.className = 'bg-letter-box';
+          bg.textContent = getRandomLetter();
+          backgroundCrossword.appendChild(bg);
+        }
+      }
+      generateBackgroundGrid();
+      window.addEventListener('resize', generateBackgroundGrid);
+    });
+  </script>
 </body>
 </html>
