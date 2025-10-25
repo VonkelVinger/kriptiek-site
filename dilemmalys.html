@@ -66,15 +66,12 @@
     @keyframes fade { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
   </style>
 
-  <!-- Firebase (v11 modular) + EXACT scoring like dilemmagame.html -->
+  <!-- Firebase (v11 modular to match index.html) -->
   <script type="module">
-    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import {
-      getFirestore, collection, getDocs, query, orderBy, limit, doc, getDoc, setDoc, serverTimestamp
+      getFirestore, collection, getDocs
     } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
-
-    /* If you created the shared module earlier, import it: */
-    import { computeDilemmaTotal as computeFromModule } from "/scripts/dilemma-score.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -85,146 +82,85 @@
       appId: "1:620450620939:web:e93a18ac23b53b33db890e"
     };
 
-    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+    const app = initializeApp(firebaseConfig);
     const db  = getFirestore(app);
 
-    /* Fallback: if the shared module is not present for some reason,
-       we inline the exact same computation to avoid drift. */
-    async function computeDilemmaTotal_fallback(uid){
-      const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
-      const STREAK_THRESHOLD = 5, STREAK_MULTIPLIER = 1.10, SUPPORTER_MULTIPLIER = 1.10;
+    // --- Correct Dilemma base points (no fail penalty possible from public data) ---
+    const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100 };
 
-      const uref = doc(db, "users", uid);
-      const usnap = await getDoc(uref);
-      let supporterActive = false;
-      if (usnap.exists()) {
-        const d = usnap.data();
-        if (d?.supporterActive === true) supporterActive = true;
-        if (d?.supporterUntil?.toMillis && d.supporterUntil.toMillis() > Date.now()) supporterActive = true;
-      }
-
-      // recent plays, newest first (finishedAt!), collapse by day
-      const qy = query(collection(db, "userGames", uid, "plays"), orderBy("finishedAt","desc"), limit(200));
-      const snap = await getDocs(qy);
-
-      const byDate = new Map();
-      snap.forEach(ds => {
-        const d = ds.data();
-        const date = ds.id.replace(/^Game/, "");
-        byDate.set(date, { win: d?.result === "win" || d?.finished === true, guesses: Number(d?.guesses || 0) });
-      });
-
-      // streak (calendar days)
-      const dates = Array.from(byDate.keys()).sort();
-      let cur=0, prev=null;
-      for (const d of dates) {
-        const consec = prev && (new Date(d) - new Date(prev) === 24*60*60*1000);
-        if (!consec) cur=0;
-        const p = byDate.get(d);
-        if (p?.win) cur++; else cur=0;
-        prev=d;
-      }
-
-      // distribution
-      const dist = {1:0,2:0,3:0,4:0,5:0,6:0,fail:0};
-      for (const p of byDate.values()) {
-        if (p.win) {
-          const g = Math.min(Math.max(1, p.guesses || 6), 6);
-          dist[g] += 1;
-        } else {
-          dist.fail += 1;
-        }
-      }
-
-      const subtotal =
-        dist[1]*BASE_POINTS[1] + dist[2]*BASE_POINTS[2] + dist[3]*BASE_POINTS[3] +
-        dist[4]*BASE_POINTS[4] + dist[5]*BASE_POINTS[5] + dist[6]*BASE_POINTS[6] +
-        dist.fail*BASE_POINTS.fail;
-
-      const streakMult = cur >= STREAK_THRESHOLD ? STREAK_MULTIPLIER : 1;
-      const supporterMult = supporterActive ? SUPPORTER_MULTIPLIER : 1;
-      const streakBonus = Math.round(subtotal * (streakMult - 1));
-      const supporterBonus = Math.round((subtotal + streakBonus) * (supporterMult - 1));
-      return subtotal + streakBonus + supporterBonus;
+    function normalizeGuesses(data){
+      // guesses might be under different keys in some older rows
+      let g = data?.guesses;
+      if (g == null) g = data?.guessCount;
+      if (g == null) g = data?.tries;
+      g = Number(g);
+      return Number.isFinite(g) ? g : null;
     }
 
-    const computeDilemmaTotal = async (uid) => {
-      try { return await computeFromModule(db, uid); }
-      catch { return await computeDilemmaTotal_fallback(uid); }
-    };
+    function pointsFromGuesses(guesses){
+      const g = Number(guesses);
+      if (!Number.isFinite(g)) return 0;
+      const clamped = Math.min(Math.max(g, 1), 6);
+      return BASE_POINTS[clamped] || 0;
+    }
 
     async function loadOverallDilemma(){
       const listEl = document.getElementById('leaderboard');
       listEl.innerHTML = '<div class="p-6 text-center text-gray-500">Laai ranglys…</div>';
 
-      // Build a wide candidate pool from users (NOT from games leaderboards).
-      // This ensures we compute the same “overall total” as the game page.
-      const TAKE = 400;
-      const qScore1 = query(collection(db, "users"), orderBy("dilemmaScore","desc"), limit(TAKE));
-      const qScore2 = query(collection(db, "users"), orderBy("kScore","desc"),        limit(TAKE));
-      const qActive = query(collection(db, "users"), orderBy("gamesPlayed","desc"),   limit(TAKE));
+      // Aggregate totals from all games/*/leaderboard/*
+      const totals = new Map(); // uid -> { name, points }
+      try{
+        const gamesSnap = await getDocs(collection(db, "games"));
+        for (const gameDoc of gamesSnap.docs){
+          const lbSnap = await getDocs(collection(db, "games", gameDoc.id, "leaderboard"));
+          lbSnap.forEach(rowDoc => {
+            const data = rowDoc.data() || {};
+            const uid  = rowDoc.id;
 
-      const [s1, s2, s3] = await Promise.allSettled([ getDocs(qScore1), getDocs(qScore2), getDocs(qActive) ]);
+            // Prefer an explicit stored points field ONLY if it matches your scale
+            // Otherwise compute from guesses with the 150..100 base.
+            let pts = Number(data.dailyPoints);
+            if (!Number.isFinite(pts) || pts <= 0 || pts > 200) {
+              const g = normalizeGuesses(data);
+              pts = pointsFromGuesses(g);
+            }
 
-      const map = new Map(); // uid -> { name, total?, updatedAt? }
-      function ingest(snap){
-        snap.forEach(d => {
-          const v = d.data() || {};
-          const id = d.id;
-          const name = (typeof v.userName === "string" && v.userName.trim()) ? v.userName.trim() : "Speler";
-          const saved = Number(v.dilemmaScore ?? v.kScore);
-          const total = Number.isFinite(saved) ? saved : null;
-          const updatedAt = v.scoreUpdatedAt || v.updatedAt || v.createdAt || null;
-          const prev = map.get(id);
-          if (!prev) map.set(id, { id, name, total, updatedAt });
-          else {
-            prev.name  = prev.name || name;
-            prev.total = Math.max(prev.total ?? -Infinity, total ?? -Infinity);
-            if (!prev.updatedAt || (updatedAt?.seconds||0) > (prev.updatedAt?.seconds||0)) prev.updatedAt = updatedAt;
-          }
-        });
-      }
-      if (s1.status === "fulfilled") ingest(s1.value);
-      if (s2.status === "fulfilled") ingest(s2.value);
-      if (s3.status === "fulfilled") ingest(s3.value);
+            if (pts <= 0) return;
 
-      // Compute accurate totals (same as game) for users missing/zero totals.
-      const candidates = Array.from(map.values()).filter(r => !(Number.isFinite(r.total) && r.total > 0)).slice(0, 250);
-      if (candidates.length) {
-        const computed = await Promise.allSettled(candidates.map(r => computeDilemmaTotal(r.id)));
-        await Promise.allSettled(computed.map((res, i) => {
-          const r = candidates[i];
-          if (res.status === "fulfilled" && Number.isFinite(res.value)) {
-            r.total = Number(res.value);
-            return setDoc(doc(db,"users", r.id),
-              { dilemmaScore: r.total, kScore: r.total, scoreUpdatedAt: serverTimestamp() },
-              { merge:true }
-            );
-          } else {
-            r.total = Number(r.total ?? 0);
-          }
-        }));
+            const latestName = (data.userName || data.name || 'Speler') + '';
+            const prev = totals.get(uid) || { name: latestName, points:0 };
+
+            // keep most recent non-empty name
+            const mergedName = (latestName && latestName !== 'Speler') ? latestName : prev.name;
+            totals.set(uid, { name: mergedName, points: prev.points + pts });
+          });
+        }
+      }catch(err){
+        console.error('Dilemma-ranglys: lees fout:', err);
+        listEl.innerHTML = '<div class="p-6 text-center text-red-600">Kon nie die ranglys laai nie.</div>';
+        return;
       }
 
-      // Final rows (exactly 25)
-      const rows = Array.from(map.values()).map(r => ({ ...r, total: Number(r.total ?? 0) }));
-      rows.sort((a,b) =>
-        (b.total - a.total) ||
-        ((b.updatedAt?.seconds||0) - (a.updatedAt?.seconds||0))
-      );
+      const rows = Array.from(totals.entries())
+        .map(([uid, v]) => ({ uid, userName: v.name || 'Speler', total: Number(v.points||0) }))
+        .filter(x => x.total > 0)
+        .sort((a,b) => b.total - a.total)
+        .slice(0, 25);
 
-      let top = rows.slice(0, 25);
-      while (top.length < 25) top.push({ id:`pad-${top.length+1}`, name:"—", total:0 });
+      if (rows.length === 0){
+        listEl.innerHTML = '<div class="p-6 text-center text-gray-500">Nog geen inskrywings.</div>';
+        return;
+      }
 
-      // Render (keeps your original, simple look)
       const frag = document.createDocumentFragment();
-      top.forEach((u, i) => {
+      rows.forEach((u, i) => {
         const div = document.createElement('div'); div.className = 'row fade-in';
         const left = document.createElement('div'); left.className = 'flex items-center space-x-3';
         const r = document.createElement('div'); r.className = 'rank'; r.textContent = (i+1) + '.';
-        const n = document.createElement('div'); n.className = 'name'; n.textContent = u.name;
+        const n = document.createElement('div'); n.className = 'name'; n.textContent = u.userName;
         left.appendChild(r); left.appendChild(n);
-        const pill = document.createElement('div'); pill.className = 'pill'; pill.textContent = (typeof u.total === 'number') ? u.total.toLocaleString('af-ZA') : '0';
+        const pill = document.createElement('div'); pill.className = 'pill'; pill.textContent = String(u.total);
         div.appendChild(left); div.appendChild(pill);
         frag.appendChild(div);
       });
