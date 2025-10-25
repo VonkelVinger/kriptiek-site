@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="af">
+<head>
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9V4CMP1FP"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-S9V4CMP1FP');
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+  <title>DILEMMA-RANGLYS – Kriptiek</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      font-family:'Montserrat',sans-serif;
+      background-color:#f3f4f6;
+      color:#1f2937;
+    }
+    .pill {
+      @apply bg-orange-500 text-white px-3 py-1 rounded-full font-semibold text-sm;
+    }
+    .leader-row {
+      @apply flex justify-between items-center px-4 py-2 border-b border-gray-200;
+    }
+    .leader-row:nth-child(odd){
+      background-color:#ffffff;
+    }
+    .leader-row:nth-child(even){
+      background-color:#f9fafb;
+    }
+    .leaderboard-card {
+      @apply max-w-md mx-auto bg-white rounded-2xl shadow-md overflow-hidden mt-6;
+    }
+  </style>
+</head>
+
+<body class="flex flex-col min-h-screen">
+
+  <!-- Header with crossword logo -->
+  <header class="bg-gray-800 text-white py-4 shadow">
+    <div class="flex justify-center items-center space-x-1 text-2xl font-bold tracking-wider">
+      <span class="transform -scale-x-100">K</span><span>R</span><span>I</span><span>P</span><span>T</span><span>I</span><span>E</span><span>K</span>
+    </div>
+  </header>
+
+  <main class="flex-1 flex flex-col items-center px-4">
+    <h1 class="text-blue-800 font-bold text-2xl mt-6 mb-4">DILEMMA-RANGLYS</h1>
+
+    <!-- Leaderboard container -->
+    <div id="leaderboard" class="leaderboard-card w-full"></div>
+
+    <button id="toggleButton"
+      class="mt-4 mb-10 bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition">
+      Wys meer
+    </button>
+    <!-- Firebase SDKs (compat for consistency with your other pages) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+    <script>
+      // 🔧 Use your existing global Firebase config. If already initialized elsewhere,
+      // this block will safely no-op.
+      (function initKriptiekFirebase(){
+        try {
+          if (!firebase.apps.length) {
+            firebase.initializeApp({
+              apiKey: "YOUR_API_KEY",
+              authDomain: "YOUR_AUTH_DOMAIN",
+              projectId: "YOUR_PROJECT_ID",
+              storageBucket: "YOUR_STORAGE_BUCKET",
+              messagingSenderId: "YOUR_SENDER_ID",
+              appId: "YOUR_APP_ID",
+            });
+          }
+        } catch(e){
+          console.warn("[Dilemmalys] Firebase init:", e);
+        }
+      })();
+    </script>
+    <script>
+      (function(){
+        const db = firebase.firestore();
+
+        const leaderboardEl = document.getElementById('leaderboard');
+        const toggleBtn = document.getElementById('toggleButton');
+
+        // Render helpers
+        function makeRow(rank, name, points){
+          const row = document.createElement('div');
+          row.className = 'leader-row';
+          const left = document.createElement('div');
+          left.className = 'flex items-center space-x-3';
+          const rankEl = document.createElement('div');
+          rankEl.className = 'text-gray-600 font-semibold w-6 text-right';
+          rankEl.textContent = rank + '.';
+          const nameEl = document.createElement('div');
+          nameEl.className = 'font-semibold text-gray-800';
+          nameEl.textContent = name || 'Onbekende speler';
+          left.appendChild(rankEl);
+          left.appendChild(nameEl);
+
+          const pill = document.createElement('div');
+          pill.className = 'pill';
+          pill.textContent = points != null ? `${points}` : '0';
+
+          row.appendChild(left);
+          row.appendChild(pill);
+          return row;
+        }
+
+        function renderList(users, showCount){
+          leaderboardEl.innerHTML = '';
+          const count = Math.min(showCount, users.length);
+          if (count === 0){
+            const empty = document.createElement('div');
+            empty.className = 'p-6 text-center text-gray-500';
+            empty.textContent = 'Nog geen inskrywings.';
+            leaderboardEl.appendChild(empty);
+            toggleBtn.style.display = 'none';
+            return;
+          }
+          for (let i=0; i<count; i++){
+            const u = users[i];
+            leaderboardEl.appendChild(makeRow(i+1, u.userName, u.dilemmaPoints));
+          }
+          // Show toggle only if there are more than 10
+          toggleBtn.style.display = users.length > 10 ? 'inline-flex' : 'none';
+        }
+
+        // State
+        let allUsers = [];
+        let showing25 = false;
+
+        // Query top 25 by dilemmaPoints desc
+        async function loadLeaderboard(){
+          try{
+            const snap = await db.collection('users')
+              .orderBy('dilemmaPoints', 'desc')
+              .limit(25)
+              .get();
+
+            allUsers = snap.docs.map(d => {
+              const data = d.data() || {};
+              return {
+                userName: data.userName || 'Speler',
+                dilemmaPoints: Number(data.dilemmaPoints || 0)
+              };
+            });
+
+            showing25 = false;
+            renderList(allUsers, 10);
+          }catch(err){
+            console.error('[Dilemmalys] Load error:', err);
+            leaderboardEl.innerHTML = '<div class="p-6 text-center text-red-600">Kon nie die ranglys laai nie.</div>';
+            toggleBtn.style.display = 'none';
+          }
+        }
+
+        toggleBtn.addEventListener('click', () => {
+          showing25 = !showing25;
+          renderList(allUsers, showing25 ? 25 : 10);
+          toggleBtn.textContent = showing25 ? 'Wys minder' : 'Wys meer';
+        });
+
+        // Kick off
+        loadLeaderboard();
+      })();
+    </script>
+
+  </main>
+
+  <!-- Footer (kept minimal to match your pages; tweak links as needed) -->
+  <footer class="mt-auto bg-gray-100 text-gray-500 text-sm py-6">
+    <div class="max-w-3xl mx-auto px-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      <div>&copy; <span id="year"></span> Kriptiek</div>
+      <nav class="flex gap-4">
+        <a href="/index.html" class="hover:text-gray-700">Tuis</a>
+        <a href="/dilemmagame.html" class="hover:text-gray-700">Dilemma</a>
+        <a href="/blitstiek.html" class="hover:text-gray-700">Blitstiek</a>
+        <a href="/slimstiek.html" class="hover:text-gray-700">Slimstiek</a>
+        <a href="/gesels.html" class="hover:text-gray-700">Gesels saam</a>
+      </nav>
+    </div>
+    <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+  </footer>
+
+</body>
+</html>
