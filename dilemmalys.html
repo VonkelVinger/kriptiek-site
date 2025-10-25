@@ -115,20 +115,32 @@
       if(s3.status==="fulfilled") ingest(s3.value);
 
       // Compute missing totals (exact logic) for a batch; persist for future speed
-      const candidates=Array.from(map.values()).filter(r=>!(Number.isFinite(r.total)&&r.total>0)).slice(0,250);
-      if(candidates.length){
-        const computed=await Promise.allSettled(candidates.map(r=>computeDilemmaTotal(r.id)));
-        await Promise.allSettled(computed.map((res,i)=>{
-          const r=candidates[i];
-          if(res.status==="fulfilled"&&Number.isFinite(res.value)){
-            r.total=Number(res.value);
-            return setDoc(doc(db,"users",r.id),{dilemmaScore:r.total,kScore:r.total,scoreUpdatedAt:serverTimestamp()},{merge:true});
-          } else {
-            r.total=Number(r.total??0);
-          }
-        }));
-      }
+// Recompute totals for EVERY candidate so we 100% match the game math
+const candidates = Array.from(map.values()).slice(0, 300); // wide pool
+if (candidates.length) {
+  const computed = await Promise.allSettled(
+    candidates.map(r => computeDilemmaTotal(r.id))
+  );
 
+  await Promise.allSettled(
+    computed.map((res, i) => {
+      const r = candidates[i];
+      if (res.status === "fulfilled" && Number.isFinite(res.value)) {
+        r.total = Number(res.value);
+        // persist so saved scores stay in lockstep with the game
+        return setDoc(
+          doc(db, "users", r.id),
+          { dilemmaScore: r.total, kScore: r.total, scoreUpdatedAt: serverTimestamp() },
+          { merge: true }
+        );
+      } else {
+        r.total = Number(r.total ?? 0); // fallback if compute failed
+      }
+    })
+  );
+}
+
+      
       // Sort & take exactly 25 (pad with zero rows if needed)
       const rows=Array.from(map.values()).map(r=>({...r,total:Number(r.total??0)}));
       rows.sort((a,b)=>(b.total-a.total)||((b.updatedAt?.seconds||0)-(a.updatedAt?.seconds||0)));
