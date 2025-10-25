@@ -70,7 +70,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import {
-      getFirestore, collection, getDocs, doc, getDoc
+      getFirestore, collection, getDocs
     } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -85,16 +85,23 @@
     const app = initializeApp(firebaseConfig);
     const db  = getFirestore(app);
 
-    // Fallback if a leaderboard row lacks dailyPoints
+    // --- Correct Dilemma base points (no fail penalty possible from public data) ---
+    const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100 };
+
+    function normalizeGuesses(data){
+      // guesses might be under different keys in some older rows
+      let g = data?.guesses;
+      if (g == null) g = data?.guessCount;
+      if (g == null) g = data?.tries;
+      g = Number(g);
+      return Number.isFinite(g) ? g : null;
+    }
+
     function pointsFromGuesses(guesses){
       const g = Number(guesses);
-      if (g === 1) return 50;
-      if (g === 2) return 40;
-      if (g === 3) return 30;
-      if (g === 4) return 20;
-      if (g === 5) return 15;
-      if (g === 6) return 10;
-      return 0; // fail/invalid
+      if (!Number.isFinite(g)) return 0;
+      const clamped = Math.min(Math.max(g, 1), 6);
+      return BASE_POINTS[clamped] || 0;
     }
 
     async function loadOverallDilemma(){
@@ -105,25 +112,28 @@
       const totals = new Map(); // uid -> { name, points }
       try{
         const gamesSnap = await getDocs(collection(db, "games"));
-        // For each game, read the leaderboard subcollection
         for (const gameDoc of gamesSnap.docs){
           const lbSnap = await getDocs(collection(db, "games", gameDoc.id, "leaderboard"));
           lbSnap.forEach(rowDoc => {
             const data = rowDoc.data() || {};
             const uid  = rowDoc.id;
-            const name = (data.userName || data.name || 'Speler').toString();
-            // Prefer stored dailyPoints; otherwise derive from guesses if available
+
+            // Prefer an explicit stored points field ONLY if it matches your scale
+            // Otherwise compute from guesses with the 150..100 base.
             let pts = Number(data.dailyPoints);
-            if (!Number.isFinite(pts) || pts < 0) {
-              if (data.guesses != null) pts = pointsFromGuesses(data.guesses);
-              else pts = 0;
+            if (!Number.isFinite(pts) || pts <= 0 || pts > 200) {
+              const g = normalizeGuesses(data);
+              pts = pointsFromGuesses(g);
             }
-            if (pts > 0){
-              const prev = totals.get(uid) || { name, points:0 };
-              // keep most recent non-empty name
-              const mergedName = (name && name !== 'Speler') ? name : prev.name;
-              totals.set(uid, { name: mergedName, points: prev.points + pts });
-            }
+
+            if (pts <= 0) return;
+
+            const latestName = (data.userName || data.name || 'Speler') + '';
+            const prev = totals.get(uid) || { name: latestName, points:0 };
+
+            // keep most recent non-empty name
+            const mergedName = (latestName && latestName !== 'Speler') ? latestName : prev.name;
+            totals.set(uid, { name: mergedName, points: prev.points + pts });
           });
         }
       }catch(err){
@@ -132,14 +142,12 @@
         return;
       }
 
-      // Transform, sort desc, take top 25
       const rows = Array.from(totals.entries())
         .map(([uid, v]) => ({ uid, userName: v.name || 'Speler', total: Number(v.points||0) }))
         .filter(x => x.total > 0)
         .sort((a,b) => b.total - a.total)
         .slice(0, 25);
 
-      // Render
       if (rows.length === 0){
         listEl.innerHTML = '<div class="p-6 text-center text-gray-500">Nog geen inskrywings.</div>';
         return;
