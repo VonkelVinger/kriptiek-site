@@ -11,13 +11,14 @@
   </script>
 
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
   <title>SLIMSTIEK ADMIN – Kriptiek</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body{font-family:'Montserrat',sans-serif}
     input,button{outline:none}
+    code{background:#f1f5f9;padding:.15rem .35rem;border-radius:.4rem}
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen">
@@ -26,114 +27,201 @@
     <h1 class="text-center text-2xl font-bold">SLIMSTIEK – ADMIN</h1>
   </header>
 
-  <main class="max-w-lg mx-auto p-6">
-    <p class="mb-4 text-sm text-slate-600">Gebruik hierdie paneel om die volgende dag se teikenwoord vir Slimstiek en Blitstiek te stel.</p>
+  <main class="max-w-xl mx-auto p-6">
+    <p class="mb-4 text-sm text-slate-600">Stel hier die volgende dag se teikenwoord vir Slimstiek en/of Blitstiek.</p>
 
-    <label class="block mb-2 font-semibold text-slate-700">Datum (YYYY-MM-DD):</label>
-    <input id="dateInput" type="date" class="w-full border border-slate-300 rounded-xl px-3 py-2 mb-4">
+    <div class="grid gap-4">
+      <div>
+        <label class="block mb-2 font-semibold text-slate-700">Datum (YYYY-MM-DD):</label>
+        <input id="dateInput" type="date" class="w-full border border-slate-300 rounded-xl px-3 py-2">
+      </div>
 
-    <label class="block mb-2 font-semibold text-slate-700">Nuwe teikenwoord:</label>
-    <input id="targetInput" type="text" maxlength="12" class="w-full border border-slate-300 rounded-xl px-3 py-2 uppercase mb-4" placeholder="bv. WOORD">
+      <div>
+        <label class="block mb-2 font-semibold text-slate-700">Nuwe teikenwoord:</label>
+        <input id="targetInput" type="text" maxlength="12" class="w-full border border-slate-300 rounded-xl px-3 py-2 uppercase" placeholder="bv. WOORD">
+      </div>
 
-    <div class="flex gap-2">
-      <button id="saveSlimstiek" class="flex-1 bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 rounded-xl">Stel vir Slimstiek</button>
-      <button id="saveBoth" class="flex-1 bg-green-700 hover:bg-green-800 text-white font-semibold py-2 rounded-xl">Stel vir Beide</button>
+      <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+        <input id="mirrorDaily" type="checkbox" class="w-4 h-4" checked>
+        Spiegel ook na <code>daily_words/{datum}</code> (vir erfenislesers)
+      </label>
+
+      <div class="flex gap-2">
+        <button id="saveSlimstiek" class="flex-1 bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 rounded-xl">Stel vir Slimstiek</button>
+        <button id="saveBlitstiek" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2 rounded-xl">Stel vir Blitstiek</button>
+      </div>
+
+      <button id="saveBoth" class="w-full bg-green-700 hover:bg-green-800 text-white font-semibold py-2 rounded-xl">Stel vir Beide</button>
+
+      <p id="status" class="text-sm mt-2"></p>
+
+      <div id="verifyBox" class="hidden border border-slate-200 rounded-xl p-4 bg-white">
+        <h2 class="font-semibold text-slate-800 mb-2">Geskrewe waardes (verifikasie)</h2>
+        <div class="grid gap-3 text-sm leading-relaxed">
+          <div>
+            <div class="font-semibold text-slate-700">Slimstiek doc</div>
+            <div id="vSlim" class="font-mono text-slate-700 break-words"></div>
+          </div>
+          <div>
+            <div class="font-semibold text-slate-700">Blitstiek doc</div>
+            <div id="vBlit" class="font-mono text-slate-700 break-words"></div>
+          </div>
+          <div>
+            <div class="font-semibold text-slate-700">daily_words doc</div>
+            <div id="vDaily" class="font-mono text-slate-700 break-words"></div>
+          </div>
+        </div>
+      </div>
     </div>
-
-    <p id="status" class="mt-4 text-sm text-slate-700"></p>
   </main>
 
-  <!-- Firebase -->
+  <!-- Firebase (modular) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import {
+      getFirestore, doc, setDoc, getDoc, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    // Uses the global config already present on Kriptiek pages
-    const app = initializeApp(window.firebaseConfig);
+    // -- Config & services (expects window.firebaseConfig on the page origin) --
+    if (!window.firebaseConfig) {
+      console.error("Missing window.firebaseConfig");
+    }
+    const app = initializeApp(window.firebaseConfig || {});
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
-    const statusEl = document.getElementById('status');
-    const dateInput = document.getElementById('dateInput');
-    const targetInput = document.getElementById('targetInput');
-    const saveSlimstiek = document.getElementById('saveSlimstiek');
-    const saveBoth = document.getElementById('saveBoth');
+    // -- UI refs --
+    const statusEl     = document.getElementById('status');
+    const dateInput    = document.getElementById('dateInput');
+    const targetInput  = document.getElementById('targetInput');
+    const mirrorDaily  = document.getElementById('mirrorDaily');
+    const btnSlim      = document.getElementById('saveSlimstiek');
+    const btnBlit      = document.getElementById('saveBlitstiek');
+    const btnBoth      = document.getElementById('saveBoth');
+    const boxVerify    = document.getElementById('verifyBox');
+    const vSlim        = document.getElementById('vSlim');
+    const vBlit        = document.getElementById('vBlit');
+    const vDaily       = document.getElementById('vDaily');
 
-    // default date = tomorrow in ZA
+    // -- Default date = tomorrow in ZA timezone --
     const tz = 'Africa/Johannesburg';
-    const now = new Date();
-    const tomorrow = new Date(now.getTime() + 24*60*60*1000);
-    dateInput.value = new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(tomorrow);
+    function fmtDate(d){
+      // yyyy-mm-dd as required by input[type=date]
+      return new Intl.DateTimeFormat('en-CA', { timeZone: tz, year:'numeric', month:'2-digit', day:'2-digit' }).format(d);
+    }
+    (function setDefaultDate(){
+      const now = new Date();
+      // add one civil day, not 24h, to better align with ZA local day
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      dateInput.value = fmtDate(tomorrow);
+    })();
 
-    function ok(msg){ statusEl.textContent = msg; statusEl.className = "mt-4 text-green-700 font-semibold"; }
-    function err(msg){ statusEl.textContent = msg; statusEl.className = "mt-4 text-red-700 font-semibold"; }
-
-    // Write legacy daily_words to avoid any TUTS fallback
-    async function writeDailyWords(dateStr, word, forBoth){
-      const ref = doc(db,"daily_words", dateStr);
-      const payload = {
-        slimstiek: word,
-        updatedAt: serverTimestamp(),
-        source: "slimstiek-admin v2025-10-24"
-      };
-      if (forBoth) payload.blitstiek = word;
-      await setDoc(ref, payload, { merge: true });
+    // -- Helpers --
+    function ok(msg){
+      statusEl.textContent = msg;
+      statusEl.className = "text-green-700 font-semibold";
+    }
+    function err(msg){
+      statusEl.textContent = msg;
+      statusEl.className = "text-red-700 font-semibold";
+    }
+    function clearVerify(){
+      boxVerify.classList.add('hidden');
+      vSlim.textContent = "";
+      vBlit.textContent = "";
+      vDaily.textContent = "";
     }
 
-    // Single canonical writer that fills ALL common field names
-    function wordPayload(word){
+    function wordPayload(word, dateStr){
       return {
         // canonical
         target: word,
         word: word,
+        date: dateStr,
         status: "active",
+        createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        source: "slimstiek-admin v2025-10-24",
-        // aliases used by older/newer clients
+        source: "slimstiek-admin v2025-10-25",
+        // common aliases for older/newer clients
         targetWord: word,
         answer: word,
-        solution: word,
+        solution: word
       };
     }
 
-    async function saveWord(forBoth){
+    async function writeDailyWords(dateStr, word, writeSlim, writeBlit){
+      if (!mirrorDaily.checked) return;
+      const ref = doc(db, "daily_words", dateStr);
+      const payload = {
+        updatedAt: serverTimestamp(),
+        source: "slimstiek-admin v2025-10-25"
+      };
+      if (writeSlim) payload.slimstiek = word;
+      if (writeBlit) payload.blitstiek = word;
+      await setDoc(ref, payload, { merge: true });
+    }
+
+    async function verifyReadback(dateStr, wroteSlim, wroteBlit){
+      const gid = "Game" + dateStr;
+      const [s, b, d] = await Promise.all([
+        wroteSlim ? getDoc(doc(db,"slimstiekGames",gid)).catch(()=>null) : null,
+        wroteBlit ? getDoc(doc(db,"blitstiekGames",gid)).catch(()=>null) : null,
+        mirrorDaily.checked ? getDoc(doc(db,"daily_words",dateStr)).catch(()=>null) : null
+      ]);
+      vSlim.textContent  = s && s.exists() ? JSON.stringify(s.data(), null, 2) : "(geen verandering of nie gelees nie)";
+      vBlit.textContent  = b && b.exists() ? JSON.stringify(b.data(), null, 2) : "(geen verandering of nie gelees nie)";
+      vDaily.textContent = d && d.exists() ? JSON.stringify(d.data(), null, 2) : "(geen verandering of nie gelees nie)";
+      boxVerify.classList.remove('hidden');
+    }
+
+    async function saveWord({ toSlim=false, toBlit=false }){
+      clearVerify();
+
       const date = (dateInput.value || "").trim();
-      const raw = (targetInput.value || "").trim();
+      const raw  = (targetInput.value || "").trim();
       const word = raw.toUpperCase();
 
       if(!date) return err("Datum ontbreek.");
       if(!word) return err("Woord ontbreek.");
       if(!/^[A-ZÁÂÄÈÉÊËÌÍÎÏÒÓÔÖÙÚÛÜŸ\-]+$/.test(word)) return err("Gebruik slegs letters (A–Z).");
 
-      const gid = "Game"+date;
+      const gid = "Game" + date;
+      const payload = wordPayload(word, date);
 
       try{
-        // Slimstiek
-        await setDoc(doc(db,"slimstiekGames",gid), wordPayload(word), { merge:true });
+        // Auth guard: show message early if not signed in
+        const user = auth.currentUser;
+        if (!user) return err("Meld asseblief aan as admin op Kriptiek.");
 
-        // Legacy/fallback daily_words
-        await writeDailyWords(date, word, forBoth);
+        // Perform writes
+        if (toSlim) await setDoc(doc(db,"slimstiekGames",gid), payload, { merge:true });
+        if (toBlit) await setDoc(doc(db,"blitstiekGames",gid), payload, { merge:true });
 
-        if (forBoth){
-          // Blitstiek
-          await setDoc(doc(db,"blitstiekGames",gid), wordPayload(word), { merge:true });
-          ok(`Teikenwoord “${word}” gestel vir Slimstiek én Blitstiek (${date}).`);
-        } else {
-          ok(`Teikenwoord “${word}” gestel vir Slimstiek (${date}).`);
-        }
+        await writeDailyWords(date, word, toSlim, toBlit);
+
+        const which = toSlim && toBlit ? "Slimstiek én Blitstiek" : (toSlim ? "Slimstiek" : "Blitstiek");
+        ok(`Teikenwoord “${word}” gestel vir ${which} (${date}).`);
+
+        // Readback verification (shows exactly what’s in Firestore)
+        await verifyReadback(date, toSlim, toBlit);
+
       }catch(e){
         console.error(e);
-        err("Kon nie skryf nie: " + (e.message || e));
+        err("Kon nie skryf nie: " + (e && e.message ? e.message : e));
       }
     }
 
-    saveSlimstiek.onclick = ()=>saveWord(false);
-    saveBoth.onclick = ()=>saveWord(true);
+    // Buttons
+    btnSlim.onclick = ()=>saveWord({ toSlim:true, toBlit:false });
+    btnBlit.onclick = ()=>saveWord({ toSlim:false, toBlit:true });
+    btnBoth.onclick = ()=>saveWord({ toSlim:true, toBlit:true });
 
+    // Basic sign-in message
     onAuthStateChanged(auth, user=>{
       if(!user){ err("Meld asseblief aan as admin op Kriptiek."); }
-      else { console.log("Signed in as:", user.email); }
+      else { statusEl.textContent = ""; statusEl.className = "text-sm"; }
     });
   </script>
 </body>
