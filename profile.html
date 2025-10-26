@@ -2,136 +2,136 @@
 <html lang="af">
 <head>
 
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-S9V4CMP1FP"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-S9V4CMP1FP');
-</script>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9V4CMP1FP"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-S9V4CMP1FP');
+  </script>
 
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>My Profiel – Kriptiek</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Profiel – Kriptiek</title>
 
-<!-- Favicons -->
-<link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
-<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=3">
-<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png?v=3">
-<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=3">
-<link rel="manifest" href="/assets/site.webmanifest?v=3">
+  <!-- Favicons -->
+  <link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=3">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png?v=3">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=3">
+  <link rel="manifest" href="/assets/site.webmanifest?v=3">
 
-<!-- Styles -->
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
-<style>
-  body { font-family: 'Montserrat', sans-serif; }
-  .mono{ font-variant-numeric: tabular-nums; }
+  <!-- Styles -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Montserrat', sans-serif; }
+    .mono{ font-variant-numeric: tabular-nums; }
 
-  /* --- Header/logo --- */
-  .logo-container {
-    position: relative; display: flex; justify-content: center; align-items: center;
-    width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
-    isolation: isolate;
-  }
-  .logo-container::before{
-    content:""; position:absolute; inset:-2px; border-radius:1rem;
-    background:conic-gradient(from 180deg at 50% 50%, #1e3a8a, #334155, #1e3a8a);
-    animation:spin 14s linear infinite; z-index:0; padding:2px;
-    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor; mask-composite: exclude;
-  }
-  @keyframes spin{ to{ transform:rotate(1turn); } }
-  @media (prefers-reduced-motion: reduce){ .logo-container::before{ animation:none; } }
+    /* --- Header/logo --- */
+    .logo-container {
+      position: relative; display: flex; justify-content: center; align-items: center;
+      width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
+      isolation: isolate;
+    }
+    .logo-container::before{
+      content:""; position:absolute; inset:-2px; border-radius:1rem;
+      background:conic-gradient(from 180deg at 50% 50%, #1e3a8a, #334155, #1e3a8a);
+      animation:spin 14s linear infinite; z-index:0; padding:2px;
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+    }
+    @keyframes spin{ to{ transform:rotate(1turn); } }
+    @media (prefers-reduced-motion: reduce){ .logo-container::before{ animation:none; } }
 
-  .crossword-grid { display: grid; grid-template-columns: repeat(8, minmax(40px, 1fr)); gap: 4px; position: relative; z-index: 10; }
-  .letter-box {
-    width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
-    background-color: #374151; color: white; font-size: 1.8rem; font-weight: bold; border: 2px solid #1f2937; border-radius: 0.375rem;
-    text-transform: uppercase; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
-  }
-  .flipped-k { transform: scaleX(-1); }
+    .crossword-grid { display: grid; grid-template-columns: repeat(8, minmax(40px, 1fr)); gap: 4px; position: relative; z-index: 10; }
+    .letter-box {
+      width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
+      background-color: #374151; color: white; font-size: 1.8rem; font-weight: bold; border: 2px solid #1f2937; border-radius: 0.375rem;
+      text-transform: uppercase; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    }
+    .flipped-k { transform: scaleX(-1); }
 
-  .background-crossword {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
-    opacity: 0.5; z-index: 1; pointer-events: none; animation: bgFloat 30s linear infinite;
-  }
-  @media (prefers-reduced-motion: reduce){ .background-crossword{ animation:none; } }
-  @keyframes bgFloat{ 0%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } 100%{ transform:translateY(0); } }
+    .background-crossword {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
+      opacity: 0.5; z-index: 1; pointer-events: none; animation: bgFloat 30s linear infinite;
+    }
+    @media (prefers-reduced-motion: reduce){ .background-crossword{ animation:none; } }
+    @keyframes bgFloat{ 0%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } 100%{ transform:translateY(0); } }
 
-  .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
+    .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
 
-  /* Buttons / pills */
-  .kbtn{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.65rem 1rem; border-radius:.9rem; background:#1d4ed8; color:#fff; font-weight:800; box-shadow:0 10px 24px rgba(29,78,216,.25); }
-  .kbtn:hover{ background:#1e40af; }
-  .kbtn-red{ background:#dc2626; } .kbtn-red:hover{ background:#b91c1c; }
+    /* Buttons / pills */
+    .kbtn{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.65rem 1rem; border-radius:.9rem; background:#1d4ed8; color:#fff; font-weight:800; box-shadow:0 10px 24px rgba(29,78,216,.25); }
+    .kbtn:hover{ background:#1e40af; }
+    .kbtn-red{ background:#dc2626; } .kbtn-red:hover{ background:#b91c1c; }
 
-  .pill { display:inline-flex; align-items:center; gap:.6rem; padding:.6rem 1.1rem; border-radius:999px; font-weight:800; color:#fff; white-space:nowrap; line-height:1.15;
-          box-shadow: 0 6px 14px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.25); }
-  .pill-sm { font-size:.95rem; padding:.55rem 1rem; }
-  .pill-lg { font-size:1.15rem; padding:.75rem 1.25rem; }
-  .pill-blue { background:linear-gradient(90deg,#1d4ed8,#1e40af); }
-  .pill-orange { background: linear-gradient(180deg, #FB7A12 0%, #D65A0A 100%); }
-  .pill-green { background: linear-gradient(180deg, #22C55E 0%, #0EA55B 100%); }
-  .pill-green-dark { background: linear-gradient(180deg, #0F766E 0%, #065F46 100%); }
+    .pill { display:inline-flex; align-items:center; gap:.6rem; padding:.6rem 1.1rem; border-radius:999px; font-weight:800; color:#fff; white-space:nowrap; line-height:1.15;
+            box-shadow: 0 6px 14px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.25); }
+    .pill-sm { font-size:.95rem; padding:.55rem 1rem; }
+    .pill-lg { font-size:1.15rem; padding:.75rem 1.25rem; }
+    .pill-blue { background:linear-gradient(90deg,#1d4ed8,#1e40af); }
+    .pill-orange { background: linear-gradient(180deg, #FB7A12 0%, #D65A0A 100%); }
+    .pill-green { background: linear-gradient(180deg, #22C55E 0%, #0EA55B 100%); }
+    .pill-green-dark { background: linear-gradient(180deg, #0F766E 0%, #065F46 100%); }
 
-  /* Cards */
-  .card{ background:#fff; border-radius:1rem; box-shadow:0 8px 18px rgba(0,0,0,.08); }
-  .mini{ background:#f8fafc; border:1px solid #e5e7eb; border-radius:.75rem; padding:12px; text-align:center; }
+    /* Cards */
+    .card{ background:#fff; border-radius:1rem; box-shadow:0 8px 18px rgba(0,0,0,.08); }
+    .mini{ background:#f8fafc; border:1px solid #e5e7eb; border-radius:.75rem; padding:12px; text-align:center; }
 
-  /* Table & bars */
-  .table{ width:100%; border-collapse:separate; border-spacing:0; }
-  .table th,.table td{ padding:.55rem .75rem; border-bottom:1px solid #e5e7eb; }
-  .table th{
-    text-align:left; font-weight:700; color:#334155; background:#f8fafc; position:sticky; top:0;
-    box-shadow: inset 0 -1px 0 #e5e7eb; /* hairline under sticky header */
-  }
-  .table th.text-right{ text-align:right; }
-  .table th.mono{ font-variant-numeric: tabular-nums; }
-  .table tbody tr:nth-child(even){ background:#f9fafb; }
-  .table tbody tr:hover{ background:#f1f5f9; }
+    /* Table & bars */
+    .table{ width:100%; border-collapse:separate; border-spacing:0; }
+    .table th,.table td{ padding:.55rem .75rem; border-bottom:1px solid #e5e7eb; }
+    .table th{
+      text-align:left; font-weight:700; color:#334155; background:#f8fafc; position:sticky; top:0;
+      box-shadow: inset 0 -1px 0 #e5e7eb;
+    }
+    .table th.text-right{ text-align:right; }
+    .table th.mono{ font-variant-numeric: tabular-nums; }
+    .table tbody tr:nth-child(even){ background:#f9fafb; }
+    .table tbody tr:hover{ background:#f1f5f9; }
 
-  .barRow{ display:grid; grid-template-columns:1.1rem 1fr auto; gap:.5rem; align-items:center; }
-  .barTrack{ height:12px; background:#e5e7eb; border-radius:6px; overflow:hidden; }
-  .barFill{ height:100%; background:linear-gradient(90deg,#1d4ed8,#1e40af); }
+    .barRow{ display:grid; grid-template-columns:1.1rem 1fr auto; gap:.5rem; align-items:center; }
+    .barTrack{ height:12px; background:#e5e7eb; border-radius:6px; overflow:hidden; }
+    .barFill{ height:100%; background:linear-gradient(90deg,#1d4ed8,#1e40af); }
 
-  /* Supporter banner (base + color variants) */
-  .supporter-banner{
-    display:flex; align-items:center; justify-content:center; width:100%;
-    color:#fff; font-weight:800; padding:.6rem 1rem; border-radius:999px; text-decoration:none;
-    box-shadow: 0 6px 14px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.25);
-  }
-  .supporter-banner-green{ background: linear-gradient(180deg, #22C55E 0%, #0EA55B 100%); }
-  .supporter-banner-red{   background: linear-gradient(180deg, #DC2626 0%, #B91C1C 100%); }
+    /* Supporter banner */
+    .supporter-banner{
+      display:flex; align-items:center; justify-content:center; width:100%;
+      color:#fff; font-weight:800; padding:.6rem 1rem; border-radius:999px; text-decoration:none;
+      box-shadow: 0 6px 14px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.25);
+    }
+    .supporter-banner-green{ background: linear-gradient(180deg, #22C55E 0%, #0EA55B 100%); }
+    .supporter-banner-red{   background: linear-gradient(180deg, #DC2626 0%, #B91C1C 100%); }
 
-  /* Equal tops */
-  .top-card { min-height:320px; }
-  @media (max-width: 640px){ .top-card{ min-height:unset; } }
+    /* Equal tops */
+    .top-card { min-height:320px; }
+    @media (max-width: 640px){ .top-card{ min-height:unset; } }
 
-  /* --- Game blocks --- */
-  .game-card .game-col { display:flex; flex-direction:column; }
-  .game-card .game-col.-col { min-height: 340px; }
-  @media (max-width: 640px){ .game-card .game-col.-col { min-height: unset; } }
-  .game-card .push-end { margin-top:auto; }
-  .col-summary { border-top: 1px solid #e5e7eb; padding-top: .75rem; }
+    /* --- Game blocks --- */
+    .game-card .game-col { display:flex; flex-direction:column; }
+    .game-card .game-col.-col { min-height: 340px; }
+    @media (max-width: 640px){ .game-card .game-col.-col { min-height: unset; } }
+    .game-card .push-end { margin-top:auto; }
+    .col-summary { border-top: 1px solid #e5e7eb; padding-top: .75rem; }
 
-  /* Info banners */
-  .banner { display:flex; align-items:center; gap:.6rem; border-radius:.75rem; padding:.5rem .75rem; font-weight:700; }
-  .banner-live { background:#ecfeff; color:#155e75; border:1px solid #a5f3fc; }
-  .banner-archive { background:#f8fafc; color:#334155; border:1px solid #e2e8f0; }
+    /* Info banners */
+    .banner { display:flex; align-items:center; gap:.6rem; border-radius:.75rem; padding:.5rem .75rem; font-weight:700; }
+    .banner-live { background:#ecfeff; color:#155e75; border:1px solid #a5f3fc; }
+    .banner-archive { background:#f8fafc; color:#334155; border:1px solid #e2e8f0; }
 
-  /* Polished table wrapper with scroll + custom scrollbar */
-  .table-wrap{ border:1px solid #e5e7eb; border-radius:.75rem; background:#fff; overflow:hidden; }
-  .table-scroll{ max-height:420px; overflow:auto; }
-  .table-scroll::-webkit-scrollbar{ width:10px; height:10px; }
-  .table-scroll::-webkit-scrollbar-thumb{ background:#cbd5e1; border-radius:999px; }
-  .table-scroll::-webkit-scrollbar-track{ background:#f1f5f9; border-radius:999px; }
+    /* Table wrapper */
+    .table-wrap{ border:1px solid #e5e7eb; border-radius:.75rem; background:#fff; overflow:hidden; }
+    .table-scroll{ max-height:420px; overflow:auto; }
+    .table-scroll::-webkit-scrollbar{ width:10px; height:10px; }
+    .table-scroll::-webkit-scrollbar-thumb{ background:#cbd5e1; border-radius:999px; }
+    .table-scroll::-webkit-scrollbar-track{ background:#f1f5f9; border-radius:999px; }
 
-  /* Summary panel gradient */
-  .summary-panel{ background:linear-gradient(180deg,#eef2ff 0%, #e0e7ff 100%); }
-</style>
+    /* Summary panel gradient */
+    .summary-panel{ background:linear-gradient(180deg,#eef2ff 0%, #e0e7ff 100%); }
+  </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
   <header class="bg-white shadow p-4">
@@ -148,7 +148,6 @@
   <div class="max-w-6xl mx-auto px-4 pt-2 text-center text-2xl font-bold text-[#1e3a8a]">
     WELKOM TERUG, <span id="wbName">GEBRUIKER</span>
   </div>
-
   <main class="flex-grow p-4 pb-16">
     <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 items-start">
       <!-- LEFT -->
@@ -198,10 +197,11 @@
         </p>
       </section>
     </div>
+
     <!-- GAMES: DILEMMA + Blitstiek & Slimstiek (shadow-mode) -->
     <div class="max-w-6xl mx-auto space-y-6 mt-6">
 
-      <!-- DILEMMA (polished layout) -->
+      <!-- DILEMMA -->
       <section class="card p-5 md:p-6 game-card">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-xl font-extrabold text-slate-900">DILEMMA</h2>
@@ -231,7 +231,6 @@
               <strong>10%-bonus vir betalende ondersteuners in die afgelope 30 dae</strong>.
             </p>
 
-            <!-- Polished table wrapper -->
             <div class="table-wrap">
               <div class="table-scroll">
                 <table class="table text-sm w-full">
@@ -290,12 +289,13 @@
           </div>
         </div>
       </section>
-
-      <!-- BLITSTIEK (shadow-mode; unchanged logic; slightly cleaner table frame for consistency) -->
+      <!-- BLITSTIEK (updated rules) -->
       <section class="card p-5 md:p-6 game-card">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-xl font-extrabold text-slate-900">BLITSTIEK</h2>
-          <div id="bannerBlit" class="banner banner-live">Vandag (live): Vroeë bonus, Verbetering, Finale posisie @ 23:55</div>
+          <div id="bannerBlit" class="banner banner-live">
+            Vandag (live): <span class="font-semibold">&lt;60s = +100</span> | <span class="font-semibold">&lt;30s = +200</span> • Posisionele bonus @ 23:55
+          </div>
         </div>
 
         <div class="grid md:grid-cols-2 gap-4 items-start">
@@ -305,7 +305,7 @@
               <div class="mt-2 flex items-end gap-4">
                 <div>
                   <div id="totalPointsBlit" class="text-4xl md:text-5xl font-extrabold mono text-emerald-900">0</div>
-                  <div class="text-xs uppercase tracking-wide text-emerald-900/70">Vandag se voorlopige punte</div>
+                  <div class="text-xs uppercase tracking-wide text-emerald-900/70">Vandag se punte (voorlopig tot 23:55)</div>
                 </div>
                 <div class="ml-auto text-right">
                   <div class="text-xs text-emerald-900/70">Vermenigvuldiger</div>
@@ -321,13 +321,27 @@
                     <tr><th>Komponent</th><th class="text-right">Reël</th><th class="text-right">Punte</th></tr>
                   </thead>
                   <tbody id="breakdownBodyBlit">
-                    <tr><td>Vroeë bonus vir eerste 10 tye ná 07:00 opgestel</td><td class="text-right mono">+20 indien van toepassing</td><td class="text-right mono" id="blitEarlyCell">0</td></tr>
-                    <tr><td>Verbeter jou eie beste tyd vir die dag</td><td class="text-right mono">+30 (maks 1/dag)</td><td class="text-right mono" id="blitImproveCell">0</td></tr>
-                    <tr><td>Finale posisie om 23:55</td><td class="text-right mono">120/90/70/60/50/40/30/25/20/15</td><td class="text-right mono" id="blitPlaceCell">0</td></tr>
-                    <tr class="archiveOnly hidden"><td>Argief: PB-punt</td><td class="text-right mono">+10 (eenmalig per dag)</td><td class="text-right mono" id="blitPBArchiveCell">0</td></tr>
+                    <tr>
+                      <td>Drempel-bonus (vandag of argief)</td>
+                      <td class="text-right mono">&lt;60s: +100 • &lt;30s: +200 (eenmalig)</td>
+                      <td class="text-right mono" id="blitThrCell">0</td>
+                    </tr>
+                    <tr class="liveOnly">
+                      <td>Finale posisie om 23:55</td>
+                      <td class="text-right mono">200/175/150/125/100/75/50/40/30/20</td>
+                      <td class="text-right mono" id="blitPlaceCell">0</td>
+                    </tr>
+                    <tr class="liveOnly">
+                      <td>Ondersteuner-aanvulling</td>
+                      <td class="text-right mono">+10% op dag se punte</td>
+                      <td class="text-right mono" id="blitSupCell">0</td>
+                    </tr>
                   </tbody>
                   <tfoot>
-                    <tr><td class="font-extrabold text-slate-900">Totaal (vandag)</td><td></td><td id="totalCellBlit" class="text-right font-extrabold mono text-emerald-900">0</td></tr>
+                    <tr>
+                      <td class="font-extrabold text-slate-900">Totaal (vandag)</td><td></td>
+                      <td id="totalCellBlit" class="text-right font-extrabold mono text-emerald-900">0</td>
+                    </tr>
                   </tfoot>
                 </table>
               </div>
@@ -336,14 +350,13 @@
             <details class="mt-4">
               <summary class="font-bold text-slate-800 cursor-pointer">Só verdien jy Blitstiek-punte</summary>
               <ul class="text-sm text-slate-700 mt-2 list-disc pl-5 space-y-1">
-                <li>Die ranglys wys nooit meer as die 10 beste tye nie. <em>Jou naam mag net een keer op die ranglys wees; </em> 'n beter tyd vervang dus 'n vorige swakker tyd.</li>
-                <li>Jy kan soggens van 07:00 af tot saans om 23:55 bonuspunte verdien as jy die ranglys haal.</li>
-                <li>Die eerste 10 spelers wat die ranglys ná 07:00 haal, kry 20 bonuspunte. Daarna kry jy 30 bonuspunte as jy op jou eerste tyd kan verbeter.</li>
-                <li> Saans om 23:55 word bonuspunte aan die eerste 10 spelers op die dag se ranglys toegeken:</li>
-                <li> 1: 120; 2: 90; 3: 70; 4: 60; 5: 50; 6: 40; 7: 30; 8: 25; 9: 20; 10: 15.</li>
-                <li>As jy 'n betalende ondersteuner van Kriptiek is, kry jy 10% ekstra by jou dag se punte (maal 1,1), met 'n maksimum van 200 punte pr dag.</li>
-                <li>Jy kan ook punte verdien deur die Blitstiek van vorige dae op die argief te speel, maar jy kan nie daarvoor bonuspunte verdien of die ranglys vir daardie dag haal nie.</li>
+                <li>Die ranglys wys nooit meer as die dag se 10 beste tye nie. Jou naam mag net een keer op die ranglys wees; ’n beter tyd vervang dus ’n vorige swakker tyd.</li>
+                <li>Jy kry onmiddellik <strong>100 bonuspunte</strong> as jou tyd onder 60 sekondes is.</li>
+                <li>Jy kry onmiddellik <strong>200 bonuspunte</strong> as jou tyd onder 30 sekondes is.</li>
+                <li>Saans om 23:55 word bonuspunte aan die eerste 10 spelers op die dag se ranglys toegeken: <strong>1: 200; 2: 175; 3: 150; 4: 125; 5: 100; 6: 75; 7: 50; 8: 40; 9: 30; 10: 20</strong>.</li>
                 <li>As tye gelyk is, word die een eerste geplaas wat die vroegste in die dag aangeteken is.</li>
+                <li>As jy ’n betalende ondersteuner van Kriptiek is, kry jy <strong>10% ekstra</strong> by jou dag se punte (maal 1,1).</li>
+                <li><strong>Argief:</strong> Jy kan nie bonuspunte kry of die ranglys haal vir ouer Blitstieks nie, maar jy kan wel dieselfde drempelpunte kry vir ’n uitstekende tyd: <strong>&lt;60s = +100</strong> of <strong>&lt;30s = +200</strong>.</li>
               </ul>
             </details>
 
@@ -368,7 +381,8 @@
           </div>
         </div>
       </section>
-      <!-- SLIMSTIEK (shadow-mode; consistent frame) -->
+
+      <!-- SLIMSTIEK (unchanged for now) -->
       <section class="card p-5 md:p-6 game-card">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-xl font-extrabold text-slate-900">SLIMSTIEK</h2>
@@ -411,18 +425,18 @@
             </div>
 
             <details class="mt-4">
-  <summary class="font-bold text-slate-800 cursor-pointer">Só verdien jy Slimstiek-punte</summary>
-  <ul class="text-sm text-slate-700 mt-2 list-disc pl-5 space-y-1">
-    <li>Die ranglys wys nooit meer as die 10 beste tellings nie. <em>Jou naam mag net een keer op die ranglys wees;</em> ’n beter telling vervang dus ’n vorige swakker telling.</li>
-    <li>Jy kan soggens van 07:00 af tot saans om 23:55 bonuspunte verdien as jy die ranglys haal.</li>
-    <li>Die eerste 10 spelers wat die ranglys ná 07:00 haal, kry 20 bonuspunte. Daarna kry jy 30 bonuspunte as jy op jou eerste telling kan verbeter.</li>
-    <li>Saans om 23:55 word bonuspunte aan die eerste 10 spelers op die dag se ranglys toegeken:</li>
-    <li>1: 120; 2: 90; 3: 70; 4: 60; 5: 50; 6: 40; 7: 30; 8: 25; 9: 20; 10: 15.</li>
-    <li>As jy ’n betalende ondersteuner van Kriptiek is, kry jy 10% ekstra by jou dag se punte (maal 1,1), met ’n maksimum van 200 punte per dag.</li>
-    <li>Jy kan ook punte verdien deur die Slimstiek van vorige dae op die argief te speel, maar jy kan nie daarvoor bonuspunte verdien of die ranglys vir daardie dag haal nie.</li>
-    <li>As tellings gelyk is, word die een eerste geplaas wat die vroegste in die dag aangeteken is.</li>
-  </ul>
-</details>
+              <summary class="font-bold text-slate-800 cursor-pointer">Só verdien jy Slimstiek-punte</summary>
+              <ul class="text-sm text-slate-700 mt-2 list-disc pl-5 space-y-1">
+                <li>Die ranglys wys nooit meer as die 10 beste tellings nie. <em>Jou naam mag net een keer op die ranglys wees;</em> ’n beter telling vervang dus ’n vorige swakker telling.</li>
+                <li>Jy kan soggens van 07:00 af tot saans om 23:55 bonuspunte verdien as jy die ranglys haal.</li>
+                <li>Die eerste 10 spelers wat die ranglys ná 07:00 haal, kry 20 bonuspunte. Daarna kry jy 30 bonuspunte as jy op jou eerste telling kan verbeter.</li>
+                <li>Saans om 23:55 word bonuspunte aan die eerste 10 spelers op die dag se ranglys toegeken:</li>
+                <li>1: 120; 2: 90; 3: 70; 4: 60; 5: 50; 6: 40; 7: 30; 8: 25; 9: 20; 10: 15.</li>
+                <li>As jy ’n betalende ondersteuner van Kriptiek is, kry jy 10% ekstra by jou dag se punte (maal 1,1), met ’n maksimum van 200 punte per dag.</li>
+                <li>Jy kan ook punte verdien deur die Slimstiek van vorige dae op die argief te speel, maar jy kan nie daarvoor bonuspunte verdien of die ranglys vir daardie dag haal nie.</li>
+                <li>As tellings gelyk is, word die een eerste geplaas wat die vroegste in die dag aangeteken is.</li>
+              </ul>
+            </details>
 
             <div class="push-end"></div>
           </div>
@@ -459,7 +473,6 @@
     <a href="/about.html" class="underline px-1.5">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline px-1.5">Kontak ons</a>
   </footer>
-
   <!-- Header background letter grid -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -519,17 +532,14 @@
     const STREAK_MULTIPLIER = 1.10;
     const SUPPORTER_MULTIPLIER = 1.10;
 
-    // ---- New: Blitstiek & Slimstiek (shadow mode) ----
+    // ---- Blitstiek & Slimstiek (shadow) config ----
     const K_CONF = {
-      EARLY_BIRD_WINDOW_START: "07:00",
       CUTOFF_TIME: "23:55",
       LEADERBOARD_SIZE: 10,
-      EARLY_BIRD_POINTS: 20,
-      IMPROVE_POINTS: 30,
-      FINAL_POINTS: [120,90,70,60,50,40,30,25,20,15],
-      DAILY_CAP_PER_GAME: 200,
-      ARCHIVE_PB_POINTS: 10,
-      ARCHIVE_DAY_CAP: 10,
+      THR_SUB60: 100,
+      THR_SUB30: 200,
+      FINAL_POINTS: [200, 175, 150, 125, 100, 75, 50, 40, 30, 20],
+      ARCHIVE_PB_POINTS: 10,         // still used by Slimstiek's current rules
       SUPPORTER_MULTIPLIER: 1.10
     };
 
@@ -538,6 +548,7 @@
     const fmt = (n) => (typeof n === "number" ? n.toLocaleString("af-ZA") : n);
     const wbName = $("wbName"); const errBanner = $("errBanner");
     const supporterBanner = $("supporterBanner"); const supporterBannerTxt = $("supporterBannerTxt");
+
     // Dilemma els
     const totalPointsEl = $("totalPoints"), subtotalCell = $("subtotalCell"), totalCell = $("totalCell");
     const breakdownBody = $("breakdownBody"), distWrap = $("distWrap");
@@ -546,12 +557,16 @@
     const streakChip = $("streakChip"), multiplierLabel = $("multiplierLabel"), calcTime = $("calcTime");
     const lopieMeta = $("lopieMeta"), supporterMeta = $("supporterMeta");
     const pillOverall = $("pillOverall"), pillDilemmaLive = $("pillDilemmaLive");
-    // Blitstiek els
-    const bannerBlit = $("bannerBlit"), blitEarlyCell = $("blitEarlyCell"), blitImproveCell = $("blitImproveCell");
-    const blitPlaceCell = $("blitPlaceCell"), blitPBArchiveCell = $("blitPBArchiveCell");
+
+    // Blitstiek els (updated)
+    const bannerBlit = $("bannerBlit");
+    const blitThrCell = $("blitThrCell");
+    const blitPlaceCell = $("blitPlaceCell");
+    const blitSupCell = $("blitSupCell");
     const totalPointsBlit = $("totalPointsBlit"), totalCellBlit = $("totalCellBlit"), calcTimeBlit = $("calcTimeBlit");
     const multiplierLabelBlit = $("multiplierLabelBlit");
-    // Slimstiek els
+
+    // Slimstiek els (unchanged)
     const bannerSlim = $("bannerSlim"), slimEarlyCell = $("slimEarlyCell"), slimImproveCell = $("slimImproveCell");
     const slimPlaceCell = $("slimPlaceCell"), slimPBArchiveCell = $("slimPBArchiveCell");
     const totalPointsSlim = $("totalPointsSlim"), totalCellSlim = $("totalCellSlim"), calcTimeSlim = $("calcTimeSlim");
@@ -581,7 +596,7 @@
     // -------- gate: must be signed in --------
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        const ret = encodeURIComponent("/profiletest.html");
+        const ret = encodeURIComponent("/profile.html");
         window.location.href = `/login.html?return=${ret}`;
         return;
       }
@@ -711,20 +726,22 @@
 
     function configureGameBanners(){
       if (IS_ARCHIVE) {
-        bannerBlit.textContent = `ARGIEF — slegs PB-punte (+10) • Dag: ${GAME_DATE}`;
+        bannerBlit.textContent = `ARGIEF — Geen ranglys/posisie. Drempelpunte slegs: <60s = +100 | <30s = +200 • Dag: ${GAME_DATE}`;
         bannerBlit.classList.remove("banner-live"); bannerBlit.classList.add("banner-archive");
         bannerSlim.textContent = `ARGIEF — slegs PB-punte (+10) • Dag: ${GAME_DATE}`;
         bannerSlim.classList.remove("banner-live"); bannerSlim.classList.add("banner-archive");
         document.querySelectorAll(".archiveOnly").forEach(el=>el.classList.remove("hidden"));
+        document.querySelectorAll(".liveOnly").forEach(el=>el.classList.add("hidden"));
       } else {
-        bannerBlit.textContent = "Vandag (live): Vroeë bonus, Verbetering, Finale posisie @ 23:55";
+        bannerBlit.innerHTML = `Vandag (live): <span class="font-semibold">&lt;60s = +100</span> | <span class="font-semibold">&lt;30s = +200</span> • Posisionele bonus @ 23:55`;
         bannerBlit.classList.remove("banner-archive"); bannerBlit.classList.add("banner-live");
         bannerSlim.textContent = "Vandag (live): Vroeë bonus, Verbetering, Finale posisie @ 23:55";
         bannerSlim.classList.remove("banner-archive"); bannerSlim.classList.add("banner-live");
+        document.querySelectorAll(".liveOnly").forEach(el=>el.classList.remove("hidden"));
       }
     }
 
-    // -------- Dilemma compute + render --------
+    // -------- Dilemma compute + render (unchanged) --------
     async function loadAndRenderDilemma(uid) {
       const uref = doc(db, "users", uid);
       const uSnap = await getDoc(uref);
@@ -816,7 +833,7 @@
         </tr>`;
       }).join("");
 
-      // Neater distribution bars: track + fill + value
+      // Distribution bars
       const pairs = [['1',dist[1]],['2',dist[2]],['3',dist[3]],['4',dist[4]],['5',dist[5]],['6',dist[6]],['X',dist.fail]];
       const maxv = Math.max(1, ...pairs.map(p => p[1]));
       distWrap.innerHTML = pairs.map(([lb,val]) => {
@@ -851,7 +868,7 @@
       totalPointsEl.textContent   = fmt(total);
     }
 
-    // -------- Shadow-mode renderer + archive PB award --------
+    // -------- Shadow-mode renderer --------
     async function renderShadowGame(uid, gameKey){
       const isBlit = gameKey === "blitstiek";
       const gameRoot = isBlit ? "blitstiekGames" : "slimstiekGames";
@@ -865,12 +882,10 @@
       if (playSnap.exists()) {
         const d = playSnap.data();
         if (isBlit) {
-          kEarly   = Number(d?.kBlit_early||0);
-          kImprove = Number(d?.kBlit_improve||0);
-          kPlace   = Number(d?.kBlit_place||0);
-          kPBArch  = Number(d?.kBlit_pbArchive||0);
-          kTotal   = Number(d?.kBlit_total||0);
+          // new fields
+          // kBlit_thr, kBlit_place, kBlit_sup, kBlit_total
         } else {
+          // Slimstiek legacy fields
           kEarly   = Number(d?.kSlim_early||0);
           kImprove = Number(d?.kSlim_improve||0);
           kPlace   = Number(d?.kSlim_place||0);
@@ -885,30 +900,41 @@
         supporterActive = !!(u?.supporterActive === true || (u?.supporterUntil?.toMillis && u.supporterUntil.toMillis()>Date.now()));
       }
 
-      if (IS_ARCHIVE && kPBArch === 0) {
+      // For Slimstiek (unchanged): keep archive PB +10
+      if (!isBlit && IS_ARCHIVE && kPBArch === 0) {
         const lbUserSnap = await getDoc(lbUserRef);
         if (lbUserSnap.exists() && lbUserSnap.data()?.[metricField] != null) {
           const delta = K_CONF.ARCHIVE_PB_POINTS;
-          if (isBlit) {
-            await setDoc(userPlayRef, { kBlit_pbArchive: delta, kBlit_total: (kTotal||0)+delta }, { merge:true });
-            kPBArch = delta; kTotal = (kTotal||0)+delta;
-          } else {
-            await setDoc(userPlayRef, { kSlim_pbArchive: delta, kSlim_total: (kTotal||0)+delta }, { merge:true });
-            kPBArch = delta; kTotal = (kTotal||0)+delta;
-          }
+          await setDoc(userPlayRef, { kSlim_pbArchive: delta, kSlim_total: (kTotal||0)+delta }, { merge:true });
+          kPBArch = delta; kTotal = (kTotal||0)+delta;
         }
       }
 
       if (isBlit) {
-        blitEarlyCell.textContent = fmt(kEarly);
-        blitImproveCell.textContent = fmt(kImprove);
-        blitPlaceCell.textContent = fmt(kPlace);
-        blitPBArchiveCell.textContent = fmt(kPBArch);
-        totalCellBlit.textContent = fmt(kTotal);
-        totalPointsBlit.textContent = fmt(kTotal);
-        multiplierLabelBlit.textContent = supporterActive ? "×1.10" : "×1.00";
+        // Read new Blitstiek fields
+        let kThr=0, kPl=0, kSup=0, kTot=0;
+        if (playSnap.exists()){
+          const d = playSnap.data();
+          kThr = Number(d?.kBlit_thr || 0);
+          kPl  = Number(d?.kBlit_place || 0);
+          kSup = Number(d?.kBlit_sup || 0);
+          kTot = Number(d?.kBlit_total || 0);
+        }
+
+        // In archive, only thresholds apply
+        if (IS_ARCHIVE) { kPl = 0; kSup = 0; }
+        if (!kTot) { kTot = kThr + kPl + kSup; } // fallback if total not pre-written
+
+        blitThrCell.textContent = fmt(kThr);
+        blitPlaceCell.textContent = fmt(kPl);
+        blitSupCell.textContent = fmt(kSup);
+        totalCellBlit.textContent = fmt(kTot);
+        totalPointsBlit.textContent = fmt(kTot);
+
+        multiplierLabelBlit.textContent = (supporterActive && !IS_ARCHIVE) ? "×1.10" : "×1.00";
         calcTimeBlit.textContent = new Date().toLocaleString("af-ZA");
       } else {
+        // Slimstiek unchanged
         slimEarlyCell.textContent = fmt(kEarly);
         slimImproveCell.textContent = fmt(kImprove);
         slimPlaceCell.textContent = fmt(kPlace);
