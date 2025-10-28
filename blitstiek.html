@@ -434,22 +434,9 @@
         : shareTextLinkOnly(GAME_ID);
     }
 
-    /* ==== K mirror config & ZA time helpers ==== */
-    const K_CONF = {
-      EARLY_BIRD_WINDOW_START: "07:00",
-      CUTOFF_TIME: "23:55",
-      LEADERBOARD_SIZE: 10,
-      EARLY_BIRD_POINTS: 20,
-      IMPROVE_POINTS: 30,
-      FINAL_POINTS: [120,90,70,60,50,40,30,25,20,15],
-      DAILY_CAP_PER_GAME: 200,
-      SUPPORTER_MULTIPLIER: 1.10
-    };
-    function gameDateFromId(id){ return id.replace(/^Game/,''); }
-    function zaTimeOn(dateStr, hhmm){
-      const [h,m] = hhmm.split(":").map(Number);
-      return new Date(`${dateStr}T${String(h-2).padStart(2,'0')}:${String(m).padStart(2,'0')}:00.000Z`);
-    }
+    /* ==== NEW: constants for the simplified scoring ==== */
+    const LB_SIZE = 10; // leaderboard shows max 10
+    // Final placement points will be added by the nightly job; thresholds are instant on client.
 
     /* ---- Mechanics ---- */
     const H = 10, W = 8;
@@ -461,6 +448,8 @@
     let user=null;
     let currentUserName='Speler';
     let GAME_ID=null, TARGET='';
+    let TODAY_ID=`Game${todayISO()}`; // set early; rechecked after resolve
+    let IS_ARCHIVE=false;             // NEW: set after GAME_ID is resolved
     let grid=Array.from({length:H},()=>Array(W).fill(null));
     let cur=null, nxt=null;
     let paused=false, ended=false, moving=false;
@@ -816,7 +805,7 @@
       const runsCol = collection(db,'blitstiekGames', GAME_ID, 'runs');
       const bestRef = doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid);
 
-      // Upsert best (smaller is better). Keep last timestamp for tiebreaks.
+      // Upsert best (smaller is better). Keep timestamp for tiebreaks.
       try {
         const bestSnap = await getDoc(bestRef);
         const prev = bestSnap.exists() ? Number(bestSnap.data().time) : null;
@@ -828,7 +817,7 @@
           }, { merge:true });
         } else {
           // still update display name
-          await setDoc(bestRef, { userName: name }, { merge:true });
+          await setDoc(bestRef, { userName: name }, { merge: true });
         }
       } catch (e) { console.warn('BEST_UPDATE_FAILED', e); }
 
@@ -847,150 +836,112 @@
       } catch (e) { console.warn('RUN_APPEND/TRIM_FAILED', e); }
     }
 
-    /* ==== Mirror Blitstiek points into userGames/plays & expose to leaderboard ==== */
-    async function mirrorBlitstiekPoints(){
+    /* ==== NEW: instant threshold awarding (client) ==== */
+    function thresholdPointsFromSeconds(sec){
+      if (sec < 30) return 200;
+      if (sec < 60) return 100;
+      return 0;
+    }
+
+    async function awardThresholdForTime(seconds){ // NEW
       if (!user || !GAME_ID) return;
+      const thr = thresholdPointsFromSeconds(Number(seconds));
+      if (thr <= 0) {
+        // Still ensure kBlit_total exists (0) so profile/leaderboard pills behave consistently
+        const playRef = doc(db, `userGames/${user.uid}/plays/${GAME_ID}`);
+        const snap = await getDoc(playRef);
+        const kPlace = snap.exists() ? Number(snap.data()?.kBlit_place || 0) : 0;
+        const kSup   = snap.exists() ? Number(snap.data()?.kBlit_sup   || 0) : 0;
+        const total  = IS_ARCHIVE ? 0 : (kPlace + kSup);
+        await setDoc(playRef, { kBlit_thr: 0, kBlit_total: total, updatedAt: serverTimestamp() }, { merge:true });
+        return;
+      }
 
-      // supporter flag
-      let supporterActive = false;
-      try {
-        const uSnap = await getDoc(doc(db, "users", user.uid));
-        if (uSnap.exists()){
-          const u = uSnap.data();
-          supporterActive = !!(u?.supporterActive === true ||
-            (u?.supporterUntil?.toMillis && u.supporterUntil.toMillis() > Date.now()));
-        }
-      } catch {}
-
-      const dateStr = gameDateFromId(GAME_ID);
-
-      // current best + time it was achieved
-      const bestRef = doc(db, `blitstiekGames/${GAME_ID}/leaderboard/${user.uid}`);
-      const bestSnap = await getDoc(bestRef);
-      const haveBest = bestSnap.exists();
-
-      // read existing k fields
       const playRef = doc(db, `userGames/${user.uid}/plays/${GAME_ID}`);
-      const playSnap = await getDoc(playRef);
-      let kEarly=0, kImprove=0, kPlace=0, kTotal=0;
-
-      if (playSnap.exists()){
-        const d = playSnap.data();
-        kEarly   = Number(d?.kBlit_early   || 0);
-        kImprove = Number(d?.kBlit_improve || 0);
-        kPlace   = Number(d?.kBlit_place   || 0);
-        kTotal   = Number(d?.kBlit_total   || 0);
+      const snap = await getDoc(playRef);
+      let prevThr = 0, kPlace=0, kSup=0;
+      if (snap.exists()){
+        const d = snap.data();
+        prevThr = Number(d?.kBlit_thr || 0);
+        kPlace  = Number(d?.kBlit_place || 0);
+        kSup    = Number(d?.kBlit_sup   || 0);
       }
+      const newThr = Math.max(prevThr, thr); // upgrade 100 -> 200 if improved
+      const newTotal = IS_ARCHIVE ? newThr : (newThr + kPlace + kSup);
 
-      const now = nowZa();
-
-      // EARLY: first 10 by timestamp after 07:00 ZA, once
-      if (kEarly === 0 && haveBest && now >= zaTimeOn(dateStr, K_CONF.EARLY_BIRD_WINDOW_START)) {
-        try {
-          const qEarly = query(
-            collection(db, `blitstiekGames/${GAME_ID}/leaderboard`),
-            orderBy("timestamp","asc"),
-            limit(10)
-          );
-          const eSnap = await getDocs(qEarly);
-          const inTop10 = eSnap.docs.some(d => d.id === user.uid);
-          if (inTop10) kEarly = K_CONF.EARLY_BIRD_POINTS;
-        } catch {}
-      }
-
-      // IMPROVE: grant once per day the first time you have a recorded best
-      if (kImprove === 0 && haveBest) {
-        kImprove = K_CONF.IMPROVE_POINTS;
-      }
-
-      // PLACE: only after cutoff; grant once
-      if (kPlace === 0 && now >= zaTimeOn(dateStr, K_CONF.CUTOFF_TIME)) {
-        try {
-          const qRank = query(
-            collection(db, `blitstiekGames/${GAME_ID}/leaderboard`),
-            orderBy("time","asc"),
-            orderBy("timestamp","asc"),
-            limit(K_CONF.LEADERBOARD_SIZE)
-          );
-          const rSnap = await getDocs(qRank);
-          const pos = rSnap.docs.findIndex(d => d.id === user.uid);
-          if (pos >= 0 && pos < K_CONF.FINAL_POINTS.length) {
-            kPlace = K_CONF.FINAL_POINTS[pos];
-          }
-        } catch {}
-      }
-
-      // TOTAL with supporter multiplier + daily cap
-      const base = kEarly + kImprove + kPlace;
-      const mult = supporterActive ? K_CONF.SUPPORTER_MULTIPLIER : 1;
-      kTotal = Math.min(Math.round(base * mult), K_CONF.DAILY_CAP_PER_GAME);
-
-      // persist in private play doc
       await setDoc(playRef, {
-        kBlit_early:   kEarly,
-        kBlit_improve: kImprove,
-        kBlit_place:   kPlace,
-        kBlit_total:   kTotal,
+        finished: true,
+        kBlit_thr: newThr,
+        kBlit_total: newTotal,
         updatedAt: serverTimestamp()
       }, { merge:true });
 
-      // also expose on leaderboard row for public rendering of the green pill
-      try {
-        await setDoc(bestRef, { kBlit_total: kTotal }, { merge: true });
-      } catch {}
+      // expose to leaderboard row for public display
+      const bestRef = doc(db, `blitstiekGames/${GAME_ID}/leaderboard/${user.uid}`);
+      try { await setDoc(bestRef, { kBlit_total: newTotal }, { merge:true }); } catch {}
+    }
+
+    /* ==== NEW: keep leaderboard pill synced from play doc (also on page load) ==== */
+    async function syncLeaderboardPillFromPlay(){ // NEW
+      if (!user || !GAME_ID) return;
+      const playRef = doc(db, `userGames/${user.uid}/plays/${GAME_ID}`);
+      const snap = await getDoc(playRef);
+      if (!snap.exists()) return;
+      const total = Number(snap.data()?.kBlit_total || 0);
+      const bestRef = doc(db, `blitstiekGames/${GAME_ID}/leaderboard/${user.uid}`);
+      try { await setDoc(bestRef, { kBlit_total: total }, { merge:true }); } catch {}
     }
 
     /* ---- LIVE Leaderboard (now with green pill) ---- */
     function startLiveLeaderboard(){
-  if(lbUnsub) { lbUnsub(); lbUnsub=null; }
+      if(lbUnsub) { lbUnsub(); lbUnsub=null; }
 
-  const qy = query(
-    collection(db,'blitstiekGames', GAME_ID, 'leaderboard'),
-    orderBy('time','asc'),
-    limit(25) // pull a few extra for clean client tie-break
-  );
+      const qy = query(
+        collection(db,'blitstiekGames', GAME_ID, 'leaderboard'),
+        orderBy('time','asc'),
+        limit(25) // pull a few extra for clean client tie-break
+      );
 
-  lbUnsub = onSnapshot(qy, (snap)=>{
-    lbList.innerHTML = '';
+      lbUnsub = onSnapshot(qy, (snap)=>{
+        lbList.innerHTML = '';
 
-    if (snap.empty) {
-      bestText.textContent='--:--';
-      lbList.innerHTML = `<li class="bg-green-100 font-medium"><span>Jy kan eerste op die leierbord wees!</span></li>`;
-      return;
+        if (snap.empty) {
+          bestText.textContent='--:--';
+          lbList.innerHTML = `<li class="bg-green-100 font-medium"><span>Jy kan eerste op die leierbord wees!</span></li>`;
+          return;
+        }
+
+        // stable client-side tiebreak: time ASC, then timestamp ASC
+        const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        rows.sort((a,b)=>{
+          const ta = Number(a.time) || Infinity;
+          const tb = Number(b.time) || Infinity;
+          if (ta !== tb) return ta - tb;
+          const sa = a.timestamp?.toMillis?.() ? a.timestamp.toMillis() : 9e15;
+          const sb = b.timestamp?.toMillis?.() ? b.timestamp.toMillis() : 9e15;
+          return sa - sb;
+        });
+
+        const top = rows.slice(0,LB_SIZE);
+
+        if (top.length) bestText.textContent = fmt(Number(top[0].time));
+
+        top.forEach(v => {
+          const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
+          const pill = (typeof v.kBlit_total === 'number' && v.kBlit_total > 0)
+            ? `<span class="k-pill" title="Vandag se Blitstiek-telling">${v.kBlit_total}</span>`
+            : '';
+          const li = document.createElement('li');
+          li.innerHTML = `<span><strong>${(v.userName||'Onbekend')}</strong>${you}: ${fmt(Number(v.time))}</span>${pill}`;
+          lbList.appendChild(li);
+        });
+
+      }, (err) => {
+        console.warn('Leaderboard stream error:', err);
+        const msg = (err && (err.code || err.message)) ? ` – ${err.code||err.message}` : '';
+        lbList.innerHTML = `<li class="px-2 py-1 rounded bg-red-50 text-red-700">Kon nie leierbord laai nie${msg}.</li>`;
+      });
     }
-
-    // stable client-side tiebreak: time ASC, then timestamp ASC
-    const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    rows.sort((a,b)=>{
-      const ta = Number(a.time) || Infinity;
-      const tb = Number(b.time) || Infinity;
-      if (ta !== tb) return ta - tb;
-      const sa = a.timestamp?.toMillis?.() ? a.timestamp.toMillis() : 9e15;
-      const sb = b.timestamp?.toMillis?.() ? b.timestamp.toMillis() : 9e15;
-      return sa - sb;
-    });
-
-    const top = rows.slice(0,10);
-
-    if (top.length) bestText.textContent = fmt(Number(top[0].time));
-
-    top.forEach(v => {
-      const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
-      const pill = (typeof v.kBlit_total === 'number' && v.kBlit_total > 0)
-  ? `<span class="k-pill" title="Vandag se Blitstiek-telling">${v.kBlit_total}</span>`
-  : '';
-      const li = document.createElement('li');
-      li.innerHTML = `<span><strong>${(v.userName||'Onbekend')}</strong>${you}: ${fmt(Number(v.time))}</span>${pill}`;
-      lbList.appendChild(li);
-    });
-
-  }, (err) => {
-    console.warn('Leaderboard stream error:', err);
-    const msg = (err && (err.code || err.message)) ? ` – ${err.code||err.message}` : '';
-    lbList.innerHTML = `<li class="px-2 py-1 rounded bg-red-50 text-red-700">Kon nie leierbord laai nie${msg}.</li>`;
-  });
-}
-
 
     /* ---- Dynamic resolver ---- */
     async function resolveGameId(){
@@ -1031,6 +982,10 @@
         }
       } catch {}
 
+      // NEW: set today's id & archive flag after GAME_ID is known
+      TODAY_ID = `Game${todayISO()}`;
+      IS_ARCHIVE = !!(GAME_ID && GAME_ID !== TODAY_ID);
+
       if(!GAME_ID){
         targetEl.innerHTML = `<span>—</span>`;
         drawGrid();
@@ -1067,8 +1022,8 @@
 
       startLiveLeaderboard();
 
-      // Backfill mirror if user already has a best today
-      if (user) { mirrorBlitstiekPoints(); }
+      // NEW: if the user already has a play doc, sync pill to leaderboard
+      if (user) { await syncLeaderboardPillFromPlay(); }
     }
 
     /* ---- Controls ---- */
@@ -1078,12 +1033,13 @@
     btnDown .addEventListener('click', ()=>hardDrop());
 
     /* ---- Finish ---- */
-    function end(win){
+    async function end(win){
       ended=true; clearInterval(tInt); clearInterval(gInt);
       if(!win) return;
 
-      submitTimeToBoard();
-      mirrorBlitstiekPoints();   // ensure profile + leaderboard row get today’s values
+      await submitTimeToBoard();             // write/upgrade best time
+      await awardThresholdForTime(t);        // NEW: instant 100/200 (or 0), update total & pill
+      await syncLeaderboardPillFromPlay();   // NEW: ensure pill reflects latest total
 
       enableStickyShare({ time: t, target: TARGET });
 
