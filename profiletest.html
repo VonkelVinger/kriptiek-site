@@ -291,7 +291,7 @@
         </div>
       </section>
 
-      <!-- BLITSTIEK (shadow-mode; unchanged logic; slightly cleaner table frame for consistency) -->
+      <!-- BLITSTIEK (shadow-mode; updated rules) -->
       <section class="card p-5 md:p-6 game-card">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-xl font-extrabold text-slate-900">BLITSTIEK</h2>
@@ -323,7 +323,7 @@
                   <tbody id="breakdownBodyBlit">
                     <tr><td>Vroeë bonus vir eerste 10 tye ná 07:00 opgestel</td><td class="text-right mono">+20 indien van toepassing</td><td class="text-right mono" id="blitEarlyCell">0</td></tr>
                     <tr><td>Verbeter jou eie beste tyd vir die dag</td><td class="text-right mono">+30 (maks 1/dag)</td><td class="text-right mono" id="blitImproveCell">0</td></tr>
-                    <tr><td>Finale posisie om 23:55</td><td class="text-right mono">120/90/70/60/50/40/30/25/20/15</td><td class="text-right mono" id="blitPlaceCell">0</td></tr>
+                    <tr><td>Finale posisie om 23:55</td><td class="text-right mono">200/175/150/125/100/75/50/40/30/20</td><td class="text-right mono" id="blitPlaceCell">0</td></tr>
                     <tr class="archiveOnly hidden"><td>Argief: PB-punt</td><td class="text-right mono">+10 (eenmalig per dag)</td><td class="text-right mono" id="blitPBArchiveCell">0</td></tr>
                   </tbody>
                   <tfoot>
@@ -338,7 +338,7 @@
               <ul class="text-sm text-slate-700 mt-2 list-disc pl-5 space-y-1">
                 <li>Leierbord: maks. 10 inskrywings; <em>een inskrywing per speler</em> (beste tyd vervang ouer tyd).</li>
                 <li>Tydvensters (ZA): Vroeë bonus vanaf 07:00; Finale posisie om 23:55.</li>
-                <li>Punte (vandag): Vroeë bonus +20; Verbetering +30 (1×/dag); Finale posisie: 120,90,70,60,50,40,30,25,20,15.</li>
+                <li>Punte (vandag): Vroeë bonus +20; Verbetering +30 (1×/dag); Finale posisie: <strong>200, 175, 150, 125, 100, 75, 50, 40, 30, 20</strong>.</li>
                 <li>Ondersteuner: ×1.10 oor vandag se som; daaglikse kap per spel: 200.</li>
                 <li>Argief (verlede dae): Geen vroeë bonus of posisie-punte; <strong>PB-punt +10</strong> (eenmalig per argief-dag).</li>
                 <li>Tiebreke: kortste tyd eerste; gelykstaande tye → vroeër <em>achievedAt</em> wen.</li>
@@ -366,6 +366,7 @@
           </div>
         </div>
       </section>
+
       <!-- SLIMSTIEK (shadow-mode; consistent frame) -->
       <section class="card p-5 md:p-6 game-card">
         <div class="flex items-center justify-between mb-3">
@@ -522,7 +523,7 @@
       LEADERBOARD_SIZE: 10,
       EARLY_BIRD_POINTS: 20,
       IMPROVE_POINTS: 30,
-      FINAL_POINTS: [120,90,70,60,50,40,30,25,20,15],
+      FINAL_POINTS: [200,175,150,125,100,75,50,40,30,20], /* ← updated */
       DAILY_CAP_PER_GAME: 200,
       ARCHIVE_PB_POINTS: 10,
       ARCHIVE_DAY_CAP: 10,
