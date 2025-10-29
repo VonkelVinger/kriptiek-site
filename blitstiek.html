@@ -436,8 +436,6 @@
 
     /* ==== NEW: constants for the simplified scoring ==== */
     const LB_SIZE = 10; // leaderboard shows max 10
-    // Final placement points will be added by the nightly job; thresholds are instant on client.
-
     /* ---- Mechanics ---- */
     const H = 10, W = 8;
     const COLORS = ['#2196f3','#f44336','#4caf50','#ffc107','#9c27b0','#003366','#009688'];
@@ -892,7 +890,7 @@
       try { await setDoc(bestRef, { kBlit_total: total }, { merge:true }); } catch {}
     }
 
-    /* ---- LIVE Leaderboard (now with green pill) ---- */
+    /* ---- LIVE Leaderboard (now with green pill + TODAY fallback) ---- */
     function startLiveLeaderboard(){
       if(lbUnsub) { lbUnsub(); lbUnsub=null; }
 
@@ -928,9 +926,22 @@
 
         top.forEach(v => {
           const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
-          const pill = (typeof v.kBlit_total === 'number' && v.kBlit_total > 0)
-            ? `<span class="k-pill" title="Vandag se Blitstiek-telling">${v.kBlit_total}</span>`
+
+          // NEW fallback (today only)
+          const fallbackToday =
+            !IS_ARCHIVE
+              ? (Number(v.time) < 30 ? 200 : (Number(v.time) < 60 ? 100 : 0))
+              : 0;
+
+          const pillValue =
+            (typeof v.kBlit_total === 'number' && v.kBlit_total > 0)
+              ? v.kBlit_total
+              : fallbackToday;
+
+          const pill = pillValue > 0
+            ? `<span class="k-pill" title="Vandag se Blitstiek-telling">${pillValue}</span>`
             : '';
+
           const li = document.createElement('li');
           li.innerHTML = `<span><strong>${(v.userName||'Onbekend')}</strong>${you}: ${fmt(Number(v.time))}</span>${pill}`;
           lbList.appendChild(li);
