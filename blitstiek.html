@@ -44,6 +44,7 @@
     html,body{height:100%}
     body{font-family:'Montserrat',system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#f9fafb;color:#1f2937}
 
+    /* HEADER */
     header{background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.08);padding:1rem;text-align:center;position:relative;}
     .logo-container{display:flex;justify-content:center;align-items:center;margin-bottom:10px;}
     .logo-container .letter-box{width:40px;height:40px;margin:2px;display:flex;justify-content:center;align-items:center;background:#374151;color:#fff;font-size:1.2rem;font-weight:700;border-radius:6px;}
@@ -52,10 +53,12 @@
     .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
     .headline{text-align:center;font-size:1.125rem;font-weight:700;color:#374151;margin:16px 0 8px;}
 
+    /* Target chips */
     #targetWrap{width:100%;max-width:var(--gridW);margin:0 auto 8px;display:flex;justify-content:center;}
     #target{display:inline-flex;gap:1px;background:var(--cell-bg);color:#fff;padding:2px;border-radius:6px;min-height:34px;align-items:center;}
     #target span{width:30px;height:30px;display:grid;place-items:center;font-weight:800;border:1px solid rgba(255,255,255,.12);}
 
+    /* GRID */
     #grid{
       position:relative;
       display:grid;
@@ -84,21 +87,68 @@
     .cell.f{display:grid;place-items:center;color:#fff;font-weight:800;font-size:var(--cell-font);text-shadow:0 1px 1px rgba(0,0,0,.35);}
     .cell.pop{transform:scale(1.15);opacity:0;}
 
+    /* Modal */
+    #over{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:50;}
+    .modal{background:#fff;border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.2);width:min(92%,520px);padding:18px;text-align:center;border:1px solid #e5e7eb;}
+    .btn{background:#1e3a8a;color:#fff;font-weight:700;padding:10px 16px;border-radius:10px;}
+    .btn.gray{background:#6b7280}
+    .btn:disabled{opacity:.6;cursor:not-allowed;}
+
+    /* Controls */
+    .controls{width:100%;max-width:calc(var(--gridW));margin:8px auto 0;}
+    .arrow-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;}
+    .dir-btn{width:100%;aspect-ratio:1/1;min-width:56px;min-height:56px;display:flex;align-items:center;justify-content:center;background:#053a6b;color:#fff;border-radius:14px;font-weight:800;font-size:24px;}
+    @media (min-width:460px){.dir-btn{min-width:64px;min-height:64px;font-size:26px}}
+    @media (min-width:640px){.dir-btn{min-width:72px;min-height:72px;font-size:28px}}
+
     .pill{background:#0c4a3e;color:#fff;font-weight:700;padding:6px 10px;border-radius:8px;text-align:center;}
     #leaderboardList li{padding:.35rem .5rem;border-radius:.375rem;display:flex;gap:.5rem;align-items:center;justify-content:space-between;}
     #leaderboardList li:nth-child(odd){background:#f3f4f6;}
     #leaderboardList li:first-child{background:#d1fae5;font-weight:700;}
+  /* Green K badge (no dot) */
+.k-pill{
+  display:inline-flex;
+  align-items:center;
+  background:#16a34a;
+  color:#fff;
+  font-weight:800;
+  border-radius:999px;
+  padding:.15rem .5rem;
+  font-size:.75rem;
+  line-height:1;
+}
 
-    .k-pill{
-      display:inline-flex;align-items:center;
-      background:#16a34a;color:#fff;font-weight:800;
-      border-radius:999px;padding:.15rem .5rem;
-      font-size:.75rem;line-height:1;
+    /* Share dropdown */
+    .share-menu-local{
+      background:#fff;border:1px solid #e5e7eb;box-shadow:0 8px 24px rgba(0,0,0,.12);
+      border-radius:.5rem;width:240px;padding:.5rem;z-index:3000;line-height:1.25;
     }
+    .share-menu-local button{
+      width:100%;text-align:left;padding:.5rem .75rem;border-radius:.375rem;font-weight:600;
+      line-height:1.25rem;display:flex;align-items:center;gap:.5rem;white-space:nowrap;
+    }
+    .share-menu-local button:hover{background:#f3f4f6;}
+
+    /* ACTION BAR */
+    .action-grid{
+      display:grid; grid-template-columns:repeat(3,1fr);
+      gap:.5rem; justify-items:center; align-items:center;
+    }
+    .action-grid > a, .action-grid > button{
+      display:grid; place-items:center; width:100%; aspect-ratio:1/1;
+      max-width:120px; padding:0; margin:0; background:transparent !important;
+      border:0; border-radius:0; line-height:0; box-shadow:none; cursor:pointer;
+    }
+    .btn-img{width:100%; height:100%; display:block; object-fit:contain; border-radius:0; box-shadow:0 6px 15px rgba(0,0,0,.25);}
+    .btn-img:hover{transform:translateY(-1px);filter:brightness(1.02)}
+    .btn-img:active{transform:translateY(0);filter:brightness(.98)}
+
+    /* N-R gate */
+    #nrGate{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:60;}
   </style>
 </head>
-
 <body class="min-h-screen flex flex-col">
+  <!-- HEADER -->
   <header>
     <div class="logo-container" aria-label="BLITSTIEK">
       <div class="letter-box">B</div><div class="letter-box">L</div>
@@ -109,6 +159,7 @@
     </div>
     <p class="welcome" id="welcomeLine">Welkom terug, <span id="playerName" class="font-semibold text-green-700">Speler</span>!</p>
   </header>
+
   <main class="flex-1">
     <div class="max-w-3xl mx-auto px-4 py-4">
 
@@ -150,13 +201,12 @@
               </div>
               <div class="flex gap-2 justify-center mt-4">
                 <button id="gateGuestBtn" class="btn">Speel sonder om te registreer</button>
-                <button id="gateRegBtn" class="btn gray">Registreer</button>
+                <button id="gateRegBtn"   class="btn gray">Registreer</button>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- Arrow controls -->
+        <!-- Arrows -->
         <div class="controls mt-3">
           <div class="arrow-row">
             <button id="btnLeft"  class="dir-btn" aria-label="Links">◀</button>
@@ -206,9 +256,9 @@
               <div class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
                 <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
                 <div class="space-y-1">
-                  <button class="wa" type="button">WhatsApp</button>
+                  <button class="wa"  type="button">WhatsApp</button>
                   <button class="copy" type="button">Kopieer skakel</button>
-                  <button class="sys" type="button">Stelsel-deel</button>
+                  <button class="sys"  type="button">Stelsel-deel</button>
                 </div>
               </div>
             </div>
@@ -229,9 +279,9 @@
               <div class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
                 <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
                 <div class="space-y-1">
-                  <button class="wa" type="button">WhatsApp</button>
+                  <button class="wa"  type="button">WhatsApp</button>
                   <button class="copy" type="button">Kopieer skakel</button>
-                  <button class="sys" type="button">Stelsel-deel</button>
+                  <button class="sys"  type="button">Stelsel-deel</button>
                 </div>
               </div>
             </div>
@@ -245,23 +295,24 @@
         <ol class="space-y-3 text-gray-700 leading-relaxed">
           <li>
             <p class="font-semibold">1. Doel</p>
-            <p>Probeer om die <strong>teikenwoord</strong> boaan so vinnig as moontlik te vorm deur die vallende blokke...</p>
+            <p>Probeer om die <strong>teikenwoord</strong> boaan so vinnig as moontlik te vorm deur die vallende blokke, elkeen met 'n lukraakte letter en kleur, links en regs te skuif voordat hulle onder land. Die teikenwoord moet in <strong>dieselfde horisontale ry</strong> gevorm word, sonder gapings of verkeerde letters. Laat val onnodige letters eenkant, of gebruik die blokreëls onder om hulle te laat verdwyn. Daar is <strong>elke dag ’n nuwe woord</strong>, wat soms minder maar nooit meer as 8 letters sal hê nie.</p>
           </li>
           <li>
             <p class="font-semibold">2. Kontroles</p>
-            <p><strong>Fisieke toetsbord:</strong> Gebruik die pyltjies...</p>
+            <p><strong>Fisieke toetsbord:</strong> Gebruik die pyltjies op jou toetsbord om die blokke links en regs te skuif, en die spasiebalk om die blok dadelik tot onder te laat val.</p>
+            <p><strong>Raakskerm:</strong> Gebruik die pyltjies op die skerm om die blokke links en regs te skuif, en die af-pyltjie om die blok dadelik tot onder te laat val.</p>
           </li>
           <li>
             <p class="font-semibold">3. Wat gebeur wanneer blokke aan mekaar raak?</p>
             <ul class="list-disc pl-6">
-              <li><strong>Dieselfde letter:</strong> As twee blokke met dieselfde LETTER...</li>
-              <li><strong>Dieselfde kleur:</strong> As twee blokke met dieselfde KLEUR...</li>
+              <li><strong>Dieselfde letter:</strong> As twee blokke met dieselfde LETTER langs of op mekaar tot stilstand kom, verdwyn albei.</li>
+              <li><strong>Dieselfde kleur:</strong> As twee blokke met dieselfde KLEUR langs of op mekaar tot stilstand kom, verdwyn albei.</li>
               <li><strong>MAAR:</strong> 'n Blok met 'n letter wat in die teikenwoord is, verdwyn nooit nie.</li>
             </ul>
           </li>
           <li>
             <p class="font-semibold">4. Leierbord</p>
-            <p>As jou tyd vinnig genoeg is, verskyn jou naam op die <strong>leierbord</strong>...</p>
+            <p>As jou tyd vinnig genoeg is, verskyn jou naam op die <strong>leierbord</strong>. Gebruik <strong>DEEL</strong> om jou vriende uit te daag en jou tyd te wys.</p>
           </li>
         </ol>
       </section>
@@ -287,6 +338,7 @@
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
+
   <!-- Firebase + Logic -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
@@ -384,6 +436,7 @@
 
     /* ==== NEW: constants for the simplified scoring ==== */
     const LB_SIZE = 10; // leaderboard shows max 10
+    // Final placement points will be added by the nightly job; thresholds are instant on client.
 
     /* ---- Mechanics ---- */
     const H = 10, W = 8;
@@ -742,6 +795,7 @@
       document.querySelectorAll('.share-tile-wrap').forEach(wireShareTile);
     }
     initTileShareDropdowns();
+
     /* ---- Leaderboard submit (canonical) ---- */
     async function submitTimeToBoard(){
       if(!user) return;
@@ -838,7 +892,7 @@
       try { await setDoc(bestRef, { kBlit_total: total }, { merge:true }); } catch {}
     }
 
-    /* ---- LIVE Leaderboard (now with green pill + TODAY fallback) ---- */
+    /* ---- LIVE Leaderboard (now with green pill) ---- */
     function startLiveLeaderboard(){
       if(lbUnsub) { lbUnsub(); lbUnsub=null; }
 
@@ -874,22 +928,9 @@
 
         top.forEach(v => {
           const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
-
-          // 🟩 NEW: display-only fallback for TODAY if kBlit_total not written yet
-          const fallbackToday =
-            !IS_ARCHIVE
-              ? (Number(v.time) < 30 ? 200 : (Number(v.time) < 60 ? 100 : 0))
-              : 0;
-
-          const pillValue =
-            (typeof v.kBlit_total === 'number' && v.kBlit_total > 0)
-              ? v.kBlit_total
-              : fallbackToday;
-
-          const pill = pillValue > 0
-            ? `<span class="k-pill" title="Vandag se Blitstiek-telling">${pillValue}</span>`
+          const pill = (typeof v.kBlit_total === 'number' && v.kBlit_total > 0)
+            ? `<span class="k-pill" title="Vandag se Blitstiek-telling">${v.kBlit_total}</span>`
             : '';
-
           const li = document.createElement('li');
           li.innerHTML = `<span><strong>${(v.userName||'Onbekend')}</strong>${you}: ${fmt(Number(v.time))}</span>${pill}`;
           lbList.appendChild(li);
@@ -1012,6 +1053,7 @@
     /* ---- Init ---- */
     await loadGame();
   </script>
+
   <!-- Buy Me a Coffee CTA above leaderboard -->
   <script>
   document.addEventListener('DOMContentLoaded', () => {
