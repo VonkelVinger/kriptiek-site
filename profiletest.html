@@ -18,10 +18,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Base styles you already use (minimal helpers kept here to avoid drift) -->
+  <!-- Minimal base styles (aligned with your site) -->
   <style>
-    :root { --k-blue:#1e3a8a; }
-    body { font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji','Segoe UI Emoji', 'Segoe UI Symbol'; }
+    :root { --k-blue:#0f2d64; --k-blue-2:#1e3a8a; }
+    body { font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans'; }
     .mono { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1, 'lnum' 1; }
     .card { background:#fff; border:1px solid #e5e7eb; border-radius: 0.75rem; box-shadow: 0 2px 6px rgba(2,6,23,.04); }
     .pill { display:inline-flex; align-items:center; border-radius:999px; padding:.25rem .6rem; font-weight:800; font-size:.82rem; }
@@ -37,14 +37,19 @@
     .banner-live { background:#eefdf3; color:#065f46; border:1px solid #bbf7d0; }
     .table-wrap { border:1px solid #e5e7eb; border-radius:.75rem; overflow:hidden; }
     .table-scroll { overflow:auto; }
-    table.table { border-collapse:collapse; }
+    table.table { border-collapse:collapse; width:100%; }
     table.table th, table.table td { padding:.6rem .75rem; border-bottom:1px solid #eef2f7; }
     table.table thead th { font-size:.8rem; text-transform:uppercase; letter-spacing:.02em; color:#64748b; background:#fafbff; }
     .mini { background:#f8fafc; border:1px solid #e5e7eb; border-radius:.75rem; padding:.5rem .6rem; text-align:center; }
-    .supporter-banner { display:block; text-align:center; font-weight:800; border-radius:.75rem; padding:.5rem .75rem; }
-    .supporter-banner-red { background:#fff1f2; color:#991b1b; border:1px solid #fecdd3; }
-    /* subtle skeleton class you can toggle while loading */
-    .skeleton { position:relative; overflow:hidden; background:#eef2ff; }
+
+    /* Brand wordmark with flipped K (keeps your visual identity without the heavy animation) */
+    .brand { display:flex; align-items:center; gap:.65rem; font-weight:900; letter-spacing:.03em; }
+    .brand-word { font-size:1.2rem; color:var(--k-blue); }
+    .brand-word .flip { display:inline-block; transform: scaleX(-1); }
+    .brand-sub { font-size:.7rem; color:#475569; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+
+    /* Optional skeleton shimmer (for loading states) */
+    .skeleton { position:relative; overflow:hidden; background:#eef2ff; border-radius:.5rem; }
     .skeleton::after { content:""; position:absolute; inset:0; transform:translateX(-100%); background:linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent); animation: shimmer 1.2s infinite; }
     @keyframes shimmer { 100% { transform:translateX(100%);} }
   </style>
@@ -52,12 +57,19 @@
 
 <body class="bg-slate-50 text-slate-900">
 
-  <!-- Header (kept minimal; keep your real site header if you have it) -->
+  <!-- Header (matches your site’s clean, bold look) -->
   <header class="bg-white border-b border-slate-200">
     <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-      <a href="/" class="text-xl font-extrabold text-slate-900">KRIPTIEK</a>
-      <nav class="text-sm">
-        <a href="/index.html" class="text-blue-700 hover:underline">Tuis</a>
+      <a href="/index.html" class="brand" aria-label="Kriptiek tuis">
+        <div class="brand-word">
+          <span class="flip">K</span>RIPTIEK
+        </div>
+        <div class="brand-sub hidden sm:block">woordspeletjies</div>
+      </a>
+      <nav class="text-sm font-semibold">
+        <a href="/dilemmagame.html" class="text-slate-700 hover:text-slate-900 mr-4">Dilemma</a>
+        <a href="/blitstiek.html" class="text-slate-700 hover:text-slate-900 mr-4">Blitstiek</a>
+        <a href="/profile.html" class="text-blue-700 hover:text-blue-900">My Profiel</a>
       </nav>
     </div>
   </header>
@@ -65,9 +77,9 @@
   <!-- Main -->
   <main class="flex-grow p-4 pb-16">
 
-    <!-- Top block: MOBILE-FIRST stack of Profile + Kriptiek-telling -->
+    <!-- MOBILE-FIRST stack: Profile + Kriptiek overview -->
     <div class="max-w-6xl mx-auto flex flex-col gap-6 items-stretch">
-      <!-- LEFT (Profile card) -->
+      <!-- Profile -->
       <section class="card p-5 md:p-6 top-card">
         <a id="supporterBanner" href="https://buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
            class="supporter-banner supporter-banner-red mb-4"
@@ -99,7 +111,7 @@
         </form>
       </section>
 
-      <!-- RIGHT (Kriptiek-telling overview) -->
+      <!-- Kriptiek overview (unchanged content, just stacked) -->
       <section class="card p-5 md:p-6 top-card">
         <div class="mb-4"><span id="pillOverall" class="pill pill-lg pill-blue" role="status">JOU KRIPTIEK-TELLING: 0</span></div>
         <div class="flex flex-wrap gap-2 mb-6 items-start">
@@ -118,7 +130,7 @@
     <div class="max-w-6xl mx-auto space-y-6 mt-6">
       <!-- DILEMMA -->
       <section id="dilemma" class="card p-5 md:p-6 game-card">
-        <!-- Color bar + header -->
+        <!-- Header -->
         <header class="flex flex-col gap-1 mb-3">
           <div class="h-1 w-full bg-orange-500 rounded-full"></div>
           <div class="flex items-center justify-between">
@@ -127,51 +139,45 @@
           </div>
         </header>
 
-        <!-- Today vs Overall -->
-        <div class="flex flex-col gap-3 mb-4">
-          <!-- TODAY (uses your existing calcTime/totalPoints etc.) -->
-          <div class="rounded-xl border border-orange-200 bg-orange-50 p-4">
-            <div class="flex items-end gap-4">
-              <div>
-                <div id="totalPoints" class="text-4xl md:text-5xl font-extrabold mono text-orange-900">0</div>
-                <div class="text-xs uppercase tracking-wide text-orange-900/70">Vandag</div>
-              </div>
-              <div class="ml-auto text-right">
-                <div class="text-xs text-orange-900/70">Laas bereken</div>
-                <div id="calcTime" class="text-sm mono" aria-live="polite">—</div>
-              </div>
+        <!-- OVERALL (top) -->
+        <div class="rounded-xl border border-slate-200 bg-white p-4 mb-3">
+          <div class="flex items-end gap-4">
+            <div>
+              <div id="dilOverallScore" class="text-3xl md:text-4xl font-extrabold mono text-slate-900">0</div>
+              <div class="text-xs uppercase tracking-wide text-slate-500">Algeheel (totaal)</div>
             </div>
-            <div class="text-[13px] text-orange-900/80 mt-2">
-              Lopie- en ondersteuner-bonusse word hier ingereken soos van toepassing.
-            </div>
-          </div>
-
-          <!-- OVERALL (new IDs for your cumulative) -->
-          <div class="rounded-xl border border-slate-200 bg-white p-4">
-            <div class="flex items-end gap-4">
-              <div>
-                <div id="dilOverallScore" class="text-3xl md:text-4xl font-extrabold mono text-slate-900">0</div>
-                <div class="text-xs uppercase tracking-wide text-slate-500">Algeheel (totaal)</div>
-              </div>
-              <div class="ml-auto text-right">
-                <div class="text-xs text-slate-500">Laas opgedateer</div>
-                <div id="dilOverallUpdated" class="text-sm mono" aria-live="polite">—</div>
-              </div>
-            </div>
-            <div class="text-[13px] text-slate-600 mt-2">
-              Die algehele totaal word minder gereeld verfris; ons wys wanneer dit laas opgedateer is.
+            <div class="ml-auto text-right">
+              <div class="text-xs text-slate-500">Laas opgedateer</div>
+              <div id="dilOverallUpdated" class="text-sm mono" aria-live="polite">—</div>
             </div>
           </div>
         </div>
 
-        <!-- Two-column content (stacked) -->
+        <!-- TODAY (below overall) -->
+        <div class="rounded-xl border border-orange-200 bg-orange-50 p-4 mb-4">
+          <div class="flex items-end gap-4">
+            <div>
+              <div id="totalPoints" class="text-4xl md:text-5xl font-extrabold mono text-orange-900">0</div>
+              <div class="text-xs uppercase tracking-wide text-orange-900/70">Vandag</div>
+            </div>
+            <div class="ml-auto text-right">
+              <div class="text-xs text-orange-900/70">Laas bereken</div>
+              <div id="calcTime" class="text-sm mono" aria-live="polite">—</div>
+            </div>
+          </div>
+          <div class="text-[13px] text-orange-900/80 mt-2">
+            Lopie- en ondersteuner-bonusse word hier ingereken soos van toepassing.
+          </div>
+        </div>
+
+        <!-- Content (mobile-first stack) -->
         <div class="flex flex-col gap-5 items-stretch">
           <!-- Breakdown -->
           <div>
             <h3 class="text-sm font-bold text-slate-700 mb-2">Vandag se ontleding</h3>
             <div class="table-wrap">
               <div class="table-scroll">
-                <table class="table text-sm w-full">
+                <table class="table text-sm">
                   <thead>
                     <tr>
                       <th class="text-left">Komponent</th>
@@ -221,9 +227,9 @@
           </div>
         </div>
       </section>
-      <!-- BLITSTIEK (LIVE, Firestore-driven) -->
+      <!-- BLITSTIEK -->
       <section id="blitstiek" class="card p-5 md:p-6 game-card">
-        <!-- Color bar + header -->
+        <!-- Header -->
         <header class="flex flex-col gap-1 mb-3">
           <div class="h-1 w-full bg-emerald-500 rounded-full"></div>
           <div class="flex items-center justify-between">
@@ -232,53 +238,50 @@
           </div>
         </header>
 
-        <!-- Today vs Overall -->
-        <div class="flex flex-col gap-3 mb-4">
-          <!-- TODAY (re-uses your ids) -->
-          <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-            <div class="flex items-end gap-4">
-              <div>
-                <div id="totalPointsBlit" class="text-4xl md:text-5xl font-extrabold mono text-emerald-900">0</div>
-                <div class="text-xs uppercase tracking-wide text-emerald-900/70">
-                  Vandag se totaal (ná 23:55 sluit ondersteuners-×1.10 in, indien aktief)
-                </div>
-              </div>
-              <div class="ml-auto text-right">
-                <div class="text-xs text-emerald-900/70">Laas bereken</div>
-                <div id="calcTimeBlit" class="text-sm mono" aria-live="polite">—</div>
-              </div>
+        <!-- OVERALL -->
+        <div class="rounded-xl border border-slate-200 bg-white p-4 mb-3">
+          <div class="flex items-end gap-4">
+            <div>
+              <div id="blitOverallScore" class="text-3xl md:text-4xl font-extrabold mono text-slate-900">0</div>
+              <div class="text-xs uppercase tracking-wide text-slate-500">Algeheel (totaal)</div>
             </div>
-            <div class="text-[13px] text-emerald-900/80 mt-2">
-              Onmiddellik: &lt;60s = +100 • &lt;30s = +200. Posisie-bonus word bygevoeg @ 23:55.
+            <div class="ml-auto text-right">
+              <div class="text-xs text-slate-500">Laas opgedateer</div>
+              <div id="blitOverallUpdated" class="text-sm mono" aria-live="polite">—</div>
             </div>
           </div>
-
-          <!-- OVERALL -->
-          <div class="rounded-xl border border-slate-200 bg-white p-4">
-            <div class="flex items-end gap-4">
-              <div>
-                <div id="blitOverallScore" class="text-3xl md:text-4xl font-extrabold mono text-slate-900">0</div>
-                <div class="text-xs uppercase tracking-wide text-slate-500">Algeheel (totaal)</div>
-              </div>
-              <div class="ml-auto text-right">
-                <div class="text-xs text-slate-500">Laas opgedateer</div>
-                <div id="blitOverallUpdated" class="text-sm mono" aria-live="polite">—</div>
-              </div>
-            </div>
-            <div class="text-[13px] text-slate-600 mt-2">
-              Totale Blitstiek-telling (alle dae); ons wys wanneer dit laas verfris is.
-            </div>
+          <div class="text-[13px] text-slate-600 mt-2">
+            Totale Blitstiek-telling (alle dae).
           </div>
         </div>
 
-        <!-- Two-column content (stacked) -->
+        <!-- TODAY -->
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 mb-4">
+          <div class="flex items-end gap-4">
+            <div>
+              <div id="totalPointsBlit" class="text-4xl md:text-5xl font-extrabold mono text-emerald-900">0</div>
+              <div class="text-xs uppercase tracking-wide text-emerald-900/70">
+                Vandag (na 23:55 sluit ×1.10 in indien ondersteuner)
+              </div>
+            </div>
+            <div class="ml-auto text-right">
+              <div class="text-xs text-emerald-900/70">Laas bereken</div>
+              <div id="calcTimeBlit" class="text-sm mono" aria-live="polite">—</div>
+            </div>
+          </div>
+          <div class="text-[13px] text-emerald-900/80 mt-2">
+            Onmiddellik: &lt;60s = +100 • &lt;30s = +200. Posisie-bonus bygevoeg @ 23:55.
+          </div>
+        </div>
+
+        <!-- Content -->
         <div class="flex flex-col gap-5 items-stretch">
           <!-- Breakdown -->
           <div>
             <h3 class="text-sm font-bold text-slate-700 mb-2">Vandag se ontleding</h3>
             <div class="table-wrap">
               <div class="table-scroll">
-                <table class="table text-sm w-full">
+                <table class="table text-sm">
                   <thead>
                     <tr><th class="text-left">Komponent</th><th class="text-right">Reël</th><th class="text-right">Punte</th></tr>
                   </thead>
@@ -311,14 +314,14 @@
             </div>
 
             <details class="mt-4">
-              <summary class="font-bold text-slate-800 cursor-pointer">Reëls vir Blitstiek (opsomming)</summary>
+              <summary class="font-bold text-slate-800 cursor-pointer">Reëls (opsomming)</summary>
               <ul class="text-sm text-slate-700 mt-2 list-disc pl-5 space-y-1">
-                <li>Ranglys: top 10 van die dag; een inskrywing per speler (beste tyd vervang ouer tyd).</li>
+                <li>Ranglys: top 10 van die dag; een inskrywing per speler (beste vervang ouer).</li>
                 <li><strong>Onmiddellik</strong>: &lt;60s = +100 • &lt;30s = +200 (een van die twee).</li>
-                <li><strong>Om 23:55</strong>: posisie-bonus vir 1–10 = 200,175,150,125,100,75,50,40,30,20.</li>
-                <li>By gelyke tye wen die vroeër aangetekende tyd.</li>
-                <li>Ondersteuners kry <strong>×1.10</strong> op die dag se som (na 23:55 toegepas).</li>
-                <li><strong>Argief</strong>: geen posisie/ondersteuner-bonus; slegs die <strong>onmiddellike</strong> tyd-bonus.</li>
+                <li><strong>23:55</strong>: posisie-bonus volgens posisie 1–10.</li>
+                <li>Tydgelyk: vroeër inskrywing wen.</li>
+                <li>Ondersteuners: ×1.10 na 23:55.</li>
+                <li>Argief: geen posisie/ondersteuner-bonus; net die onmiddellike tyd-bonus.</li>
               </ul>
             </details>
           </div>
@@ -336,15 +339,15 @@
             <h4 class="text-sm font-bold text-slate-700 mb-2">Verspreiding (bv. tyd-klasse)</h4>
             <div id="distWrapBlit" class="space-y-2 text-slate-400">Kom binnekort.</div>
 
-            <div class="col-summary push-end text-sm text-slate-600 mt-2">
+            <p class="text-sm text-slate-600 mt-2">
               <span class="font-semibold">Leidraad:</span> Blitstiek-punte tel by jou Kriptiek-totaal.
-            </div>
+            </p>
           </div>
         </div>
       </section>
-      <!-- SLIMSTIEK (shadow; unchanged scoring, unified layout) -->
+      <!-- SLIMSTIEK -->
       <section id="slimstiek" class="card p-5 md:p-6 game-card">
-        <!-- Color bar + header -->
+        <!-- Header -->
         <header class="flex flex-col gap-1 mb-3">
           <div class="h-1 w-full bg-teal-500 rounded-full"></div>
           <div class="flex items-center justify-between">
@@ -353,56 +356,53 @@
           </div>
         </header>
 
-        <!-- Today vs Overall -->
-        <div class="flex flex-col gap-3 mb-4">
-          <!-- TODAY -->
-          <div class="rounded-xl border border-teal-200 bg-teal-50 p-4">
-            <div class="flex items-end gap-4">
-              <div>
-                <div id="totalPointsSlim" class="text-4xl md:text-5xl font-extrabold mono text-teal-900">0</div>
-                <div class="text-xs uppercase tracking-wide text-teal-900/70">Vandag se voorlopige punte</div>
-              </div>
-              <div class="ml-auto text-right">
-                <div class="text-xs text-teal-900/70">Laas bereken</div>
-                <div id="calcTimeSlim" class="text-sm mono" aria-live="polite">—</div>
-              </div>
+        <!-- OVERALL -->
+        <div class="rounded-xl border border-slate-200 bg-white p-4 mb-3">
+          <div class="flex items-end gap-4">
+            <div>
+              <div id="slimOverallScore" class="text-3xl md:text-4xl font-extrabold mono text-slate-900">0</div>
+              <div class="text-xs uppercase tracking-wide text-slate-500">Algeheel (totaal)</div>
             </div>
-            <div class="text-[13px] text-teal-900/80 mt-2">
-              Vroeë/verbetering/posisie reëls geld soos hieronder; ×1.10 vir ondersteuners.
+            <div class="ml-auto text-right">
+              <div class="text-xs text-slate-500">Laas opgedateer</div>
+              <div id="slimOverallUpdated" class="text-sm mono" aria-live="polite">—</div>
             </div>
           </div>
-
-          <!-- OVERALL (can stay “binnekort” until live) -->
-          <div class="rounded-xl border border-slate-200 bg-white p-4">
-            <div class="flex items-end gap-4">
-              <div>
-                <div id="slimOverallScore" class="text-3xl md:text-4xl font-extrabold mono text-slate-900">0</div>
-                <div class="text-xs uppercase tracking-wide text-slate-500">Algeheel (totaal)</div>
-              </div>
-              <div class="ml-auto text-right">
-                <div class="text-xs text-slate-500">Laas opgedateer</div>
-                <div id="slimOverallUpdated" class="text-sm mono" aria-live="polite">—</div>
-              </div>
-            </div>
-            <div class="text-[13px] text-slate-600 mt-2">
-              Totale Slimstiek-telling (binnekort aktief).
-            </div>
+          <div class="text-[13px] text-slate-600 mt-2">
+            Totale Slimstiek-telling (binnekort aktief).
           </div>
         </div>
 
-        <!-- Two-column content (stacked) -->
+        <!-- TODAY -->
+        <div class="rounded-xl border border-teal-200 bg-teal-50 p-4 mb-4">
+          <div class="flex items-end gap-4">
+            <div>
+              <div id="totalPointsSlim" class="text-4xl md:text-5xl font-extrabold mono text-teal-900">0</div>
+              <div class="text-xs uppercase tracking-wide text-teal-900/70">Vandag se voorlopige punte</div>
+            </div>
+            <div class="ml-auto text-right">
+              <div class="text-xs text-teal-900/70">Laas bereken</div>
+              <div id="calcTimeSlim" class="text-sm mono" aria-live="polite">—</div>
+            </div>
+          </div>
+          <div class="text-[13px] text-teal-900/80 mt-2">
+            Vroeë/verbetering/posisie reëls geld hieronder; ×1.10 vir ondersteuners.
+          </div>
+        </div>
+
+        <!-- Content -->
         <div class="flex flex-col gap-5 items-stretch">
           <!-- Breakdown -->
           <div>
             <h3 class="text-sm font-bold text-slate-700 mb-2">Vandag se ontleding</h3>
             <div class="table-wrap">
               <div class="table-scroll">
-                <table class="table text-sm w-full">
+                <table class="table text-sm">
                   <thead>
                     <tr><th class="text-left">Komponent</th><th class="text-right">Reël</th><th class="text-right">Punte</th></tr>
                   </thead>
                   <tbody id="breakdownBodySlim">
-                    <tr><td>Vroeë bonus vir eerste 10 tellings ná 07:00 behaal</td><td class="text-right mono">+20 indien van toepassing</td><td class="text-right mono" id="slimEarlyCell">0</td></tr>
+                    <tr><td>Vroeë bonus vir eerste 10 tellings ná 07:00</td><td class="text-right mono">+20 indien van toepassing</td><td class="text-right mono" id="slimEarlyCell">0</td></tr>
                     <tr><td>Verbeter jou eie beste telling vir die dag</td><td class="text-right mono">+30 (maks 1/dag)</td><td class="text-right mono" id="slimImproveCell">0</td></tr>
                     <tr><td>Finale posisie om 23:55</td><td class="text-right mono">120/90/70/60/50/40/30/25/20/15</td><td class="text-right mono" id="slimPlaceCell">0</td></tr>
                     <tr class="archiveOnly hidden"><td>Argief: PB-punt</td><td class="text-right mono">+10 (eenmalig per dag)</td><td class="text-right mono" id="slimPBArchiveCell">0</td></tr>
@@ -415,13 +415,13 @@
             </div>
 
             <details class="mt-4">
-              <summary class="font-bold text-slate-800 cursor-pointer">Reëls vir Slimstiek (opsomming)</summary>
+              <summary class="font-bold text-slate-800 cursor-pointer">Reëls (opsomming)</summary>
               <ul class="text-sm text-slate-700 mt-2 list-disc pl-5 space-y-1">
                 <li>Leierbord: maks. 10; een inskrywing per speler (beste vervang ouer).</li>
                 <li>Tydvensters (ZA): Vroeë bonus vanaf 07:00; Finale posisie om 23:55.</li>
                 <li>Punte (vandag): Vroeë +20; Verbetering +30 (1×/dag); Finale: 120,90,70,60,50,40,30,25,20,15.</li>
                 <li>Ondersteuner: ×1.10 oor vandag se som; daaglikse kap per spel: 200.</li>
-                <li>Argief: Geen vroeë of posisie-punte; PB +10 (eenmalig per argief-dag).</li>
+                <li>Argief: Geen vroeë/posisie-punte; PB +10 (eenmalig per dag).</li>
               </ul>
             </details>
           </div>
@@ -439,48 +439,41 @@
             <h4 class="text-sm font-bold text-slate-700 mb-2">Verspreiding (bv. punte-klasse)</h4>
             <div id="distWrapSlim" class="space-y-2 text-slate-400">Kom binnekort.</div>
 
-            <div class="col-summary push-end text-sm text-slate-600">
+            <p class="text-sm text-slate-600">
               <span class="font-semibold">Leidraad:</span> Hierdie Slimstiek-punte is nog proeflopie en tel nie by jou Kriptiek-telling nie.
-            </div>
+            </p>
           </div>
         </div>
       </section>
-    </div> <!-- /max-w wrapper for GAMES -->
+    </div> <!-- /games container -->
   </main>
 
-  <!-- Footer (keep your real site footer if needed) -->
-  <footer class="mt-8 border-t border-slate-200 bg-white">
-    <div class="max-w-6xl mx-auto px-4 py-6 text-sm text-slate-500">
-      © <span id="yearNow"></span> Kriptiek. Alle regte voorbehou.
+  <!-- Footer (proper site footer style) -->
+  <footer class="border-t border-slate-200 bg-white">
+    <div class="max-w-6xl mx-auto px-4 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="text-sm text-slate-600">
+        © <span id="yearNow"></span> Kriptiek. Alle regte voorbehou.
+      </div>
+      <div class="text-xs text-slate-500">
+        <a href="/gesels.html" class="hover:underline mr-4">Gesels saam</a>
+        <a href="/dilemma-argief.html" class="hover:underline mr-4">Dilemma-argief</a>
+        <a href="/blitstiek-argief.html" class="hover:underline">Blitstiek-argief</a>
+      </div>
     </div>
   </footer>
 
   <script>
-    // Tiny helper to keep the footer year fresh
     document.getElementById('yearNow').textContent = new Date().getFullYear();
-
-    // OPTIONAL: if you want quick empty-state messaging for “not played today”
-    // Example:
-    // if (!playedTodayDilemma) {
-    //   document.getElementById('calcTime').textContent = '—';
-    //   document.getElementById('totalPoints').textContent = '0';
-    // }
-
-    // New IDs you can set when your overall totals refresh:
-    //   Dilemma: dilOverallScore, dilOverallUpdated
-    //   Blitstiek: blitOverallScore, blitOverallUpdated
-    //   Slimstiek: slimOverallScore, slimOverallUpdated
   </script>
-  <!-- Firebase SDKs (same as live Kriptiek) -->
+
+  <!-- Firebase SDKs (same wiring as before) -->
   <script type="module">
-    // Import Firebase modules (v10+ style)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged, sendPasswordResetEmail, deleteUser, updateProfile } 
+    import { getAuth, onAuthStateChanged, sendPasswordResetEmail, deleteUser, updateProfile }
       from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } 
+    import { getFirestore, doc, getDoc, setDoc }
       from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    // ---- Firebase configuration ----
     const firebaseConfig = {
       apiKey: "AIzaSyCdM-4asNdcSpLGkSMosAoV8RUsH_KrfM4",
       authDomain: "kriptiek.firebaseapp.com",
@@ -490,93 +483,70 @@
       appId: "1:598423858938:web:2e6e021179963eb48f1cf4"
     };
 
-    // ---- Initialize app and services ----
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
-    // ---- Auth listener ----
     onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        console.log("No user signed in");
-        return;
-      }
-
-      console.log("Signed in as:", user.displayName || user.email);
+      if (!user) return;
+      // Populate profile fields
       document.getElementById("nameInput").value  = user.displayName || "";
       document.getElementById("emailInput").value = user.email || "";
 
-      // Fetch user totals (optional overall blocks)
+      // Populate OVERALL (top) scores when available
       try {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists()) {
-          const u = userDoc.data();
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if (snap.exists()) {
+          const u = snap.data();
           if (u.kDilemma_total !== undefined) {
             document.getElementById("dilOverallScore").textContent = u.kDilemma_total;
-            document.getElementById("dilOverallUpdated").textContent =
-              u.updatedAt || "—";
+            document.getElementById("dilOverallUpdated").textContent = u.updatedAt || "—";
           }
           if (u.kBlit_total !== undefined) {
             document.getElementById("blitOverallScore").textContent = u.kBlit_total;
-            document.getElementById("blitOverallUpdated").textContent =
-              u.updatedAt || "—";
+            document.getElementById("blitOverallUpdated").textContent = u.updatedAt || "—";
           }
           if (u.kSlim_total !== undefined) {
             document.getElementById("slimOverallScore").textContent = u.kSlim_total;
-            document.getElementById("slimOverallUpdated").textContent =
-              u.updatedAt || "—";
+            document.getElementById("slimOverallUpdated").textContent = u.updatedAt || "—";
           }
-          if (u.kScore !== undefined)
-            document.getElementById("pillOverall").textContent =
-              `JOU KRIPTIEK-TELLING: ${u.kScore}`;
+          if (u.kScore !== undefined) {
+            document.getElementById("pillOverall").textContent = `JOU KRIPTIEK-TELLING: ${u.kScore}`;
+          }
         }
-      } catch (err) {
-        console.error("Firestore read failed:", err);
+      } catch (e) {
+        console.error(e);
       }
     });
 
-    // ---- Profile form actions ----
-    const form = document.getElementById("profileForm");
-    form.addEventListener("submit", async (e) => {
+    // Profile form
+    document.getElementById("profileForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const user = auth.currentUser;
       if (!user) return alert("Geen gebruiker aangemeld nie.");
-
       const name = document.getElementById("nameInput").value.trim();
       try {
         await updateProfile(user, { displayName: name });
         await setDoc(doc(db, "users", user.uid), { userName: name }, { merge: true });
-        document.getElementById("formMsg").textContent = "Naam suksesvol bygewerk.";
-        document.getElementById("formMsg").classList.remove("hidden");
-      } catch (err) {
-        console.error(err);
-        alert("Kon nie stoor nie: " + err.message);
-      }
+        const msg = document.getElementById("formMsg");
+        msg.textContent = "Naam suksesvol bygewerk.";
+        msg.classList.remove("hidden");
+      } catch (err) { alert("Kon nie stoor nie: " + err.message); }
     });
 
-    // ---- Reset password ----
     document.getElementById("resetPwBtn").addEventListener("click", async () => {
       const email = document.getElementById("emailInput").value.trim();
       if (!email) return alert("Tik jou e-pos in.");
-      try {
-        await sendPasswordResetEmail(auth, email);
-        alert("Wagwoord-herstel-skakel gestuur aan " + email);
-      } catch (err) {
-        alert(err.message);
-      }
+      try { await sendPasswordResetEmail(auth, email); alert("Wagwoord-herstel-skakel gestuur aan " + email); }
+      catch (err) { alert(err.message); }
     });
 
-    // ---- Delete account ----
     document.getElementById("deleteBtn").addEventListener("click", async () => {
       const user = auth.currentUser;
       if (!user) return alert("Geen gebruiker aangemeld nie.");
       if (!confirm("Wil jy jou rekening permanent uitvee?")) return;
-      try {
-        await deleteUser(user);
-        alert("Rekening verwyder.");
-      } catch (err) {
-        alert("Kon nie uitvee nie: " + err.message);
-      }
+      try { await deleteUser(user); alert("Rekening verwyder."); }
+      catch (err) { alert("Kon nie uitvee nie: " + err.message); }
     });
   </script>
 </body>
