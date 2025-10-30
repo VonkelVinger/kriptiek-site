@@ -13,7 +13,7 @@
 
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>My Profiel – Kriptiek (toets)</title>
+<title>My Profiel – Kriptiek</title>
 
 <!-- Favicons -->
 <link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
@@ -79,11 +79,29 @@
   .mini { background:#f8fafc; border:1px solid #e5e7eb; border-radius:.75rem; padding:.5rem .6rem; text-align:center; }
 </style>
 
+<!-- === Feature toggles (simple, non-destructive) === -->
+<script>
+  // Live feature flags
+  const FEATURES = {
+    blitstiek: true,   // live
+    slimstiek: false,  // hidden until ready
+  };
+  function applyFeatureToggles() {
+    document.querySelectorAll('[data-section]').forEach(el => {
+      const key = el.getAttribute('data-section');
+      const on = !!FEATURES[key];
+      el.style.display = on ? '' : 'none';
+      el.setAttribute('aria-hidden', on ? 'false' : 'true');
+    });
+  }
+  document.addEventListener('DOMContentLoaded', applyFeatureToggles);
+</script>
+
 <!-- Firebase setup (same project as index.html) -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, sendPasswordResetEmail, deleteUser, updateProfile } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -99,29 +117,137 @@
 
   function setSupporterPill(isActive,labelExtra=""){
     const el=document.getElementById("supporterPill"); if(!el)return;
-    if(isActive){el.textContent="ONDERSTEUNER: AKTIEF"+(labelExtra?` — ${labelExtra}`:"");el.style.background="#dcfce7";el.style.color="#065f46";el.style.border="1px solid #bbf7d0";}
-    else{el.textContent="ONDERSTEUNER: NIE AKTIEF NIE";el.style.background="#fef2f2";el.style.color="#991b1b";el.style.border="1px solid #fecaca";}
+    if(isActive){
+      el.textContent="ONDERSTEUNER: AKTIEF"+(labelExtra?` — ${labelExtra}`:"");
+      el.style.background="#dcfce7"; el.style.color="#065f46"; el.style.border="1px solid #bbf7d0";
+    }else{
+      el.textContent="ONDERSTEUNER: NIE AKTIEF NIE";
+      el.style.background="#fef2f2"; el.style.color="#991b1b"; el.style.border="1px solid #fecaca";
+    }
     el.classList.add("font-extrabold");
   }
 
-  onAuthStateChanged(auth, async(user)=>{
-    if(!user)return;
-    document.getElementById("nameInput").value=user.displayName||"";
-    document.getElementById("emailInput").value=user.email||"";
-    try{
-      const snap=await getDoc(doc(db,"users",user.uid));
-      if(snap.exists()){
-        const u=snap.data();
-        if(u.kDilemma_total!==undefined)document.getElementById("dilOverallScore").textContent=u.kDilemma_total;
-        if(u.kBlit_total!==undefined)document.getElementById("blitOverallScore").textContent=u.kBlit_total;
-        if(u.kSlim_total!==undefined)document.getElementById("slimOverallScore").textContent=u.kSlim_total;
-        if(u.kScore!==undefined)document.getElementById("pillOverall").textContent=`JOU KRIPTIEK-TELLING: ${u.kScore}`;
-        let active=!!u.isPaid;let labelExtra="";
-        if(u.paidUntil){const until=typeof u.paidUntil==="number"?u.paidUntil:Date.parse(u.paidUntil);
-          if(!Number.isNaN(until)&&until>Date.now()){active=true;labelExtra=`tot ${new Date(until).toLocaleDateString("af-ZA")}`;}}
-        setSupporterPill(active,labelExtra);
+  function safeNum(v, fallback = 0) {
+    const n = typeof v === 'number' ? v : parseFloat(v);
+    return Number.isFinite(n) ? n : fallback;
+  }
+
+  async function readUserDoc(uid) {
+    const snap = await getDoc(doc(db,"users",uid));
+    return snap.exists() ? snap.data() : null;
+  }
+
+  function renderSupporter(user) {
+    let active = !!user?.isPaid; let labelExtra="";
+    if(user?.paidUntil){
+      const until = typeof user.paidUntil==="number" ? user.paidUntil
+                  : (user.paidUntil?.seconds ? user.paidUntil.seconds*1000 : Date.parse(user.paidUntil));
+      if(Number.isFinite(until) && until > Date.now()){
+        active = true;
+        labelExtra = `tot ${new Date(until).toLocaleDateString("af-ZA")}`;
       }
-    }catch(e){console.error(e);}
+    }
+    setSupporterPill(active,labelExtra);
+  }
+
+  function renderTotals(user) {
+    const dTot = document.getElementById("dilOverallScore");
+    const bTot = document.getElementById("blitOverallScore");
+    const sTot = document.getElementById("slimOverallScore");
+    const kTot = document.getElementById("pillOverall");
+    if(dTot && user?.kDilemma_total!==undefined) dTot.textContent = user.kDilemma_total;
+    if(bTot && user?.kBlit_total!==undefined)     bTot.textContent = user.kBlit_total;
+    if(sTot && user?.kSlim_total!==undefined)     sTot.textContent = user.kSlim_total;
+    if(kTot && user?.kScore!==undefined)          kTot.textContent = `JOU KRIPTIEK-TELLING: ${user.kScore}`;
+  }
+
+  function renderTodayCards(user) {
+    // Dilemma (unknown field names for daily — show '—' unless you already write them)
+    const dToday = document.getElementById("totalPoints");
+    const dCalc  = document.getElementById("calcTime");
+    if(dToday) dToday.textContent = '—';
+    if(dCalc)  dCalc.textContent  = '—';
+
+    // Blitstiek (today points finalized by 23:55 Cloud Function; optional field)
+    const bToday = document.getElementById("totalPointsBlit");
+    const bCalc  = document.getElementById("calcTimeBlit");
+    const todayPoints = (user && (user.blit_todayPoints !== undefined)) ? user.blit_todayPoints : null;
+    if(bToday) bToday.textContent = (todayPoints === null) ? '—' : safeNum(todayPoints, 0);
+    if(bCalc)  bCalc.textContent  = '—';
+
+    // Slimstiek (hidden for now)
+    const sToday = document.getElementById("totalPointsSlim");
+    const sCalc  = document.getElementById("calcTimeSlim");
+    if(sToday) sToday.textContent = '—';
+    if(sCalc)  sCalc.textContent  = '—';
+  }
+
+  // Wire profile form actions (safe + minimal)
+  function wireProfileForm(user) {
+    const form = document.getElementById('profileForm');
+    const resetBtn = document.getElementById('resetPwBtn');
+    const delBtn = document.getElementById('deleteBtn');
+    const nameInput = document.getElementById('nameInput');
+
+    if(form){
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try{
+          const newName = (nameInput.value||'').trim();
+          if(newName && newName.length >= 2) {
+            await updateProfile(user, { displayName: newName });
+            alert('Jou naam is opgedateer.');
+          }
+        }catch(err){ console.error(err); alert('Kon nie jou naam opdateer nie.'); }
+      });
+    }
+    if(resetBtn){
+      resetBtn.addEventListener('click', async () => {
+        try{
+          await sendPasswordResetEmail(auth, user.email);
+          alert('Skakel om jou wagwoord te herstel is na jou e-pos gestuur.');
+        }catch(err){ console.error(err); alert('Kon nie wagwoord-epos stuur nie.'); }
+      });
+    }
+    if(delBtn){
+      delBtn.addEventListener('click', async () => {
+        if(!confirm("Is jy seker jy wil jou rekening permanent verwyder?")) return;
+        try{
+          await deleteUser(user);
+          alert('Jou rekening is verwyder.');
+          window.location.href = '/';
+        }catch(err){ console.error(err); alert('Kon nie rekening verwyder nie. Meld asseblief weer aan en probeer weer.'); }
+      });
+    }
+  }
+
+  onAuthStateChanged(auth, async(user)=>{
+    if(!user) return;
+    // Prefill basics
+    const nameEl  = document.getElementById("nameInput");
+    const emailEl = document.getElementById("emailInput");
+    if(nameEl)  nameEl.value  = user.displayName || "";
+    if(emailEl) emailEl.value = user.email || "";
+
+    try{
+      const u = await readUserDoc(user.uid);
+      if(u){
+        renderTotals(u);
+        renderSupporter(u);
+        renderTodayCards(u);
+      }else{
+        // Fallback to blanks if user doc missing
+        renderSupporter(null);
+        renderTodayCards(null);
+      }
+    }catch(e){ console.error(e); }
+
+    wireProfileForm(user);
+
+    // GA4: profile view event
+    if (typeof gtag === 'function') {
+      gtag('event','profile_view',{ uid: user.uid });
+    }
   });
 </script>
 
@@ -164,7 +290,8 @@
           </div>
           <div>
             <label for="emailInput" class="block text-sm font-semibold text-gray-700">E-posadres</label>
-            <input id="emailInput" type="email" required class="mt-1 w-full border border-gray-300 rounded p-2" value="speler@example.com"/>
+            <input id="emailInput" type="email" required class="mt-1 w-full border border-gray-300 rounded p-2" value="speler@example.com" disabled/>
+            <p class="text-xs text-slate-500 mt-1">Jou e-pos kan nie hier verander word nie.</p>
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
@@ -178,7 +305,7 @@
       <!-- OVERVIEW -->
       <section class="card p-5 md:p-6">
         <div class="mb-2">
-          <span id="supporterPill" class="pill pill-lg" style="background:#f1f5f9;color:#0f172a;border:1px solid #e2e8f0">ONDERSTEUNER: ONBESKOSTIG</span>
+          <span id="supporterPill" class="pill pill-lg" style="background:#f1f5f9;color:#0f172a;border:1px solid #e2e8f0">ONDERSTEUNER: NIE AKTIEF NIE</span>
         </div>
         <div class="mb-4">
           <span id="pillOverall" class="pill pill-lg pill-blue">JOU KRIPTIEK-TELLING: 0</span>
@@ -194,7 +321,7 @@
       </section>
 
       <!-- DILEMMA -->
-      <section class="card p-5 md:p-6">
+      <section class="card p-5 md:p-6" data-section="dilemma">
         <header class="flex flex-col gap-1 mb-3">
           <div class="h-1 w-full bg-orange-500 rounded-full"></div>
           <h2 class="text-xl font-extrabold text-slate-900">DILEMMA</h2>
@@ -216,7 +343,7 @@
         <div class="rounded-xl border border-orange-200 bg-orange-50 p-4 mb-4">
           <div class="flex items-end justify-between">
             <div>
-              <div id="totalPoints" class="text-4xl font-extrabold mono text-orange-900">0</div>
+              <div id="totalPoints" class="text-4xl font-extrabold mono text-orange-900">—</div>
               <div class="text-xs uppercase tracking-wide text-orange-900/70">Vandag</div>
             </div>
             <div class="text-right">
@@ -228,7 +355,7 @@
       </section>
 
       <!-- BLITSTIEK -->
-      <section class="card p-5 md:p-6">
+      <section class="card p-5 md:p-6" data-section="blitstiek">
         <header class="flex flex-col gap-1 mb-3">
           <div class="h-1 w-full bg-emerald-500 rounded-full"></div>
           <h2 class="text-xl font-extrabold text-slate-900">BLITSTIEK</h2>
@@ -247,10 +374,10 @@
           </div>
         </div>
 
-        <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 mb-4">
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 mb-3">
           <div class="flex items-end justify-between">
             <div>
-              <div id="totalPointsBlit" class="text-4xl font-extrabold mono text-emerald-900">0</div>
+              <div id="totalPointsBlit" class="text-4xl font-extrabold mono text-emerald-900">—</div>
               <div class="text-xs uppercase tracking-wide text-emerald-900/70">Vandag</div>
             </div>
             <div class="text-right">
@@ -259,10 +386,23 @@
             </div>
           </div>
         </div>
+
+        <!-- Rules copy (live) -->
+        <div class="rounded-xl bg-gray-50 p-4 border border-gray-200 mt-3">
+          <h3 class="font-semibold text-gray-800 mb-2">Blitstiek – Telling & Ranglys</h3>
+          <ul class="list-disc list-inside text-gray-700 space-y-1">
+            <li>Die ranglys wys nooit meer as die dag se <strong>10 beste tye</strong> nie. Jou naam verskyn net een keer; ’n beter tyd vervang ’n swakker tyd.</li>
+            <li>Jy kry <strong>onmiddellik 100 bonuspunte</strong> as jy Blitstiek in <strong>onder 60 sekondes</strong> wen.</li>
+            <li>Verder kry jy <strong>plaas-punte</strong> om 23:55 volgens jou finale plek op die dag-ranglys (1–10 = 200, 175, 150, 125, 100, 75, 50, 40, 30, 20).</li>
+            <li><strong>Geen</strong> ekstra punte meer vir vroeg speel of eerste op die bord nie.</li>
+            <li>Betalende ondersteuners kry ’n <strong>10% bonus</strong> op die dag se plek-punte.</li>
+            <li>Daar is <strong>geen daaglikse maksimum</strong> meer op Blitstiek-punte nie.</li>
+          </ul>
+        </div>
       </section>
 
-      <!-- SLIMSTIEK -->
-      <section class="card p-5 md:p-6">
+      <!-- SLIMSTIEK (hidden for now; flip FEATURES.slimstiek=true when ready) -->
+      <section class="card p-5 md:p-6" data-section="slimstiek" aria-hidden="true" style="display:none">
         <header class="flex flex-col gap-1 mb-3">
           <div class="h-1 w-full bg-teal-500 rounded-full"></div>
           <h2 class="text-xl font-extrabold text-slate-900">SLIMSTIEK</h2>
@@ -284,7 +424,7 @@
         <div class="rounded-xl border border-teal-200 bg-teal-50 p-4 mb-4">
           <div class="flex items-end justify-between">
             <div>
-              <div id="totalPointsSlim" class="text-4xl font-extrabold mono text-teal-900">0</div>
+              <div id="totalPointsSlim" class="text-4xl font-extrabold mono text-teal-900">—</div>
               <div class="text-xs uppercase tracking-wide text-teal-900/70">Vandag</div>
             </div>
             <div class="text-right">
@@ -317,9 +457,16 @@
       const letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
       const rand=()=>letters[Math.floor(Math.random()*letters.length)];
       function regen(){
-        bg.innerHTML='';const rows=Math.ceil(bg.offsetHeight/30);const cols=Math.ceil(bg.offsetWidth/30);
-        const total=(rows*cols)||300;for(let i=0;i<total;i++){const d=document.createElement('div');
-        d.className='bg-letter-box';d.textContent=rand();bg.appendChild(d);}
+        bg.innerHTML='';
+        const rows=Math.ceil(bg.offsetHeight/30);
+        const cols=Math.ceil(bg.offsetWidth/30);
+        const total=(rows*cols)||300;
+        for(let i=0;i<total;i++){
+          const d=document.createElement('div');
+          d.className='bg-letter-box';
+          d.textContent=rand();
+          bg.appendChild(d);
+        }
       }
       regen();window.addEventListener('resize',regen);
     });
