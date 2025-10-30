@@ -125,8 +125,10 @@
     // ---- helpers ----
     const $ = (id) => document.getElementById(id);
     const fmt = (n) => (typeof n === "number" ? n.toLocaleString("af-ZA") : n);
-const wbName = document.getElementById("wbName");
-
+function setWbName(name){
+  const el = document.getElementById("wbName");
+  if (el) el.textContent = (name || "Gebruiker").toUpperCase();
+}
     
     function todayZaISO(){
       const now = new Date();
@@ -308,6 +310,10 @@ const wbName = document.getElementById("wbName");
       const userDoc = userDocSnap.data() || {};
       const supporter = getSupporterState(userDoc);
       renderSupporterPill(supporter);
+
+      // ---- Set welcome name at top
+const displayName = user.displayName || userDoc.userName || "Gebruiker";
+setWbName(displayName);
 
       // Sync top banner with supporter state
       const supporterBanner = document.getElementById("supporterBanner");
