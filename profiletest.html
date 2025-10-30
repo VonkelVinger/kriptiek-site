@@ -71,11 +71,6 @@
     .pill-green { background:#e8fff3; color:#065f46; }
     .pill-green-dark { background:#e6fffb; color:#115e59; }
     .mono { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1, 'lnum' 1; }
-    .table-wrap { border:1px solid #e5e7eb; border-radius:.75rem; overflow:hidden; }
-    .table-scroll { overflow:auto; }
-    table.table { border-collapse:collapse; width:100%; }
-    table.table th, table.table td { padding:.6rem .75rem; border-bottom:1px solid #eef2f7; }
-    table.table thead th { font-size:.8rem; text-transform:uppercase; letter-spacing:.02em; color:#64748b; background:#fafbff; }
     .mini { background:#f8fafc; border:1px solid #e5e7eb; border-radius:.75rem; padding:.5rem .6rem; text-align:center; }
   </style>
 
@@ -204,8 +199,8 @@
       if (today) {
         if (today.win) {
           const base = BASE_POINTS[Math.min(Math.max(1, today.guesses || 6), 6)];
-          // Mirror multiplier logic per-day (if you want base-only, change to: todayPoints = base)
-          const tStreakMult = streakMult; // approx: current streak includes today if win
+          // Mirror multiplier logic per-day. If you prefer base-only, change next line to: todayPoints = base;
+          const tStreakMult = streakMult; // approx: includes today if win
           const baseWithStreak = Math.round(base * tStreakMult);
           todayPoints = Math.round(baseWithStreak * supporterMult);
         } else {
@@ -217,7 +212,6 @@
     }
 
     async function loadDilemma(uid, supporterActive){
-      // Read last N plays
       const playsRef = collection(db, "userGames", uid, "plays");
       const q = query(playsRef, orderBy("finishedAt", "desc"), limit(200));
       const snap = await getDocs(q);
@@ -238,11 +232,17 @@
     }
 
     // ---- Blitstiek reads ----
+    function num(v){ return (typeof v === "number") ? v : (v==null ? 0 : Number(v)); }
+
     async function loadBlitstiekOverall(userDoc){
-      // Preferred: canonical total on users doc
-      if (typeof userDoc?.kBlit_total === "number") return userDoc.kBlit_total;
-      // Fallback: if you later keep a cumulative path, add it here.
-      return 0;
+      // Accept several legacy/alias field names, coerce to number
+      const v =
+        userDoc?.kBlit_total ??
+        userDoc?.kBlitTotal ??
+        userDoc?.blitstiekTotal ??
+        userDoc?.blit_total ??
+        0;
+      return num(v);
     }
 
     async function loadBlitstiekToday(uid, userDoc){
@@ -308,18 +308,41 @@
       const supporter = getSupporterState(userDoc);
       renderSupporterPill(supporter);
 
-      // Compute Dilemma
+      // Sync the top banner with supporter state (fix)
+      const supporterBanner = document.getElementById("supporterBanner");
+      if (supporterBanner) {
+        if (supporter.active) {
+          supporterBanner.className =
+            "block text-center font-bold rounded-lg p-3 mb-4 bg-green-50 border border-green-200 text-green-800";
+          supporterBanner.textContent = "Betalende ondersteuner — dankie!";
+        } else {
+          supporterBanner.className =
+            "block text-center font-bold rounded-lg p-3 mb-4 bg-red-50 border border-red-200 text-red-800";
+          supporterBanner.textContent = "Kliek hier om 'n betalende ondersteuner te word";
+        }
+      }
+
+      // ---- Blitstiek totals FIRST
+      const bltOverall = await loadBlitstiekOverall(userDoc);
+      let   bltToday   = await loadBlitstiekToday(user.uid, userDoc);
+
+      // If no points yet but we have a time today, show it in the “Laas bereken” line
+      if (bltToday == null && typeof userDoc?.time === "number") {
+        const el = document.getElementById("calcTimeBlit");
+        if (el) el.textContent = `Tyd vandag: ${userDoc.time}s – punte om 23:55`;
+        const tpb = document.getElementById("totalPointsBlit");
+        if (tpb) tpb.title = "Wag vir 23:55-uitslag of blit_todayPoints";
+      }
+
+      // ---- Dilemma compute
       const { overall: dlmOverall, today: dlmToday } = await loadDilemma(user.uid, supporter.active);
 
-      // Blitstiek totals
-      const bltOverall = await loadBlitstiekOverall(userDoc);
-      const bltToday   = await loadBlitstiekToday(user.uid, userDoc);
-
-      // Kriptiek total (prefer users.kScore; else sum)
+      // ---- Kriptiek total: prefer users.kScore, else sum
       const kScore = (typeof userDoc.kScore === "number")
         ? userDoc.kScore
         : (Number(dlmOverall || 0) + Number(bltOverall || 0));
 
+      // ---- Render
       renderNumbers({kScore, dlmOverall, dlmToday, bltOverall, bltToday});
 
       // GA4: profile view
