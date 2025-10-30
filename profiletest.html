@@ -29,7 +29,7 @@
   <style>
     body { font-family: 'Montserrat', sans-serif; background-color: #f3f4f6; }
 
-    /* --- Header/logo styles (from index.html) --- */
+    /* --- Header/logo styles --- */
     .logo-container {
       position: relative; display: flex; justify-content: center; align-items: center;
       width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
@@ -76,16 +76,15 @@
 
   <!-- === Feature toggles === -->
   <script>
-    // Only sections listed here are toggled; Dilemma is always on.
     const FEATURES = {
-      blitstiek: true,   // live
-      slimstiek: false,  // hidden until ready
+      blitstiek: true,
+      slimstiek: false,
     };
     function applyFeatureToggles() {
       const known = new Set(Object.keys(FEATURES));
       document.querySelectorAll('[data-section]').forEach(el => {
         const key = el.getAttribute('data-section');
-        if (!known.has(key)) return; // leave unflagged sections as-is
+        if (!known.has(key)) return;
         const on = !!FEATURES[key];
         el.style.display = on ? '' : 'none';
         el.setAttribute('aria-hidden', on ? 'false' : 'true');
@@ -98,14 +97,13 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import {
-      getAuth, onAuthStateChanged, sendPasswordResetEmail, deleteUser, updateProfile, updateEmail
+      getAuth, onAuthStateChanged, sendPasswordResetEmail, deleteUser, updateProfile
     } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
     import {
       getFirestore, doc, getDoc, setDoc, updateDoc,
       collection, query, orderBy, limit, getDocs, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
-    // Same config as your live site
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
       authDomain: "kriptiek-c9ea2.firebaseapp.com",
@@ -115,13 +113,11 @@
       appId: "1:620450620939:web:e93a18ac23b53b33db890e"
     };
 
-    // ---- constants (Dilemma) ----
     const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
     const STREAK_THRESHOLD = 5;
     const STREAK_MULTIPLIER = 1.10;
     const SUPPORTER_MULTIPLIER = 1.10;
 
-    // ---- init ----
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
@@ -139,8 +135,8 @@
     const GAME_TODAY = `Game${todayZaISO()}`;
 
     function getSupporterState(u){
-      // Support both schemas
       let active = false, untilTs = null;
+
       if (u?.supporterActive === true) active = true;
       if (u?.isPaid === true) active = true;
 
@@ -157,9 +153,8 @@
       return { active, untilTs };
     }
 
-    // ---- Dilemma: compute overall from plays, and today from today's play ----
+    // ---- Dilemma scoring (overall + today) ----
     function computeDilemma(plays, supporterActive){
-      // Build unique-by-date map, compute streaks, dist
       const byDate = new Map();
       plays.slice().reverse().forEach(p => byDate.set(p.date, p));
       const dates = Array.from(byDate.keys()).sort();
@@ -193,18 +188,17 @@
       const overall = subtotal + streakBonus;
       const overallWithSupport = Math.round(overall * supporterMult);
 
-      // Today
+      // Today (uses same multiplier logic as overall for consistency)
       const today = byDate.get(todayZaISO());
       let todayPoints = null;
       if (today) {
         if (today.win) {
           const base = BASE_POINTS[Math.min(Math.max(1, today.guesses || 6), 6)];
-          // Mirror multiplier logic per-day. If you prefer base-only, change next line to: todayPoints = base;
-          const tStreakMult = streakMult; // approx: includes today if win
+          const tStreakMult = streakMult;
           const baseWithStreak = Math.round(base * tStreakMult);
           todayPoints = Math.round(baseWithStreak * supporterMult);
         } else {
-          todayPoints = BASE_POINTS.fail; // lost today
+          todayPoints = BASE_POINTS.fail;
         }
       }
 
@@ -231,32 +225,41 @@
       return computeDilemma(plays, supporterActive);
     }
 
-    // ---- Blitstiek reads ----
+    // ---- Blitstiek helpers (exact logic as agreed) ----
     function num(v){ return (typeof v === "number") ? v : (v==null ? 0 : Number(v)); }
 
-    async function loadBlitstiekOverall(userDoc){
-      // Accept several legacy/alias field names, coerce to number
-      const v =
-        userDoc?.kBlit_total ??
-        userDoc?.kBlitTotal ??
-        userDoc?.blitstiekTotal ??
-        userDoc?.blit_total ??
-        0;
-      return num(v);
+    async function getTodayLeaderboard(uid){
+      const snap = await getDoc(doc(db, "blitstiekGames", GAME_TODAY, "leaderboard", uid));
+      return snap.exists() ? snap.data() : null;
     }
 
-    async function loadBlitstiekToday(uid, userDoc){
-      // Preferred: Cloud Function daily write on users doc
-      if (typeof userDoc?.blit_todayPoints === "number") return userDoc.blit_todayPoints;
+    // Overall pill: base from users doc + provisional 100 if sub-60 and no place points yet
+    async function loadBlitstiekOverall(userDoc, uid){
+      const base =
+        num(userDoc?.kBlit_total ??
+            userDoc?.kBlitTotal ??
+            userDoc?.blitstiekTotal ??
+            userDoc?.blit_total ?? 0);
 
-      // Fallback: look for today's leaderboard entry with dailyPoints
-      const you = await getDoc(doc(db, "blitstiekGames", GAME_TODAY, "leaderboard", uid));
-      if (you.exists()) {
-        const r = you.data();
-        if (typeof r.dailyPoints === "number") return r.dailyPoints;
-      }
-      // Otherwise unknown until 23:55 → show null (renders as "—")
-      return null;
+      const lb = await getTodayLeaderboard(uid);
+      const noPlacePtsYet =
+        (typeof userDoc?.blit_todayPoints !== "number") &&
+        !(lb && typeof lb.dailyPoints === "number");
+      const instant = (lb && typeof lb.time === "number" && lb.time < 60) ? 100 : 0;
+
+      return base + (noPlacePtsYet ? instant : 0);
+    }
+
+    // Today tile: instant (0/100) + place (null until written)
+    async function loadBlitstiekToday(uid, userDoc){
+      let place = (typeof userDoc?.blit_todayPoints === "number") ? userDoc.blit_todayPoints : null;
+
+      const lb = await getTodayLeaderboard(uid);
+      if (lb && typeof lb.dailyPoints === "number") place = lb.dailyPoints;
+
+      const instant = (lb && typeof lb.time === "number" && lb.time < 60) ? 100 : 0;
+
+      return { instant, place };
     }
 
     function renderSupporterPill(state){
@@ -274,30 +277,26 @@
     }
 
     function renderNumbers({kScore, dlmOverall, dlmToday, bltOverall, bltToday}){
-      // Overview pills
       if ($("pillOverall"))       $("pillOverall").textContent       = `JOU KRIPTIEK-TELLING: ${fmt(kScore ?? 0)}`;
       if ($("pillDilemmaLive"))   $("pillDilemmaLive").textContent   = `JOU DILEMMA-TELLING: ${fmt(dlmOverall ?? 0)}`;
       if ($("pillBlitLive"))      $("pillBlitLive").textContent      = `JOU BLITSTIEK-TELLING: ${fmt(bltOverall ?? 0)}`;
 
-      // Dilemma card
       if ($("dilOverallScore"))   $("dilOverallScore").textContent   = fmt(dlmOverall ?? 0);
       if ($("calcTime"))          $("calcTime").textContent          = new Date().toLocaleString("af-ZA");
       if ($("totalPoints"))       $("totalPoints").textContent       = (dlmToday==null ? "—" : fmt(dlmToday));
 
-      // Blitstiek card
       if ($("blitOverallScore"))  $("blitOverallScore").textContent  = fmt(bltOverall ?? 0);
       if ($("calcTimeBlit"))      $("calcTimeBlit").textContent      = new Date().toLocaleString("af-ZA");
       if ($("totalPointsBlit"))   $("totalPointsBlit").textContent   = (bltToday==null ? "—" : fmt(bltToday));
     }
 
     async function hydrateProfile(user){
-      // Prefill basics
       const nameEl  = $("nameInput");
       const emailEl = $("emailInput");
       if(nameEl)  nameEl.value  = user.displayName || "";
       if(emailEl) emailEl.value = user.email || "";
 
-      // Ensure users doc exists (for supporter fields etc.)
+      // Ensure users doc exists
       const uref = doc(db, "users", user.uid);
       let userDocSnap = await getDoc(uref);
       if (!userDocSnap.exists()) {
@@ -308,7 +307,7 @@
       const supporter = getSupporterState(userDoc);
       renderSupporterPill(supporter);
 
-      // Sync the top banner with supporter state (fix)
+      // Sync top banner with supporter state
       const supporterBanner = document.getElementById("supporterBanner");
       if (supporterBanner) {
         if (supporter.active) {
@@ -322,30 +321,29 @@
         }
       }
 
-      // ---- Blitstiek totals FIRST
-      const bltOverall = await loadBlitstiekOverall(userDoc);
-      let   bltToday   = await loadBlitstiekToday(user.uid, userDoc);
+      // ---- Blitstiek (provisional-aware)
+      const bltOverall = await loadBlitstiekOverall(userDoc, user.uid);
+      const { instant: bltInstant, place: bltPlace } = await loadBlitstiekToday(user.uid, userDoc);
+      let bltTodayTotal = null;
+      if (bltInstant || bltPlace != null) bltTodayTotal = Number(bltInstant) + Number(bltPlace ?? 0);
 
-      // If no points yet but we have a time today, show it in the “Laas bereken” line
-      if (bltToday == null && typeof userDoc?.time === "number") {
+      if (bltTodayTotal == null && typeof userDoc?.time === "number") {
         const el = document.getElementById("calcTimeBlit");
         if (el) el.textContent = `Tyd vandag: ${userDoc.time}s – punte om 23:55`;
         const tpb = document.getElementById("totalPointsBlit");
-        if (tpb) tpb.title = "Wag vir 23:55-uitslag of blit_todayPoints";
+        if (tpb) tpb.title = "Wag vir 23:55-uitslag";
       }
 
-      // ---- Dilemma compute
+      // ---- Dilemma compute (includes supporter multiplier per our rules)
       const { overall: dlmOverall, today: dlmToday } = await loadDilemma(user.uid, supporter.active);
 
-      // ---- Kriptiek total: prefer users.kScore, else sum
+      // ---- Kriptiek total: prefer stored kScore, else sum
       const kScore = (typeof userDoc.kScore === "number")
         ? userDoc.kScore
         : (Number(dlmOverall || 0) + Number(bltOverall || 0));
 
-      // ---- Render
-      renderNumbers({kScore, dlmOverall, dlmToday, bltOverall, bltToday});
+      renderNumbers({ kScore, dlmOverall, dlmToday, bltOverall, bltToday: bltTodayTotal });
 
-      // GA4: profile view
       if (typeof gtag === 'function') gtag('event','profile_view',{ uid: user.uid });
     }
 
@@ -406,7 +404,6 @@
         wireProfileForm(user);
       }catch(e){
         console.error(e);
-        // Fail-soft: leave placeholders as '—' / 0
       }
     });
   </script>
@@ -547,7 +544,6 @@
           </div>
         </div>
 
-        <!-- Rules copy (live) -->
         <div class="rounded-xl bg-gray-50 p-4 border border-gray-200 mt-3">
           <h3 class="font-semibold text-gray-800 mb-2">Blitstiek – Telling & Ranglys</h3>
           <ul class="list-disc list-inside text-gray-700 space-y-1">
@@ -598,7 +594,6 @@
     </div>
   </main>
 
-  <!-- Footer -->
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
     &copy; 2025 Kriptiek. Alle regte voorbehou. |
     <a href="/profile.html" class="underline">My profiel</a> |
