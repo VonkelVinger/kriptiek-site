@@ -834,53 +834,46 @@
       } catch (e) { console.warn('RUN_APPEND/TRIM_FAILED', e); }
     }
 
-    /* ==== NEW: instant threshold awarding (client) ==== */
+    /* ==== Instant threshold awarding (client) ==== */
     function thresholdPointsFromSeconds(sec){
       if (sec < 30) return 200;
       if (sec < 60) return 100;
       return 0;
     }
 
-    async function awardThresholdForTime(seconds){ // NEW
+    async function awardThresholdForTime(seconds){
       if (!user || !GAME_ID) return;
-      const thr = thresholdPointsFromSeconds(Number(seconds));
-      if (thr <= 0) {
-        // Still ensure kBlit_total exists (0) so profile/leaderboard pills behave consistently
-        const playRef = doc(db, `userGames/${user.uid}/plays/${GAME_ID}`);
-        const snap = await getDoc(playRef);
-        const kPlace = snap.exists() ? Number(snap.data()?.kBlit_place || 0) : 0;
-        const kSup   = snap.exists() ? Number(snap.data()?.kBlit_sup   || 0) : 0;
-        const total  = IS_ARCHIVE ? 0 : (kPlace + kSup);
-        await setDoc(playRef, { kBlit_thr: 0, kBlit_total: total, updatedAt: serverTimestamp() }, { merge:true });
-        return;
-      }
 
+      const instant = thresholdPointsFromSeconds(Number(seconds));
       const playRef = doc(db, `userGames/${user.uid}/plays/${GAME_ID}`);
       const snap = await getDoc(playRef);
-      let prevThr = 0, kPlace=0, kSup=0;
-      if (snap.exists()){
+
+      let prevInstant = 0, kPlace = 0;
+      if (snap.exists()) {
         const d = snap.data();
-        prevThr = Number(d?.kBlit_thr || 0);
-        kPlace  = Number(d?.kBlit_place || 0);
-        kSup    = Number(d?.kBlit_sup   || 0);
+        prevInstant = Number(d?.kBlit_instant || 0);
+        kPlace      = Number(d?.kBlit_place   || 0);
       }
-      const newThr = Math.max(prevThr, thr); // upgrade 100 -> 200 if improved
-      const newTotal = IS_ARCHIVE ? newThr : (newThr + kPlace + kSup);
+
+      // Upgrade 100 → 200 if improved today
+      const newInstant = Math.max(prevInstant, instant);
+      // Client never applies supporter ×1.10; CF adds it at 23:55.
+      const newTotal   = IS_ARCHIVE ? newInstant : (newInstant + kPlace);
 
       await setDoc(playRef, {
         finished: true,
-        kBlit_thr: newThr,
+        kBlit_instant: newInstant,
         kBlit_total: newTotal,
         updatedAt: serverTimestamp()
       }, { merge:true });
 
-      // expose to leaderboard row for public display
+      // Expose the running total on the leaderboard row for the green pill
       const bestRef = doc(db, `blitstiekGames/${GAME_ID}/leaderboard/${user.uid}`);
       try { await setDoc(bestRef, { kBlit_total: newTotal }, { merge:true }); } catch {}
     }
 
-    /* ==== NEW: keep leaderboard pill synced from play doc (also on page load) ==== */
-    async function syncLeaderboardPillFromPlay(){ // NEW
+    /* ==== Keep leaderboard pill synced from play doc ==== */
+    async function syncLeaderboardPillFromPlay(){
       if (!user || !GAME_ID) return;
       const playRef = doc(db, `userGames/${user.uid}/plays/${GAME_ID}`);
       const snap = await getDoc(playRef);
@@ -890,14 +883,14 @@
       try { await setDoc(bestRef, { kBlit_total: total }, { merge:true }); } catch {}
     }
 
-    /* ---- LIVE Leaderboard (now with green pill + TODAY fallback) ---- */
+    /* ---- LIVE Leaderboard (with green pill + TODAY fallback) ---- */
     function startLiveLeaderboard(){
       if(lbUnsub) { lbUnsub(); lbUnsub=null; }
 
       const qy = query(
         collection(db,'blitstiekGames', GAME_ID, 'leaderboard'),
         orderBy('time','asc'),
-        limit(25) // pull a few extra for clean client tie-break
+        limit(25)
       );
 
       lbUnsub = onSnapshot(qy, (snap)=>{
@@ -921,13 +914,12 @@
         });
 
         const top = rows.slice(0,LB_SIZE);
-
         if (top.length) bestText.textContent = fmt(Number(top[0].time));
 
         top.forEach(v => {
           const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
 
-          // NEW fallback (today only)
+          // Fallback: before CF runs at 23:55, show 100/200 if present via time
           const fallbackToday =
             !IS_ARCHIVE
               ? (Number(v.time) < 30 ? 200 : (Number(v.time) < 60 ? 100 : 0))
@@ -1033,7 +1025,7 @@
 
       startLiveLeaderboard();
 
-      // NEW: if the user already has a play doc, sync pill to leaderboard
+      // If the user already has a play doc, sync pill to leaderboard
       if (user) { await syncLeaderboardPillFromPlay(); }
     }
 
@@ -1049,8 +1041,8 @@
       if(!win) return;
 
       await submitTimeToBoard();             // write/upgrade best time
-      await awardThresholdForTime(t);        // NEW: instant 100/200 (or 0), update total & pill
-      await syncLeaderboardPillFromPlay();   // NEW: ensure pill reflects latest total
+      await awardThresholdForTime(t);        // instant 100/200 (or 0), update total & pill
+      await syncLeaderboardPillFromPlay();   // ensure pill reflects latest total
 
       enableStickyShare({ time: t, target: TARGET });
 
