@@ -2,260 +2,396 @@
 <html lang="af">
 <head>
 
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-S9V4CMP1FP"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-S9V4CMP1FP');
-</script>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9V4CMP1FP"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-S9V4CMP1FP');
+  </script>
 
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>My Profiel – Kriptiek</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Profiel – Kriptiek</title>
 
-<!-- Favicons -->
-<link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
-<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=3">
-<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png?v=3">
-<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=3">
-<link rel="manifest" href="/assets/site.webmanifest?v=3">
+  <!-- Favicons -->
+  <link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=3">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png?v=3">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=3">
+  <link rel="manifest" href="/assets/site.webmanifest?v=3">
 
-<!-- Fonts & Tailwind -->
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800;900&display=swap" rel="stylesheet">
+  <!-- Fonts & Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800;900&display=swap" rel="stylesheet">
 
-<style>
-  body { font-family: 'Montserrat', sans-serif; background-color: #f3f4f6; }
+  <style>
+    body { font-family: 'Montserrat', sans-serif; background-color: #f3f4f6; }
 
-  /* --- Header/logo styles (from index.html) --- */
-  .logo-container {
-    position: relative; display: flex; justify-content: center; align-items: center;
-    width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
-    isolation: isolate;
-  }
-  .logo-container::before{
-    content:""; position:absolute; inset:-2px; border-radius:1rem;
-    background:conic-gradient(from 180deg at 50% 50%, #1e3a8a, #334155, #1e3a8a);
-    animation:spin 14s linear infinite; z-index:0; padding:2px;
-    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor; mask-composite: exclude;
-  }
-  @keyframes spin{ to{ transform:rotate(1turn); } }
-  @media (prefers-reduced-motion: reduce){ .logo-container::before{ animation:none; } }
-
-  .crossword-grid { display: grid; grid-template-columns: repeat(8, minmax(40px, 1fr)); gap: 4px; position: relative; z-index: 10; }
-  .letter-box {
-    width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
-    background-color: #374151; color: white; font-size: 1.8rem; font-weight: bold; border: 2px solid #1f2937; border-radius: 0.375rem;
-    text-transform: uppercase; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
-  }
-  .flipped-k { transform: scaleX(-1); }
-
-  .background-crossword {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
-    opacity: 0.5; z-index: 1; pointer-events: none; animation: bgFloat 30s linear infinite;
-  }
-  @keyframes bgFloat{ 0%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } 100%{ transform:translateY(0); } }
-
-  .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
-
-  /* --- Card + pill styling --- */
-  .card { background:#fff; border:1px solid #e5e7eb; border-radius:0.75rem; box-shadow:0 2px 6px rgba(2,6,23,.04); }
-  .pill { display:inline-flex; align-items:center; border-radius:999px; padding:.35rem .9rem; font-weight:800; font-size:.9rem; }
-  .pill-lg { padding:.45rem .95rem; font-size:1rem; }
-  .pill-blue { background:#e0e7ff; color:#1e3a8a; }
-  .pill-orange { background:#fff1e6; color:#c2410c; }
-  .pill-green { background:#e8fff3; color:#065f46; }
-  .pill-green-dark { background:#e6fffb; color:#115e59; }
-  .mono { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1, 'lnum' 1; }
-  .table-wrap { border:1px solid #e5e7eb; border-radius:.75rem; overflow:hidden; }
-  .table-scroll { overflow:auto; }
-  table.table { border-collapse:collapse; width:100%; }
-  table.table th, table.table td { padding:.6rem .75rem; border-bottom:1px solid #eef2f7; }
-  table.table thead th { font-size:.8rem; text-transform:uppercase; letter-spacing:.02em; color:#64748b; background:#fafbff; }
-  .mini { background:#f8fafc; border:1px solid #e5e7eb; border-radius:.75rem; padding:.5rem .6rem; text-align:center; }
-</style>
-
-<!-- === Feature toggles (Option B: only toggle known sections) === -->
-<script>
-  // Only sections listed here will be toggled; others are left untouched (shown by default).
-  const FEATURES = {
-    blitstiek: true,   // live
-    slimstiek: false,  // hidden until ready
-  };
-  function applyFeatureToggles() {
-    const known = new Set(Object.keys(FEATURES));
-    document.querySelectorAll('[data-section]').forEach(el => {
-      const key = el.getAttribute('data-section');
-      if (!known.has(key)) return; // leave unflagged sections (e.g., Dilemma) as-is
-      const on = !!FEATURES[key];
-      el.style.display = on ? '' : 'none';
-      el.setAttribute('aria-hidden', on ? 'false' : 'true');
-    });
-  }
-  document.addEventListener('DOMContentLoaded', applyFeatureToggles);
-</script>
-
-<!-- Firebase setup (same project as index.html) -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged, sendPasswordResetEmail, deleteUser, updateProfile } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
-    authDomain: "kriptiek-c9ea2.firebaseapp.com",
-    projectId: "kriptiek-c9ea2",
-    storageBucket: "kriptiek-c9ea2.appspot.com",
-    messagingSenderId: "620450620939",
-    appId: "1:620450620939:web:e93a18ac23b53b33db890e"
-  };
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db   = getFirestore(app);
-
-  function setSupporterPill(isActive,labelExtra=""){
-    const el=document.getElementById("supporterPill"); if(!el)return;
-    if(isActive){
-      el.textContent="ONDERSTEUNER: AKTIEF"+(labelExtra?` — ${labelExtra}`:"");
-      el.style.background="#dcfce7"; el.style.color="#065f46"; el.style.border="1px solid #bbf7d0";
-    }else{
-      el.textContent="ONDERSTEUNER: NIE AKTIEF NIE";
-      el.style.background="#fef2f2"; el.style.color="#991b1b"; el.style.border="1px solid #fecaca";
+    /* --- Header/logo styles (from index.html) --- */
+    .logo-container {
+      position: relative; display: flex; justify-content: center; align-items: center;
+      width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
+      isolation: isolate;
     }
-    el.classList.add("font-extrabold");
-  }
+    .logo-container::before{
+      content:""; position:absolute; inset:-2px; border-radius:1rem;
+      background:conic-gradient(from 180deg at 50% 50%, #1e3a8a, #334155, #1e3a8a);
+      animation:spin 14s linear infinite; z-index:0; padding:2px;
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+    }
+    @keyframes spin{ to{ transform:rotate(1turn); } }
+    @media (prefers-reduced-motion: reduce){ .logo-container::before{ animation:none; } }
 
-  function safeNum(v, fallback = 0) {
-    const n = typeof v === 'number' ? v : parseFloat(v);
-    return Number.isFinite(n) ? n : fallback;
-  }
+    .crossword-grid { display: grid; grid-template-columns: repeat(8, minmax(40px, 1fr)); gap: 4px; position: relative; z-index: 10; }
+    .letter-box {
+      width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
+      background-color: #374151; color: white; font-size: 1.8rem; font-weight: bold; border: 2px solid #1f2937; border-radius: 0.375rem;
+      text-transform: uppercase; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    }
+    .flipped-k { transform: scaleX(-1); }
 
-  async function readUserDoc(uid) {
-    const snap = await getDoc(doc(db,"users",uid));
-    return snap.exists() ? snap.data() : null;
-  }
+    .background-crossword {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
+      opacity: 0.5; z-index: 1; pointer-events: none; animation: bgFloat 30s linear infinite;
+    }
+    @keyframes bgFloat{ 0%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } 100%{ transform:translateY(0); } }
 
-  function renderSupporter(user) {
-    let active = !!user?.isPaid; let labelExtra="";
-    if(user?.paidUntil){
-      const until = typeof user.paidUntil==="number" ? user.paidUntil
-                  : (user.paidUntil?.seconds ? user.paidUntil.seconds*1000 : Date.parse(user.paidUntil));
-      if(Number.isFinite(until) && until > Date.now()){
-        active = true;
-        labelExtra = `tot ${new Date(until).toLocaleDateString("af-ZA")}`;
+    .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
+
+    /* --- Card + pill styling --- */
+    .card { background:#fff; border:1px solid #e5e7eb; border-radius:0.75rem; box-shadow:0 2px 6px rgba(2,6,23,.04); }
+    .pill { display:inline-flex; align-items:center; border-radius:999px; padding:.35rem .9rem; font-weight:800; font-size:.9rem; }
+    .pill-lg { padding:.45rem .95rem; font-size:1rem; }
+    .pill-blue { background:#e0e7ff; color:#1e3a8a; }
+    .pill-orange { background:#fff1e6; color:#c2410c; }
+    .pill-green { background:#e8fff3; color:#065f46; }
+    .pill-green-dark { background:#e6fffb; color:#115e59; }
+    .mono { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1, 'lnum' 1; }
+    .table-wrap { border:1px solid #e5e7eb; border-radius:.75rem; overflow:hidden; }
+    .table-scroll { overflow:auto; }
+    table.table { border-collapse:collapse; width:100%; }
+    table.table th, table.table td { padding:.6rem .75rem; border-bottom:1px solid #eef2f7; }
+    table.table thead th { font-size:.8rem; text-transform:uppercase; letter-spacing:.02em; color:#64748b; background:#fafbff; }
+    .mini { background:#f8fafc; border:1px solid #e5e7eb; border-radius:.75rem; padding:.5rem .6rem; text-align:center; }
+  </style>
+
+  <!-- === Feature toggles === -->
+  <script>
+    // Only sections listed here are toggled; Dilemma is always on.
+    const FEATURES = {
+      blitstiek: true,   // live
+      slimstiek: false,  // hidden until ready
+    };
+    function applyFeatureToggles() {
+      const known = new Set(Object.keys(FEATURES));
+      document.querySelectorAll('[data-section]').forEach(el => {
+        const key = el.getAttribute('data-section');
+        if (!known.has(key)) return; // leave unflagged sections as-is
+        const on = !!FEATURES[key];
+        el.style.display = on ? '' : 'none';
+        el.setAttribute('aria-hidden', on ? 'false' : 'true');
+      });
+    }
+    document.addEventListener('DOMContentLoaded', applyFeatureToggles);
+  </script>
+
+  <!-- Firebase setup -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import {
+      getAuth, onAuthStateChanged, sendPasswordResetEmail, deleteUser, updateProfile, updateEmail
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc, setDoc, updateDoc,
+      collection, query, orderBy, limit, getDocs, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+    // Same config as your live site
+    const firebaseConfig = {
+      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+      authDomain: "kriptiek-c9ea2.firebaseapp.com",
+      projectId: "kriptiek-c9ea2",
+      storageBucket: "kriptiek-c9ea2.appspot.com",
+      messagingSenderId: "620450620939",
+      appId: "1:620450620939:web:e93a18ac23b53b33db890e"
+    };
+
+    // ---- constants (Dilemma) ----
+    const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
+    const STREAK_THRESHOLD = 5;
+    const STREAK_MULTIPLIER = 1.10;
+    const SUPPORTER_MULTIPLIER = 1.10;
+
+    // ---- init ----
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    // ---- helpers ----
+    const $ = (id) => document.getElementById(id);
+    const fmt = (n) => (typeof n === "number" ? n.toLocaleString("af-ZA") : n);
+
+    function todayZaISO(){
+      const now = new Date();
+      const utc = now.getTime() + now.getTimezoneOffset()*60000;
+      const za  = new Date(utc + 120*60000); // UTC+2
+      return za.toISOString().slice(0,10);
+    }
+    const GAME_TODAY = `Game${todayZaISO()}`;
+
+    function getSupporterState(u){
+      // Support both schemas
+      let active = false, untilTs = null;
+      if (u?.supporterActive === true) active = true;
+      if (u?.isPaid === true) active = true;
+
+      const until =
+        (u?.supporterUntil?.toMillis && u.supporterUntil.toMillis()) ||
+        (typeof u?.supporterUntil === 'number' ? u.supporterUntil :
+          (u?.supporterUntil ? Date.parse(u.supporterUntil) : null)) ||
+        (typeof u?.paidUntil === 'number' ? u.paidUntil :
+          (u?.paidUntil ? Date.parse(u.paidUntil) : null));
+
+      if (Number.isFinite(until) && until > Date.now()) {
+        active = true; untilTs = until;
       }
+      return { active, untilTs };
     }
-    setSupporterPill(active,labelExtra);
-  }
 
-  function renderTotals(user) {
-    const dTot = document.getElementById("dilOverallScore");
-    const bTot = document.getElementById("blitOverallScore");
-    const sTot = document.getElementById("slimOverallScore");
-    const kTot = document.getElementById("pillOverall");
-    if(dTot && user?.kDilemma_total!==undefined) dTot.textContent = user.kDilemma_total;
-    if(bTot && user?.kBlit_total!==undefined)     bTot.textContent = user.kBlit_total;
-    if(sTot && user?.kSlim_total!==undefined)     sTot.textContent = user.kSlim_total;
-    if(kTot && user?.kScore!==undefined)          kTot.textContent = `JOU KRIPTIEK-TELLING: ${user.kScore}`;
-  }
+    // ---- Dilemma: compute overall from plays, and today from today's play ----
+    function computeDilemma(plays, supporterActive){
+      // Build unique-by-date map, compute streaks, dist
+      const byDate = new Map();
+      plays.slice().reverse().forEach(p => byDate.set(p.date, p));
+      const dates = Array.from(byDate.keys()).sort();
 
-  function renderTodayCards(user) {
-    // Dilemma (daily field not finalized yet → show '—')
-    const dToday = document.getElementById("totalPoints");
-    const dCalc  = document.getElementById("calcTime");
-    if(dToday) dToday.textContent = '—';
-    if(dCalc)  dCalc.textContent  = '—';
+      let cur = 0, best = 0, prev = null;
+      for (const d of dates) {
+        const consec = prev && (new Date(d) - new Date(prev) === 24*60*60*1000);
+        if (!consec) cur = 0;
+        const p = byDate.get(d);
+        if (p?.win) { cur++; best = Math.max(best, cur); } else { cur = 0; }
+        prev = d;
+      }
 
-    // Blitstiek (today points from Cloud Function at 23:55: users/{uid}.blit_todayPoints)
-    const bToday = document.getElementById("totalPointsBlit");
-    const bCalc  = document.getElementById("calcTimeBlit");
-    const todayPoints = (user && (user.blit_todayPoints !== undefined)) ? user.blit_todayPoints : null;
-    if(bToday) bToday.textContent = (todayPoints === null) ? '—' : safeNum(todayPoints, 0);
-    if(bCalc)  bCalc.textContent  = '—';
+      const dist = {1:0,2:0,3:0,4:0,5:0,6:0,fail:0};
+      for (const p of byDate.values()) {
+        if (p.win) {
+          const g = Math.min(Math.max(1, p.guesses || 6), 6);
+          dist[g] += 1;
+        } else dist.fail += 1;
+      }
 
-    // Slimstiek (hidden for now)
-    const sToday = document.getElementById("totalPointsSlim");
-    const sCalc  = document.getElementById("calcTimeSlim");
-    if(sToday) sToday.textContent = '—';
-    if(sCalc)  sCalc.textContent  = '—';
-  }
+      const subtotal =
+        dist[1]*BASE_POINTS[1] + dist[2]*BASE_POINTS[2] + dist[3]*BASE_POINTS[3] +
+        dist[4]*BASE_POINTS[4] + dist[5]*BASE_POINTS[5] + dist[6]*BASE_POINTS[6] +
+        dist.fail*BASE_POINTS.fail;
 
-  // Wire profile form actions (safe + minimal)
-  function wireProfileForm(user) {
-    const form = document.getElementById('profileForm');
-    const resetBtn = document.getElementById('resetPwBtn');
-    const delBtn = document.getElementById('deleteBtn');
-    const nameInput = document.getElementById('nameInput');
+      const streakMult = (cur >= STREAK_THRESHOLD) ? STREAK_MULTIPLIER : 1;
+      const supporterMult = supporterActive ? SUPPORTER_MULTIPLIER : 1;
 
-    if(form){
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        try{
-          const newName = (nameInput.value||'').trim();
-          if(newName && newName.length >= 2) {
-            await updateProfile(user, { displayName: newName });
-            alert('Jou naam is opgedateer.');
-          }
-        }catch(err){ console.error(err); alert('Kon nie jou naam opdateer nie.'); }
+      const streakBonus = Math.round(subtotal * (streakMult - 1));
+      const overall = subtotal + streakBonus;
+      const overallWithSupport = Math.round(overall * supporterMult);
+
+      // Today
+      const today = byDate.get(todayZaISO());
+      let todayPoints = null;
+      if (today) {
+        if (today.win) {
+          const base = BASE_POINTS[Math.min(Math.max(1, today.guesses || 6), 6)];
+          // Mirror multiplier logic per-day (if you want base-only, change to: todayPoints = base)
+          const tStreakMult = streakMult; // approx: current streak includes today if win
+          const baseWithStreak = Math.round(base * tStreakMult);
+          todayPoints = Math.round(baseWithStreak * supporterMult);
+        } else {
+          todayPoints = BASE_POINTS.fail; // lost today
+        }
+      }
+
+      return { overall: overallWithSupport, today: todayPoints };
+    }
+
+    async function loadDilemma(uid, supporterActive){
+      // Read last N plays
+      const playsRef = collection(db, "userGames", uid, "plays");
+      const q = query(playsRef, orderBy("finishedAt", "desc"), limit(200));
+      const snap = await getDocs(q);
+
+      const plays = [];
+      snap.forEach(docSnap => {
+        const d = docSnap.data();
+        const gameId = docSnap.id; // "GameYYYY-MM-DD"
+        const theDate = gameId.replace(/^Game/, "");
+        plays.push({
+          date: theDate,
+          win: d?.result === "win" || d?.finished === true,
+          guesses: Number(d?.guesses || 0),
+        });
       });
-    }
-    if(resetBtn){
-      resetBtn.addEventListener('click', async () => {
-        try{
-          await sendPasswordResetEmail(auth, user.email);
-          alert('Skakel om jou wagwoord te herstel is na jou e-pos gestuur.');
-        }catch(err){ console.error(err); alert('Kon nie wagwoord-epos stuur nie.'); }
-      });
-    }
-    if(delBtn){
-      delBtn.addEventListener('click', async () => {
-        if(!confirm("Is jy seker jy wil jou rekening permanent verwyder?")) return;
-        try{
-          await deleteUser(user);
-          alert('Jou rekening is verwyder.');
-          window.location.href = '/';
-        }catch(err){ console.error(err); alert('Kon nie rekening verwyder nie. Meld asseblief weer aan en probeer weer.'); }
-      });
-    }
-  }
 
-  onAuthStateChanged(auth, async(user)=>{
-    if(!user) return;
-    // Prefill basics
-    const nameEl  = document.getElementById("nameInput");
-    const emailEl = document.getElementById("emailInput");
-    if(nameEl)  nameEl.value  = user.displayName || "";
-    if(emailEl) emailEl.value = user.email || "";
+      return computeDilemma(plays, supporterActive);
+    }
 
-    try{
-      const u = await readUserDoc(user.uid);
-      if(u){
-        renderTotals(u);
-        renderSupporter(u);
-        renderTodayCards(u);
+    // ---- Blitstiek reads ----
+    async function loadBlitstiekOverall(userDoc){
+      // Preferred: canonical total on users doc
+      if (typeof userDoc?.kBlit_total === "number") return userDoc.kBlit_total;
+      // Fallback: if you later keep a cumulative path, add it here.
+      return 0;
+    }
+
+    async function loadBlitstiekToday(uid, userDoc){
+      // Preferred: Cloud Function daily write on users doc
+      if (typeof userDoc?.blit_todayPoints === "number") return userDoc.blit_todayPoints;
+
+      // Fallback: look for today's leaderboard entry with dailyPoints
+      const you = await getDoc(doc(db, "blitstiekGames", GAME_TODAY, "leaderboard", uid));
+      if (you.exists()) {
+        const r = you.data();
+        if (typeof r.dailyPoints === "number") return r.dailyPoints;
+      }
+      // Otherwise unknown until 23:55 → show null (renders as "—")
+      return null;
+    }
+
+    function renderSupporterPill(state){
+      const el=$("supporterPill"); if(!el) return;
+      if(state.active){
+        const extra = state.untilTs ? ` — tot ${new Date(state.untilTs).toLocaleDateString("af-ZA")}` : "";
+        el.textContent = "ONDERSTEUNER: AKTIEF"+extra;
+        el.style.background="#dcfce7"; el.style.color="#065f46"; el.style.border="1px solid #bbf7d0";
+        el.classList.add("font-extrabold");
       }else{
-        renderSupporter(null);
-        renderTodayCards(null);
+        el.textContent="ONDERSTEUNER: NIE AKTIEF NIE";
+        el.style.background="#fef2f2"; el.style.color="#991b1b"; el.style.border="1px solid #fecaca";
+        el.classList.add("font-extrabold");
       }
-    }catch(e){ console.error(e); }
-
-    wireProfileForm(user);
-
-    // GA4: profile view event
-    if (typeof gtag === 'function') {
-      gtag('event','profile_view',{ uid: user.uid });
     }
-  });
-</script>
+
+    function renderNumbers({kScore, dlmOverall, dlmToday, bltOverall, bltToday}){
+      // Overview pills
+      if ($("pillOverall"))       $("pillOverall").textContent       = `JOU KRIPTIEK-TELLING: ${fmt(kScore ?? 0)}`;
+      if ($("pillDilemmaLive"))   $("pillDilemmaLive").textContent   = `JOU DILEMMA-TELLING: ${fmt(dlmOverall ?? 0)}`;
+      if ($("pillBlitLive"))      $("pillBlitLive").textContent      = `JOU BLITSTIEK-TELLING: ${fmt(bltOverall ?? 0)}`;
+
+      // Dilemma card
+      if ($("dilOverallScore"))   $("dilOverallScore").textContent   = fmt(dlmOverall ?? 0);
+      if ($("calcTime"))          $("calcTime").textContent          = new Date().toLocaleString("af-ZA");
+      if ($("totalPoints"))       $("totalPoints").textContent       = (dlmToday==null ? "—" : fmt(dlmToday));
+
+      // Blitstiek card
+      if ($("blitOverallScore"))  $("blitOverallScore").textContent  = fmt(bltOverall ?? 0);
+      if ($("calcTimeBlit"))      $("calcTimeBlit").textContent      = new Date().toLocaleString("af-ZA");
+      if ($("totalPointsBlit"))   $("totalPointsBlit").textContent   = (bltToday==null ? "—" : fmt(bltToday));
+    }
+
+    async function hydrateProfile(user){
+      // Prefill basics
+      const nameEl  = $("nameInput");
+      const emailEl = $("emailInput");
+      if(nameEl)  nameEl.value  = user.displayName || "";
+      if(emailEl) emailEl.value = user.email || "";
+
+      // Ensure users doc exists (for supporter fields etc.)
+      const uref = doc(db, "users", user.uid);
+      let userDocSnap = await getDoc(uref);
+      if (!userDocSnap.exists()) {
+        await setDoc(uref, { userName: user.displayName || "Gebruiker", createdAt: serverTimestamp(), updatedAt: serverTimestamp() }, { merge: true });
+        userDocSnap = await getDoc(uref);
+      }
+      const userDoc = userDocSnap.data() || {};
+      const supporter = getSupporterState(userDoc);
+      renderSupporterPill(supporter);
+
+      // Compute Dilemma
+      const { overall: dlmOverall, today: dlmToday } = await loadDilemma(user.uid, supporter.active);
+
+      // Blitstiek totals
+      const bltOverall = await loadBlitstiekOverall(userDoc);
+      const bltToday   = await loadBlitstiekToday(user.uid, userDoc);
+
+      // Kriptiek total (prefer users.kScore; else sum)
+      const kScore = (typeof userDoc.kScore === "number")
+        ? userDoc.kScore
+        : (Number(dlmOverall || 0) + Number(bltOverall || 0));
+
+      renderNumbers({kScore, dlmOverall, dlmToday, bltOverall, bltToday});
+
+      // GA4: profile view
+      if (typeof gtag === 'function') gtag('event','profile_view',{ uid: user.uid });
+    }
+
+    function wireProfileForm(user){
+      const form = $("profileForm");
+      const resetBtn = $("resetPwBtn");
+      const delBtn = $("deleteBtn");
+
+      if(form){
+        form.addEventListener("submit", async (e)=>{
+          e.preventDefault();
+          try{
+            const newName = ($("nameInput").value||"").trim().slice(0,40);
+            if(newName && newName !== (user.displayName||"")){
+              await updateProfile(user, { displayName: newName });
+              await updateDoc(doc(db,"users",user.uid), { userName: newName, updatedAt: serverTimestamp() });
+              alert("Profiel gestoor.");
+            } else {
+              alert("Geen veranderinge om te stoor nie.");
+            }
+          }catch(err){ console.error(err); alert("Kon nie jou profiel opdateer nie."); }
+        });
+      }
+      if(resetBtn){
+        resetBtn.addEventListener("click", async ()=>{
+          try{
+            await sendPasswordResetEmail(auth, auth.currentUser.email);
+            alert("’n Wagwoordherstel-skakel is per e-pos gestuur.");
+          }catch(err){ console.error(err); alert("Kon nie wagwoordherstel stuur nie."); }
+        });
+      }
+      if(delBtn){
+        delBtn.addEventListener("click", async ()=>{
+          if(!confirm("Is jy seker? Jou rekening sal verwyder word.")) return;
+          try{
+            await deleteUser(auth.currentUser);
+            alert("Rekening verwyder.");
+            window.location.href = "/";
+          }catch(err){
+            console.error(err);
+            alert(String(err.code||"").includes("requires-recent-login")
+              ? "Meld asseblief weer aan en probeer dan weer."
+              : "Kon nie jou rekening verwyder nie.");
+          }
+        });
+      }
+    }
+
+    // ---- Auth gate + bootstrap ----
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        const ret = encodeURIComponent("/profiletest.html");
+        window.location.href = `/login.html?return=${ret}`;
+        return;
+      }
+      try{
+        await hydrateProfile(user);
+        wireProfileForm(user);
+      }catch(e){
+        console.error(e);
+        // Fail-soft: leave placeholders as '—' / 0
+      }
+    });
+  </script>
 
 </head>
 
 <body class="bg-gray-100 min-h-screen flex flex-col">
-  <!-- Exact same header/logo as index.html -->
+  <!-- Header -->
   <header class="bg-white shadow p-4">
     <div class="logo-container">
       <div id="backgroundCrossword" class="background-crossword"></div>
@@ -402,7 +538,7 @@
         </div>
       </section>
 
-      <!-- SLIMSTIEK (hidden for now; flip FEATURES.slimstiek=true when ready) -->
+      <!-- SLIMSTIEK (hidden for now) -->
       <section class="card p-5 md:p-6" data-section="slimstiek" aria-hidden="true" style="display:none">
         <header class="flex flex-col gap-1 mb-3">
           <div class="h-1 w-full bg-teal-500 rounded-full"></div>
@@ -439,7 +575,7 @@
     </div>
   </main>
 
-  <!-- Exact same footer -->
+  <!-- Footer -->
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
     &copy; 2025 Kriptiek. Alle regte voorbehou. |
     <a href="/profile.html" class="underline">My profiel</a> |
