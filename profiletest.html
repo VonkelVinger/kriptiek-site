@@ -79,16 +79,18 @@
   .mini { background:#f8fafc; border:1px solid #e5e7eb; border-radius:.75rem; padding:.5rem .6rem; text-align:center; }
 </style>
 
-<!-- === Feature toggles (simple, non-destructive) === -->
+<!-- === Feature toggles (Option B: only toggle known sections) === -->
 <script>
-  // Live feature flags
+  // Only sections listed here will be toggled; others are left untouched (shown by default).
   const FEATURES = {
     blitstiek: true,   // live
     slimstiek: false,  // hidden until ready
   };
   function applyFeatureToggles() {
+    const known = new Set(Object.keys(FEATURES));
     document.querySelectorAll('[data-section]').forEach(el => {
       const key = el.getAttribute('data-section');
+      if (!known.has(key)) return; // leave unflagged sections (e.g., Dilemma) as-is
       const on = !!FEATURES[key];
       el.style.display = on ? '' : 'none';
       el.setAttribute('aria-hidden', on ? 'false' : 'true');
@@ -162,13 +164,13 @@
   }
 
   function renderTodayCards(user) {
-    // Dilemma (unknown field names for daily — show '—' unless you already write them)
+    // Dilemma (daily field not finalized yet → show '—')
     const dToday = document.getElementById("totalPoints");
     const dCalc  = document.getElementById("calcTime");
     if(dToday) dToday.textContent = '—';
     if(dCalc)  dCalc.textContent  = '—';
 
-    // Blitstiek (today points finalized by 23:55 Cloud Function; optional field)
+    // Blitstiek (today points from Cloud Function at 23:55: users/{uid}.blit_todayPoints)
     const bToday = document.getElementById("totalPointsBlit");
     const bCalc  = document.getElementById("calcTimeBlit");
     const todayPoints = (user && (user.blit_todayPoints !== undefined)) ? user.blit_todayPoints : null;
@@ -236,7 +238,6 @@
         renderSupporter(u);
         renderTodayCards(u);
       }else{
-        // Fallback to blanks if user doc missing
         renderSupporter(null);
         renderTodayCards(null);
       }
