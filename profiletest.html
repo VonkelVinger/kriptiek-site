@@ -2,208 +2,157 @@
 <html lang="af">
 <head>
 
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-S9V4CMP1FP"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-S9V4CMP1FP');
-</script>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9V4CMP1FP"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-S9V4CMP1FP');
+  </script>
 
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>My Profiel – Kriptiek (toets)</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Profiel – Kriptiek</title>
 
-<!-- Favicon and App Icons -->
-<link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
-<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=3">
-<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png?v=3">
-<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=3">
-<link rel="manifest" href="/assets/site.webmanifest?v=3">
+  <!-- Favicons -->
+  <link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=3">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png?v=3">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=3">
+  <link rel="manifest" href="/assets/site.webmanifest?v=3">
 
-<!-- Social Share Image -->
-<meta property="og:image" content="https://www.kriptiek.com/assets/share-logo.png?v=1" />
-<meta name="twitter:image" content="https://www.kriptiek.com/assets/share-logo.png?v=1" />
-<meta property="og:title" content="Kriptiek – Tuiste van DILEMMA" />
-<meta property="og:description" content="Speel DILEMMA aanlyn" />
-<meta property="og:url" content="https://www.kriptiek.com/" />
-<meta property="og:type" content="website" />
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="image" content="https://www.kriptiek.com/assets/share-logo.png?v=1" />
+  <!-- Styles -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Montserrat', sans-serif; }
+    .mono{ font-variant-numeric: tabular-nums; }
 
-<!-- Styles -->
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800;900&display=swap" rel="stylesheet">
-
-<style>
-  body { font-family: 'Montserrat', sans-serif; }
-  .card { background:#fff; border:1px solid #e5e7eb; border-radius: 0.75rem; box-shadow: 0 2px 6px rgba(2,6,23,.04); }
-  .pill { display:inline-flex; align-items:center; border-radius:999px; padding:.3rem .7rem; font-weight:800; font-size:.9rem; }
-  .pill-lg { padding:.45rem .9rem; font-size:.95rem; }
-  .pill-blue { background:#e0e7ff; color:#1e3a8a; }
-  .pill-orange { background:#fff1e6; color:#c2410c; }
-  .pill-green { background:#e8fff3; color:#065f46; }
-  .pill-green-dark { background:#e6fffb; color:#115e59; }
-  .mono { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1, 'lnum' 1; }
-  .table-wrap { border:1px solid #e5e7eb; border-radius:.75rem; overflow:hidden; }
-  .table-scroll { overflow:auto; }
-  table.table { border-collapse:collapse; width:100%; }
-  table.table th, table.table td { padding:.6rem .75rem; border-bottom:1px solid #eef2f7; }
-  table.table thead th { font-size:.8rem; text-transform:uppercase; letter-spacing:.02em; color:#64748b; background:#fafbff; }
-  .mini { background:#f8fafc; border:1px solid #e5e7eb; border-radius:.75rem; padding:.5rem .6rem; text-align:center; }
-  .supporter-banner { display:block; text-align:center; font-weight:800; border-radius:.75rem; padding:.5rem .75rem; }
-  .supporter-banner-red { background:#fff1f2; color:#991b1b; border:1px solid #fecdd3; }
-</style>
-
-<!-- Firebase boot (same project & versions as index.html) -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged, sendPasswordResetEmail, deleteUser, updateProfile } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
-    authDomain: "kriptiek-c9ea2.firebaseapp.com",
-    projectId: "kriptiek-c9ea2",
-    storageBucket: "kriptiek-c9ea2.appspot.com",
-    messagingSenderId: "620450620939",
-    appId: "1:620450620939:web:e93a18ac23b53b33db890e"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db   = getFirestore(app);
-
-  // Expose logout (parity with index.html)
-  window.kriptiekLogout = async function () {
-    try { await import("https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js").then(m => m.signOut(auth)); }
-    finally { try { localStorage.clear(); sessionStorage.clear(); } catch{}; setTimeout(() => location.href="/index.html", 120); }
-  };
-
-  // Helper to set supporter pill styling
-  function setSupporterPill(isActive, labelExtra="") {
-    const el = document.getElementById("supporterPill");
-    if (!el) return;
-    if (isActive) {
-      el.textContent = "ONDERSTEUNER: AKTIEF" + (labelExtra ? ` — ${labelExtra}` : "");
-      el.style.background = "#dcfce7"; // green-50
-      el.style.color = "#065f46";      // green-900
-      el.style.border = "1px solid #bbf7d0";
-      el.classList.add("font-extrabold");
-    } else {
-      el.textContent = "ONDERSTEUNER: NIE AKTIEF NIE";
-      el.style.background = "#fef2f2"; // red-50
-      el.style.color = "#991b1b";      // red-900
-      el.style.border = "1px solid #fecaca";
-      el.classList.add("font-extrabold");
+    /* --- Header/logo --- */
+    .logo-container {
+      position: relative; display: flex; justify-content: center; align-items: center;
+      width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
+      isolation: isolate;
     }
-  }
+    .logo-container::before{
+      content:""; position:absolute; inset:-2px; border-radius:1rem;
+      background:conic-gradient(from 180deg at 50% 50%, #1e3a8a, #334155, #1e3a8a);
+      animation:spin 14s linear infinite; z-index:0; padding:2px;
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+    }
+    @keyframes spin{ to{ transform:rotate(1turn); } }
+    @media (prefers-reduced-motion: reduce){ .logo-container::before{ animation:none; } }
 
-  // Auth listener → populate fields & overall scores + supporter pill
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) return;
-    const nameEl  = document.getElementById("nameInput");
-    const emailEl = document.getElementById("emailInput");
-    if (nameEl)  nameEl.value  = user.displayName || "";
-    if (emailEl) emailEl.value = user.email || "";
+    .crossword-grid { display: grid; grid-template-columns: repeat(8, minmax(40px, 1fr)); gap: 4px; position: relative; z-index: 10; }
+    .letter-box {
+      width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
+      background-color: #374151; color: white; font-size: 1.8rem; font-weight: bold; border: 2px solid #1f2937; border-radius: 0.375rem;
+      text-transform: uppercase; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    }
+    .flipped-k { transform: scaleX(-1); }
 
-    try {
-      const snap = await getDoc(doc(db, "users", user.uid));
-      if (snap.exists()) {
-        const u = snap.data();
+    .background-crossword {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
+      opacity: 0.5; z-index: 1; pointer-events: none; animation: bgFloat 30s linear infinite;
+    }
+    @media (prefers-reduced-motion: reduce){ .background-crossword{ animation:none; } }
+    @keyframes bgFloat{ 0%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } 100%{ transform:translateY(0); } }
 
-        // Overall totals + updated stamps (if you store fields with those names)
-        if (u.kDilemma_total !== undefined) document.getElementById("dilOverallScore").textContent = u.kDilemma_total;
-        if (u.kBlit_total     !== undefined) document.getElementById("blitOverallScore").textContent = u.kBlit_total;
-        if (u.kSlim_total     !== undefined) document.getElementById("slimOverallScore").textContent = u.kSlim_total;
+    .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
 
-        if (u.kScore !== undefined) document.getElementById("pillOverall").textContent = `JOU KRIPTIEK-TELLING: ${u.kScore}`;
+    /* Buttons / pills */
+    .kbtn{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.65rem 1rem; border-radius:.9rem; background:#1d4ed8; color:#fff; font-weight:800; box-shadow:0 10px 24px rgba(29,78,216,.25); }
+    .kbtn:hover{ background:#1e40af; }
+    .kbtn-red{ background:#dc2626; } .kbtn-red:hover{ background:#b91c1c; }
 
-        if (u.updatedAt) {
-          const stamp = u.updatedAt; // string or ms
-          const s = typeof stamp === "number" ? new Date(stamp) : new Date(Date.parse(stamp));
-          const nice = isNaN(s) ? "—" : s.toLocaleString("af-ZA");
-          ["dilOverallUpdated","blitOverallUpdated","slimOverallUpdated"].forEach(id => {
-            const el = document.getElementById(id); if (el) el.textContent = nice;
-          });
-        }
+    .pill { display:inline-flex; align-items:center; gap:.6rem; padding:.6rem 1.1rem; border-radius:999px; font-weight:800; color:#fff; white-space:nowrap; line-height:1.15;
+            box-shadow: 0 6px 14px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.25); }
+    .pill-sm { font-size:.95rem; padding:.55rem 1rem; }
+    .pill-lg { font-size:1.15rem; padding:.75rem 1.25rem; }
+    .pill-blue { background:linear-gradient(90deg,#1d4ed8,#1e40af); }
+    .pill-orange { background: linear-gradient(180deg, #FB7A12 0%, #D65A0A 100%); }
+    .pill-green { background: linear-gradient(180deg, #22C55E 0%, #0EA55B 100%); }
+    .pill-green-dark { background: linear-gradient(180deg, #0F766E 0%, #065F46 100%); }
 
-        // Supporter: isPaid or paidUntil
-        let active = !!u.isPaid;
-        let labelExtra = "";
-        if (u.paidUntil) {
-          const until = typeof u.paidUntil === "number" ? u.paidUntil : Date.parse(u.paidUntil);
-          if (!Number.isNaN(until) && until > Date.now()) {
-            active = true;
-            labelExtra = `tot ${new Date(until).toLocaleDateString("af-ZA")}`;
-          }
-        }
-        setSupporterPill(active, labelExtra);
-      }
-    } catch (e) { console.error(e); }
-  });
+    /* Cards */
+    .card{ background:#fff; border-radius:1rem; box-shadow:0 8px 18px rgba(0,0,0,.08); }
+    .mini{ background:#f8fafc; border:1px solid #e5e7eb; border-radius:.75rem; padding:12px; text-align:center; }
 
-  // Profile form handlers
-  document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById("profileForm");
-    const resetBtn = document.getElementById("resetPwBtn");
-    const delBtn   = document.getElementById("deleteBtn");
+    /* Table & bars */
+    .table{ width:100%; border-collapse:separate; border-spacing:0; }
+    .table th,.table td{ padding:.55rem .75rem; border-bottom:1px solid #e5e7eb; }
+    .table th{
+      text-align:left; font-weight:700; color:#334155; background:#f8fafc; position:sticky; top:0;
+      box-shadow: inset 0 -1px 0 #e5e7eb; /* hairline under sticky header */
+    }
+    .table th.text-right{ text-align:right; }
+    .table th.mono{ font-variant-numeric: tabular-nums; }
+    .table tbody tr:nth-child(even){ background:#f9fafb; }
+    .table tbody tr:hover{ background:#f1f5f9; }
 
-    if (form) form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const user = auth.currentUser; if (!user) return alert("Geen gebruiker aangemeld nie.");
-      const name = document.getElementById("nameInput").value.trim();
-      try {
-        await updateProfile(user, { displayName: name });
-        await setDoc(doc(db, "users", user.uid), { userName: name }, { merge: true });
-        const msg = document.getElementById("formMsg");
-        if (msg) { msg.textContent = "Naam suksesvol bygewerk."; msg.classList.remove("hidden"); }
-      } catch (err) { alert("Kon nie stoor nie: " + err.message); }
-    });
+    .barRow{ display:grid; grid-template-columns:1.1rem 1fr auto; gap:.5rem; align-items:center; }
+    .barTrack{ height:12px; background:#e5e7eb; border-radius:6px; overflow:hidden; }
+    .barFill{ height:100%; background:linear-gradient(90deg,#1d4ed8,#1e40af); }
 
-    if (resetBtn) resetBtn.addEventListener("click", async () => {
-      const email = (document.getElementById("emailInput")?.value || "").trim();
-      if (!email) return alert("Tik jou e-pos in.");
-      try { await sendPasswordResetEmail(auth, email); alert("Wagwoord-herstel-skakel gestuur aan " + email); }
-      catch (err) { alert(err.message); }
-    });
+    /* Supporter banner (base + color variants) */
+    .supporter-banner{
+      display:flex; align-items:center; justify-content:center; width:100%;
+      color:#fff; font-weight:800; padding:.6rem 1rem; border-radius:999px; text-decoration:none;
+      box-shadow: 0 6px 14px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.25);
+    }
+    .supporter-banner-green{ background: linear-gradient(180deg, #22C55E 0%, #0EA55B 100%); }
+    .supporter-banner-red{   background: linear-gradient(180deg, #DC2626 0%, #B91C1C 100%); }
 
-    if (delBtn) delBtn.addEventListener("click", async () => {
-      const user = auth.currentUser; if (!user) return alert("Geen gebruiker aangemeld nie.");
-      if (!confirm("Wil jy jou rekening permanent uitvee?")) return;
-      try { await deleteUser(user); alert("Rekening verwyder."); }
-      catch (err) { alert("Kon nie uitvee nie: " + err.message); }
-    });
-  });
-</script>
+    /* Equal tops */
+    .top-card { min-height:320px; }
+    @media (max-width: 640px){ .top-card{ min-height:unset; } }
 
+    /* --- Game blocks --- */
+    .game-card .game-col { display:flex; flex-direction:column; }
+    .game-card .game-col.-col { min-height: 340px; }
+    @media (max-width: 640px){ .game-card .game-col.-col { min-height: unset; } }
+    .game-card .push-end { margin-top:auto; }
+    .col-summary { border-top: 1px solid #e5e7eb; padding-top: .75rem; }
+
+    /* Info banners */
+    .banner { display:flex; align-items:center; gap:.6rem; border-radius:.75rem; padding:.5rem .75rem; font-weight:700; }
+    .banner-live { background:#ecfeff; color:#155e75; border:1px solid #a5f3fc; }
+    .banner-archive { background:#f8fafc; color:#334155; border:1px solid #e2e8f0; }
+
+    /* Polished table wrapper with scroll + custom scrollbar */
+    .table-wrap{ border:1px solid #e5e7eb; border-radius:.75rem; background:#fff; overflow:hidden; }
+    .table-scroll{ max-height:420px; overflow:auto; }
+    .table-scroll::-webkit-scrollbar{ width:10px; height:10px; }
+    .table-scroll::-webkit-scrollbar-thumb{ background:#cbd5e1; border-radius:999px; }
+    .table-scroll::-webkit-scrollbar-track{ background:#f1f5f9; border-radius:999px; }
+
+    /* Summary panel gradient */
+    .summary-panel{ background:linear-gradient(180deg,#eef2ff 0%, #e0e7ff 100%); }
+  </style>
 </head>
-
 <body class="bg-gray-100 min-h-screen flex flex-col">
-  <!-- EXACT header from index.html -->
   <header class="bg-white shadow p-4">
     <div class="logo-container">
       <div id="backgroundCrossword" class="background-crossword"></div>
       <div class="crossword-grid">
-        <div class="letter-box flipped-k">K</div>
-        <div class="letter-box flipped-k">R</div>
-        <div class="letter-box">I</div>
-        <div class="letter-box flipped-k">P</div>
-        <div class="letter-box">T</div>
-        <div class="letter-box">I</div>
-        <div class="letter-box flipped-k">E</div>
-        <div class="letter-box">K</div>
+        <div class="letter-box flipped-k">K</div><div class="letter-box flipped-k">R</div><div class="letter-box">I</div>
+        <div class="letter-box flipped-k">P</div><div class="letter-box">T</div><div class="letter-box">I</div>
+        <div class="letter-box flipped-k">E</div><div class="letter-box">K</div>
       </div>
     </div>
   </header>
 
-  <main class="flex-grow p-4 pb-16">
-    <!-- Top: Profile + overview (mobile-first stack) -->
-    <div class="max-w-6xl mx-auto flex flex-col gap-6 items-stretch">
+  <div class="max-w-6xl mx-auto px-4 pt-2 text-center text-2xl font-bold text-[#1e3a8a]">
+    WELKOM TERUG, <span id="wbName">GEBRUIKER</span>
+  </div>
 
-      <!-- Profile -->
-      <section class="card p-5 md:p-6">
+  <main class="flex-grow p-4 pb-16">
+<div class="max-w-6xl mx-auto flex flex-col gap-6 items-stretch">
+    <!-- LEFT -->
+      <section class="card p-5 md:p-6 top-card">
         <a id="supporterBanner" href="https://buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
            class="supporter-banner supporter-banner-red mb-4"
            aria-label="Word ’n ondersteuner (Buy Me a Coffee)">
@@ -225,31 +174,24 @@
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
-            <button type="submit" class="px-4 py-2 rounded-xl bg-blue-900 text-white font-bold" id="saveBtn">BÊRE</button>
-            <button id="resetPwBtn" type="button" class="px-4 py-2 rounded-xl bg-slate-800 text-white font-bold">VRA NUWE WAGWOORD</button>
-            <button id="deleteBtn" type="button" class="px-4 py-2 rounded-xl bg-red-700 text-white font-bold">VERWYDER MY REKENING</button>
+            <button type="submit" class="kbtn" id="saveBtn">BÊRE</button>
+            <button id="resetPwBtn" type="button" class="kbtn bg-slate-800 hover:bg-slate-900">VRA NUWE WAGWOORD</button>
+            <button id="deleteBtn" type="button" class="kbtn kbtn-red">VERWYDER MY REKENING</button>
           </div>
           <p id="formMsg" class="text-sm mt-2 hidden" aria-live="polite" role="status"></p>
           <p id="deleteMsg" class="text-sm mt-2 hidden" aria-live="polite" role="status"></p>
         </form>
       </section>
 
-      <!-- Overview + Ondersteuner pill -->
-      <section class="card p-5 md:p-6">
-        <div class="mb-2">
-          <span id="supporterPill" class="pill pill-lg" role="status"
-                style="background:#f1f5f9;color:#0f172a;border:1px solid #e2e8f0">
-            ONDERSTEUNER: ONBESKOSTIG
-          </span>
-        </div>
-        <div class="mb-4">
-          <span id="pillOverall" class="pill pill-lg pill-blue" role="status">JOU KRIPTIEK-TELLING: 0</span>
-        </div>
-        <div class="flex flex-wrap gap-2 mb-4 items-start">
+      <!-- RIGHT -->
+      <section class="card p-5 md:p-6 top-card">
+        <div class="mb-4"><span id="pillOverall" class="pill pill-lg pill-blue" role="status">JOU KRIPTIEK-TELLING: 0</span></div>
+        <div class="flex flex-wrap gap-2 mb-6 items-start">
           <span id="pillDilemmaLive" class="pill pill-lg pill-orange" role="status">JOU DILEMMA-TELLING: 0</span>
           <span id="pillBlitLive" class="pill pill-lg pill-green" role="status">JOU BLITSTIEK-TELLING: 0</span>
           <span class="pill pill-lg pill-green-dark">JOU SLIMSTIEK-TELLING: BINNEKORT</span>
         </div>
+        <h3 class="text-2xl md:text-[1.7rem] font-extrabold text-slate-900 mb-1">Hoe werk die Kriptiek-telling?</h3>
         <p class="text-sm text-slate-600">
           Jou Kriptiek-telling is die som van jou <strong>Dilemma</strong>- en <strong>Blitstiek</strong>-tellings (Slimstiek volg later).
         </p>
@@ -258,248 +200,655 @@
 
     <!-- GAMES -->
     <div class="max-w-6xl mx-auto space-y-6 mt-6">
+
       <!-- DILEMMA -->
-      <section class="card p-5 md:p-6">
-        <header class="flex flex-col gap-1 mb-3">
-          <div class="h-1 w-full bg-orange-500 rounded-full"></div>
+      <section class="card p-5 md:p-6 game-card">
+        <div class="flex items-center justify-between mb-3">
           <h2 class="text-xl font-extrabold text-slate-900">DILEMMA</h2>
-        </header>
-
-        <!-- OVERALL (big & bold) -->
-        <div class="rounded-xl border border-slate-200 bg-white p-4 mb-3">
-          <div class="flex items-end gap-4">
-            <div>
-              <div id="dilOverallScore" class="text-6xl font-black mono text-slate-900 tracking-tight">0</div>
-              <div class="text-xs uppercase tracking-wide text-slate-500">Algeheel (totaal)</div>
-            </div>
-            <div class="ml-auto text-right">
-              <div class="text-xs text-slate-500">Laas opgedateer</div>
-              <div id="dilOverallUpdated" class="text-sm mono">—</div>
-            </div>
-          </div>
+          <span id="streakChip" class="hidden px-2.5 py-1 rounded-full font-bold text-indigo-900" style="background:#e0e7ff">+10% lopie</span>
         </div>
 
-        <!-- TODAY -->
-        <div class="rounded-xl border border-orange-200 bg-orange-50 p-4 mb-4">
-          <div class="flex items-end gap-4">
-            <div>
-              <div id="totalPoints" class="text-4xl md:text-5xl font-extrabold mono text-orange-900">0</div>
-              <div class="text-xs uppercase tracking-wide text-orange-900/70">Vandag</div>
-            </div>
-            <div class="ml-auto text-right">
-              <div class="text-xs text-orange-900/70">Laas bereken</div>
-              <div id="calcTime" class="text-sm mono">—</div>
-            </div>
-          </div>
-          <div class="text-[13px] text-orange-900/80 mt-2">
-            Lopie- en ondersteuners-bonusse word hier ingereken soos van toepassing.
-          </div>
-        </div>
-
-        <h3 class="text-sm font-bold text-slate-700 mb-2">Vandag se ontleding</h3>
-        <div class="table-wrap">
-          <div class="table-scroll">
-            <table class="table text-sm">
-              <thead>
-                <tr>
-                  <th class="text-left">Komponent</th>
-                  <th class="text-right">Aantal</th>
-                  <th class="text-right mono">Formule</th>
-                  <th class="text-right">Punte</th>
-                </tr>
-              </thead>
-              <tbody id="breakdownBody"></tbody>
-              <tfoot>
-                <tr><td class="font-bold">Subtotaal</td><td></td><td></td><td class="text-right font-extrabold mono" id="subtotalCell">0</td></tr>
-                <tr><td class="font-bold">Lopie-bonus</td><td></td><td class="text-right whitespace-nowrap" id="lopieMeta">—</td><td class="text-right font-extrabold mono" id="lopieBonusCell">0</td></tr>
-                <tr><td class="font-bold">Ondersteuner-bonus</td><td></td><td class="text-right whitespace-nowrap" id="supporterMeta">—</td><td class="text-right font-extrabold mono" id="supporterBonusCell">0</td></tr>
-                <tr><td class="font-extrabold text-slate-900">Totaal (vandag)</td><td></td><td></td><td class="text-right font-extrabold mono text-orange-900" id="totalCell">0</td></tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- BLITSTIEK -->
-      <section class="card p-5 md:p-6">
-        <header class="flex flex-col gap-1 mb-3">
-          <div class="h-1 w-full bg-emerald-500 rounded-full"></div>
-          <div class="flex items-center justify-between">
-            <h2 class="text-xl font-extrabold text-slate-900">BLITSTIEK</h2>
-            <div id="bannerBlit" class="text-xs font-extrabold px-2 py-1 rounded bg-emerald-50 border border-emerald-200 text-emerald-900">
-              Vandag (voorlopig, finale posisie om 23:55)
-            </div>
-          </div>
-        </header>
-
-        <!-- OVERALL (big & bold) -->
-        <div class="rounded-xl border border-slate-200 bg-white p-4 mb-3">
-          <div class="flex items-end gap-4">
-            <div>
-              <div id="blitOverallScore" class="text-6xl font-black mono text-slate-900 tracking-tight">0</div>
-              <div class="text-xs uppercase tracking-wide text-slate-500">Algeheel (totaal)</div>
-            </div>
-            <div class="ml-auto text-right">
-              <div class="text-xs text-slate-500">Laas opgedateer</div>
-              <div id="blitOverallUpdated" class="text-sm mono">—</div>
-            </div>
-          </div>
-          <div class="text-[13px] text-slate-600 mt-2">
-            Totale Blitstiek-telling (alle dae).
-          </div>
-        </div>
-
-        <!-- TODAY -->
-        <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 mb-4">
-          <div class="flex items-end gap-4">
-            <div>
-              <div id="totalPointsBlit" class="text-4xl md:text-5xl font-extrabold mono text-emerald-900">0</div>
-              <div class="text-xs uppercase tracking-wide text-emerald-900/70">
-                Vandag (na 23:55 sluit ×1.10 in indien ondersteuner)
+<div class="flex flex-col gap-5 items-stretch">
+          <div class="game-col dilemma-col">
+            <div class="summary-panel border border-indigo-200 rounded-xl p-4 mb-4">
+              <div class="text-sm text-indigo-900/80">Laas bereken op: <span id="calcTime" class="mono">—</span></div>
+              <div class="mt-2 flex items-end gap-4">
+                <div>
+                  <div class="text-4xl md:text-5xl font-extrabold mono text-indigo-900" id="totalPoints">0</div>
+                  <div class="text-xs uppercase tracking-wide text-indigo-900/70">Totale DILEMMA-telling</div>
+                </div>
+                <div class="ml-auto text-right">
+                  <div class="text-xs text-indigo-900/70">Vermenigvuldiger</div>
+                  <div class="text-xl font-extrabold mono" id="multiplierLabel">×1.00</div>
+                </div>
               </div>
             </div>
-            <div class="ml-auto text-right">
-              <div class="text-xs text-emerald-900/70">Laas bereken</div>
-              <div id="calcTimeBlit" class="text-sm mono">—</div>
+
+           <p class="text-sm leading-6 text-slate-600 mb-3">
+  <strong>RAAISKOTE:</strong> Hoe minder jy nodig het, hoe meer punte kry jy.<br>
+  <strong>LOPIE-BONUS:</strong> <strong>As jou huidige lopie 5 dae of meer is, kry jy ’n 10%-bonus op jou dag se Dilemma-subtotaal.</strong><br>
+  <strong>ONDERSTEUNER-BONUS:</strong> <strong>10% by jou totaal as jy die oplossing vind en ’n betalende ondersteuner op daardie dag is.</strong><br>
+  <strong>STRAFPUNTE:</strong> <strong>-50 punte</strong> as jy <strong>nie in ses raaie die oplossing kon kry nie</strong>.
+</p>
+            <div class="table-wrap">
+              <div class="table-scroll">
+                <table class="table text-sm w-full">
+                  <thead>
+                    <tr>
+                      <th>Komponent</th>
+                      <th class="text-right">Aantal</th>
+                      <th class="text-right mono">Formule</th>
+                      <th class="text-right">Punte</th>
+                    </tr>
+                  </thead>
+                  <tbody id="breakdownBody"></tbody>
+                  <tfoot>
+                    <tr><td class="font-bold">Subtotaal</td><td></td><td></td><td class="text-right font-extrabold mono" id="subtotalCell">0</td></tr>
+                    <tr><td class="font-bold">Lopie-bonus</td><td></td><td class="text-right whitespace-nowrap" id="lopieMeta">—</td><td class="text-right font-extrabold mono" id="lopieBonusCell">0</td></tr>
+                    <tr><td class="font-bold">Ondersteuner-bonus</td><td></td><td class="text-right whitespace-nowrap" id="supporterMeta">—</td><td class="text-right font-extrabold mono" id="supporterBonusCell">0</td></tr>
+                    <tr><td class="font-extrabold text-slate-900">Totaal</td><td></td><td></td><td class="text-right font-extrabold mono text-indigo-900" id="totalCell">0</td></tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <div class="push-end"></div>
+          </div>
+
+          <div class="game-col dilemma-col">
+            <h3 class="text-sm font-bold text-slate-700 mb-2">Jou Dilemma-statistiek</h3>
+            <div class="grid grid-cols-4 gap-2 mb-3">
+              <div class="mini"><div id="playedStat" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Dilemmas gespeel</div></div>
+              <div class="mini"><div id="winrateStat" class="text-3xl font-extrabold mono">0%</div><div class="text-xs text-slate-500 mt-1">Sukseskoers</div></div>
+              <div class="mini"><div id="curStreak" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Huidige lopie</div></div>
+              <div class="mini"><div id="bestStreak" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Beste lopie</div></div>
+            </div>
+
+            <h4 class="text-sm font-bold text-slate-700 mb-2">Suksesverdeling</h4>
+            <div id="distWrap" class="space-y-2"></div>
+
+            <div class="col-summary push-end text-sm text-slate-600 mt-3">
+              <span class="font-semibold">Let wel:</span> Tans bestaan jou Kriptiek-telling nog net uit jou Dilemma-telling, maar later sal jou Blitstiek- en Slimstiek-tellings ook ingereken word.
             </div>
           </div>
         </div>
+      </section>
 
-        <h3 class="text-sm font-bold text-slate-700 mb-2">Vandag se ontleding</h3>
-        <div class="table-wrap">
-          <div class="table-scroll">
-            <table class="table text-sm">
-              <thead>
-                <tr><th class="text-left">Komponent</th><th class="text-right">Reël</th><th class="text-right">Punte</th></tr>
-              </thead>
-              <tbody id="breakdownBodyBlit">
-                <tr>
-                  <td>Tyd-bonus (vandag)</td>
-                  <td class="text-right mono">&lt;60s = +100 • &lt;30s = +200 (een van die twee)</td>
-                  <td class="text-right mono" id="blitInstantCell">0</td>
-                </tr>
-                <tr class="liveOnly">
-                  <td>Posisie-bonus (om 23:55)</td>
-                  <td class="text-right mono">1–10: 200,175,150,125,100,75,50,40,30,20</td>
-                  <td class="text-right mono" id="blitPlaceCell">0</td>
-                </tr>
-              </tbody>
-              <tfoot>
-                <tr class="liveOnly">
-                  <td class="font-extrabold text-slate-900">Totaal (vandag)</td>
-                  <td class="text-right text-slate-500">ná ondersteuners-×1.10 indien aktief</td>
-                  <td id="totalCellBlit" class="text-right font-extrabold mono text-emerald-900">0</td>
-                </tr>
-                <tr class="archiveOnly hidden">
-                  <td class="font-extrabold text-slate-900">Totaal (argief)</td>
-                  <td class="text-right text-slate-500">geen posisie/ondersteuner-bonus</td>
-                  <td id="totalCellBlitArchive" class="text-right font-extrabold mono text-emerald-900">0</td>
-                </tr>
-              </tfoot>
-            </table>
+      <!-- BLITSTIEK (LIVE, Firestore-driven) -->
+      <section class="card p-5 md:p-6 game-card">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xl font-extrabold text-slate-900">BLITSTIEK</h2>
+          <div id="bannerBlit" class="banner banner-live">Vandag (voorlopig, finale posisie om 23:55)</div>
+        </div>
+
+<div class="flex flex-col gap-4 items-stretch">
+          <div class="game-col">
+            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4">
+              <div class="text-sm text-emerald-900/80">Laas bereken op: <span id="calcTimeBlit" class="mono">—</span></div>
+              <div class="mt-2 flex items-end gap-4">
+                <div>
+                  <div id="totalPointsBlit" class="text-4xl md:text-5xl font-extrabold mono text-emerald-900">0</div>
+                  <div class="text-xs uppercase tracking-wide text-emerald-900/70">
+                    Vandag se totaal (ná 23:55 sluit ondersteuners-×1.10 in, indien aktief)
+                  </div>
+                </div>
+                <div class="ml-auto text-right">
+                  <div class="text-xs text-emerald-900/70">Ondersteuner-status</div>
+                  <div id="supporterLabelBlit" class="text-sm font-bold mono">—</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <div class="table-scroll">
+                <table class="table text-sm w-full">
+                  <thead>
+                    <tr><th>Komponent</th><th class="text-right">Reël</th><th class="text-right">Punte</th></tr>
+                  </thead>
+                  <tbody id="breakdownBodyBlit">
+                    <tr>
+                      <td>Tyd-bonus (vandag)</td>
+                      <td class="text-right mono">&lt;60s = +100 • &lt;30s = +200 (een van die twee)</td>
+                      <td class="text-right mono" id="blitInstantCell">0</td>
+                    </tr>
+                    <tr class="liveOnly">
+                      <td>Posisie-bonus (om 23:55)</td>
+                      <td class="text-right mono">1–10: 200,175,150,125,100,75,50,40,30,20</td>
+                      <td class="text-right mono" id="blitPlaceCell">0</td>
+                    </tr>
+                  </tbody>
+                  <tfoot>
+                    <tr class="liveOnly">
+                      <td class="font-extrabold text-slate-900">Totaal (vandag)</td>
+                      <td class="text-right text-slate-500">ná ondersteuners-×1.10 indien aktief</td>
+                      <td id="totalCellBlit" class="text-right font-extrabold mono text-emerald-900">0</td>
+                    </tr>
+                    <tr class="archiveOnly hidden">
+                      <td class="font-extrabold text-slate-900">Totaal (argief)</td>
+                      <td class="text-right text-slate-500">geen posisie/ondersteuner-bonus</td>
+                      <td id="totalCellBlitArchive" class="text-right font-extrabold mono text-emerald-900">0</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <details class="mt-4">
+              <summary class="font-bold text-slate-800 cursor-pointer">Reëls vir Blitstiek (opsomming)</summary>
+              <ul class="text-sm text-slate-700 mt-2 list-disc pl-5 space-y-1">
+                <li>Ranglys: nooit meer as die dag se 10 beste tye nie; elke speler net een inskrywing (beste tyd vervang ouer tyd).</li>
+                <li><strong>Onmiddellik</strong>: &lt;60s = +100 • &lt;30s = +200 (een van die twee).</li>
+                <li><strong>Om 23:55</strong>: posisie-bonus vir 1–10 = 200,175,150,125,100,75,50,40,30,20.</li>
+                <li>As tye gelyk is, wen die een wat vroeër aangeteken is.</li>
+                <li>Betalende ondersteuners kry <strong>×1.10</strong> op die dag se som (na 23:55 toegepas).</li>
+                <li><strong>Argief</strong>: geen posisie/ondersteuner-bonus; slegs die <strong>onmiddellike</strong> tyd-bonus geld.</li>
+                <li>Geen vroeë/verbetering-bonusse; geen daaglikse kap.</li>
+              </ul>
+            </details>
+
+            <div class="push-end"></div>
+          </div>
+
+          <div class="game-col">
+            <h3 class="text-sm font-bold text-slate-700 mb-2">Blitstiek-statistiek</h3>
+            <div class="grid grid-cols-4 gap-2 mb-4">
+              <div class="mini"><div id="playedStatBlit" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Gespeel</div></div>
+              <div class="mini"><div id="bestTimeBlit" class="text-3xl font-extrabold mono">—</div><div class="text-xs text-slate-500 mt-1">Beste tyd</div></div>
+              <div class="mini"><div id="avgTimeBlit" class="text-3xl font-extrabold mono">—</div><div class="text-xs text-slate-500 mt-1">Gemiddeld</div></div>
+              <div class="mini"><div id="winsBlit" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Oorwinnings</div></div>
+            </div>
+
+            <h4 class="text-sm font-bold text-slate-700 mb-2">Verspreiding (bv. tyd-klasse)</h4>
+            <div id="distWrapBlit" class="space-y-2 text-slate-400">Kom binnekort.</div>
+
+            <div class="col-summary push-end text-sm text-slate-600">
+              <span class="font-semibold">Leidraad:</span> Blitstiek-punte tel by jou Kriptiek-telling.
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- SLIMSTIEK -->
-      <section class="card p-5 md:p-6">
-        <header class="flex flex-col gap-1 mb-3">
-          <div class="h-1 w-full bg-teal-500 rounded-full"></div>
-          <div class="flex items-center justify-between">
-            <h2 class="text-xl font-extrabold text-slate-900">SLIMSTIEK</h2>
-            <div id="bannerSlim" class="text-xs font-extrabold px-2 py-1 rounded bg-teal-50 border border-teal-200 text-teal-900">
-              Vandag (voorlopig, finale posisie om 23:55)
-            </div>
-          </div>
-        </header>
-
-        <!-- OVERALL (big & bold) -->
-        <div class="rounded-xl border border-slate-200 bg-white p-4 mb-3">
-          <div class="flex items-end gap-4">
-            <div>
-              <div id="slimOverallScore" class="text-6xl font-black mono text-slate-900 tracking-tight">0</div>
-              <div class="text-xs uppercase tracking-wide text-slate-500">Algeheel (totaal)</div>
-            </div>
-            <div class="ml-auto text-right">
-              <div class="text-xs text-slate-500">Laas opgedateer</div>
-              <div id="slimOverallUpdated" class="text-sm mono">—</div>
-            </div>
-          </div>
-          <div class="text-[13px] text-slate-600 mt-2">
-            Totale Slimstiek-telling (binnekort aktief).
-          </div>
+      <!-- SLIMSTIEK (shadow; unchanged) -->
+      <section class="card p-5 md:p-6 game-card">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xl font-extrabold text-slate-900">SLIMSTIEK</h2>
+          <div id="bannerSlim" class="banner banner-live">Vandag (voorlopig, finale posisie om 23:55): Vroeë bonus, Verbetering, Finale posisie @ 23:55</div>
         </div>
 
-        <!-- TODAY -->
-        <div class="rounded-xl border border-teal-200 bg-teal-50 p-4 mb-4">
-          <div class="flex items-end gap-4">
-            <div>
-              <div id="totalPointsSlim" class="text-4xl md:text-5xl font-extrabold mono text-teal-900">0</div>
-              <div class="text-xs uppercase tracking-wide text-teal-900/70">Vandag se voorlopige punte</div>
+<div class="flex flex-col gap-4 items-stretch">
+          <div class="game-col">
+            <div class="bg-teal-50 border border-teal-200 rounded-xl p-4 mb-4">
+              <div class="text-sm text-teal-900/80">Laas bereken op: <span id="calcTimeSlim" class="mono">—</span></div>
+              <div class="mt-2 flex items-end gap-4">
+                <div>
+                  <div id="totalPointsSlim" class="text-4xl md:text-5xl font-extrabold mono text-teal-900">0</div>
+                  <div class="text-xs uppercase tracking-wide text-teal-900/70">Vandag se voorlopige punte</div>
+                </div>
+                <div class="ml-auto text-right">
+                  <div class="text-xs text-teal-900/70">Vermenigvuldiger</div>
+                  <div id="multiplierLabelSlim" class="text-xl font-extrabold mono">×1.00</div>
+                </div>
+              </div>
             </div>
-            <div class="ml-auto text-right">
-              <div class="text-xs text-teal-900/70">Laas bereken</div>
-              <div id="calcTimeSlim" class="text-sm mono">—</div>
-            </div>
-          </div>
-        </div>
 
-        <h3 class="text-sm font-bold text-slate-700 mb-2">Vandag se ontleding</h3>
-        <div class="table-wrap">
-          <div class="table-scroll">
-            <table class="table text-sm">
-              <thead>
-                <tr><th class="text-left">Komponent</th><th class="text-right">Reël</th><th class="text-right">Punte</th></tr>
-              </thead>
-              <tbody id="breakdownBodySlim">
-                <tr><td>Vroeë bonus vir eerste 10 tellings ná 07:00</td><td class="text-right mono">+20 indien van toepassing</td><td class="text-right mono" id="slimEarlyCell">0</td></tr>
-                <tr><td>Verbeter jou eie beste telling vir die dag</td><td class="text-right mono">+30 (maks 1/dag)</td><td class="text-right mono" id="slimImproveCell">0</td></tr>
-                <tr><td>Finale posisie om 23:55</td><td class="text-right mono">120/90/70/60/50/40/30/25/20/15</td><td class="text-right mono" id="slimPlaceCell">0</td></tr>
-                <tr class="archiveOnly hidden"><td>Argief: PB-punt</td><td class="text-right mono">+10 (eenmalig per dag)</td><td class="text-right mono" id="slimPBArchiveCell">0</td></tr>
-              </tbody>
-              <tfoot>
-                <tr><td class="font-extrabold text-slate-900">Totaal (vandag)</td><td></td><td id="totalCellSlim" class="text-right font-extrabold mono text-teal-900">0</td></tr>
-              </tfoot>
-            </table>
+            <div class="table-wrap">
+              <div class="table-scroll">
+                <table class="table text-sm w-full">
+                  <thead>
+                    <tr><th>Komponent</th><th class="text-right">Reël</th><th class="text-right">Punte</th></tr>
+                  </thead>
+                  <tbody id="breakdownBodySlim">
+                    <tr><td>Vroeë bonus vir eerste 10 tellings ná 07:00 behaal</td><td class="text-right mono">+20 indien van toepassing</td><td class="text-right mono" id="slimEarlyCell">0</td></tr>
+                    <tr><td>Verbeter jou eie beste telling vir die dag</td><td class="text-right mono">+30 (maks 1/dag)</td><td class="text-right mono" id="slimImproveCell">0</td></tr>
+                    <tr><td>Finale posisie om 23:55</td><td class="text-right mono">120/90/70/60/50/40/30/25/20/15</td><td class="text-right mono" id="slimPlaceCell">0</td></tr>
+                    <tr class="archiveOnly hidden"><td>Argief: PB-punt</td><td class="text-right mono">+10 (eenmalig per dag)</td><td class="text-right mono" id="slimPBArchiveCell">0</td></tr>
+                  </tbody>
+                  <tfoot>
+                    <tr><td class="font-extrabold text-slate-900">Totaal (vandag)</td><td></td><td id="totalCellSlim" class="text-right font-extrabold mono text-teal-900">0</td></tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <details class="mt-4">
+              <summary class="font-bold text-slate-800 cursor-pointer">Reëls vir Slimstiek (opsomming)</summary>
+              <ul class="text-sm text-slate-700 mt-2 list-disc pl-5 space-y-1">
+                <li>Leierbord: maks. 10 inskrywings; <em>een inskrywing per speler</em> (beste telling vervang ouer telling).</li>
+                <li>Tydvensters (ZA): Vroeë bonus vanaf 07:00; Finale posisie om 23:55.</li>
+                <li>Punte (vandag): Vroeë bonus +20; Verbetering +30 (1×/dag); Finale posisie: 120,90,70,60,50,40,30,25,20,15.</li>
+                <li>Ondersteuner: ×1.10 oor vandag se som; daaglikse kap per spel: 200.</li>
+                <li>Argief (verlede dae): Geen vroeë bonus of posisie-punte; <strong>PB-punt +10</strong> (eenmalig per argief-dag).</li>
+                <li>Tiebreke: hoogste telling eerste; gelykstaande tellings → vroeër <em>achievedAt</em> wen.</li>
+              </ul>
+            </details>
+
+            <div class="push-end"></div>
+          </div>
+
+          <div class="game-col">
+            <h3 class="text-sm font-bold text-slate-700 mb-2">Slimstiek-statistiek</h3>
+            <div class="grid grid-cols-4 gap-2 mb-4">
+              <div class="mini"><div id="playedStatSlim" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Gespeel</div></div>
+              <div class="mini"><div id="bestScoreSlim" class="text-3xl font-extrabold mono">—</div><div class="text-xs text-slate-500 mt-1">Beste telling</div></div>
+              <div class="mini"><div id="avgScoreSlim" class="text-3xl font-extrabold mono">—</div><div class="text-xs text-slate-500 mt-1">Gemiddeld</div></div>
+              <div class="mini"><div id="winsSlim" class="text-3xl font-extrabold mono">0</div><div class="text-xs text-slate-500 mt-1">Oorwinnings</div></div>
+            </div>
+
+            <h4 class="text-sm font-bold text-slate-700 mb-2">Verspreiding (bv. punte-klasse)</h4>
+            <div id="distWrapSlim" class="space-y-2 text-slate-400">Kom binnekort.</div>
+
+            <div class="col-summary push-end text-sm text-slate-600">
+              <span class="font-semibold">Leidraad:</span> Hierdie Slimstiek-punte is nog proeflopie en tel nie by jou Kriptiek-telling nie.
+            </div>
           </div>
         </div>
       </section>
-    </div> <!-- /games -->
+
+    </div>
   </main>
 
-  <!-- EXACT footer from index.html -->
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
     &copy; 2025 Kriptiek. Alle regte voorbehou. |
-    <a href="/profile.html" class="underline">My profiel</a> |
-    <a href="/forum.html" class="underline">Gesels saam</a> |
-    <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
-    <a href="/terms.html" class="underline">Voorwaardes</a> |
-    <a href="/faq.html" class="underline">Gereelde vrae</a> |
-    <a href="/about.html" class="underline">Oor Kriptiek</a> |
-    <a href="/contact.html" class="underline">Kontak ons</a>
+    <a href="/index.html" class="underline px-1.5">Tuis</a> |
+    <a href="/forum.html" class="underline px-1.5">Gesels saam</a> |
+    <a href="/privacy.html" class="underline px-1.5">Privaatheidsbeleid</a> |
+    <a href="/terms.html" class="underline px-1.5">Voorwaardes</a> |
+    <a href="/faq.html" class="underline px-1.5">Gereelde vrae</a> |
+    <a href="/about.html" class="underline px-1.5">Oor Kriptiek</a> |
+    <a href="/contact.html" class="underline px-1.5">Kontak ons</a>
   </footer>
 
-  <!-- Background crossword (same behaviour as index header) -->
+  <!-- Header background letter grid -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const backgroundCrossword = document.getElementById('backgroundCrossword');
-      if (!backgroundCrossword) return;
       const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      function rand(){ return letters[Math.floor(Math.random()*letters.length)]; }
-      function regen(){
+      const rand = n => Math.floor(Math.random()*n);
+      function getRandomLetter(){ return letters[rand(letters.length)]; }
+
+      function generateBackgroundGrid() {
+        if (!backgroundCrossword) return;
         backgroundCrossword.innerHTML = '';
         const numRows = Math.ceil(backgroundCrossword.offsetHeight / 30);
         const numCols = Math.ceil(backgroundCrossword.offsetWidth / 30);
-        const total = (numRows * numCols) || 300;
-        for (let i = 0; i < total; i++) {
-          const d = document.createElement('div');
-          d.className = 'bg-letter-box';
-          d.textContent = rand();
-          backgroundCrossword.appendChild(d);
+        const totalCells = (numRows * numCols) || 300;
+        for (let i = 0; i < totalCells; i++) {
+          const bg = document.createElement('div');
+          bg.className = 'bg-letter-box';
+          bg.textContent = getRandomLetter();
+          backgroundCrossword.appendChild(bg);
         }
       }
-      regen(); window.addEventListener('resize', regen);
+      generateBackgroundGrid();
+
+      let gridTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(gridTimer);
+        gridTimer = setTimeout(generateBackgroundGrid, 150);
+      });
     });
+  </script>
+
+  <!-- Firebase Auth + Firestore integration -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import {
+      getAuth, onAuthStateChanged, updateEmail, updateProfile,
+      sendPasswordResetEmail, deleteUser
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc, setDoc, updateDoc,
+      collection, query, orderBy, limit, getDocs, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+      authDomain: "kriptiek-c9ea2.firebaseapp.com",
+      projectId: "kriptiek-c9ea2",
+      storageBucket: "kriptiek-c9ea2.appspot.com",
+      messagingSenderId: "620450620939",
+      appId: "1:620450620939:web:e93a18ac23b53b33db890e"
+    };
+
+    /* ---- DILEMMA ---- */
+    const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
+    const STREAK_THRESHOLD = 5;
+    const STREAK_MULTIPLIER = 1.10;
+    const SUPPORTER_MULTIPLIER = 1.10;
+
+    const $ = (id) => document.getElementById(id);
+    const fmt = (n) => (typeof n === "number" ? n.toLocaleString("af-ZA") : n);
+
+    const wbName = $("wbName"), errBanner = $("errBanner");
+    const supporterBanner = $("supporterBanner"), supporterBannerTxt = $("supporterBannerTxt");
+
+    /* Dilemma els */
+    const totalPointsEl = $("totalPoints"), subtotalCell = $("subtotalCell"), totalCell = $("totalCell");
+    const breakdownBody = $("breakdownBody"), distWrap = $("distWrap");
+    const playedStat = $("playedStat"), winrateStat = $("winrateStat");
+    const curStreakEl = $("curStreak"), bestStreakEl = $("bestStreak");
+    const streakChip = $("streakChip"), multiplierLabel = $("multiplierLabel"), calcTime = $("calcTime");
+    const lopieMeta = $("lopieMeta"), supporterMeta = $("supporterMeta");
+
+    /* Pills */
+    const pillOverall = $("pillOverall"), pillDilemmaLive = $("pillDilemmaLive"), pillBlitLive = $("pillBlitLive");
+
+    /* Blit els */
+    const bannerBlit = $("bannerBlit");
+    const blitInstantCell = $("blitInstantCell");
+    const blitPlaceCell = $("blitPlaceCell");
+    const totalCellBlit = $("totalCellBlit");
+    const totalCellBlitArchive = $("totalCellBlitArchive");
+    const totalPointsBlit = $("totalPointsBlit");
+    const supporterLabelBlit = $("supporterLabelBlit");
+    const calcTimeBlit = $("calcTimeBlit");
+
+    /* Slim els (unchanged “shadow” block) */
+    const bannerSlim = $("bannerSlim"), slimEarlyCell = $("slimEarlyCell"), slimImproveCell = $("slimImproveCell");
+    const slimPlaceCell = $("slimPlaceCell"), slimPBArchiveCell = $("slimPBArchiveCell");
+    const totalPointsSlim = $("totalPointsSlim"), totalCellSlim = $("totalCellSlim"), calcTimeSlim = $("calcTimeSlim");
+    const multiplierLabelSlim = $("multiplierLabelSlim");
+
+    /* Date helpers (ZA) */
+    function todayZaISO(){
+      const now = new Date();
+      const utc = now.getTime() + now.getTimezoneOffset()*60000;
+      const za = new Date(utc + 120*60000); // UTC+2
+      return za.toISOString().slice(0,10);
+    }
+    function parseGameIdParam(){
+      const p = new URLSearchParams(location.search).get("gameId");
+      return p && /^Game\d{4}-\d{2}-\d{2}$/.test(p) ? p : null;
+    }
+    const TODAY_ID = `Game${todayZaISO()}`;
+    const GAME_ID = parseGameIdParam() || TODAY_ID;
+    const GAME_DATE = GAME_ID.replace(/^Game/,'');
+    const IS_ARCHIVE = GAME_ID !== TODAY_ID;
+
+    /* Init Firebase */
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    /* Totals for overall pill */
+    let gDilemmaTotal = 0;
+    let gBlitTotal = 0;
+
+    function updateOverallPill(){
+      const sum = (gDilemmaTotal || 0) + (gBlitTotal || 0);
+      pillOverall.textContent   = `JOU KRIPTIEK-TELLING: ${fmt(sum)}`;
+      pillBlitLive.textContent  = `JOU BLITSTIEK-TELLING: ${fmt(gBlitTotal || 0)}`;
+      pillDilemmaLive.textContent = `JOU DILEMMA-TELLING: ${fmt(gDilemmaTotal || 0)}`;
+    }
+
+    /* Auth gate */
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        const ret = encodeURIComponent("/profiletest.html");
+        window.location.href = `/login.html?return=${ret}`;
+        return;
+      }
+      try {
+        await hydrateProfile(user);
+        await loadAndRenderDilemma(user.uid);
+        configureBlitBanner();
+        await renderBlitFromFirestore(user.uid);
+        await renderSlimShadow(user.uid); /* unchanged */
+        updateOverallPill();
+      } catch (e) {
+        console.error(e);
+        showError("Kon nie data laai nie. Probeer asb. weer.");
+      }
+    });
+
+    function showError(msg) {
+      errBanner.textContent = msg;
+      errBanner.classList.remove("hidden");
+    }
+
+    /* Profile load/write */
+    async function hydrateProfile(user) {
+      const uref = doc(db, "users", user.uid);
+      const snap = await getDoc(uref);
+
+      let userName = user.displayName || "Gebruiker";
+      let supporterActive = false;
+
+      if (snap.exists()) {
+        const d = snap.data();
+        if (d?.userName) userName = d.userName;
+        if (d?.supporterActive === true) supporterActive = true;
+        if (d?.supporterUntil?.toMillis && d.supporterUntil.toMillis() > Date.now()) supporterActive = true;
+      } else {
+        await setDoc(uref, {
+          userName: userName,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+      }
+
+      wbName.textContent = (userName || "GEBRUIKER").toUpperCase();
+
+      if (supporterActive) {
+        supporterBanner.classList.remove("supporter-banner-red");
+        supporterBanner.classList.add("supporter-banner-green");
+        supporterBanner.setAttribute("aria-label", "Dankie dat jy 'n betalende ondersteuner is");
+        supporterBannerTxt.textContent = "Jy is 'n betalende ondersteuner — dankie!";
+      } else {
+        supporterBanner.classList.remove("supporter-banner-green");
+        supporterBanner.classList.add("supporter-banner-red");
+        supporterBanner.setAttribute("aria-label", "Word ’n ondersteuner (Buy Me a Coffee)");
+        supporterBannerTxt.textContent = "Kliek hier om 'n betalende ondersteuner te word";
+      }
+    }
+
+    function configureBlitBanner(){
+      if (IS_ARCHIVE) {
+        bannerBlit.textContent = `ARGIEF — slegs onmiddellike tyd-bonus (geen posisie/ondersteuner-bonus) • Dag: ${GAME_DATE}`;
+        bannerBlit.classList.remove("banner-live"); bannerBlit.classList.add("banner-archive");
+        document.querySelectorAll(".liveOnly").forEach(el=>el.classList.add("hidden"));
+        document.querySelectorAll(".archiveOnly").forEach(el=>el.classList.remove("hidden"));
+      } else {
+        bannerBlit.textContent = "Vandag (voorlopig): Finale posisie om 23:55 • Geen vroeë/verbetering/daaglikse kap";
+        bannerBlit.classList.remove("banner-archive"); bannerBlit.classList.add("banner-live");
+        document.querySelectorAll(".liveOnly").forEach(el=>el.classList.remove("hidden"));
+        document.querySelectorAll(".archiveOnly").forEach(el=>el.classList.add("hidden"));
+      }
+    }
+
+    /* -------- Dilemma compute + render (unchanged) -------- */
+    async function loadAndRenderDilemma(uid) {
+      const uref = doc(db, "users", uid);
+      const uSnap = await getDoc(uref);
+
+      let supporterActive = false;
+      if (uSnap.exists()) {
+        const d = uSnap.data();
+        if (d?.supporterActive === true) supporterActive = true;
+        if (d?.supporterUntil?.toMillis && d.supporterUntil.toMillis() > Date.now()) supporterActive = true;
+      }
+
+      const playsRef = collection(db, "userGames", uid, "plays");
+      const q = query(playsRef, orderBy("finishedAt", "desc"), limit(200));
+      const snap = await getDocs(q);
+
+      const plays = [];
+      snap.forEach((docSnap) => {
+        const d = docSnap.data();
+        const gameId = docSnap.id; // "GameYYYY-MM-DD"
+        const theDate = gameId.replace(/^Game/, "");
+        plays.push({
+          date: theDate,
+          win: d?.result === "win" || d?.finished === true,
+          guesses: Number(d?.guesses || 0),
+        });
+      });
+
+      computeAndRenderDilemma(plays, supporterActive);
+    }
+
+    function computeAndRenderDilemma(plays, supporterActive) {
+      const byDate = new Map();
+      plays.slice().reverse().forEach((p) => byDate.set(p.date, p));
+
+      const dates = Array.from(byDate.keys()).sort();
+      let cur = 0, best = 0, prev = null;
+      for (const d of dates) {
+        const consec = prev && (new Date(d) - new Date(prev) === 24 * 60 * 60 * 1000);
+        if (!consec) cur = 0;
+        const p = byDate.get(d);
+        if (p?.win) { cur++; best = Math.max(best, cur); } else { cur = 0; }
+        prev = d;
+      }
+
+      const dist = { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, fail:0 };
+      for (const p of byDate.values()) {
+        if (p.win) {
+          const g = Math.min(Math.max(1, p.guesses || 6), 6);
+          dist[g] += 1;
+        } else { dist.fail += 1; }
+      }
+
+      const subtotal =
+        dist[1]*BASE_POINTS[1] + dist[2]*BASE_POINTS[2] + dist[3]*BASE_POINTS[3] +
+        dist[4]*BASE_POINTS[4] + dist[5]*BASE_POINTS[5] + dist[6]*BASE_POINTS[6] +
+        dist.fail*BASE_POINTS.fail;
+
+      const streakMult = cur >= STREAK_THRESHOLD ? STREAK_MULTIPLIER : 1;
+      const supporterMult = supporterActive ? SUPPORTER_MULTIPLIER : 1;
+      const streakBonus = Math.round(subtotal * (streakMult - 1));
+      const supporterBonus = Math.round((subtotal + streakBonus) * (supporterMult - 1));
+      const total = subtotal + streakBonus + supporterBonus;
+
+      const totalPlayed = dates.length;
+      const wins = totalPlayed - dist.fail;
+      const winrate = totalPlayed ? Math.round((wins / totalPlayed) * 100) : 0;
+
+      playedStat.textContent = totalPlayed;
+      winrateStat.textContent = `${winrate}%`;
+      curStreakEl.textContent = cur;
+      bestStreakEl.textContent = best;
+
+      const rows = [
+        {label: `In 1 raaiskoot opgelos`, qty: dist[1], per: BASE_POINTS[1]},
+        {label: `In 2 raaiskote opgelos`,  qty: dist[2], per: BASE_POINTS[2]},
+        {label: `In 3 raaiskote opgelos`,  qty: dist[3], per: BASE_POINTS[3]},
+        {label: `In 4 raaiskote opgelos`,  qty: dist[4], per: BASE_POINTS[4]},
+        {label: `In 5 raaiskote opgelos`,  qty: dist[5], per: BASE_POINTS[5]},
+        {label: `In 6 raaiskote opgelos`,  qty: dist[6], per: BASE_POINTS[6]},
+        {label: `Onsuksesvol`,               qty: dist.fail, per: BASE_POINTS.fail},
+      ];
+      breakdownBody.innerHTML = rows.map(r => {
+        const pts = r.qty * r.per;
+        return `<tr>
+          <td>${r.label}</td>
+          <td class="text-right mono">${fmt(r.qty)}</td>
+          <td class="text-right mono">${fmt(r.qty)} × ${fmt(r.per)}</td>
+          <td class="text-right mono ${pts>=0?'text-emerald-700':'text-red-700'}">${fmt(pts)}</td>
+        </tr>`;
+      }).join("");
+
+      subtotalCell.textContent = fmt(subtotal);
+      $("lopieBonusCell").textContent = fmt(streakBonus);
+      $("supporterBonusCell").textContent = fmt(supporterBonus);
+      totalCell.textContent = fmt(total);
+      totalPointsEl.textContent = fmt(total);
+
+      if (streakMult > 1) {
+        streakChip.classList.remove("hidden");
+        lopieMeta.innerHTML = `Lopie: ${cur} op ’n ry <span class="text-slate-400">(×${STREAK_MULTIPLIER.toFixed(2)})</span>`;
+      } else {
+        streakChip.classList.add("hidden");
+        lopieMeta.innerHTML = `Geen <span class="text-slate-400">(huidige lopie: ${cur})</span>`;
+      }
+      supporterMeta.textContent = supporterActive ? `×${SUPPORTER_MULTIPLIER.toFixed(2)}` : "Geen";
+      multiplierLabel.textContent = `×${(streakMult * (supporterActive?SUPPORTER_MULTIPLIER:1)).toFixed(2)}`;
+
+      calcTime.textContent = new Date().toLocaleString("af-ZA");
+
+      gDilemmaTotal = total;
+      updateOverallPill();
+    }
+
+   /* -------- BLITSTIEK: Read from Firestore only -------- */
+async function renderBlitFromFirestore(uid){
+  const playRef = doc(db, `userGames/${uid}/plays/${GAME_ID}`);
+  const playSnap = await getDoc(playRef);
+
+  // values from play doc
+  let kThr = 0, kPlace = 0, kTotal = 0;
+  if (playSnap.exists()) {
+    const d = playSnap.data();
+    // NEW canonical field + backward-compat with old kBlit_instant
+    kThr   = Number(d?.kBlit_thr ?? d?.kBlit_instant ?? 0);
+    kPlace = Number(d?.kBlit_place ?? 0);
+    kTotal = Number(d?.kBlit_total ?? 0); // already includes ×1.10 if applied by backend after 23:55
+  }
+
+  // Supporter label (informational only)
+  let supporterActive = false;
+  const uSnap = await getDoc(doc(db, "users", uid));
+  if (uSnap.exists()){
+    const u = uSnap.data();
+    supporterActive = !!(u?.supporterActive === true || (u?.supporterUntil?.toMillis && u.supporterUntil.toMillis() > Date.now()));
+  }
+  supporterLabelBlit.textContent = supporterActive ? "Aktief (×1.10 ná 23:55)" : "Nie aktief";
+
+  // Render table cells
+  blitInstantCell.textContent = fmt(kThr);
+
+  if (!IS_ARCHIVE) {
+    blitPlaceCell.textContent = fmt(kPlace);
+    // Prefer backend total when available; otherwise show partial (thr+place) during the day
+    const liveTotal = kTotal > 0 ? kTotal : (kThr + kPlace);
+    totalCellBlit.textContent = fmt(liveTotal);
+    totalPointsBlit.textContent = fmt(liveTotal);
+    gBlitTotal = liveTotal;
+  } else {
+    // Archive: only the instant threshold counts
+    totalCellBlitArchive.textContent = fmt(kThr);
+    totalPointsBlit.textContent = fmt(kThr);
+    gBlitTotal = kThr;
+  }
+
+  calcTimeBlit.textContent = new Date().toLocaleString("af-ZA");
+  updateOverallPill();
+}
+    /* -------- SLIMSTIEK (shadow, unchanged) -------- */
+    async function renderSlimShadow(uid){
+      const lbUserRef = doc(db, `slimstiekGames/${GAME_ID}/leaderboard/${uid}`);
+      const userPlayRef = doc(db, `userGames/${uid}/plays/${GAME_ID}`);
+
+      const playSnap = await getDoc(userPlayRef);
+      let kEarly=0,kImprove=0,kPlace=0,kPBArch=0,kTotal=0, supporterActive=false;
+
+      if (playSnap.exists()) {
+        const d = playSnap.data();
+        kEarly   = Number(d?.kSlim_early||0);
+        kImprove = Number(d?.kSlim_improve||0);
+        kPlace   = Number(d?.kSlim_place||0);
+        kPBArch  = Number(d?.kSlim_pbArchive||0);
+        kTotal   = Number(d?.kSlim_total||0);
+      }
+
+      const userSnap = await getDoc(doc(db,"users",uid));
+      if (userSnap.exists()){
+        const u = userSnap.data();
+        supporterActive = !!(u?.supporterActive === true || (u?.supporterUntil?.toMillis && u.supporterUntil.toMillis()>Date.now()));
+      }
+
+      // Optional archive PB logic for Slimstiek stays as-is (shadow)
+      const lbUserSnap = await getDoc(lbUserRef); void lbUserSnap;
+
+      slimEarlyCell.textContent = fmt(kEarly);
+      slimImproveCell.textContent = fmt(kImprove);
+      slimPlaceCell.textContent = fmt(kPlace);
+      slimPBArchiveCell.textContent = fmt(kPBArch);
+      totalCellSlim.textContent = fmt(kTotal);
+      totalPointsSlim.textContent = fmt(kTotal);
+      multiplierLabelSlim.textContent = supporterActive ? "×1.10" : "×1.00";
+      calcTimeSlim.textContent = new Date().toLocaleString("af-ZA");
+    }
   </script>
 </body>
 </html>
