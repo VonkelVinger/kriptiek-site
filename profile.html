@@ -71,12 +71,6 @@
   .pill-green { background:#e8fff3; color:#065f46; }
   .pill-green-dark { background:#e6fffb; color:#115e59; }
   .mono { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1, 'lnum' 1; }
-  .table-wrap { border:1px solid #e5e7eb; border-radius:.75rem; overflow:hidden; }
-  .table-scroll { overflow:auto; }
-  table.table { border-collapse:collapse; width:100%; }
-  table.table th, table.table td { padding:.6rem .75rem; border-bottom:1px solid #eef2f7; }
-  table.table thead th { font-size:.8rem; text-transform:uppercase; letter-spacing:.02em; color:#64748b; background:#fafbff; }
-  .mini { background:#f8fafc; border:1px solid #e5e7eb; border-radius:.75rem; padding:.5rem .6rem; text-align:center; }
 </style>
 
 <!-- === Feature toggles (Option B: only toggle known sections) === -->
@@ -139,6 +133,12 @@
     return snap.exists() ? snap.data() : null;
   }
 
+  function banner(show){
+    const b=document.getElementById('supporterBanner');
+    if(!b) return;
+    b.style.display = show ? '' : 'none';
+  }
+
   function renderSupporter(user) {
     let active = !!user?.isPaid; let labelExtra="";
     if(user?.paidUntil){
@@ -150,6 +150,7 @@
       }
     }
     setSupporterPill(active,labelExtra);
+    banner(!active); // hide the red “become a supporter” banner if active
   }
 
   function renderTotals(user) {
@@ -157,10 +158,20 @@
     const bTot = document.getElementById("blitOverallScore");
     const sTot = document.getElementById("slimOverallScore");
     const kTot = document.getElementById("pillOverall");
-    if(dTot && user?.kDilemma_total!==undefined) dTot.textContent = user.kDilemma_total;
-    if(bTot && user?.kBlit_total!==undefined)     bTot.textContent = user.kBlit_total;
-    if(sTot && user?.kSlim_total!==undefined)     sTot.textContent = user.kSlim_total;
-    if(kTot && user?.kScore!==undefined)          kTot.textContent = `JOU KRIPTIEK-TELLING: ${user.kScore}`;
+    const pillD  = document.getElementById("pillDilemmaLive");
+    const pillB  = document.getElementById("pillBlitLive");
+
+    const kD = user?.kDilemma_total ?? 0;
+    const kB = user?.kBlit_total ?? 0;
+
+    if(dTot) dTot.textContent = kD;
+    if(bTot) bTot.textContent = kB;
+    if(sTot && user?.kSlim_total!==undefined) sTot.textContent = user.kSlim_total;
+    if(kTot && user?.kScore!==undefined) kTot.textContent = `JOU KRIPTIEK-TELLING: ${user.kScore}`;
+
+    // 🔧 update the orange/green pills too (these were stuck at 0 before)
+    if(pillD) pillD.textContent = `JOU DILEMMA-TELLING: ${kD}`;
+    if(pillB) pillB.textContent = `JOU BLITSTIEK-TELLING: ${kB}`;
   }
 
   function renderTodayCards(user) {
@@ -184,6 +195,13 @@
     if(sCalc)  sCalc.textContent  = '—';
   }
 
+  function renderWelcome(user){
+    const line = document.getElementById('welcomeLine');
+    if(!line) return;
+    const name = (user?.displayName || '').trim();
+    line.textContent = name ? `WELKOM TERUG, ${name.toUpperCase()}` : 'WELKOM TERUG!';
+  }
+
   // Wire profile form actions (safe + minimal)
   function wireProfileForm(user) {
     const form = document.getElementById('profileForm');
@@ -199,6 +217,7 @@
           if(newName && newName.length >= 2) {
             await updateProfile(user, { displayName: newName });
             alert('Jou naam is opgedateer.');
+            renderWelcome(user); // refresh heading
           }
         }catch(err){ console.error(err); alert('Kon nie jou naam opdateer nie.'); }
       });
@@ -225,6 +244,10 @@
 
   onAuthStateChanged(auth, async(user)=>{
     if(!user) return;
+
+    // welcome line
+    renderWelcome(user);
+
     // Prefill basics
     const nameEl  = document.getElementById("nameInput");
     const emailEl = document.getElementById("emailInput");
@@ -255,7 +278,7 @@
 </head>
 
 <body class="bg-gray-100 min-h-screen flex flex-col">
-  <!-- Exact same header/logo as index.html -->
+  <!-- Header/logo -->
   <header class="bg-white shadow p-4">
     <div class="logo-container">
       <div id="backgroundCrossword" class="background-crossword"></div>
@@ -269,6 +292,10 @@
         <div class="letter-box flipped-k">E</div>
         <div class="letter-box">K</div>
       </div>
+    </div>
+    <!-- New welcome line (matches index.html vibe) -->
+    <div class="max-w-6xl mx-auto px-2">
+      <h1 id="welcomeLine" class="text-xl md:text-2xl font-extrabold text-blue-900 tracking-tight"></h1>
     </div>
   </header>
 
@@ -439,7 +466,7 @@
     </div>
   </main>
 
-  <!-- Exact same footer -->
+  <!-- Footer -->
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
     &copy; 2025 Kriptiek. Alle regte voorbehou. |
     <a href="/profile.html" class="underline">My profiel</a> |
