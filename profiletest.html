@@ -125,7 +125,9 @@
     // ---- helpers ----
     const $ = (id) => document.getElementById(id);
     const fmt = (n) => (typeof n === "number" ? n.toLocaleString("af-ZA") : n);
+const wbName = document.getElementById("wbName");
 
+    
     function todayZaISO(){
       const now = new Date();
       const utc = now.getTime() + now.getTimezoneOffset()*60000;
@@ -427,6 +429,9 @@
       </div>
     </div>
   </header>
+<div class="max-w-6xl mx-auto px-4 pt-2 text-center text-2xl font-bold text-[#1e3a8a]">
+  WELKOM TERUG, <span id="wbName">GEBRUIKER</span>
+</div>
 
   <main class="flex-grow p-4 pb-16">
     <div class="max-w-6xl mx-auto flex flex-col gap-6 items-stretch">
