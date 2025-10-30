@@ -770,46 +770,50 @@
       updateOverallPill();
     }
 
-    /* -------- BLITSTIEK: Read from Firestore only -------- */
-    async function renderBlitFromFirestore(uid){
-      const playRef = doc(db, `userGames/${uid}/plays/${GAME_ID}`);
-      const playSnap = await getDoc(playRef);
+   /* -------- BLITSTIEK: Read from Firestore only -------- */
+async function renderBlitFromFirestore(uid){
+  const playRef = doc(db, `userGames/${uid}/plays/${GAME_ID}`);
+  const playSnap = await getDoc(playRef);
 
-      let kInstant = 0, kPlace = 0, kTotal = 0;
-      if (playSnap.exists()) {
-        const d = playSnap.data();
-        kInstant = Number(d?.kBlit_instant || 0);  // 0 / 100 / 200
-        kPlace   = Number(d?.kBlit_place   || 0);  // 0 or 200..20 at 23:55
-        kTotal   = Number(d?.kBlit_total   || 0);  // day total (includes ×1.10 if supporter & after 23:55)
-      }
+  // values from play doc
+  let kThr = 0, kPlace = 0, kTotal = 0;
+  if (playSnap.exists()) {
+    const d = playSnap.data();
+    // NEW canonical field + backward-compat with old kBlit_instant
+    kThr   = Number(d?.kBlit_thr ?? d?.kBlit_instant ?? 0);
+    kPlace = Number(d?.kBlit_place ?? 0);
+    kTotal = Number(d?.kBlit_total ?? 0); // already includes ×1.10 if applied by backend after 23:55
+  }
 
-      // Supporter status (just label; total already includes multiplier if applied by backend)
-      let supporterActive = false;
-      const uSnap = await getDoc(doc(db,"users",uid));
-      if (uSnap.exists()){
-        const u = uSnap.data();
-        supporterActive = !!(u?.supporterActive === true || (u?.supporterUntil?.toMillis && u.supporterUntil.toMillis()>Date.now()));
-      }
-      supporterLabelBlit.textContent = supporterActive ? "Aktief (×1.10 ná 23:55)" : "Nie aktief";
+  // Supporter label (informational only)
+  let supporterActive = false;
+  const uSnap = await getDoc(doc(db, "users", uid));
+  if (uSnap.exists()){
+    const u = uSnap.data();
+    supporterActive = !!(u?.supporterActive === true || (u?.supporterUntil?.toMillis && u.supporterUntil.toMillis() > Date.now()));
+  }
+  supporterLabelBlit.textContent = supporterActive ? "Aktief (×1.10 ná 23:55)" : "Nie aktief";
 
-      // Render table
-      blitInstantCell.textContent = fmt(kInstant);
-      if (!IS_ARCHIVE) {
-        blitPlaceCell.textContent = fmt(kPlace);
-        totalCellBlit.textContent = fmt(kTotal);
-        totalPointsBlit.textContent = fmt(kTotal);
-      } else {
-        // Archive: show only instant; total = instant
-        totalCellBlitArchive.textContent = fmt(kInstant);
-        totalPointsBlit.textContent = fmt(kInstant);
-      }
+  // Render table cells
+  blitInstantCell.textContent = fmt(kThr);
 
-      // Update Kriptiek pill total with Blitstiek today (for the viewed GAME_ID; TODAY affects your live sum)
-      gBlitTotal = IS_ARCHIVE ? (kInstant || 0) : (kTotal || (kInstant + kPlace));
-      calcTimeBlit.textContent = new Date().toLocaleString("af-ZA");
-      updateOverallPill();
-    }
+  if (!IS_ARCHIVE) {
+    blitPlaceCell.textContent = fmt(kPlace);
+    // Prefer backend total when available; otherwise show partial (thr+place) during the day
+    const liveTotal = kTotal > 0 ? kTotal : (kThr + kPlace);
+    totalCellBlit.textContent = fmt(liveTotal);
+    totalPointsBlit.textContent = fmt(liveTotal);
+    gBlitTotal = liveTotal;
+  } else {
+    // Archive: only the instant threshold counts
+    totalCellBlitArchive.textContent = fmt(kThr);
+    totalPointsBlit.textContent = fmt(kThr);
+    gBlitTotal = kThr;
+  }
 
+  calcTimeBlit.textContent = new Date().toLocaleString("af-ZA");
+  updateOverallPill();
+}
     /* -------- SLIMSTIEK (shadow, unchanged) -------- */
     async function renderSlimShadow(uid){
       const lbUserRef = doc(db, `slimstiekGames/${GAME_ID}/leaderboard/${uid}`);
