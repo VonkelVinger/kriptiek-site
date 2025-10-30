@@ -471,5 +471,113 @@
     //   Blitstiek: blitOverallScore, blitOverallUpdated
     //   Slimstiek: slimOverallScore, slimOverallUpdated
   </script>
+  <!-- Firebase SDKs (same as live Kriptiek) -->
+  <script type="module">
+    // Import Firebase modules (v10+ style)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, sendPasswordResetEmail, deleteUser, updateProfile } 
+      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } 
+      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // ---- Firebase configuration ----
+    const firebaseConfig = {
+      apiKey: "AIzaSyCdM-4asNdcSpLGkSMosAoV8RUsH_KrfM4",
+      authDomain: "kriptiek.firebaseapp.com",
+      projectId: "kriptiek",
+      storageBucket: "kriptiek.appspot.com",
+      messagingSenderId: "598423858938",
+      appId: "1:598423858938:web:2e6e021179963eb48f1cf4"
+    };
+
+    // ---- Initialize app and services ----
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    // ---- Auth listener ----
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        console.log("No user signed in");
+        return;
+      }
+
+      console.log("Signed in as:", user.displayName || user.email);
+      document.getElementById("nameInput").value  = user.displayName || "";
+      document.getElementById("emailInput").value = user.email || "";
+
+      // Fetch user totals (optional overall blocks)
+      try {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          const u = userDoc.data();
+          if (u.kDilemma_total !== undefined) {
+            document.getElementById("dilOverallScore").textContent = u.kDilemma_total;
+            document.getElementById("dilOverallUpdated").textContent =
+              u.updatedAt || "—";
+          }
+          if (u.kBlit_total !== undefined) {
+            document.getElementById("blitOverallScore").textContent = u.kBlit_total;
+            document.getElementById("blitOverallUpdated").textContent =
+              u.updatedAt || "—";
+          }
+          if (u.kSlim_total !== undefined) {
+            document.getElementById("slimOverallScore").textContent = u.kSlim_total;
+            document.getElementById("slimOverallUpdated").textContent =
+              u.updatedAt || "—";
+          }
+          if (u.kScore !== undefined)
+            document.getElementById("pillOverall").textContent =
+              `JOU KRIPTIEK-TELLING: ${u.kScore}`;
+        }
+      } catch (err) {
+        console.error("Firestore read failed:", err);
+      }
+    });
+
+    // ---- Profile form actions ----
+    const form = document.getElementById("profileForm");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const user = auth.currentUser;
+      if (!user) return alert("Geen gebruiker aangemeld nie.");
+
+      const name = document.getElementById("nameInput").value.trim();
+      try {
+        await updateProfile(user, { displayName: name });
+        await setDoc(doc(db, "users", user.uid), { userName: name }, { merge: true });
+        document.getElementById("formMsg").textContent = "Naam suksesvol bygewerk.";
+        document.getElementById("formMsg").classList.remove("hidden");
+      } catch (err) {
+        console.error(err);
+        alert("Kon nie stoor nie: " + err.message);
+      }
+    });
+
+    // ---- Reset password ----
+    document.getElementById("resetPwBtn").addEventListener("click", async () => {
+      const email = document.getElementById("emailInput").value.trim();
+      if (!email) return alert("Tik jou e-pos in.");
+      try {
+        await sendPasswordResetEmail(auth, email);
+        alert("Wagwoord-herstel-skakel gestuur aan " + email);
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    // ---- Delete account ----
+    document.getElementById("deleteBtn").addEventListener("click", async () => {
+      const user = auth.currentUser;
+      if (!user) return alert("Geen gebruiker aangemeld nie.");
+      if (!confirm("Wil jy jou rekening permanent uitvee?")) return;
+      try {
+        await deleteUser(user);
+        alert("Rekening verwyder.");
+      } catch (err) {
+        alert("Kon nie uitvee nie: " + err.message);
+      }
+    });
+  </script>
 </body>
 </html>
