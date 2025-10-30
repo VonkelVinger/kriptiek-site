@@ -403,8 +403,9 @@ setWbName(displayName);
     // ---- Auth gate + bootstrap ----
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        const ret = encodeURIComponent("/profiletest.html");
-        window.location.href = `/login.html?return=${ret}`;
+        const ret = encodeURIComponent("/profile.html");
+window.location.href = `/login.html?return=${ret}`;
+
         return;
       }
       try{
