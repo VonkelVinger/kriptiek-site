@@ -9,7 +9,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DILEMMA-RANGLYS – Kriptiek</title>
 
+  <!-- Tailwind (kept for existing utility classes) -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
 
   <style>
@@ -23,6 +25,7 @@
     .flipped-k{transform:scaleX(-1)}
     .background-crossword{position:absolute;top:0;left:0;width:100%;height:100%;display:grid;grid-template-columns:repeat(auto-fill,minmax(30px,1fr));grid-template-rows:repeat(auto-fill,minmax(30px,1fr));opacity:.5;z-index:1;pointer-events:none;animation:bgFloat 30s linear infinite}
     @keyframes bgFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+    @media(prefers-reduced-motion:reduce){.background-crossword{animation:none}}
     .bg-letter-box{display:flex;justify-content:center;align-items:center;font-size:1.1rem;font-weight:bold;color:#9ca3af;border:1px solid #e5e7eb;background:transparent;user-select:none}
     .leader-card{max-width:680px;margin:1rem auto 0;background:#fff;border-radius:1rem;box-shadow:0 10px 20px rgba(0,0,0,.06);overflow:hidden}
     .row{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;border-bottom:1px solid #e5e7eb}
@@ -35,48 +38,12 @@
 
   <script type="module">
     import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, orderBy, limit, doc, getDoc, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
     // Firebase (same project)
     const firebaseConfig={apiKey:"AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",authDomain:"kriptiek-c9ea2.firebaseapp.com",projectId:"kriptiek-c9ea2",storageBucket:"kriptiek-c9ea2.appspot.com",messagingSenderId:"620450620939",appId:"1:620450620939:web:e93a18ac23b53b33db890e"};
     const app=getApps().length?getApps()[0]:initializeApp(firebaseConfig);
     const db=getFirestore(app);
-
-    // ==== EXACT SAME SCORING AS dilemmagame.html ====
-    const BASE_POINTS={1:150,2:135,3:120,4:110,5:105,6:100,fail:-50};
-    const STREAK_THRESHOLD=5, STREAK_MULTIPLIER=1.10, SUPPORTER_MULTIPLIER=1.10;
-
-    async function computeDilemmaTotal(uid){
-      // supporter flag
-      const usnap=await getDoc(doc(db,"users",uid));
-      let supporterActive=false;
-      if(usnap.exists()){
-        const d=usnap.data();
-        if(d?.supporterActive===true) supporterActive=true;
-        if(d?.supporterUntil?.toMillis && d.supporterUntil.toMillis()>Date.now()) supporterActive=true;
-      }
-      // recent plays (finishedAt!), collapse per day
-      const snap=await getDocs(query(collection(db,"userGames",uid,"plays"),orderBy("finishedAt","desc"),limit(200)));
-      const byDate=new Map();
-      snap.forEach(ds=>{
-        const d=ds.data()||{};
-        const date=ds.id.replace(/^Game/,"");
-        byDate.set(date,{win:d?.result==="win"||d?.finished===true,guesses:Number(d?.guesses||0)});
-      });
-      // streak by calendar day
-      const dates=Array.from(byDate.keys()).sort(); let cur=0,prev=null;
-      for(const d of dates){ const consec=prev&&(new Date(d)-new Date(prev)===86400000); if(!consec) cur=0; const p=byDate.get(d); if(p?.win) cur++; else cur=0; prev=d; }
-      // distribution
-      const dist={1:0,2:0,3:0,4:0,5:0,6:0,fail:0};
-      for(const p of byDate.values()){ if(p.win){ const g=Math.min(Math.max(1,p.guesses||6),6); dist[g]++; } else { dist.fail++; } }
-      const subtotal = dist[1]*BASE_POINTS[1]+dist[2]*BASE_POINTS[2]+dist[3]*BASE_POINTS[3]+dist[4]*BASE_POINTS[4]+dist[5]*BASE_POINTS[5]+dist[6]*BASE_POINTS[6]+dist.fail*BASE_POINTS.fail;
-      const streakMult = cur>=STREAK_THRESHOLD?STREAK_MULTIPLIER:1;
-      const supporterMult = supporterActive?SUPPORTER_MULTIPLIER:1;
-      const streakBonus = Math.round(subtotal*(streakMult-1));
-      const supporterBonus = Math.round((subtotal+streakBonus)*(supporterMult-1));
-      return subtotal+streakBonus+supporterBonus;
-    }
-    // ================================================
 
     const fmt=n=>typeof n==="number"?n.toLocaleString("af-ZA"):n;
 
@@ -84,72 +51,24 @@
       const listEl=document.getElementById("leaderboard");
       listEl.innerHTML='<div class="p-6 text-center text-gray-500">Laai ranglys…</div>';
 
-      // Build a wide pool of candidates from users (never from games/*/leaderboard)
-      const TAKE=400;
-      const [s1,s2,s3]=await Promise.allSettled([
-        getDocs(query(collection(db,"users"),orderBy("dilemmaScore","desc"),limit(TAKE))),
-        getDocs(query(collection(db,"users"),orderBy("kScore","desc"),limit(TAKE))),
-        getDocs(query(collection(db,"users"),orderBy("gamesPlayed","desc"),limit(TAKE)))
-      ]);
-
-      const map=new Map(); // uid -> {name,total?,updatedAt?}
-      function ingest(snap){
+      // Single small query: top 25 by precomputed score
+      let rows=[];
+      try{
+        const snap=await getDocs(query(collection(db,"users"),orderBy("dilemmaScore","desc"),limit(25)));
         snap.forEach(d=>{
           const v=d.data()||{};
-          const id=d.id;
-          const name=(typeof v.userName==="string"&&v.userName.trim())?v.userName.trim():"Speler";
-          const saved=Number(v.dilemmaScore ?? v.kScore);
-          const total=Number.isFinite(saved)?saved:null;
-          const updatedAt=v.scoreUpdatedAt||v.updatedAt||v.createdAt||null;
-          const prev=map.get(id);
-          if(!prev) map.set(id,{id,name,total,updatedAt});
-          else{
-            prev.name = prev.name || name;
-            prev.total = Math.max(prev.total ?? -Infinity, total ?? -Infinity);
-            if(!prev.updatedAt || (updatedAt?.seconds||0)>(prev.updatedAt?.seconds||0)) prev.updatedAt=updatedAt;
-          }
+          rows.push({
+            name:(typeof v.userName==="string"&&v.userName.trim())?v.userName.trim():"Speler",
+            total:Number(v.dilemmaScore||0)
+          });
         });
+      }catch(e){
+        console.error(e);
       }
-      if(s1.status==="fulfilled") ingest(s1.value);
-      if(s2.status==="fulfilled") ingest(s2.value);
-      if(s3.status==="fulfilled") ingest(s3.value);
+      while(rows.length<25) rows.push({name:"—",total:0});
 
-      // Compute missing totals (exact logic) for a batch; persist for future speed
-// Recompute totals for EVERY candidate so we 100% match the game math
-const candidates = Array.from(map.values()).slice(0, 300); // wide pool
-if (candidates.length) {
-  const computed = await Promise.allSettled(
-    candidates.map(r => computeDilemmaTotal(r.id))
-  );
-
-  await Promise.allSettled(
-    computed.map((res, i) => {
-      const r = candidates[i];
-      if (res.status === "fulfilled" && Number.isFinite(res.value)) {
-        r.total = Number(res.value);
-        // persist so saved scores stay in lockstep with the game
-        return setDoc(
-          doc(db, "users", r.id),
-          { dilemmaScore: r.total, kScore: r.total, scoreUpdatedAt: serverTimestamp() },
-          { merge: true }
-        );
-      } else {
-        r.total = Number(r.total ?? 0); // fallback if compute failed
-      }
-    })
-  );
-}
-
-      
-      // Sort & take exactly 25 (pad with zero rows if needed)
-      const rows=Array.from(map.values()).map(r=>({...r,total:Number(r.total??0)}));
-      rows.sort((a,b)=>(b.total-a.total)||((b.updatedAt?.seconds||0)-(a.updatedAt?.seconds||0)));
-      let top=rows.slice(0,25);
-      while(top.length<25) top.push({id:`pad-${top.length+1}`,name:"—",total:0});
-
-      // Render simple list
       const frag=document.createDocumentFragment();
-      top.forEach((u,i)=>{
+      rows.forEach((u,i)=>{
         const div=document.createElement("div"); div.className="row fade-in";
         const left=document.createElement("div"); left.className="flex items-center space-x-3";
         const r=document.createElement("div"); r.className="rank"; r.textContent=(i+1)+".";
@@ -200,21 +119,42 @@ if (candidates.length) {
   </footer>
 
   <script>
+    // Lightweight background: cap cells, build on idle, debounce resize
     document.addEventListener('DOMContentLoaded',function(){
       const backgroundCrossword=document.getElementById('backgroundCrossword');
+      if(!backgroundCrossword) return;
+
       const letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      function r(){return letters[Math.floor(Math.random()*letters.length)]}
+      const rand=()=>letters[Math.floor(Math.random()*letters.length)];
+
       function build(){
-        if(!backgroundCrossword) return;
         backgroundCrossword.innerHTML='';
-        const rows=Math.ceil(backgroundCrossword.offsetHeight/30);
-        const cols=Math.ceil(backgroundCrossword.offsetWidth/30);
-        const total=(rows*cols)||300;
+        const cellSize=30;
+        const rows=Math.max(1,Math.ceil(backgroundCrossword.offsetHeight/cellSize));
+        const cols=Math.max(1,Math.ceil(backgroundCrossword.offsetWidth/cellSize));
+        const total=Math.min(rows*cols, 200); // cap to 200 cells
         for(let i=0;i<total;i++){
-          const el=document.createElement('div'); el.className='bg-letter-box'; el.textContent=r(); backgroundCrossword.appendChild(el);
+          const el=document.createElement('div');
+          el.className='bg-letter-box';
+          el.textContent=rand();
+          backgroundCrossword.appendChild(el);
         }
       }
-      build(); window.addEventListener('resize',build);
+
+      const idleBuild = () => (window.requestIdleCallback ? requestIdleCallback(build) : setTimeout(build, 0));
+      idleBuild();
+
+      let rAF=null, last=0;
+      function onResize(){
+        const now=Date.now();
+        if(now-last<200){ // debounce ~200ms
+          if(rAF) cancelAnimationFrame(rAF);
+          rAF=requestAnimationFrame(()=>{ last=now; build();});
+        }else{
+          last=now; build();
+        }
+      }
+      window.addEventListener('resize', onResize);
     });
   </script>
 </body>
