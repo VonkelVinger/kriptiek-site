@@ -1,161 +1,199 @@
 <!DOCTYPE html>
 <html lang="af">
 <head>
-  <!-- GA -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9V4CMP1FP"></script>
-  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-S9V4CMP1FP');</script>
-
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>DILEMMA-RANGLYS – Kriptiek</title>
 
-  <!-- Tailwind (kept for existing utility classes) -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+  <!-- Preconnects to cut DNS+TLS time for Firebase/Fonts -->
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
+  <!-- Fonts (loaded non-blocking) -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" media="print" onload="this.media='all'">
+
+  <!-- Minimal, static CSS (no Tailwind) -->
   <style>
-    body{font-family:'Montserrat',sans-serif;background:#f3f4f6}
-    .logo-container{position:relative;display:flex;justify-content:center;align-items:center;width:fit-content;margin:1rem auto;padding:1rem;border-radius:1rem;background:#fff;overflow:hidden;isolation:isolate}
-    .logo-container::before{content:"";position:absolute;inset:-2px;border-radius:1rem;background:conic-gradient(from 180deg,#1e3a8a,#334155,#1e3a8a);animation:spin 14s linear infinite;z-index:0;padding:2px;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+    :root{
+      --ink:#111827; --muted:#6b7280; --bg:#f3f4f6; --card:#fff; --brand:#1e3a8a; --pill:#f97316; --row:#f9fafb; --border:#e5e7eb; --tile:#374151; --tileEdge:#1f2937;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;background:var(--bg);color:var(--ink)}
+    header,footer{background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+    .wrap{max-width:980px;margin:0 auto;padding:0 16px}
+    .logo-container{position:relative;display:flex;justify-content:center;align-items:center;width:fit-content;margin:16px auto;padding:12px;border-radius:16px;background:#fff;overflow:hidden;isolation:isolate}
+    .logo-container::before{content:"";position:absolute;inset:-2px;border-radius:16px;background:conic-gradient(from 180deg,#1e3a8a,#334155,#1e3a8a);animation:spin 14s linear infinite;z-index:0;padding:2px;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
     @keyframes spin{to{transform:rotate(1turn)}}
-    @media(prefers-reduced-motion:reduce){.logo-container::before{animation:none}}
+    @media (prefers-reduced-motion:reduce){.logo-container::before{animation:none}}
     .crossword-grid{display:grid;grid-template-columns:repeat(8,minmax(40px,1fr));gap:4px;position:relative;z-index:10}
-    .letter-box{width:50px;height:50px;display:flex;justify-content:center;align-items:center;background:#374151;color:#fff;font-size:1.8rem;font-weight:bold;border:2px solid #1f2937;border-radius:.375rem;text-transform:uppercase}
+    .letter-box{width:50px;height:50px;display:flex;justify-content:center;align-items:center;background:var(--tile);color:#fff;font-size:28px;font-weight:700;border:2px solid var(--tileEdge);border-radius:6px;text-transform:uppercase}
     .flipped-k{transform:scaleX(-1)}
-    .background-crossword{position:absolute;top:0;left:0;width:100%;height:100%;display:grid;grid-template-columns:repeat(auto-fill,minmax(30px,1fr));grid-template-rows:repeat(auto-fill,minmax(30px,1fr));opacity:.5;z-index:1;pointer-events:none;animation:bgFloat 30s linear infinite}
+    .bg-fx{position:absolute;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(80% 50% at 50% 0%,rgba(30,58,138,.08),transparent 60%)}
+    .background-crossword{position:absolute;inset:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(30px,1fr));grid-auto-rows:30px;opacity:.5;pointer-events:none;animation:bgFloat 30s linear infinite}
     @keyframes bgFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
-    @media(prefers-reduced-motion:reduce){.background-crossword{animation:none}}
-    .bg-letter-box{display:flex;justify-content:center;align-items:center;font-size:1.1rem;font-weight:bold;color:#9ca3af;border:1px solid #e5e7eb;background:transparent;user-select:none}
-    .leader-card{max-width:680px;margin:1rem auto 0;background:#fff;border-radius:1rem;box-shadow:0 10px 20px rgba(0,0,0,.06);overflow:hidden}
-    .row{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;border-bottom:1px solid #e5e7eb}
-    .row:nth-child(odd){background:#fff}.row:nth-child(even){background:#f9fafb}
-    .rank{width:2rem;text-align:right;font-weight:700;color:#6b7280}
-    .name{font-weight:700;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .pill{background:#f97316;color:#fff;padding:.25rem .6rem;border-radius:9999px;font-weight:700;font-size:.875rem}
-    .fade-in{animation:fade .35s ease-out}@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+    @media (prefers-reduced-motion:reduce){.background-crossword{animation:none}}
+    .bg-letter-box{display:flex;justify-content:center;align-items:center;font:700 17px/1 Montserrat,system-ui,sans-serif;color:#9ca3af;border:1px solid var(--border);background:transparent;user-select:none}
+    h1{margin:24px 0 8px;text-align:center;font-size:28px;color:var(--brand)}
+    .leader-card{max-width:680px;margin:12px auto 0;background:var(--card);border-radius:16px;box-shadow:0 10px 20px rgba(0,0,0,.06);overflow:hidden}
+    .row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+    .row:nth-child(even){background:var(--row)}
+    .rank{width:2rem;text-align:right;font-weight:700;color:var(--muted)}
+    .name{flex:1;margin-left:12px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .pill{background:var(--pill);color:#fff;padding:4px 10px;border-radius:9999px;font-weight:700;font-size:14px}
+    .fade-in{animation:fade .25s ease-out}
+    @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+    footer{margin-top:32px;font-size:13px;color:#6b7280}
+    footer .wrap{padding:12px 16px;text-align:center}
+    footer a{color:inherit;text-decoration:underline}
   </style>
 
+  <!-- GA: load after first paint to avoid blocking -->
+  <script>
+    (function deferGA(){
+      var load = function(){
+        var s1=document.createElement('script');
+        s1.src='https://www.googletagmanager.com/gtag/js?id=G-S9V4CMP1FP'; s1.async=true; document.head.appendChild(s1);
+        s1.onload=function(){
+          window.dataLayer=window.dataLayer||[];
+          function gtag(){dataLayer.push(arguments);}
+          window.gtag=gtag;
+          gtag('js', new Date());
+          gtag('config','G-S9V4CMP1FP');
+        }
+      };
+      if('requestIdleCallback' in window) requestIdleCallback(load); else setTimeout(load,0);
+    })();
+  </script>
+
+  <!-- Firebase App + Firestore LITE (smaller, read-only, faster to start) -->
   <script type="module">
     import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import {
+      getFirestore, collection, getDocs, query, orderBy, limit
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore-lite.js";
 
     // Firebase (same project)
-    const firebaseConfig={apiKey:"AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",authDomain:"kriptiek-c9ea2.firebaseapp.com",projectId:"kriptiek-c9ea2",storageBucket:"kriptiek-c9ea2.appspot.com",messagingSenderId:"620450620939",appId:"1:620450620939:web:e93a18ac23b53b33db890e"};
-    const app=getApps().length?getApps()[0]:initializeApp(firebaseConfig);
-    const db=getFirestore(app);
+    const firebaseConfig = {
+      apiKey:"AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+      authDomain:"kriptiek-c9ea2.firebaseapp.com",
+      projectId:"kriptiek-c9ea2",
+      storageBucket:"kriptiek-c9ea2.appspot.com",
+      messagingSenderId:"620450620939",
+      appId:"1:620450620939:web:e93a18ac23b53b33db890e"
+    };
+    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
 
-    const fmt=n=>typeof n==="number"?n.toLocaleString("af-ZA"):n;
+    const fmt = n => typeof n === "number" ? n.toLocaleString("af-ZA") : n;
 
     async function loadOverall(){
-      const listEl=document.getElementById("leaderboard");
-      listEl.innerHTML='<div class="p-6 text-center text-gray-500">Laai …</div>';
+      const listEl = document.getElementById("leaderboard");
+      listEl.innerHTML = '<div class="p-6" style="text-align:center;color:#6b7280">Laai ranglys…</div>';
 
-      // Single small query: top 25 by precomputed score
-      let rows=[];
+      let rows = [];
       try{
-        const snap=await getDocs(query(collection(db,"users"),orderBy("dilemmaScore","desc"),limit(25)));
+        // Single small query: top 25 by precomputed score
+        const snap = await getDocs(query(collection(db,"users"), orderBy("dilemmaScore","desc"), limit(25)));
         snap.forEach(d=>{
           const v=d.data()||{};
           rows.push({
-            name:(typeof v.userName==="string"&&v.userName.trim())?v.userName.trim():"Speler",
-            total:Number(v.dilemmaScore||0)
+            name: (typeof v.userName==="string" && v.userName.trim()) ? v.userName.trim() : "Speler",
+            total: Number(v.dilemmaScore || 0)
           });
         });
       }catch(e){
         console.error(e);
       }
-      while(rows.length<25) rows.push({name:"—",total:0});
+      while (rows.length < 25) rows.push({ name:"—", total:0 });
 
-      const frag=document.createDocumentFragment();
+      const frag = document.createDocumentFragment();
       rows.forEach((u,i)=>{
-        const div=document.createElement("div"); div.className="row fade-in";
-        const left=document.createElement("div"); left.className="flex items-center space-x-3";
-        const r=document.createElement("div"); r.className="rank"; r.textContent=(i+1)+".";
-        const n=document.createElement("div"); n.className="name"; n.textContent=u.name;
-        left.appendChild(r); left.appendChild(n);
-        const pill=document.createElement("div"); pill.className="pill"; pill.textContent=fmt(u.total);
+        const div = document.createElement("div"); div.className="row fade-in";
+        const left= document.createElement("div"); left.style.display="flex"; left.style.alignItems="center";
+        const rank= document.createElement("div"); rank.className="rank"; rank.textContent=(i+1)+".";
+        const name= document.createElement("div"); name.className="name"; name.textContent=u.name;
+        left.appendChild(rank); left.appendChild(name);
+        const pill= document.createElement("div"); pill.className="pill"; pill.textContent=fmt(u.total);
         div.appendChild(left); div.appendChild(pill);
         frag.appendChild(div);
       });
       listEl.innerHTML=""; listEl.appendChild(frag);
     }
 
+    // Paint content ASAP; heavy visuals later
     document.addEventListener("DOMContentLoaded", loadOverall);
   </script>
 </head>
-<body class="min-h-screen flex flex-col">
-  <header class="bg-white shadow p-4">
-    <div class="logo-container">
-      <div id="backgroundCrossword" class="background-crossword"></div>
-      <div class="crossword-grid">
-        <div class="letter-box flipped-k">K</div>
-        <div class="letter-box flipped-k">R</div>
-        <div class="letter-box">I</div>
-        <div class="letter-box flipped-k">P</div>
-        <div class="letter-box">T</div>
-        <div class="letter-box">I</div>
-        <div class="letter-box flipped-k">E</div>
-        <div class="letter-box">K</div>
+
+<body>
+  <header>
+    <div class="wrap">
+      <div class="logo-container">
+        <div class="background-crossword" id="backgroundCrossword" aria-hidden="true"></div>
+        <div class="crossword-grid" aria-label="Kriptiek">
+          <div class="letter-box flipped-k">K</div>
+          <div class="letter-box flipped-k">R</div>
+          <div class="letter-box">I</div>
+          <div class="letter-box flipped-k">P</div>
+          <div class="letter-box">T</div>
+          <div class="letter-box">I</div>
+          <div class="letter-box flipped-k">E</div>
+          <div class="letter-box">K</div>
+        </div>
       </div>
     </div>
   </header>
 
-  <main class="flex-grow py-10 sm:py-12 md:py-16 px-6 text-center relative">
-    <div class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(80%_50%_at_50%_0%,rgba(30,58,138,.08),transparent_60%)]"></div>
-    <h1 class="text-3xl font-bold text-[#1e3a8a] mb-4">DILEMMA SE TOP-25</h1>
-    <section class="leader-card"><div id="leaderboard" role="list"></div></section>
+  <main class="wrap" style="position:relative;padding:24px 16px 0">
+    <div class="bg-fx" aria-hidden="true"></div>
+    <h1>DILEMMA-RANGLYS</h1>
+    <section class="leader-card" aria-live="polite">
+      <div id="leaderboard" role="list"></div>
+    </section>
   </main>
 
-  <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
-    &copy; 2025 Kriptiek. Alle regte voorbehou. |
-    <a href="/index.html" class="underline">Tuis</a> |
-    <a href="/forum.html" class="underline">Gesels saam</a> |
-    <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
-    <a href="/terms.html" class="underline">Voorwaardes</a> |
-    <a href="/faq.html" class="underline">Gereelde vrae</a> |
-    <a href="/about.html" class="underline">Oor Kriptiek</a> |
-    <a href="/contact.html" class="underline">Kontak ons</a>
+  <footer>
+    <div class="wrap">
+      &copy; 2025 Kriptiek. Alle regte voorbehou. |
+      <a href="/index.html">Tuis</a> |
+      <a href="/forum.html">Gesels saam</a> |
+      <a href="/privacy.html">Privaatheidsbeleid</a> |
+      <a href="/terms.html">Voorwaardes</a> |
+      <a href="/faq.html">Gereelde vrae</a> |
+      <a href="/about.html">Oor Kriptiek</a> |
+      <a href="/contact.html">Kontak ons</a>
+    </div>
   </footer>
 
+  <!-- Background letters: idle + capped so it never slows first paint -->
   <script>
-    // Lightweight background: cap cells, build on idle, debounce resize
-    document.addEventListener('DOMContentLoaded',function(){
-      const backgroundCrossword=document.getElementById('backgroundCrossword');
-      if(!backgroundCrossword) return;
-
+    (function(){
       const letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
       const rand=()=>letters[Math.floor(Math.random()*letters.length)];
-
       function build(){
-        backgroundCrossword.innerHTML='';
-        const cellSize=30;
-        const rows=Math.max(1,Math.ceil(backgroundCrossword.offsetHeight/cellSize));
-        const cols=Math.max(1,Math.ceil(backgroundCrossword.offsetWidth/cellSize));
-        const total=Math.min(rows*cols, 200); // cap to 200 cells
+        const host=document.getElementById('backgroundCrossword');
+        if(!host) return;
+        host.innerHTML='';
+        const w=host.clientWidth||window.innerWidth, h=host.clientHeight||180;
+        const size=30, cols=Math.ceil(w/size), rows=Math.ceil(h/size);
+        const total=Math.min(cols*rows, 160); // hard cap
+        const frag=document.createDocumentFragment();
         for(let i=0;i<total;i++){
           const el=document.createElement('div');
           el.className='bg-letter-box';
           el.textContent=rand();
-          backgroundCrossword.appendChild(el);
+          frag.appendChild(el);
         }
+        host.appendChild(frag);
       }
+      const start=()=>('requestIdleCallback'in window?requestIdleCallback(build):setTimeout(build,0));
+      window.addEventListener('DOMContentLoaded',start,{once:true});
 
-      const idleBuild = () => (window.requestIdleCallback ? requestIdleCallback(build) : setTimeout(build, 0));
-      idleBuild();
-
-      let rAF=null, last=0;
-      function onResize(){
-        const now=Date.now();
-        if(now-last<200){ // debounce ~200ms
-          if(rAF) cancelAnimationFrame(rAF);
-          rAF=requestAnimationFrame(()=>{ last=now; build();});
-        }else{
-          last=now; build();
-        }
-      }
-      window.addEventListener('resize', onResize);
-    });
+      let to=null;
+      window.addEventListener('resize',()=>{ clearTimeout(to); to=setTimeout(build,220); });
+    })();
   </script>
 </body>
 </html>
