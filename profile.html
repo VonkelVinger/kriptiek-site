@@ -117,6 +117,15 @@
     const STREAK_THRESHOLD = 5;
     const STREAK_MULTIPLIER = 1.10;
     const SUPPORTER_MULTIPLIER = 1.10;
+function dateZaOffset(days){
+  // Build a yyyy-mm-dd for ZA time (UTC+2, no DST)
+  const now = new Date();
+  const utc = now.getTime() + now.getTimezoneOffset()*60000;
+  const za  = new Date(utc + 120*60000);
+  za.setDate(za.getDate() + days);
+  return za.toISOString().slice(0,10);
+}
+function gameIdFor(days){ return `Game${dateZaOffset(days)}`; }
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -125,6 +134,7 @@
     // ---- helpers ----
     const $ = (id) => document.getElementById(id);
     const fmt = (n) => (typeof n === "number" ? n.toLocaleString("af-ZA") : n);
+    
 function setWbName(name){
   const el = document.getElementById("wbName");
   if (el) el.textContent = (name || "Gebruiker").toUpperCase();
@@ -239,20 +249,41 @@ function setWbName(name){
 
     // Overall pill: base from users doc + provisional 100 if sub-60 and no place points yet
     async function loadBlitstiekOverall(userDoc, uid){
-      const base =
-        num(userDoc?.kBlit_total ??
-            userDoc?.kBlitTotal ??
-            userDoc?.blitstiekTotal ??
-            userDoc?.blit_total ?? 0);
+  const toNum = v => (typeof v === "number" ? v : (v==null ? 0 : Number(v)));
 
-      const lb = await getTodayLeaderboard(uid);
-      const noPlacePtsYet =
-        (typeof userDoc?.blit_todayPoints !== "number") &&
-        !(lb && typeof lb.dailyPoints === "number");
-      const instant = (lb && typeof lb.time === "number" && lb.time < 60) ? 100 : 0;
+  // 1) Prefer stored overall total if present (any legacy field name)
+  let base = toNum(
+    userDoc?.kBlit_total ??
+    userDoc?.kBlitTotal ??
+    userDoc?.blitstiekTotal ??
+    userDoc?.blit_total
+  );
 
-      return base + (noPlacePtsYet ? instant : 0);
+  // 2) Fallback: if no stored total yet, include yesterday's finalized dailyPoints
+  if (!base) {
+    const yRef  = doc(db, "blitstiekGames", gameIdFor(-1), "leaderboard", uid);
+    const ySnap = await getDoc(yRef);
+    if (ySnap.exists()) {
+      const y = ySnap.data();
+      if (typeof y?.dailyPoints === "number") base += y.dailyPoints;
     }
+  }
+
+  // 3) Today: provisional instant bonus if <60s and no 23:55 points yet
+  const tRef  = doc(db, "blitstiekGames", gameIdFor(0), "leaderboard", uid);
+  const tSnap = await getDoc(tRef);
+  const t     = tSnap.exists() ? tSnap.data() : null;
+
+  const noPlacePtsYet =
+    typeof userDoc?.blit_todayPoints !== "number" &&
+    !(t && typeof t.dailyPoints === "number");
+
+  // (Tomorrow we’ll change this to 200 for <30s and 100 for <60s)
+  const instant = (t && typeof t.time === "number" && t.time < 60) ? 100 : 0;
+
+  return base + (noPlacePtsYet ? instant : 0);
+}
+
 
     // Today tile: instant (0/100) + place (null until written)
     async function loadBlitstiekToday(uid, userDoc){
@@ -334,6 +365,10 @@ setWbName(displayName);
       const { instant: bltInstant, place: bltPlace } = await loadBlitstiekToday(user.uid, userDoc);
       let bltTodayTotal = null;
       if (bltInstant || bltPlace != null) bltTodayTotal = Number(bltInstant) + Number(bltPlace ?? 0);
+
+      const blitOverallUpdated = document.getElementById("blitOverallUpdated");
+if (blitOverallUpdated) blitOverallUpdated.textContent = new Date().toLocaleString("af-ZA");
+
 
       if (bltTodayTotal == null && typeof userDoc?.time === "number") {
         const el = document.getElementById("calcTimeBlit");
