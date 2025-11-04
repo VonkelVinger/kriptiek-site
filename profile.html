@@ -228,7 +228,7 @@
       return computeDilemma(plays, supporterActive);
     }
 
-    /* === Blitstiek helpers (robust historic + today estimation) === */
+    /* === Blitstiek helpers (robust historic + today instant-only until 23:55) === */
     function blitPointsFromRow(row){
       if (typeof row?.dailyPoints === "number") return row.dailyPoints;   // canonical new field
       if (typeof row?.points === "number")      return row.points;        // legacy
@@ -307,27 +307,15 @@
       return base + (noPlacePtsYet ? instant : 0);
     }
 
-    // Today tile: instant (0/100) + place (if nightly not written yet, estimate rank even outside top-10)
+    // Today tile: show ONLY instant (0/100) until 23:55 writes dailyPoints; afterwards show instant + official dailyPoints
     async function loadBlitstiekToday(uid, userDoc){
-      let place = (typeof userDoc?.blit_todayPoints === "number") ? userDoc.blit_todayPoints : null;
-
       const mine = await getTodayLeaderboard(uid);
+
       const instant = (mine && typeof mine.time === "number" && mine.time < 60) ? 100 : 0;
 
-      if (place == null && mine && typeof mine.dailyPoints === "number") place = mine.dailyPoints;
-
-      // Estimate rank even if not top-10
-      if (place == null && mine && typeof mine.time === "number") {
-        try {
-          const q = query(collection(db, "blitstiekGames", GAME_TODAY, "leaderboard"), where("time","<", mine.time));
-          const snap = await getDocs(q);
-          const rank = (snap.size || 0) + 1; // 1-based rank
-          if (rank >= 1 && rank <= 10) place = BLIT_RANK_POINTS[rank - 1];
-          else place = null; // outside top-10 -> no place points
-        } catch (e) {
-          console.warn("rank estimation failed:", e);
-        }
-      }
+      let place = null;
+      if (mine && typeof mine.dailyPoints === "number") place = mine.dailyPoints;
+      if (typeof userDoc?.blit_todayPoints === "number") place = userDoc.blit_todayPoints;
 
       return { instant, place };
     }
@@ -394,11 +382,12 @@
         }
       }
 
-      // Blitstiek (historic + today estimation)
+      // Blitstiek (historic agg + today instant-only)
       const bltOverall = await loadBlitstiekOverall(userDoc, user.uid);
       const { instant: bltInstant, place: bltPlace } = await loadBlitstiekToday(user.uid, userDoc);
       let bltTodayTotal = null;
-      if (bltInstant || bltPlace != null) bltTodayTotal = Number(bltInstant) + Number(bltPlace ?? 0);
+      if (bltPlace != null) bltTodayTotal = Number(bltInstant) + Number(bltPlace);
+      else if (bltInstant)  bltTodayTotal = Number(bltInstant);
 
       const blitOverallUpdated = document.getElementById("blitOverallUpdated");
       if (blitOverallUpdated) blitOverallUpdated.textContent = new Date().toLocaleString("af-ZA");
