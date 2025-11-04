@@ -101,8 +101,8 @@
     } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
     import {
       getFirestore, doc, getDoc, setDoc, updateDoc,
-      collection, query, orderBy, limit, getDocs, serverTimestamp
-      collectionGroup, where
+      collection, query, orderBy, limit, getDocs, serverTimestamp,
+      collectionGroup, where, documentId
     } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -118,15 +118,16 @@
     const STREAK_THRESHOLD = 5;
     const STREAK_MULTIPLIER = 1.10;
     const SUPPORTER_MULTIPLIER = 1.10;
-function dateZaOffset(days){
-  // Build a yyyy-mm-dd for ZA time (UTC+2, no DST)
-  const now = new Date();
-  const utc = now.getTime() + now.getTimezoneOffset()*60000;
-  const za  = new Date(utc + 120*60000);
-  za.setDate(za.getDate() + days);
-  return za.toISOString().slice(0,10);
-}
-function gameIdFor(days){ return `Game${dateZaOffset(days)}`; }
+
+    function dateZaOffset(days){
+      // Build a yyyy-mm-dd for ZA time (UTC+2, no DST)
+      const now = new Date();
+      const utc = now.getTime() + now.getTimezoneOffset()*60000;
+      const za  = new Date(utc + 120*60000);
+      za.setDate(za.getDate() + days);
+      return za.toISOString().slice(0,10);
+    }
+    function gameIdFor(days){ return `Game${dateZaOffset(days)}`; }
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -135,12 +136,12 @@ function gameIdFor(days){ return `Game${dateZaOffset(days)}`; }
     // ---- helpers ----
     const $ = (id) => document.getElementById(id);
     const fmt = (n) => (typeof n === "number" ? n.toLocaleString("af-ZA") : n);
-    
-function setWbName(name){
-  const el = document.getElementById("wbName");
-  if (el) el.textContent = (name || "Gebruiker").toUpperCase();
-}
-    
+
+    function setWbName(name){
+      const el = document.getElementById("wbName");
+      if (el) el.textContent = (name || "Gebruiker").toUpperCase();
+    }
+
     function todayZaISO(){
       const now = new Date();
       const utc = now.getTime() + now.getTimezoneOffset()*60000;
@@ -250,58 +251,59 @@ function setWbName(name){
 
     // Overall pill: base from users doc + provisional 100 if sub-60 and no place points yet
     async function loadBlitstiekOverall(userDoc, uid){
-  const toNum = v => (typeof v === "number" ? v : (v==null ? 0 : Number(v)));
+      const toNum = v => (typeof v === "number" ? v : (v==null ? 0 : Number(v)));
 
-  // 1) Prefer any stored total
-  let base = toNum(
-    userDoc?.kBlit_total ??
-    userDoc?.kBlitTotal ??
-    userDoc?.blitstiekTotal ??
-    userDoc?.blit_total
-  );
+      // 1) Prefer any stored total
+      let base = toNum(
+        userDoc?.kBlit_total ??
+        userDoc?.kBlitTotal ??
+        userDoc?.blitstiekTotal ??
+        userDoc?.blit_total
+      );
 
-  // 2) Fallback: if base is 0, sum recent finalized dailyPoints for this user
-  if (!base) {
-    // Pull the last ~60 leaderboard rows for this user across days and sum dailyPoints
-    const cg = query(
-      collectionGroup(db, "leaderboard"),
-      where("__name__", "==", uid),        // documentId() == uid
-      orderBy("timestamp", "desc"),
-      limit(60)
-    );
-    const cgSnap = await getDocs(cg);
-    let sum = 0;
-    cgSnap.forEach(d => {
-      const data = d.data();
-      if (typeof data?.dailyPoints === "number") sum += data.dailyPoints;
-    });
-    base = sum;
+      // 2) Fallback: if base is 0, sum recent finalized dailyPoints for this user
+      if (!base) {
+        let sum = 0;
+        try {
+          const cg = query(
+            collectionGroup(db, "leaderboard"),
+            where(documentId(), "==", uid),
+            limit(60)
+          );
+          const cgSnap = await getDocs(cg);
+          cgSnap.forEach(d => {
+            const data = d.data();
+            if (typeof data?.dailyPoints === "number") sum += data.dailyPoints;
+          });
+        } catch (err) {
+          console.warn("Blitstiek overall fallback path hit:", err);
+        }
+        base = base || sum;
 
-    // If still 0, last small safety: look only at yesterday’s doc once
-    if (!base) {
-      const yRef  = doc(db, "blitstiekGames", gameIdFor(-1), "leaderboard", uid);
-      const ySnap = await getDoc(yRef);
-      if (ySnap.exists()) {
-        const y = ySnap.data();
-        if (typeof y?.dailyPoints === "number") base += y.dailyPoints;
+        // If still 0, last small safety: look only at yesterday’s doc once
+        if (!base) {
+          const yRef  = doc(db, "blitstiekGames", gameIdFor(-1), "leaderboard", uid);
+          const ySnap = await getDoc(yRef);
+          if (ySnap.exists()) {
+            const y = ySnap.data();
+            if (typeof y?.dailyPoints === "number") base += y.dailyPoints;
+          }
+        }
       }
+
+      // 3) Today: add provisional instant 100 only if no 23:55 points yet
+      const tRef  = doc(db, "blitstiekGames", gameIdFor(0), "leaderboard", uid);
+      const tSnap = await getDoc(tRef);
+      const t     = tSnap.exists() ? tSnap.data() : null;
+
+      const noPlacePtsYet =
+        typeof userDoc?.blit_todayPoints !== "number" &&
+        !(t && typeof t.dailyPoints === "number");
+
+      const instant = (t && typeof t.time === "number" && t.time < 60) ? 100 : 0;
+
+      return base + (noPlacePtsYet ? instant : 0);
     }
-  }
-
-  // 3) Today: add provisional instant 100 only if no 23:55 points yet
-  const tRef  = doc(db, "blitstiekGames", gameIdFor(0), "leaderboard", uid);
-  const tSnap = await getDoc(tRef);
-  const t     = tSnap.exists() ? tSnap.data() : null;
-
-  const noPlacePtsYet =
-    typeof userDoc?.blit_todayPoints !== "number" &&
-    !(t && typeof t.dailyPoints === "number");
-
-  const instant = (t && typeof t.time === "number" && t.time < 60) ? 100 : 0;
-
-  return base + (noPlacePtsYet ? instant : 0);
-}
-
 
     // Today tile: instant (0/100) + place (null until written)
     async function loadBlitstiekToday(uid, userDoc){
@@ -361,8 +363,8 @@ function setWbName(name){
       renderSupporterPill(supporter);
 
       // ---- Set welcome name at top
-const displayName = user.displayName || userDoc.userName || "Gebruiker";
-setWbName(displayName);
+      const displayName = user.displayName || userDoc.userName || "Gebruiker";
+      setWbName(displayName);
 
       // Sync top banner with supporter state
       const supporterBanner = document.getElementById("supporterBanner");
@@ -385,8 +387,7 @@ setWbName(displayName);
       if (bltInstant || bltPlace != null) bltTodayTotal = Number(bltInstant) + Number(bltPlace ?? 0);
 
       const blitOverallUpdated = document.getElementById("blitOverallUpdated");
-if (blitOverallUpdated) blitOverallUpdated.textContent = new Date().toLocaleString("af-ZA");
-
+      if (blitOverallUpdated) blitOverallUpdated.textContent = new Date().toLocaleString("af-ZA");
 
       if (bltTodayTotal == null && typeof userDoc?.time === "number") {
         const el = document.getElementById("calcTimeBlit");
@@ -397,11 +398,11 @@ if (blitOverallUpdated) blitOverallUpdated.textContent = new Date().toLocaleStri
 
       // ---- Dilemma compute (includes supporter multiplier per our rules)
       const { overall: dlmOverall, today: dlmToday } = await loadDilemma(user.uid, supporter.active);
+      const upd = document.getElementById("dilOverallUpdated");
+      if (upd) upd.textContent = new Date().toLocaleString("af-ZA");
 
-      // ---- Kriptiek total: prefer stored kScore, else sum
-
+      // ---- Kriptiek total: prefer stored kScore, else sum (current: sum of two games)
       const kScore = Number(dlmOverall || 0) + Number(bltOverall || 0);
-
 
       renderNumbers({ kScore, dlmOverall, dlmToday, bltOverall, bltToday: bltTodayTotal });
 
@@ -457,8 +458,7 @@ if (blitOverallUpdated) blitOverallUpdated.textContent = new Date().toLocaleStri
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         const ret = encodeURIComponent("/profile.html");
-window.location.href = `/login.html?return=${ret}`;
-
+        window.location.href = `/login.html?return=${ret}`;
         return;
       }
       try{
@@ -471,7 +471,6 @@ window.location.href = `/login.html?return=${ret}`;
   </script>
 
 </head>
-
 <body class="bg-gray-100 min-h-screen flex flex-col">
   <!-- Header -->
   <header class="bg-white shadow p-4">
@@ -489,9 +488,10 @@ window.location.href = `/login.html?return=${ret}`;
       </div>
     </div>
   </header>
-<div class="max-w-6xl mx-auto px-4 pt-2 text-center text-2xl font-bold text-[#1e3a8a]">
-  WELKOM TERUG, <span id="wbName">GEBRUIKER</span>
-</div>
+
+  <div class="max-w-6xl mx-auto px-4 pt-2 text-center text-2xl font-bold text-[#1e3a8a]">
+    WELKOM TERUG, <span id="wbName">GEBRUIKER</span>
+  </div>
 
   <main class="flex-grow p-4 pb-16">
     <div class="max-w-6xl mx-auto flex flex-col gap-6 items-stretch">
@@ -575,7 +575,6 @@ window.location.href = `/login.html?return=${ret}`;
           </div>
         </div>
       </section>
-
       <!-- BLITSTIEK -->
       <section class="card p-5 md:p-6" data-section="blitstiek">
         <header class="flex flex-col gap-1 mb-3">
@@ -612,7 +611,7 @@ window.location.href = `/login.html?return=${ret}`;
         <div class="rounded-xl bg-gray-50 p-4 border border-gray-200 mt-3">
           <h3 class="font-semibold text-gray-800 mb-2">Blitstiek: Telling & ranglys</h3>
           <ul class="list-disc list-inside text-gray-700 space-y-1">
-            <li>Die ranglys wys <strong>die dag se 10 beste tye.</strong>
+            <li>Die ranglys wys <strong>die dag se 10 beste tye.</strong></li>
             <li>Jou naam verskyn hoogstens een keer op die dag se lys, en 'n beter tyd vervang jou vorige swakker tyd.</li>
             <li>Jy kry <strong>dadelik 100 bonuspunte</strong> as jy Blitstiek in <strong>onder 60 sekondes</strong> klaarmaak</li>
             <li>Jy kry <strong>bonuspunte vir jou posisie op die lys om 23:55</strong> (1 tot 10 = 200, 175, 150, 125, 100, 75, 50, 40, 30 en 20).</li>
