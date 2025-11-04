@@ -114,13 +114,15 @@
       appId: "1:620450620939:web:e93a18ac23b53b33db890e"
     };
 
+    /* === Scoring constants === */
     const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
     const STREAK_THRESHOLD = 5;
     const STREAK_MULTIPLIER = 1.10;
     const SUPPORTER_MULTIPLIER = 1.10;
+    const BLIT_RANK_POINTS = [200,175,150,125,100,75,50,40,30,20]; // 1..10
 
+    /* === Helpers === */
     function dateZaOffset(days){
-      // Build a yyyy-mm-dd for ZA time (UTC+2, no DST)
       const now = new Date();
       const utc = now.getTime() + now.getTimezoneOffset()*60000;
       const za  = new Date(utc + 120*60000);
@@ -128,12 +130,13 @@
       return za.toISOString().slice(0,10);
     }
     function gameIdFor(days){ return `Game${dateZaOffset(days)}`; }
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db   = getFirestore(app);
-
-    // ---- helpers ----
+    function todayZaISO(){
+      const now = new Date();
+      const utc = now.getTime() + now.getTimezoneOffset()*60000;
+      const za  = new Date(utc + 120*60000);
+      return za.toISOString().slice(0,10);
+    }
+    const GAME_TODAY = `Game${todayZaISO()}`;
     const $ = (id) => document.getElementById(id);
     const fmt = (n) => (typeof n === "number" ? n.toLocaleString("af-ZA") : n);
 
@@ -142,17 +145,8 @@
       if (el) el.textContent = (name || "Gebruiker").toUpperCase();
     }
 
-    function todayZaISO(){
-      const now = new Date();
-      const utc = now.getTime() + now.getTimezoneOffset()*60000;
-      const za  = new Date(utc + 120*60000); // UTC+2
-      return za.toISOString().slice(0,10);
-    }
-    const GAME_TODAY = `Game${todayZaISO()}`;
-
     function getSupporterState(u){
       let active = false, untilTs = null;
-
       if (u?.supporterActive === true) active = true;
       if (u?.isPaid === true) active = true;
 
@@ -169,18 +163,18 @@
       return { active, untilTs };
     }
 
-    // ---- Dilemma scoring (overall + today) ----
+    /* === Dilemma scoring (overall + today) === */
     function computeDilemma(plays, supporterActive){
       const byDate = new Map();
       plays.slice().reverse().forEach(p => byDate.set(p.date, p));
       const dates = Array.from(byDate.keys()).sort();
 
-      let cur = 0, best = 0, prev = null;
+      let cur = 0, prev = null;
       for (const d of dates) {
         const consec = prev && (new Date(d) - new Date(prev) === 24*60*60*1000);
         if (!consec) cur = 0;
         const p = byDate.get(d);
-        if (p?.win) { cur++; best = Math.max(best, cur); } else { cur = 0; }
+        if (p?.win) cur++; else cur = 0;
         prev = d;
       }
 
@@ -204,14 +198,12 @@
       const overall = subtotal + streakBonus;
       const overallWithSupport = Math.round(overall * supporterMult);
 
-      // Today (uses same multiplier logic as overall for consistency)
       const today = byDate.get(todayZaISO());
       let todayPoints = null;
       if (today) {
         if (today.win) {
           const base = BASE_POINTS[Math.min(Math.max(1, today.guesses || 6), 6)];
-          const tStreakMult = streakMult;
-          const baseWithStreak = Math.round(base * tStreakMult);
+          const baseWithStreak = Math.round(base * streakMult);
           todayPoints = Math.round(baseWithStreak * supporterMult);
         } else {
           todayPoints = BASE_POINTS.fail;
@@ -222,7 +214,7 @@
     }
 
     async function loadDilemma(uid, supporterActive){
-      const playsRef = collection(db, "userGames", uid, "plays");
+      const playsRef = collection(getFirestore(), "userGames", uid, "plays");
       const q = query(playsRef, orderBy("finishedAt", "desc"), limit(200));
       const snap = await getDocs(q);
 
@@ -241,19 +233,32 @@
       return computeDilemma(plays, supporterActive);
     }
 
-    // ---- Blitstiek helpers (exact logic as agreed) ----
-    function num(v){ return (typeof v === "number") ? v : (v==null ? 0 : Number(v)); }
+    /* === Blitstiek scoring (robust historic + today estimation) === */
+    function blitPointsFromRow(row){
+      if (typeof row?.dailyPoints === "number") return row.dailyPoints;   // canonical new field
+      if (typeof row?.points === "number")      return row.points;        // legacy
+      if (typeof row?.totalPoints === "number") return row.totalPoints;   // legacy
+
+      let p = 0;
+      if (typeof row?.placePoints === "number") p += row.placePoints;     // legacy place
+      if (typeof row?.instant === "number")     p += row.instant;         // legacy instant
+
+      // Infer instant from time if present
+      if (typeof row?.time === "number" && row.time < 60) p += 100;
+
+      return p;
+    }
 
     async function getTodayLeaderboard(uid){
-      const snap = await getDoc(doc(db, "blitstiekGames", GAME_TODAY, "leaderboard", uid));
+      const snap = await getDoc(doc(getFirestore(), "blitstiekGames", GAME_TODAY, "leaderboard", uid));
       return snap.exists() ? snap.data() : null;
     }
 
-    // Overall pill: base from users doc + provisional 100 if sub-60 and no place points yet
+    // Overall pill: prefer stored total; else aggregate all leaderboard rows; add provisional 100 only until dailyPoints exists today.
     async function loadBlitstiekOverall(userDoc, uid){
       const toNum = v => (typeof v === "number" ? v : (v==null ? 0 : Number(v)));
 
-      // 1) Prefer any stored total
+      // 1) Prefer stored total on users/{uid}
       let base = toNum(
         userDoc?.kBlit_total ??
         userDoc?.kBlitTotal ??
@@ -261,38 +266,31 @@
         userDoc?.blit_total
       );
 
-      // 2) Fallback: if base is 0, sum recent finalized dailyPoints for this user
+      // 2) If none, sum historical leaderboard rows across days
       if (!base) {
         let sum = 0;
         try {
           const cg = query(
-            collectionGroup(db, "leaderboard"),
+            collectionGroup(getFirestore(), "leaderboard"),
             where(documentId(), "==", uid),
-            limit(60)
+            limit(365)
           );
           const cgSnap = await getDocs(cg);
-          cgSnap.forEach(d => {
-            const data = d.data();
-            if (typeof data?.dailyPoints === "number") sum += data.dailyPoints;
-          });
+          cgSnap.forEach(docSnap => { sum += blitPointsFromRow(docSnap.data()); });
         } catch (err) {
-          console.warn("Blitstiek overall fallback path hit:", err);
+          console.warn("Blitstiek overall aggregation fallback hit:", err);
         }
-        base = base || sum;
 
-        // If still 0, last small safety: look only at yesterday’s doc once
-        if (!base) {
-          const yRef  = doc(db, "blitstiekGames", gameIdFor(-1), "leaderboard", uid);
+        if (!sum) {
+          const yRef  = doc(getFirestore(), "blitstiekGames", gameIdFor(-1), "leaderboard", uid);
           const ySnap = await getDoc(yRef);
-          if (ySnap.exists()) {
-            const y = ySnap.data();
-            if (typeof y?.dailyPoints === "number") base += y.dailyPoints;
-          }
+          if (ySnap.exists()) sum += blitPointsFromRow(ySnap.data());
         }
+        base = sum;
       }
 
-      // 3) Today: add provisional instant 100 only if no 23:55 points yet
-      const tRef  = doc(db, "blitstiekGames", gameIdFor(0), "leaderboard", uid);
+      // 3) Today: add provisional instant 100 only if no dailyPoints yet
+      const tRef  = doc(getFirestore(), "blitstiekGames", gameIdFor(0), "leaderboard", uid);
       const tSnap = await getDoc(tRef);
       const t     = tSnap.exists() ? tSnap.data() : null;
 
@@ -305,18 +303,42 @@
       return base + (noPlacePtsYet ? instant : 0);
     }
 
-    // Today tile: instant (0/100) + place (null until written)
+    // Today tile: instant (0/100) + place (if nightly not written yet, compute rank client-side from top-10)
     async function loadBlitstiekToday(uid, userDoc){
       let place = (typeof userDoc?.blit_todayPoints === "number") ? userDoc.blit_todayPoints : null;
 
       const lb = await getTodayLeaderboard(uid);
-      if (lb && typeof lb.dailyPoints === "number") place = lb.dailyPoints;
-
       const instant = (lb && typeof lb.time === "number" && lb.time < 60) ? 100 : 0;
+
+      if (place == null) {
+        try {
+          const topQ = query(
+            collection(getFirestore(), "blitstiekGames", GAME_TODAY, "leaderboard"),
+            orderBy("time", "asc"),
+            limit(10)
+          );
+          const topSnap = await getDocs(topQ);
+
+          let rank = null, idx = 0;
+          topSnap.forEach(docSnap => {
+            idx += 1;
+            if (docSnap.id === uid && rank == null) rank = idx;
+          });
+
+          if (rank != null && rank >= 1 && rank <= 10) {
+            place = BLIT_RANK_POINTS[rank - 1];
+          } else {
+            place = null; // not in top-10 (or no row)
+          }
+        } catch (err) {
+          console.warn("Could not compute client-side Blitstiek rank:", err);
+        }
+      }
 
       return { instant, place };
     }
 
+    /* === UI wiring === */
     function renderSupporterPill(state){
       const el=$("supporterPill"); if(!el) return;
       if(state.active){
@@ -352,7 +374,7 @@
       if(emailEl) emailEl.value = user.email || "";
 
       // Ensure users doc exists
-      const uref = doc(db, "users", user.uid);
+      const uref = doc(getFirestore(), "users", user.uid);
       let userDocSnap = await getDoc(uref);
       if (!userDocSnap.exists()) {
         await setDoc(uref, { userName: user.displayName || "Gebruiker", createdAt: serverTimestamp(), updatedAt: serverTimestamp() }, { merge: true });
@@ -362,25 +384,23 @@
       const supporter = getSupporterState(userDoc);
       renderSupporterPill(supporter);
 
-      // ---- Set welcome name at top
+      // Welcome name
       const displayName = user.displayName || userDoc.userName || "Gebruiker";
       setWbName(displayName);
 
-      // Sync top banner with supporter state
+      // Supporter banner
       const supporterBanner = document.getElementById("supporterBanner");
       if (supporterBanner) {
         if (supporter.active) {
-          supporterBanner.className =
-            "block text-center font-bold rounded-lg p-3 mb-4 bg-green-50 border border-green-200 text-green-800";
+          supporterBanner.className = "block text-center font-bold rounded-lg p-3 mb-4 bg-green-50 border border-green-200 text-green-800";
           supporterBanner.textContent = "Jy is 'n betalende ondersteuner — dankie!";
         } else {
-          supporterBanner.className =
-            "block text-center font-bold rounded-lg p-3 mb-4 bg-red-50 border border-red-200 text-red-800";
+          supporterBanner.className = "block text-center font-bold rounded-lg p-3 mb-4 bg-red-50 border border-red-200 text-red-800";
           supporterBanner.textContent = "Kliek hier om 'n betalende ondersteuner te word";
         }
       }
 
-      // ---- Blitstiek (provisional-aware)
+      // Blitstiek (historic + today estimation)
       const bltOverall = await loadBlitstiekOverall(userDoc, user.uid);
       const { instant: bltInstant, place: bltPlace } = await loadBlitstiekToday(user.uid, userDoc);
       let bltTodayTotal = null;
@@ -396,12 +416,12 @@
         if (tpb) tpb.title = "Wag vir 23:55-uitslag";
       }
 
-      // ---- Dilemma compute (includes supporter multiplier per our rules)
+      // Dilemma
       const { overall: dlmOverall, today: dlmToday } = await loadDilemma(user.uid, supporter.active);
       const upd = document.getElementById("dilOverallUpdated");
       if (upd) upd.textContent = new Date().toLocaleString("af-ZA");
 
-      // ---- Kriptiek total: prefer stored kScore, else sum (current: sum of two games)
+      // Kriptiek total (Dilemma + Blitstiek for now)
       const kScore = Number(dlmOverall || 0) + Number(bltOverall || 0);
 
       renderNumbers({ kScore, dlmOverall, dlmToday, bltOverall, bltToday: bltTodayTotal });
@@ -421,7 +441,7 @@
             const newName = ($("nameInput").value||"").trim().slice(0,40);
             if(newName && newName !== (user.displayName||"")){
               await updateProfile(user, { displayName: newName });
-              await updateDoc(doc(db,"users",user.uid), { userName: newName, updatedAt: serverTimestamp() });
+              await updateDoc(doc(getFirestore(),"users",user.uid), { userName: newName, updatedAt: serverTimestamp() });
               alert("Profiel gestoor.");
             } else {
               alert("Geen veranderinge om te stoor nie.");
@@ -432,7 +452,7 @@
       if(resetBtn){
         resetBtn.addEventListener("click", async ()=>{
           try{
-            await sendPasswordResetEmail(auth, auth.currentUser.email);
+            await sendPasswordResetEmail(getAuth(), getAuth().currentUser.email);
             alert("’n Wagwoordherstel-skakel is per e-pos gestuur.");
           }catch(err){ console.error(err); alert("Kon nie wagwoordherstel stuur nie."); }
         });
@@ -441,7 +461,7 @@
         delBtn.addEventListener("click", async ()=>{
           if(!confirm("Is jy seker? Jou rekening sal verwyder word.")) return;
           try{
-            await deleteUser(auth.currentUser);
+            await deleteUser(getAuth().currentUser);
             alert("Rekening verwyder.");
             window.location.href = "/";
           }catch(err){
@@ -455,7 +475,7 @@
     }
 
     // ---- Auth gate + bootstrap ----
-    onAuthStateChanged(auth, async (user) => {
+    onAuthStateChanged(getAuth(), async (user) => {
       if (!user) {
         const ret = encodeURIComponent("/profile.html");
         window.location.href = `/login.html?return=${ret}`;
