@@ -76,10 +76,7 @@
 
   <!-- === Feature toggles === -->
   <script>
-    const FEATURES = {
-      blitstiek: true,
-      slimstiek: false,
-    };
+    const FEATURES = { blitstiek: true, slimstiek: false };
     function applyFeatureToggles() {
       const known = new Set(Object.keys(FEATURES));
       document.querySelectorAll('[data-section]').forEach(el => {
@@ -96,9 +93,7 @@
   <!-- Firebase setup -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import {
-      getAuth, onAuthStateChanged, sendPasswordResetEmail, deleteUser, updateProfile
-    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, sendPasswordResetEmail, deleteUser, updateProfile } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
     import {
       getFirestore, doc, getDoc, setDoc, updateDoc,
       collection, query, orderBy, limit, getDocs, serverTimestamp,
@@ -139,6 +134,10 @@
     const GAME_TODAY = `Game${todayZaISO()}`;
     const $ = (id) => document.getElementById(id);
     const fmt = (n) => (typeof n === "number" ? n.toLocaleString("af-ZA") : n);
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
 
     function setWbName(name){
       const el = document.getElementById("wbName");
@@ -214,7 +213,7 @@
     }
 
     async function loadDilemma(uid, supporterActive){
-      const playsRef = collection(getFirestore(), "userGames", uid, "plays");
+      const playsRef = collection(db, "userGames", uid, "plays");
       const q = query(playsRef, orderBy("finishedAt", "desc"), limit(200));
       const snap = await getDocs(q);
 
@@ -223,17 +222,13 @@
         const d = docSnap.data();
         const gameId = docSnap.id; // "GameYYYY-MM-DD"
         const theDate = gameId.replace(/^Game/, "");
-        plays.push({
-          date: theDate,
-          win: d?.result === "win" || d?.finished === true,
-          guesses: Number(d?.guesses || 0),
-        });
+        plays.push({ date: theDate, win: d?.result === "win" || d?.finished === true, guesses: Number(d?.guesses || 0) });
       });
 
       return computeDilemma(plays, supporterActive);
     }
 
-    /* === Blitstiek scoring (robust historic + today estimation) === */
+    /* === Blitstiek helpers (robust historic + today estimation) === */
     function blitPointsFromRow(row){
       if (typeof row?.dailyPoints === "number") return row.dailyPoints;   // canonical new field
       if (typeof row?.points === "number")      return row.points;        // legacy
@@ -242,96 +237,95 @@
       let p = 0;
       if (typeof row?.placePoints === "number") p += row.placePoints;     // legacy place
       if (typeof row?.instant === "number")     p += row.instant;         // legacy instant
-
-      // Infer instant from time if present
-      if (typeof row?.time === "number" && row.time < 60) p += 100;
-
+      if (typeof row?.time === "number" && row.time < 60) p += 100;       // infer instant from time
       return p;
     }
 
     async function getTodayLeaderboard(uid){
-      const snap = await getDoc(doc(getFirestore(), "blitstiekGames", GAME_TODAY, "leaderboard", uid));
-      return snap.exists() ? snap.data() : null;
+      // Try doc keyed by uid
+      const direct = await getDoc(doc(db, "blitstiekGames", GAME_TODAY, "leaderboard", uid));
+      if (direct.exists()) return { id: direct.id, ...direct.data() };
+
+      // Fallback: auto-ID row with uid field
+      try {
+        const q1 = query(
+          collection(db, "blitstiekGames", GAME_TODAY, "leaderboard"),
+          where("uid","==", uid),
+          limit(1)
+        );
+        const qs = await getDocs(q1);
+        let row = null;
+        qs.forEach(d => { if (!row) row = { id: d.id, ...d.data() }; });
+        return row; // may be null
+      } catch (e) {
+        console.warn("getTodayLeaderboard fallback failed:", e);
+        return null;
+      }
     }
 
-    // Overall pill: prefer stored total; else aggregate all leaderboard rows; add provisional 100 only until dailyPoints exists today.
+    // Overall pill: prefer stored total; else aggregate all leaderboard rows (both ID styles); add provisional 100 only until dailyPoints exists today.
     async function loadBlitstiekOverall(userDoc, uid){
       const toNum = v => (typeof v === "number" ? v : (v==null ? 0 : Number(v)));
 
       // 1) Prefer stored total on users/{uid}
-      let base = toNum(
-        userDoc?.kBlit_total ??
-        userDoc?.kBlitTotal ??
-        userDoc?.blitstiekTotal ??
-        userDoc?.blit_total
-      );
+      let base = toNum(userDoc?.kBlit_total ?? userDoc?.kBlitTotal ?? userDoc?.blitstiekTotal ?? userDoc?.blit_total);
 
       // 2) If none, sum historical leaderboard rows across days
       if (!base) {
         let sum = 0;
-        try {
-          const cg = query(
-            collectionGroup(getFirestore(), "leaderboard"),
-            where(documentId(), "==", uid),
-            limit(365)
-          );
-          const cgSnap = await getDocs(cg);
-          cgSnap.forEach(docSnap => { sum += blitPointsFromRow(docSnap.data()); });
-        } catch (err) {
-          console.warn("Blitstiek overall aggregation fallback hit:", err);
-        }
 
+        // (a) Docs keyed by uid
+        try {
+          const cg1 = query(collectionGroup(db, "leaderboard"), where(documentId(), "==", uid), limit(365));
+          const s1 = await getDocs(cg1);
+          s1.forEach(d => { sum += blitPointsFromRow(d.data()); });
+        } catch (e) { console.warn("overall: docId()==uid path skipped:", e); }
+
+        // (b) Auto-ID docs with uid field
+        try {
+          const cg2 = query(collectionGroup(db, "leaderboard"), where("uid","==", uid), limit(365));
+          const s2 = await getDocs(cg2);
+          s2.forEach(d => { sum += blitPointsFromRow(d.data()); });
+        } catch (e) { console.warn("overall: where(uid==) path skipped:", e); }
+
+        // Tiny safety: yesterday keyed-by-uid
         if (!sum) {
-          const yRef  = doc(getFirestore(), "blitstiekGames", gameIdFor(-1), "leaderboard", uid);
-          const ySnap = await getDoc(yRef);
-          if (ySnap.exists()) sum += blitPointsFromRow(ySnap.data());
+          try {
+            const yRef  = doc(db, "blitstiekGames", gameIdFor(-1), "leaderboard", uid);
+            const ySnap = await getDoc(yRef);
+            if (ySnap.exists()) sum += blitPointsFromRow(ySnap.data());
+          } catch {}
         }
         base = sum;
       }
 
       // 3) Today: add provisional instant 100 only if no dailyPoints yet
-      const tRef  = doc(getFirestore(), "blitstiekGames", gameIdFor(0), "leaderboard", uid);
-      const tSnap = await getDoc(tRef);
-      const t     = tSnap.exists() ? tSnap.data() : null;
-
-      const noPlacePtsYet =
-        typeof userDoc?.blit_todayPoints !== "number" &&
-        !(t && typeof t.dailyPoints === "number");
-
-      const instant = (t && typeof t.time === "number" && t.time < 60) ? 100 : 0;
+      const todayRow = await getTodayLeaderboard(uid);
+      const noPlacePtsYet = !todayRow || typeof todayRow.dailyPoints !== "number";
+      const instant = (todayRow && typeof todayRow.time === "number" && todayRow.time < 60) ? 100 : 0;
 
       return base + (noPlacePtsYet ? instant : 0);
     }
 
-    // Today tile: instant (0/100) + place (if nightly not written yet, compute rank client-side from top-10)
+    // Today tile: instant (0/100) + place (if nightly not written yet, estimate rank even outside top-10)
     async function loadBlitstiekToday(uid, userDoc){
       let place = (typeof userDoc?.blit_todayPoints === "number") ? userDoc.blit_todayPoints : null;
 
-      const lb = await getTodayLeaderboard(uid);
-      const instant = (lb && typeof lb.time === "number" && lb.time < 60) ? 100 : 0;
+      const mine = await getTodayLeaderboard(uid);
+      const instant = (mine && typeof mine.time === "number" && mine.time < 60) ? 100 : 0;
 
-      if (place == null) {
+      if (place == null && mine && typeof mine.dailyPoints === "number") place = mine.dailyPoints;
+
+      // Estimate rank even if not top-10
+      if (place == null && mine && typeof mine.time === "number") {
         try {
-          const topQ = query(
-            collection(getFirestore(), "blitstiekGames", GAME_TODAY, "leaderboard"),
-            orderBy("time", "asc"),
-            limit(10)
-          );
-          const topSnap = await getDocs(topQ);
-
-          let rank = null, idx = 0;
-          topSnap.forEach(docSnap => {
-            idx += 1;
-            if (docSnap.id === uid && rank == null) rank = idx;
-          });
-
-          if (rank != null && rank >= 1 && rank <= 10) {
-            place = BLIT_RANK_POINTS[rank - 1];
-          } else {
-            place = null; // not in top-10 (or no row)
-          }
-        } catch (err) {
-          console.warn("Could not compute client-side Blitstiek rank:", err);
+          const q = query(collection(db, "blitstiekGames", GAME_TODAY, "leaderboard"), where("time","<", mine.time));
+          const snap = await getDocs(q);
+          const rank = (snap.size || 0) + 1; // 1-based rank
+          if (rank >= 1 && rank <= 10) place = BLIT_RANK_POINTS[rank - 1];
+          else place = null; // outside top-10 -> no place points
+        } catch (e) {
+          console.warn("rank estimation failed:", e);
         }
       }
 
@@ -374,7 +368,7 @@
       if(emailEl) emailEl.value = user.email || "";
 
       // Ensure users doc exists
-      const uref = doc(getFirestore(), "users", user.uid);
+      const uref = doc(db, "users", user.uid);
       let userDocSnap = await getDoc(uref);
       if (!userDocSnap.exists()) {
         await setDoc(uref, { userName: user.displayName || "Gebruiker", createdAt: serverTimestamp(), updatedAt: serverTimestamp() }, { merge: true });
@@ -421,7 +415,7 @@
       const upd = document.getElementById("dilOverallUpdated");
       if (upd) upd.textContent = new Date().toLocaleString("af-ZA");
 
-      // Kriptiek total (Dilemma + Blitstiek for now)
+      // Kriptiek total (Dilemma + Blitstiek)
       const kScore = Number(dlmOverall || 0) + Number(bltOverall || 0);
 
       renderNumbers({ kScore, dlmOverall, dlmToday, bltOverall, bltToday: bltTodayTotal });
@@ -441,7 +435,7 @@
             const newName = ($("nameInput").value||"").trim().slice(0,40);
             if(newName && newName !== (user.displayName||"")){
               await updateProfile(user, { displayName: newName });
-              await updateDoc(doc(getFirestore(),"users",user.uid), { userName: newName, updatedAt: serverTimestamp() });
+              await updateDoc(doc(db,"users",user.uid), { userName: newName, updatedAt: serverTimestamp() });
               alert("Profiel gestoor.");
             } else {
               alert("Geen veranderinge om te stoor nie.");
@@ -452,7 +446,7 @@
       if(resetBtn){
         resetBtn.addEventListener("click", async ()=>{
           try{
-            await sendPasswordResetEmail(getAuth(), getAuth().currentUser.email);
+            await sendPasswordResetEmail(auth, auth.currentUser.email);
             alert("’n Wagwoordherstel-skakel is per e-pos gestuur.");
           }catch(err){ console.error(err); alert("Kon nie wagwoordherstel stuur nie."); }
         });
@@ -461,7 +455,7 @@
         delBtn.addEventListener("click", async ()=>{
           if(!confirm("Is jy seker? Jou rekening sal verwyder word.")) return;
           try{
-            await deleteUser(getAuth().currentUser);
+            await deleteUser(auth.currentUser);
             alert("Rekening verwyder.");
             window.location.href = "/";
           }catch(err){
@@ -475,7 +469,7 @@
     }
 
     // ---- Auth gate + bootstrap ----
-    onAuthStateChanged(getAuth(), async (user) => {
+    onAuthStateChanged(auth, async (user) => {
       if (!user) {
         const ret = encodeURIComponent("/profile.html");
         window.location.href = `/login.html?return=${ret}`;
