@@ -102,6 +102,7 @@
     import {
       getFirestore, doc, getDoc, setDoc, updateDoc,
       collection, query, orderBy, limit, getDocs, serverTimestamp
+      collectionGroup, where
     } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -251,7 +252,7 @@ function setWbName(name){
     async function loadBlitstiekOverall(userDoc, uid){
   const toNum = v => (typeof v === "number" ? v : (v==null ? 0 : Number(v)));
 
-  // 1) Prefer stored overall total if present (any legacy field name)
+  // 1) Prefer any stored total
   let base = toNum(
     userDoc?.kBlit_total ??
     userDoc?.kBlitTotal ??
@@ -259,17 +260,35 @@ function setWbName(name){
     userDoc?.blit_total
   );
 
-  // 2) Fallback: if no stored total yet, include yesterday's finalized dailyPoints
+  // 2) Fallback: if base is 0, sum recent finalized dailyPoints for this user
   if (!base) {
-    const yRef  = doc(db, "blitstiekGames", gameIdFor(-1), "leaderboard", uid);
-    const ySnap = await getDoc(yRef);
-    if (ySnap.exists()) {
-      const y = ySnap.data();
-      if (typeof y?.dailyPoints === "number") base += y.dailyPoints;
+    // Pull the last ~60 leaderboard rows for this user across days and sum dailyPoints
+    const cg = query(
+      collectionGroup(db, "leaderboard"),
+      where("__name__", "==", uid),        // documentId() == uid
+      orderBy("timestamp", "desc"),
+      limit(60)
+    );
+    const cgSnap = await getDocs(cg);
+    let sum = 0;
+    cgSnap.forEach(d => {
+      const data = d.data();
+      if (typeof data?.dailyPoints === "number") sum += data.dailyPoints;
+    });
+    base = sum;
+
+    // If still 0, last small safety: look only at yesterday’s doc once
+    if (!base) {
+      const yRef  = doc(db, "blitstiekGames", gameIdFor(-1), "leaderboard", uid);
+      const ySnap = await getDoc(yRef);
+      if (ySnap.exists()) {
+        const y = ySnap.data();
+        if (typeof y?.dailyPoints === "number") base += y.dailyPoints;
+      }
     }
   }
 
-  // 3) Today: provisional instant bonus if <60s AND no 23:55 place points yet
+  // 3) Today: add provisional instant 100 only if no 23:55 points yet
   const tRef  = doc(db, "blitstiekGames", gameIdFor(0), "leaderboard", uid);
   const tSnap = await getDoc(tRef);
   const t     = tSnap.exists() ? tSnap.data() : null;
@@ -278,12 +297,10 @@ function setWbName(name){
     typeof userDoc?.blit_todayPoints !== "number" &&
     !(t && typeof t.dailyPoints === "number");
 
-  // (We’ll change this to 200 for <30s later; for now keep 100 for <60s)
   const instant = (t && typeof t.time === "number" && t.time < 60) ? 100 : 0;
 
   return base + (noPlacePtsYet ? instant : 0);
 }
-
 
 
     // Today tile: instant (0/100) + place (null until written)
