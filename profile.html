@@ -30,37 +30,29 @@
     body { font-family: 'Montserrat', sans-serif; background-color: #f3f4f6; }
 
     /* --- Header/logo styles --- */
-    .logo-container {
-      position: relative; display: flex; justify-content: center; align-items: center;
-      width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
-      isolation: isolate;
-    }
-    .logo-container::before{
-      content:""; position:absolute; inset:-2px; border-radius:1rem;
+    .logo-container { position: relative; display: flex; justify-content: center; align-items: center;
+      width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden; isolation: isolate; }
+    .logo-container::before{ content:""; position:absolute; inset:-2px; border-radius:1rem;
       background:conic-gradient(from 180deg at 50% 50%, #1e3a8a, #334155, #1e3a8a);
       animation:spin 14s linear infinite; z-index:0; padding:2px;
       mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-      -webkit-mask-composite: xor; mask-composite: exclude;
-    }
+      -webkit-mask-composite: xor; mask-composite: exclude; }
     @keyframes spin{ to{ transform:rotate(1turn); } }
     @media (prefers-reduced-motion: reduce){ .logo-container::before{ animation:none; } }
 
     .crossword-grid { display: grid; grid-template-columns: repeat(8, minmax(40px, 1fr)); gap: 4px; position: relative; z-index: 10; }
-    .letter-box {
-      width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
+    .letter-box { width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
       background-color: #374151; color: white; font-size: 1.8rem; font-weight: bold; border: 2px solid #1f2937; border-radius: 0.375rem;
-      text-transform: uppercase; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
-    }
+      text-transform: uppercase; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2); }
     .flipped-k { transform: scaleX(-1); }
 
-    .background-crossword {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid;
+    .background-crossword { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid;
       grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
-      opacity: 0.5; z-index: 1; pointer-events: none; animation: bgFloat 30s linear infinite;
-    }
+      opacity: 0.5; z-index: 1; pointer-events: none; animation: bgFloat 30s linear infinite; }
     @keyframes bgFloat{ 0%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } 100%{ transform:translateY(0); } }
 
-    .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
+    .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem;
+      font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
 
     /* --- Card + pill styling --- */
     .card { background:#fff; border:1px solid #e5e7eb; border-radius:0.75rem; box-shadow:0 2px 6px rgba(2,6,23,.04); }
@@ -89,7 +81,6 @@
     }
     document.addEventListener('DOMContentLoaded', applyFeatureToggles);
   </script>
-
   <!-- Firebase setup -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
@@ -109,29 +100,28 @@
       appId: "1:620450620939:web:e93a18ac23b53b33db890e"
     };
 
-    /* === Scoring constants === */
+    /* === DILEMMA scoring constants === */
     const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
     const STREAK_THRESHOLD = 5;
     const STREAK_MULTIPLIER = 1.10;
     const SUPPORTER_MULTIPLIER = 1.10;
-    const BLIT_RANK_POINTS = [200,175,150,125,100,75,50,40,30,20]; // 1..10
 
     /* === Helpers === */
-    function dateZaOffset(days){
-      const now = new Date();
-      const utc = now.getTime() + now.getTimezoneOffset()*60000;
-      const za  = new Date(utc + 120*60000);
-      za.setDate(za.getDate() + days);
-      return za.toISOString().slice(0,10);
-    }
-    function gameIdFor(days){ return `Game${dateZaOffset(days)}`; }
     function todayZaISO(){
       const now = new Date();
       const utc = now.getTime() + now.getTimezoneOffset()*60000;
       const za  = new Date(utc + 120*60000);
       return za.toISOString().slice(0,10);
     }
+    function gameIdFor(daysFromToday){
+      const now = new Date();
+      const utc = now.getTime() + now.getTimezoneOffset()*60000;
+      const za  = new Date(utc + 120*60000);
+      za.setDate(za.getDate() + daysFromToday);
+      return `Game${za.toISOString().slice(0,10)}`;
+    }
     const GAME_TODAY = `Game${todayZaISO()}`;
+
     const $ = (id) => document.getElementById(id);
     const fmt = (n) => (typeof n === "number" ? n.toLocaleString("af-ZA") : n);
 
@@ -140,7 +130,7 @@
     const db   = getFirestore(app);
 
     function setWbName(name){
-      const el = document.getElementById("wbName");
+      const el = $("wbName");
       if (el) el.textContent = (name || "Gebruiker").toUpperCase();
     }
 
@@ -156,9 +146,7 @@
         (typeof u?.paidUntil === 'number' ? u.paidUntil :
           (u?.paidUntil ? Date.parse(u.paidUntil) : null));
 
-      if (Number.isFinite(until) && until > Date.now()) {
-        active = true; untilTs = until;
-      }
+      if (Number.isFinite(until) && until > Date.now()) { active = true; untilTs = until; }
       return { active, untilTs };
     }
 
@@ -227,97 +215,105 @@
 
       return computeDilemma(plays, supporterActive);
     }
+    /* === BLITSTIEK (instant tiers + confirmed history) === */
 
-    /* === Blitstiek helpers (robust historic + today instant-only until 23:55) === */
+    // Parse milliseconds from possible shapes: timeMs number, time seconds, or "MM:SS"
+    function parseBlitTimeMs(row){
+      if (!row) return NaN;
+      if (typeof row.timeMs === "number") return row.timeMs;
+      if (typeof row.time === "number")   return row.time * 1000;
+      if (typeof row.time === "string") {
+        const parts = row.time.split(":").map(Number);
+        if (parts.length === 2) return (parts[0]*60 + parts[1]) * 1000;
+        if (parts.length === 1) return parts[0] * 1000;
+      }
+      return NaN;
+    }
+
+    // Instant bonus: <30s => 200, <60s => 100, else 0
+    function blitInstantBonus(timeMs){
+      if (!Number.isFinite(timeMs)) return 0;
+      if (timeMs < 30000) return 200;
+      if (timeMs < 60000) return 100;
+      return 0;
+    }
+
+    // Resolve daily points from a leaderboard row (prefer canonical; infer instant if needed)
     function blitPointsFromRow(row){
-      if (typeof row?.dailyPoints === "number") return row.dailyPoints;   // canonical new field
-      if (typeof row?.points === "number")      return row.points;        // legacy
-      if (typeof row?.totalPoints === "number") return row.totalPoints;   // legacy
+      if (typeof row?.dailyPoints === "number") return row.dailyPoints; // canonical
+      if (typeof row?.points === "number")      return row.points;      // legacy
+      if (typeof row?.totalPoints === "number") return row.totalPoints; // legacy
 
       let p = 0;
-      if (typeof row?.placePoints === "number") p += row.placePoints;     // legacy place
-      if (typeof row?.instant === "number")     p += row.instant;         // legacy instant
-      if (typeof row?.time === "number" && row.time < 60) p += 100;       // infer instant from time
+      if (typeof row?.placePoints === "number") p += row.placePoints;   // legacy
+      if (typeof row?.instant === "number")     p += row.instant;       // legacy
+      p += blitInstantBonus(parseBlitTimeMs(row));                      // inference
       return p;
     }
 
-    async function getTodayLeaderboard(uid){
-      // Try doc keyed by uid
-      const direct = await getDoc(doc(db, "blitstiekGames", GAME_TODAY, "leaderboard", uid));
-      if (direct.exists()) return { id: direct.id, ...direct.data() };
-
-      // Fallback: auto-ID row with uid field
-      try {
-        const q1 = query(
-          collection(db, "blitstiekGames", GAME_TODAY, "leaderboard"),
-          where("uid","==", uid),
-          limit(1)
-        );
-        const qs = await getDocs(q1);
-        let row = null;
-        qs.forEach(d => { if (!row) row = { id: d.id, ...d.data() }; });
-        return row; // may be null
-      } catch (e) {
-        console.warn("getTodayLeaderboard fallback failed:", e);
-        return null;
-      }
-    }
-
-    // Overall pill: prefer stored total; else aggregate all leaderboard rows (both ID styles); add provisional 100 only until dailyPoints exists today.
-    async function loadBlitstiekOverall(userDoc, uid){
-      const toNum = v => (typeof v === "number" ? v : (v==null ? 0 : Number(v)));
-
-      // 1) Prefer stored total on users/{uid}
-      let base = toNum(userDoc?.kBlit_total ?? userDoc?.kBlitTotal ?? userDoc?.blitstiekTotal ?? userDoc?.blit_total);
-
-      // 2) If none, sum historical leaderboard rows across days
-      if (!base) {
-        let sum = 0;
-
-        // (a) Docs keyed by uid
-        try {
-          const cg1 = query(collectionGroup(db, "leaderboard"), where(documentId(), "==", uid), limit(365));
-          const s1 = await getDocs(cg1);
-          s1.forEach(d => { sum += blitPointsFromRow(d.data()); });
-        } catch (e) { console.warn("overall: docId()==uid path skipped:", e); }
-
-        // (b) Auto-ID docs with uid field
-        try {
-          const cg2 = query(collectionGroup(db, "leaderboard"), where("uid","==", uid), limit(365));
-          const s2 = await getDocs(cg2);
-          s2.forEach(d => { sum += blitPointsFromRow(d.data()); });
-        } catch (e) { console.warn("overall: where(uid==) path skipped:", e); }
-
-        // Tiny safety: yesterday keyed-by-uid
-        if (!sum) {
-          try {
-            const yRef  = doc(db, "blitstiekGames", gameIdFor(-1), "leaderboard", uid);
-            const ySnap = await getDoc(yRef);
-            if (ySnap.exists()) sum += blitPointsFromRow(ySnap.data());
-          } catch {}
-        }
-        base = sum;
-      }
-
-      // 3) Today: add provisional instant 100 only if no dailyPoints yet
-      const todayRow = await getTodayLeaderboard(uid);
-      const noPlacePtsYet = !todayRow || typeof todayRow.dailyPoints !== "number";
-      const instant = (todayRow && typeof todayRow.time === "number" && todayRow.time < 60) ? 100 : 0;
-
-      return base + (noPlacePtsYet ? instant : 0);
-    }
-
-    // Today tile: show ONLY instant (0/100) until 23:55 writes dailyPoints; afterwards show instant + official dailyPoints
+    // Today tile: BEFORE 23:55 → instant only; AFTER 23:55 → instant + dailyPoints
     async function loadBlitstiekToday(uid, userDoc){
-      const mine = await getTodayLeaderboard(uid);
+      // Try direct doc: id == uid
+      let snap = await getDoc(doc(db, "blitstiekGames", GAME_TODAY, "leaderboard", uid));
+      let row = snap.exists() ? { id: snap.id, ...snap.data() } : null;
 
-      const instant = (mine && typeof mine.time === "number" && mine.time < 60) ? 100 : 0;
+      // Fallback: auto-ID with uid field
+      if (!row) {
+        try {
+          const qs = await getDocs(query(
+            collection(db, "blitstiekGames", GAME_TODAY, "leaderboard"),
+            where("uid", "==", uid),
+            limit(1)
+          ));
+          qs.forEach(d => { if (!row) row = { id: d.id, ...d.data() }; });
+        } catch {}
+      }
+
+      const ms = parseBlitTimeMs(row);
+      const instant = blitInstantBonus(ms);
 
       let place = null;
-      if (mine && typeof mine.dailyPoints === "number") place = mine.dailyPoints;
+      if (row && typeof row.dailyPoints === "number") place = row.dailyPoints;
       if (typeof userDoc?.blit_todayPoints === "number") place = userDoc.blit_todayPoints;
 
       return { instant, place };
+    }
+
+    // Overall (Algeheel): confirmed history only — EXCLUDE today entirely
+    async function loadBlitstiekOverall(userDoc, uid){
+      const toNum = v => (typeof v === "number" ? v : (v==null ? 0 : Number(v)));
+
+      // Prefer confirmed total maintained by the 23:55 job
+      let base = toNum(
+        userDoc?.blitstiekTotalConfirmed ??
+        userDoc?.kBlit_total ??
+        userDoc?.kBlitTotal ??
+        userDoc?.blitstiekTotal ??
+        userDoc?.blit_total
+      );
+      if (base) return base;
+
+      // Recompute by summing past days (exclude GAME_TODAY)
+      const todayId = GAME_TODAY;
+      let sum = 0;
+
+      try {
+        const s1 = await getDocs(query(collectionGroup(db, "leaderboard"), where(documentId(), "==", uid), limit(365)));
+        s1.forEach(d => {
+          const parent = d.ref.parent.parent; const gameId = parent?.id || "";
+          if (gameId !== todayId) sum += blitPointsFromRow(d.data());
+        });
+      } catch {}
+
+      try {
+        const s2 = await getDocs(query(collectionGroup(db, "leaderboard"), where("uid","==", uid), limit(365)));
+        s2.forEach(d => {
+          const parent = d.ref.parent.parent; const gameId = parent?.id || "";
+          if (gameId !== todayId) sum += blitPointsFromRow(d.data());
+        });
+      } catch {}
+
+      return sum;
     }
 
     /* === UI wiring === */
@@ -382,7 +378,7 @@
         }
       }
 
-      // Blitstiek (historic agg + today instant-only)
+      // Blitstiek (historic confirmed + today instant-only until 23:55)
       const bltOverall = await loadBlitstiekOverall(userDoc, user.uid);
       const { instant: bltInstant, place: bltPlace } = await loadBlitstiekToday(user.uid, userDoc);
       let bltTodayTotal = null;
@@ -391,13 +387,6 @@
 
       const blitOverallUpdated = document.getElementById("blitOverallUpdated");
       if (blitOverallUpdated) blitOverallUpdated.textContent = new Date().toLocaleString("af-ZA");
-
-      if (bltTodayTotal == null && typeof userDoc?.time === "number") {
-        const el = document.getElementById("calcTimeBlit");
-        if (el) el.textContent = `Tyd vandag: ${userDoc.time}s – punte om 23:55`;
-        const tpb = document.getElementById("totalPointsBlit");
-        if (tpb) tpb.title = "Wag vir 23:55-uitslag";
-      }
 
       // Dilemma
       const { overall: dlmOverall, today: dlmToday } = await loadDilemma(user.uid, supporter.active);
@@ -472,7 +461,6 @@
       }
     });
   </script>
-
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
   <!-- Header -->
@@ -616,7 +604,8 @@
           <ul class="list-disc list-inside text-gray-700 space-y-1">
             <li>Die ranglys wys <strong>die dag se 10 beste tye.</strong></li>
             <li>Jou naam verskyn hoogstens een keer op die dag se lys, en 'n beter tyd vervang jou vorige swakker tyd.</li>
-            <li>Jy kry <strong>dadelik 100 bonuspunte</strong> as jy Blitstiek in <strong>onder 60 sekondes</strong> klaarmaak</li>
+            <li>Jy kry <strong>dadelik 100 punte</strong> as jy Blitstiek in <strong>onder 60 sekondes</strong> klaarmaak</li>
+            <li>Jy kry <strong>dadelik 200 punte</strong> as jy Blitstiek in <strong>onder 30 sekondes</strong> klaarmaak</li>
             <li>Jy kry <strong>bonuspunte vir jou posisie op die lys om 23:55</strong> (1 tot 10 = 200, 175, 150, 125, 100, 75, 50, 40, 30 en 20).</li>
             <li>Betalende Kriptiek-ondersteuners kry 'n <strong>10%-bonus</strong> op die dag se ranglyspunte.</li>
           </ul>
