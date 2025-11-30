@@ -84,11 +84,12 @@
       margin:16px 0 8px;
     }
 
-    /* Game layout: ad + main game column */
+    /* Game area wrapper: centred column, ad floats to the left on large screens */
     .game-layout{
       width:100%;
-      max-width:960px;
+      max-width:720px;
       margin:0 auto;
+      position:relative;
     }
 
     /* Target chips */
@@ -391,10 +392,21 @@
         </div>
       </section>
 
-      <!-- Ad + main game column -->
-      <div class="game-layout lg:flex lg:items-start lg:gap-6">
-        <!-- Desktop ad slot -->
-        <div class="hidden lg:block flex-shrink-0">
+      <!-- MOBILE ad: visible under header / above game -->
+      <div class="mt-2 mb-4 flex justify-center lg:hidden">
+        <a href="/advertisers.html"
+           class="inline-block rounded-2xl overflow-hidden shadow-lg border border-slate-800/40">
+          <img
+            src="/assets/kriptiek-placeholder-300x250.png"
+            alt="Jou advertensie kan hier wees – klik vir meer inligting"
+            class="block w-[300px] h-[250px] object-cover">
+        </a>
+      </div>
+
+      <!-- Game layout: centred column; desktop ad floats to the left -->
+      <div class="game-layout">
+        <!-- DESKTOP ad, positioned to the left of the centred column -->
+        <div class="hidden lg:block absolute -left-[340px] top-8">
           <a href="/advertisers.html"
              class="inline-block rounded-2xl overflow-hidden shadow-lg border border-slate-800/40">
             <img
@@ -404,8 +416,8 @@
           </a>
         </div>
 
-        <!-- Main game column -->
-        <div class="flex-1 min-w-0">
+        <!-- Main game column (centred) -->
+        <div class="max-w-xl mx-auto">
           <div class="headline">TEIKENWOORD:</div>
           <div id="targetWrap"><div id="target"><span>—</span></div></div>
           <div id="rowHint">Vermeningvuldiger: ×<b id="rowMultVal">1</b></div>
