@@ -170,7 +170,12 @@
     #adminPanel{display:none}
 
     /* Desktop layout: ad + game */
-    .game-layout { width: 100%; }
+.game-layout {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;   /* centre the whole strip */
+}
+
     .ad-slot { display: none; }
 
     @media (min-width:1024px) {
@@ -215,7 +220,7 @@
   </header>
 
   <main class="flex-1">
-    <div class="max-w-3xl mx-auto px-4 py-4">
+<div class="max-w-5xl mx-auto px-4 py-4">
 
       <!-- Admin backfill mini-panel -->
       <section id="adminPanel" class="mb-3">
