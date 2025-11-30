@@ -44,58 +44,100 @@
     html,body{height:100%}
     body{
       font-family:'Montserrat',system-ui,Segoe UI,Roboto,Arial,sans-serif;
-      background:#f9fafb;color:#1f2937;
+      background:#f9fafb;
+      color:#1f2937;
     }
 
     /* HEADER */
     header{
-      background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.08);
-      padding:1rem;text-align:center;position:relative;
+      background:#fff;
+      box-shadow:0 2px 4px rgba(0,0,0,.08);
+      padding:1rem;
+      text-align:center;
+      position:relative;
     }
     .logo-container{
-      display:flex;justify-content:center;align-items:center;margin-bottom:10px;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      margin-bottom:10px;
     }
     .logo-container .letter-box{
-      width:40px;height:40px;margin:2px;display:flex;justify-content:center;
-      align-items:center;background:#374151;color:#fff;font-size:1.2rem;
-      font-weight:700;border-radius:6px;
+      width:40px;height:40px;margin:2px;
+      display:flex;justify-content:center;align-items:center;
+      background:#374151;color:#fff;
+      font-size:1.2rem;font-weight:700;border-radius:6px;
     }
     .welcome{font-size:.9rem;color:#6b7280}
 
     .card{
-      background:#fff;border:1px solid #e5e7eb;border-radius:16px;
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:16px;
       box-shadow:0 2px 8px rgba(0,0,0,.05);
     }
     .headline{
-      text-align:center;font-size:1.125rem;font-weight:700;
-      color:#374151;margin:16px 0 8px;
+      text-align:center;
+      font-size:1.125rem;
+      font-weight:700;
+      color:#374151;
+      margin:16px 0 8px;
+    }
+
+    /* Game area wrapper: centred column, ads float left/right on large screens */
+    .game-layout{
+      width:100%;
+      max-width:720px;
+      margin:0 auto;
+      position:relative;
     }
 
     /* Target chips */
     #targetWrap{
-      width:100%;max-width:var(--gridW);margin:0 auto 8px;
-      display:flex;justify-content:center;
+      width:100%;
+      max-width:var(--gridW);
+      margin:0 auto 8px;
+      display:flex;
+      justify-content:center;
     }
     #target{
-      display:inline-flex;gap:1px;background:var(--cell-bg);color:#fff;
-      padding:2px;border-radius:6px;min-height:34px;align-items:center;
+      display:inline-flex;
+      gap:1px;
+      background:var(--cell-bg);
+      color:#fff;
+      padding:2px;
+      border-radius:6px;
+      min-height:34px;
+      align-items:center;
     }
     #target span{
-      width:30px;height:30px;display:grid;place-items:center;font-weight:800;
+      width:30px;height:30px;
+      display:grid;place-items:center;
+      font-weight:800;
       border:1px solid rgba(255,255,255,.12);
     }
 
     /* GRID */
     #grid{
-      position:relative;display:grid;
+      position:relative;
+      display:grid;
       grid-template-columns:repeat(8,1fr);
       grid-template-rows:repeat(10,1fr);
-      gap:0;background:#fff;border:var(--line) solid #0c4a3e;
-      border-radius:8px;overflow:hidden;width:var(--gridW);
-      height:400px;margin:10px auto 8px;
+      gap:0;
+      background:#fff;
+      border:var(--line) solid #0c4a3e;
+      border-radius:8px;
+      overflow:hidden;
+      width:var(--gridW);
+      height:400px;
+      margin:10px auto 8px;
     }
     #grid::after{
-      content:'';position:absolute;inset:0;pointer-events:none;z-index:5;
+      content:'';
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      z-index:5;
       background:
         repeating-linear-gradient(to right,
           transparent 0 calc(var(--cellSize) - var(--line)),
@@ -105,28 +147,43 @@
           rgba(255,255,255,.28) 0 var(--cellSize));
     }
     .cell{
-      position:relative;background:var(--cell-bg);
+      position:relative;
+      background:var(--cell-bg);
       transition:transform .15s ease-out,opacity .15s ease-out;
     }
     .cell.f{
-      display:grid;place-items:center;color:#fff;font-weight:800;
-      font-size:var(--cell-font);text-shadow:0 1px 1px rgba(0,0,0,.35);
+      display:grid;place-items:center;
+      color:#fff;font-weight:800;
+      font-size:var(--cell-font);
+      text-shadow:0 1px 1px rgba(0,0,0,.35);
     }
     .cell.pop{transform:scale(1.15);opacity:0;}
 
     /* Modal */
     #over{
-      position:fixed;inset:0;display:none;align-items:center;
-      justify-content:center;background:rgba(0,0,0,.55);z-index:50;
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background:rgba(0,0,0,.55);
+      z-index:50;
     }
     .modal{
-      background:#fff;border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.2);
-      width:min(92%,520px);padding:18px;text-align:center;
+      background:#fff;
+      border-radius:16px;
+      box-shadow:0 20px 50px rgba(0,0,0,.2);
+      width:min(92%,520px);
+      padding:18px;
+      text-align:center;
       border:1px solid #e5e7eb;
     }
     .btn{
-      background:#1e3a8a;color:#fff;font-weight:700;
-      padding:10px 16px;border-radius:10px;
+      background:#1e3a8a;
+      color:#fff;
+      font-weight:700;
+      padding:10px 16px;
+      border-radius:10px;
     }
     .btn.gray{background:#6b7280}
     .btn:disabled{opacity:.6;cursor:not-allowed;}
@@ -135,9 +192,12 @@
     .controls{width:100%;max-width:calc(var(--gridW));margin:8px auto 0;}
     .arrow-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;}
     .dir-btn{
-      width:100%;aspect-ratio:1/1;min-width:56px;min-height:56px;
+      width:100%;
+      aspect-ratio:1/1;
+      min-width:56px;min-height:56px;
       display:flex;align-items:center;justify-content:center;
-      background:#053a6b;color:#fff;border-radius:14px;
+      background:#053a6b;color:#fff;
+      border-radius:14px;
       font-weight:800;font-size:24px;
     }
     @media (min-width:460px){
@@ -148,60 +208,107 @@
     }
 
     .pill{
-      background:#0c4a3e;color:#fff;font-weight:700;
-      padding:6px 10px;border-radius:8px;text-align:center;
+      background:#0c4a3e;
+      color:#fff;
+      font-weight:700;
+      padding:6px 10px;
+      border-radius:8px;
+      text-align:center;
     }
     #leaderboardList li{
-      padding:.35rem .5rem;border-radius:.375rem;display:flex;
-      gap:.5rem;align-items:center;justify-content:space-between;
+      padding:.35rem .5rem;
+      border-radius:.375rem;
+      display:flex;
+      gap:.5rem;
+      align-items:center;
+      justify-content:space-between;
     }
     #leaderboardList li:nth-child(odd){background:#f3f4f6;}
-    #leaderboardList li:first-child{background:#d1fae5;font-weight:700;}
+    #leaderboardList li:first-child{
+      background:#d1fae5;
+      font-weight:700;
+    }
 
-    /* Green K badge */
+    /* Green K badge (no dot) */
     .k-pill{
-      display:inline-flex;align-items:center;background:#16a34a;
-      color:#fff;font-weight:800;border-radius:999px;
-      padding:.15rem .5rem;font-size:.75rem;line-height:1;
+      display:inline-flex;
+      align-items:center;
+      background:#16a34a;
+      color:#fff;
+      font-weight:800;
+      border-radius:999px;
+      padding:.15rem .5rem;
+      font-size:.75rem;
+      line-height:1;
     }
 
     /* Share dropdown */
     .share-menu-local{
-      background:#fff;border:1px solid #e5e7eb;
+      background:#fff;
+      border:1px solid #e5e7eb;
       box-shadow:0 8px 24px rgba(0,0,0,.12);
-      border-radius:.5rem;width:240px;padding:.5rem;
-      z-index:3000;line-height:1.25;
+      border-radius:.5rem;
+      width:240px;
+      padding:.5rem;
+      z-index:3000;
+      line-height:1.25;
     }
     .share-menu-local button{
-      width:100%;text-align:left;padding:.5rem .75rem;
-      border-radius:.375rem;font-weight:600;
-      line-height:1.25rem;display:flex;align-items:center;
-      gap:.5rem;white-space:nowrap;
+      width:100%;
+      text-align:left;
+      padding:.5rem .75rem;
+      border-radius:.375rem;
+      font-weight:600;
+      line-height:1.25rem;
+      display:flex;
+      align-items:center;
+      gap:.5rem;
+      white-space:nowrap;
     }
     .share-menu-local button:hover{background:#f3f4f6;}
 
-    /* ACTION BAR */
+    /* ACTION BARS */
     .action-grid{
-      display:grid;grid-template-columns:repeat(3,1fr);
-      gap:.5rem;justify-items:center;align-items:center;
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:.5rem;
+      justify-items:center;
+      align-items:center;
     }
     .action-grid > a,
     .action-grid > button{
-      display:grid;place-items:center;width:100%;aspect-ratio:1/1;
-      max-width:120px;padding:0;margin:0;background:transparent !important;
-      border:0;border-radius:0;line-height:0;box-shadow:none;cursor:pointer;
+      display:grid;place-items:center;
+      width:100%;aspect-ratio:1/1;
+      max-width:120px;
+      padding:0;margin:0;
+      background:transparent !important;
+      border:0;border-radius:0;line-height:0;
+      box-shadow:none;cursor:pointer;
     }
     .btn-img{
-      width:100%;height:100%;display:block;object-fit:contain;
-      border-radius:0;box-shadow:0 6px 15px rgba(0,0,0,.25);
+      width:100%;height:100%;
+      display:block;object-fit:contain;
+      border-radius:0;
+      box-shadow:0 6px 15px rgba(0,0,0,.25);
     }
-    .btn-img:hover{transform:translateY(-1px);filter:brightness(1.02)}
-    .btn-img:active{transform:translateY(0);filter:brightness(.98)}
+    .btn-img:hover{
+      transform:translateY(-1px);
+      filter:brightness(1.02);
+    }
+    .btn-img:active{
+      transform:translateY(0);
+      filter:brightness(.98);
+    }
 
     /* N-R gate */
     #nrGate{
-      position:fixed;inset:0;display:none;align-items:center;
-      justify-content:center;background:rgba(0,0,0,.55);z-index:60;
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background:rgba(0,0,0,.55);
+      z-index:60;
     }
   </style>
 </head>
@@ -221,207 +328,190 @@
   </header>
 
   <main class="flex-1">
-    <div class="max-w-3xl mx-auto px-4 py-4">
+    <div class="max-w-5xl mx-auto px-4 py-4">
 
-      <div class="headline">TEIKENWOORD:</div>
-      <div id="targetWrap"><div id="target"><span>—</span></div></div>
-      <!-- MOBILE IN-HOUSE AD (one tile on small screens) -->
-      <div class="mt-4 flex justify-center lg:hidden">
+      <!-- MOBILE ad: visible under header / above game -->
+      <div class="mt-2 mb-4 flex justify-center lg:hidden">
         <a href="/advertisers.html"
-           class="block bg-[#001537] text-white text-center rounded-2xl px-6 py-8
-                  shadow-lg hover:shadow-xl transition duration-200 w-64 max-w-full select-none">
-          <div class="text-xl font-extrabold mb-3">
-            Jou advertensie<br>kan hier wees
-          </div>
-          <div class="text-sm opacity-90">
-            Klik vir meer inligting
-          </div>
+           class="inline-block rounded-2xl overflow-hidden shadow-lg border border-slate-800/40">
+          <img
+            src="/assets/kriptiek-placeholder-300x250.png"
+            alt="Jou advertensie kan hier wees – klik vir meer inligting"
+            class="block max-w-full md:w-[300px] h-auto">
         </a>
       </div>
 
-      <!-- GAME LAYOUT + IN-HOUSE ADS (matching Slimstiek) -->
-      <div class="mt-4 lg:mt-6 lg:grid lg:grid-cols-[auto,1fr,auto] lg:items-start gap-4 lg:gap-8">
-        <!-- LEFT AD (desktop only) -->
-        <aside class="hidden lg:flex justify-center">
+      <!-- Game layout: centred column; desktop ads float left/right -->
+      <div class="game-layout">
+        <!-- DESKTOP ad, positioned to the left of the centred column -->
+        <div id="desktopAdLeft" class="hidden lg:block absolute -left-[340px]">
           <a href="/advertisers.html"
-             class="block bg-[#001537] text-white text-center rounded-2xl px-6 py-10
-                    shadow-lg hover:shadow-xl transition duration-200 w-64 max-w-full select-none">
-            <div class="text-xl font-extrabold mb-3">
-              Jou advertensie<br>kan hier wees
-            </div>
-            <div class="text-sm opacity-90">
-              Klik vir meer inligting
-            </div>
+             class="inline-block rounded-2xl overflow-hidden shadow-lg border border-slate-800/40">
+            <img
+              src="/assets/kriptiek-placeholder-300x250.png"
+              alt="Jou advertensie kan hier wees – klik vir meer inligting"
+              class="block max-w-full md:w-[300px] h-auto">
           </a>
-        </aside>
+        </div>
 
-        <!-- GAME card -->
-        <section class="card p-4">
-          <div class="relative">
-            <div id="grid"></div>
+        <!-- DESKTOP ad, positioned to the right of the centred column -->
+        <div id="desktopAdRight" class="hidden lg:block absolute -right-[340px]">
+          <a href="/advertisers.html"
+             class="inline-block rounded-2xl overflow-hidden shadow-lg border border-slate-800/40">
+            <img
+              src="/assets/kriptiek-placeholder-300x250.png"
+              alt="Jou advertensie kan hier wees – klik vir meer inligting"
+              class="block max-w-full md:w-[300px] h-auto">
+          </a>
+        </div>
 
-            <!-- Success modal -->
-            <div id="over">
-              <div class="modal">
-                <p id="winMsg" class="mb-3 text-base"></p>
-                <div class="actions" style="display:flex;gap:.75rem;justify-content:center;margin-top:12px;">
-                  <button id="modalShareBtn" type="button" class="btn">DEEL</button>
-                  <button id="modalCloseBtn" type="button" class="btn gray">SLUIT</button>
-                </div>
-                <div id="shareMenu" class="hidden share-menu-local mx-auto mt-2">
-                  <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
-                  <div class="space-y-1">
-                    <button id="mWhatsApp" type="button">WhatsApp</button>
-                    <button id="mCopy" type="button">Kopieer skakel</button>
-                    <button id="mSystem" type="button">Stelsel-deel</button>
-                  </div>
-                </div>
-              </div>
-            </div>
+        <!-- Main game column (centred) -->
+        <div class="max-w-xl mx-auto">
+          <div class="headline">TEIKENWOORD:</div>
+          <div id="targetWrap"><div id="target"><span>—</span></div></div>
 
-            <!-- N-R gate -->
-            <div id="nrGate">
-              <div class="modal">
-                <h3 class="text-lg font-extrabold mb-1">WELKOM BY BLITSTIEK OP KRIPTIEK</h3>
-                <p class="text-sm text-gray-600 mb-3">Jou opsies:</p>
-                <div class="text-left space-y-2 text-gray-700">
-                  <p><strong>1)</strong> Speel Blitstiek as 'n ongeregistreerde speler met beperkte funksies.</p>
-                  <p><strong>2)</strong>
-                    <a href="/register.html" class="underline" id="gateRegLink">Registreer</a>
-                    sodat jy volle toegang tot alles op Kriptiek kan kry, insluitend Blitstiek.
-                  </p>
-                </div>
-                <div class="flex gap-2 justify-center mt-4">
-                  <button id="gateGuestBtn" class="btn">Speel sonder om te registreer</button>
-                  <button id="gateRegBtn"   class="btn gray">Registreer</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Arrows -->
-          <div class="controls mt-3">
-            <div class="arrow-row">
-              <button id="btnLeft"  class="dir-btn" aria-label="Links">◀</button>
-              <button id="btnDown"  class="dir-btn" aria-label="Laat val">▼</button>
-              <button id="btnRight" class="dir-btn" aria-label="Regs">▶</button>
-            </div>
-          </div>
-
-          <!-- Start/Pause + Sticky share -->
-          <div class="controls mt-3 flex items-center justify-center gap-2">
-            <button id="btnStart" class="btn">BEGIN</button>
-            <button id="btnPause" class="btn gray">POUSE</button>
-
+          <!-- GAME card -->
+          <section class="card p-4">
             <div class="relative">
-              <button id="stickyShareBtn" class="btn hidden">DEEL</button>
-              <div id="stickyShareMenu" class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
-                <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
-                <div class="space-y-1">
-                  <button id="sWhatsApp" type="button">WhatsApp</button>
-                  <button id="sCopy" type="button">Kopieer skakel</button>
-                  <button id="sSystem" type="button">Stelsel-deel</button>
+              <div id="grid"></div>
+
+              <!-- Success modal -->
+              <div id="over">
+                <div class="modal">
+                  <p id="winMsg" class="mb-3 text-base"></p>
+                  <div class="actions" style="display:flex;gap:.75rem;justify-content:center;margin-top:12px;">
+                    <button id="modalShareBtn" type="button" class="btn">DEEL</button>
+                    <button id="modalCloseBtn" type="button" class="btn gray">SLUIT</button>
+                  </div>
+                  <div id="shareMenu" class="hidden share-menu-local mx-auto mt-2">
+                    <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
+                    <div class="space-y-1">
+                      <button id="mWhatsApp" type="button">WhatsApp</button>
+                      <button id="mCopy" type="button">Kopieer skakel</button>
+                      <button id="mSystem" type="button">Stelsel-deel</button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <!-- Timers -->
-          <div class="controls grid grid-cols-2 gap-2 mt-3">
-            <div id="timeBox" class="pill">Jou tyd: <b>00:00</b></div>
-            <div id="bestBox" class="pill">Beste tyd: <b>--:--</b></div>
-          </div>
-
-          <!-- ACTION BARS -->
-          <div class="controls mt-3" id="actionBars">
-            <!-- Guests -->
-            <div id="barNR" class="action-grid">
-              <a href="/register.html" title="Registreer">
-                <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="120" height="120">
-              </a>
-              <a href="/forum.html" title="Gesels saam">
-                <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
-              </a>
-              <div class="relative share-tile-wrap">
-                <button type="button" class="share-tile" title="Deel">
-                  <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
-                </button>
-                <div class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
-                  <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
-                  <div class="space-y-1">
-                    <button class="wa"  type="button">WhatsApp</button>
-                    <button class="copy" type="button">Kopieer skakel</button>
-                    <button class="sys"  type="button">Stelsel-deel</button>
+              <!-- N-R gate -->
+              <div id="nrGate">
+                <div class="modal">
+                  <h3 class="text-lg font-extrabold mb-1">WELKOM BY BLITSTIEK OP KRIPTIEK</h3>
+                  <p class="text-sm text-gray-600 mb-3">Jou opsies:</p>
+                  <div class="text-left space-y-2 text-gray-700">
+                    <p><strong>1)</strong> Speel Blitstiek as 'n ongeregistreerde speler met beperkte funksies.</p>
+                    <p><strong>2)</strong>
+                      <a href="/register.html" class="underline" id="gateRegLink">
+                        Registreer
+                      </a>
+                      sodat jy volle toegang tot alles op Kriptiek kan kry, insluitend Blitstiek.
+                    </p>
+                  </div>
+                  <div class="flex gap-2 justify-center mt-4">
+                    <button id="gateGuestBtn" class="btn">Speel sonder om te registreer</button>
+                    <button id="gateRegBtn"   class="btn gray">Registreer</button>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Registered -->
-            <div id="barR" class="action-grid hidden">
-              <a href="/forum.html" title="Gesels saam">
-                <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
-              </a>
-              <a href="/blitstiek-argief.html" title="Blitstiek-argief">
-                <img class="btn-img" src="/assets/B_ARGIEF_12SEP.png" alt="B Argief" width="120" height="120">
-              </a>
-              <div class="relative share-tile-wrap">
-                <button type="button" class="share-tile" title="Deel">
-                  <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
-                </button>
-                <div class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
+            <!-- Arrows -->
+            <div class="controls mt-3">
+              <div class="arrow-row">
+                <button id="btnLeft"  class="dir-btn" aria-label="Links">◀</button>
+                <button id="btnDown"  class="dir-btn" aria-label="Laat val">▼</button>
+                <button id="btnRight" class="dir-btn" aria-label="Regs">▶</button>
+              </div>
+            </div>
+
+            <!-- Start/Pause + Sticky share -->
+            <div class="controls mt-3 flex items-center justify-center gap-2">
+              <button id="btnStart" class="btn">BEGIN</button>
+              <button id="btnPause" class="btn gray">POUSE</button>
+
+              <div class="relative">
+                <button id="stickyShareBtn" class="btn hidden">DEEL</button>
+                <div id="stickyShareMenu" class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
                   <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
                   <div class="space-y-1">
-                    <button class="wa"  type="button">WhatsApp</button>
-                    <button class="copy" type="button">Kopieer skakel</button>
-                    <button class="sys"  type="button">Stelsel-deel</button>
+                    <button id="sWhatsApp" type="button">WhatsApp</button>
+                    <button id="sCopy" type="button">Kopieer skakel</button>
+                    <button id="sSystem" type="button">Stelsel-deel</button>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
 
-        <!-- RIGHT AD (desktop only) -->
-        <aside class="hidden lg:flex justify-center">
-          <a href="/advertisers.html"
-             class="block bg-[#001537] text-white text-center rounded-2xl px-6 py-10
-                    shadow-lg hover:shadow-xl transition duration-200 w-64 max-w-full select-none">
-            <div class="text-xl font-extrabold mb-3">
-              Jou advertensie<br>kan hier wees
+            <!-- Timers -->
+            <div class="controls grid grid-cols-2 gap-2 mt-3">
+              <div id="timeBox" class="pill">Jou tyd: <b>00:00</b></div>
+              <div id="bestBox" class="pill">Beste tyd: <b>--:--</b></div>
             </div>
-            <div class="text-sm opacity-90">
-              Klik vir meer inligting
+
+            <!-- ACTION BARS -->
+            <div class="controls mt-3" id="actionBars">
+              <!-- Guests -->
+              <div id="barNR" class="action-grid">
+                <a href="/register.html" title="Registreer">
+                  <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="120" height="120">
+                </a>
+                <a href="/forum.html" title="Gesels saam">
+                  <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
+                </a>
+                <div class="relative share-tile-wrap">
+                  <button type="button" class="share-tile" title="Deel">
+                    <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
+                  </button>
+                  <div class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
+                    <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
+                    <div class="space-y-1">
+                      <button class="wa"  type="button">WhatsApp</button>
+                      <button class="copy" type="button">Kopieer skakel</button>
+                      <button class="sys"  type="button">Stelsel-deel</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Registered -->
+              <div id="barR" class="action-grid hidden">
+                <a href="/forum.html" title="Gesels saam">
+                  <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
+                </a>
+                <a href="/blitstiek-argief.html" title="Blitstiek-argief">
+                  <img class="btn-img" src="/assets/B_ARGIEF_12SEP.png" alt="B Argief" width="120" height="120">
+                </a>
+                <div class="relative share-tile-wrap">
+                  <button type="button" class="share-tile" title="Deel">
+                    <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
+                  </button>
+                  <div class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
+                    <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
+                    <div class="space-y-1">
+                      <button class="wa"  type="button">WhatsApp</button>
+                      <button class="copy" type="button">Kopieer skakel</button>
+                      <button class="sys"  type="button">Stelsel-deel</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </a>
-        </aside>
-      </div>
+          </section>
+        </div><!-- /main game column -->
+      </div><!-- /game-layout -->
       <!-- HOE OM TE SPEEL -->
       <section class="mt-4 bg-white rounded shadow p-4">
         <h2 class="text-xl font-bold mb-2">HOE OM TE SPEEL</h2>
         <ol class="space-y-3 text-gray-700 leading-relaxed">
           <li>
             <p class="font-semibold">1. Doel</p>
-            <p>
-              Probeer om die <strong>teikenwoord</strong> boaan so vinnig as moontlik te vorm
-              deur die vallende blokke, elkeen met 'n lukrake letter en kleur, links en regs te skuif
-              voordat hulle onder land. Die teikenwoord moet in
-              <strong>dieselfde horisontale ry</strong> gevorm word, sonder gapings of verkeerde letters.
-              Laat val onnodige letters eenkant, of gebruik die blokreëls onder om hulle te laat verdwyn.
-              Daar is <strong>elke dag ’n nuwe woord</strong>, wat soms minder maar nooit meer as
-              8 letters sal hê nie.
-            </p>
+            <p>Probeer om die <strong>teikenwoord</strong> boaan so vinnig as moontlik te vorm deur die vallende blokke, elkeen met 'n lukrake letter en kleur, links en regs te skuif voordat hulle onder land. Die teikenwoord moet in <strong>dieselfde horisontale ry</strong> gevorm word, sonder gapings of verkeerde letters. Laat val onnodige letters eenkant, of gebruik die blokreëls onder om hulle te laat verdwyn. Daar is <strong>elke dag ’n nuwe woord</strong>, wat soms minder maar nooit meer as 8 letters sal hê nie.</p>
           </li>
           <li>
             <p class="font-semibold">2. Kontroles</p>
-            <p>
-              <strong>Fisieke toetsbord:</strong> Gebruik die pyltjies op jou toetsbord
-              om die blokke links en regs te skuif, en die spasiebalk om die blok dadelik tot onder te laat val.
-            </p>
-            <p>
-              <strong>Raakskerm:</strong> Gebruik die pyltjies op die skerm om die blokke links en regs te skuif,
-              en die af-pyltjie om die blok dadelik tot onder te laat val.
-            </p>
+            <p><strong>Fisieke toetsbord:</strong> Gebruik die pyltjies op jou toetsbord om die blokke links en regs te skuif, en die spasiebalk om die blok dadelik tot onder te laat val.</p>
+            <p><strong>Raakskerm:</strong> Gebruik die pyltjies op die skerm om die blokke links en regs te skuif, en die af-pyltjie om die blok dadelik tot onder te laat val.</p>
           </li>
           <li>
             <p class="font-semibold">3. Wat gebeur wanneer blokke aan mekaar raak?</p>
@@ -433,10 +523,7 @@
           </li>
           <li>
             <p class="font-semibold">4. Leierbord</p>
-            <p>
-              As jou tyd vinnig genoeg is, verskyn jou naam op die <strong>leierbord</strong>.
-              Gebruik <strong>DEEL</strong> om jou vriende uit te daag en jou tyd te wys.
-            </p>
+            <p>As jou tyd vinnig genoeg is, verskyn jou naam op die <strong>leierbord</strong>. Gebruik <strong>DEEL</strong> om jou vriende uit te daag en jou tyd te wys.</p>
           </li>
         </ol>
       </section>
@@ -446,9 +533,7 @@
         <div class="flex items-center justify-between mb-2">
           <h2 class="text-xl font-bold">VANDAG SE TOP-10 (die afsnypunt is om 23:55)</h2>
         </div>
-        <ul id="leaderboardList" class="text-gray-700 text-left">
-          <li>Laai...</li>
-        </ul>
+        <ul id="leaderboardList" class="text-gray-700 text-left"><li>Laai...</li></ul>
       </section>
     </div>
   </main>
@@ -473,6 +558,7 @@
       collection, query, orderBy, limit, getDocs, onSnapshot, where
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
+    /* ---- Firebase ---- */
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
       authDomain: "kriptiek-c9ea2.firebaseapp.com",
@@ -486,59 +572,59 @@
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
-    const welcomeLine    = document.getElementById('welcomeLine');
-    const playerNameEl   = document.getElementById('playerName');
-    const targetEl       = document.getElementById('target');
-    const gridEl         = document.getElementById('grid');
-    const over           = document.getElementById('over');
-    const winMsg         = document.getElementById('winMsg');
-    const modalShareBtn  = document.getElementById('modalShareBtn');
-    const modalCloseBtn  = document.getElementById('modalCloseBtn');
-    const shareMenu      = document.getElementById('shareMenu');
-    const lbList         = document.getElementById('leaderboardList');
-    const timeText       = document.querySelector('#timeBox b');
-    const bestText       = document.querySelector('#bestBox b');
-    const btnLeft        = document.getElementById('btnLeft');
-    const btnRight       = document.getElementById('btnRight');
-    const btnDown        = document.getElementById('btnDown');
-    const btnStart       = document.getElementById('btnStart');
-    const btnPause       = document.getElementById('btnPause');
-    const stickyShareBtn = document.getElementById('stickyShareBtn');
-    const stickyShareMenu= document.getElementById('stickyShareMenu');
-    const sWA            = document.getElementById('sWhatsApp');
-    const sCopy          = document.getElementById('sCopy');
-    const sSys           = document.getElementById('sSystem');
-    const mWA            = document.getElementById('mWhatsApp');
-    const mCopy          = document.getElementById('mCopy');
-    const mSys           = document.getElementById('mSystem');
-    const barNR          = document.getElementById('barNR');
-    const barR           = document.getElementById('barR');
-    const nrGate         = document.getElementById('nrGate');
-    const gateGuestBtn   = document.getElementById('gateGuestBtn');
-    const gateRegBtn     = document.getElementById('gateRegBtn');
-    const gateRegLink    = document.getElementById('gateRegLink');
+    /* ---- DOM ---- */
+    const welcomeLine = document.getElementById('welcomeLine');
+    const playerNameEl = document.getElementById('playerName');
+    const targetEl   = document.getElementById('target');
+    const gridEl     = document.getElementById('grid');
+    const over       = document.getElementById('over');
+    const winMsg     = document.getElementById('winMsg');
+    const modalShareBtn = document.getElementById('modalShareBtn');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+    const shareMenu  = document.getElementById('shareMenu');
 
+    const lbList     = document.getElementById('leaderboardList');
+    const timeText   = document.querySelector('#timeBox b');
+    const bestText   = document.querySelector('#bestBox b');
+
+    const btnLeft = document.getElementById('btnLeft');
+    const btnRight= document.getElementById('btnRight');
+    const btnDown = document.getElementById('btnDown');
+    const btnStart= document.getElementById('btnStart');
+    const btnPause= document.getElementById('btnPause');
+
+    const stickyShareBtn   = document.getElementById('stickyShareBtn');
+    const stickyShareMenu  = document.getElementById('stickyShareMenu');
+    const sWA   = document.getElementById('sWhatsApp');
+    const sCopy = document.getElementById('sCopy');
+    const sSys  = document.getElementById('sSystem');
+    const mWA   = document.getElementById('mWhatsApp');
+    const mCopy = document.getElementById('mCopy');
+    const mSys  = document.getElementById('mSystem');
+
+    const barNR       = document.getElementById('barNR');
+    const barR        = document.getElementById('barR');
+    const nrGate      = document.getElementById('nrGate');
+    const gateGuestBtn= document.getElementById('gateGuestBtn');
+    const gateRegBtn  = document.getElementById('gateRegBtn');
+    const gateRegLink = document.getElementById('gateRegLink');
+
+    /* ---- Helpers ---- */
     const pad = n => String(n).padStart(2,'0');
     const fmt = s => s==null ? '--:--' : `${pad(Math.floor(s/60))}:${pad(s%60)}`;
     function nowZa(){
-      const n=new Date();
-      const utc=n.getTime()+n.getTimezoneOffset()*60000;
+      const n=new Date(); const utc=n.getTime()+n.getTimezoneOffset()*60000;
       return new Date(utc + 120*60000);
     }
-    const todayISO = () => {
-      const d=nowZa();
-      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-    };
+    const todayISO = () => { const d=nowZa(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
 
-    const qs          = new URLSearchParams(location.search);
-    const explicitId  = qs.get('gameId');
-    const SITE_ORIGIN = location.hostname.endsWith('kriptiek.com')
-      ? location.origin
-      : 'https://www.kriptiek.com';
+    const qs = new URLSearchParams(location.search);
+    const explicitId = qs.get('gameId');
+    const SITE_ORIGIN = location.hostname.endsWith('kriptiek.com') ? location.origin : 'https://www.kriptiek.com';
 
+    /* ---- Share helpers ---- */
     const shareKey = gid => `blitstiekShare:${gid}`;
     let stickyPayload = null;
-
     function buildShareUrl(gameId){
       const url = new URL('/blitstiek.html', SITE_ORIGIN);
       if (gameId) url.searchParams.set('gameId', gameId);
@@ -558,22 +644,28 @@
         : shareTextLinkOnly(GAME_ID);
     }
 
-    const LB_SIZE = 10;
+    /* ==== NEW: constants for the simplified scoring ==== */
+    const LB_SIZE = 10; // leaderboard shows max 10
+
+    /* ---- Mechanics ---- */
     const H = 10, W = 8;
     const COLORS = ['#2196f3','#f44336','#4caf50','#ffc107','#9c27b0','#003366','#009688'];
     const CONS   = 'BCDFGHJKLMNPQRSTVWXZ';
     const VOWS   = 'AEIOUY';
 
+    /* ---- State ---- */
     let user=null;
     let currentUserName='Speler';
     let GAME_ID=null, TARGET='';
-    let TODAY_ID=`Game${todayISO()}`;
-    let IS_ARCHIVE=false;
+    let TODAY_ID=`Game${todayISO()}`; // set early; rechecked after resolve
+    let IS_ARCHIVE=false;             // NEW: set after GAME_ID is resolved
     let grid=Array.from({length:H},()=>Array(W).fill(null));
     let cur=null, nxt=null;
     let paused=false, ended=false, moving=false;
     let t=0, tInt=null, gInt=null;
     let lbUnsub=null;
+
+    /* ---- Username ---- */
     async function resolveUserName(u){
       try{
         const uref = doc(db,'users',u.uid);
@@ -590,6 +682,7 @@
       return 'Speler';
     }
 
+    /* ---- Auth ---- */
     onAuthStateChanged(auth, async (u)=>{
       user=u||null;
       if(user){
@@ -609,13 +702,14 @@
       }
     });
 
+    /* ---- Pixel-perfect grid sizing ---- */
     function resizeGrid(){
-      const wrap    = gridEl.parentElement;
-      const availCss= Math.min(320, Math.floor(wrap.clientWidth));
-      const dpr     = Math.max(1, window.devicePixelRatio || 1);
-      const toDp    = vCss => Math.round(vCss * dpr);
-      const toCss   = vDp  => vDp / dpr;
-      const snapDp  = vDp  => Math.floor(vDp / 8) * 8;
+      const wrap = gridEl.parentElement;
+      const availCss = Math.min(320, Math.floor(wrap.clientWidth));
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      const toDp   = vCss => Math.round(vCss * dpr);
+      const toCss  = vDp  => vDp / dpr;
+      const snapDp = vDp  => Math.floor(vDp / 8) * 8;
 
       const availDp   = toDp(availCss);
       const snappedDp = Math.max(toDp(240), snapDp(availDp));
@@ -635,18 +729,40 @@
       const glyph = Math.max(15, Math.min(28, Math.round(cellCss * 0.50)));
       document.documentElement.style.setProperty('--cell-font', glyph + 'px');
     }
-    window.addEventListener('resize', resizeGrid);
 
+    /* Align desktop ads (left/right) with the top of the playing grid */
+    function alignDesktopAds(){
+      const layout = document.querySelector('.game-layout');
+      const grid   = document.getElementById('grid');
+      const leftAd  = document.getElementById('desktopAdLeft');
+      const rightAd = document.getElementById('desktopAdRight');
+      if (!layout || !grid) return;
+
+      const layoutRect = layout.getBoundingClientRect();
+      const gridRect   = grid.getBoundingClientRect();
+      const offset     = gridRect.top - layoutRect.top;
+
+      if (offset >= 0 && offset < 2000){
+        if (leftAd)  leftAd.style.top  = offset + 'px';
+        if (rightAd) rightAd.style.top = offset + 'px';
+      }
+    }
+
+    function handleResize(){
+      resizeGrid();
+      alignDesktopAds();
+    }
+    window.addEventListener('resize', handleResize);
+
+    /* ---- Grid rendering ---- */
     function drawGrid(){
       gridEl.innerHTML='';
-      for(let y=0;y<H;y++){
-        for(let x=0;x<W;x++){
-          const d=document.createElement('div');
-          d.className='cell'; d.dataset.x=x; d.dataset.y=y;
-          gridEl.appendChild(d);
-        }
+      for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+        const d=document.createElement('div'); d.className='cell'; d.dataset.x=x; d.dataset.y=y;
+        gridEl.appendChild(d);
       }
       resizeGrid();
+      alignDesktopAds();
     }
     function drawBlock(b){
       if(!b||b.x<0||b.x>=W||b.y<0||b.y>=H) return;
@@ -662,14 +778,12 @@
     }
 
     const partOfTarget = L => TARGET.includes(L);
-    const collide = b =>
-      !b || b.x<0||b.x>=W||b.y>=H || (b.y>=0 && grid[b.y][b.x]);
+    const collide = b => !b || b.x<0||b.x>=W||b.y>=H || (b.y>=0 && grid[b.y][b.x]);
 
     function createBlock(){
       const color = COLORS[Math.floor(Math.random()*COLORS.length)];
-      const letter = Math.random()<0.3
-        ? VOWS[Math.floor(Math.random()*VOWS.length)]
-        : CONS[Math.floor(Math.random()*CONS.length)];
+      const letter = Math.random()<0.3 ? VOWS[Math.floor(Math.random()*VOWS.length)]
+                                       : CONS[Math.floor(Math.random()*CONS.length)];
       return { color, letter, x:Math.floor(W/2), y:0 };
     }
 
@@ -692,8 +806,7 @@
 
     async function place(){
       if(!cur||cur.y<0) return;
-      grid[cur.y][cur.x]={...cur};
-      drawBlock(cur);
+      grid[cur.y][cur.x]={...cur}; drawBlock(cur);
       await matchAndDrop();
       await checkWin();
       cur=nxt; nxt=createBlock();
@@ -702,19 +815,12 @@
 
     async function matchAndDrop(){
       const del=new Set();
-      for(let y=0;y<H;y++){
-        for(let x=0;x<W;x++){
-          const a=grid[y][x];
-          if(!a||partOfTarget(a.letter)) continue;
-          for(const [dx,dy] of [[1,0],[0,1],[-1,0],[0,-1]]){
-            const nx=x+dx, ny=y+dy;
-            if(nx<0||nx>=W||ny<0||ny>=H) continue;
-            const b=grid[ny][nx];
-            if(!b||partOfTarget(b.letter)) continue;
-            if(a.letter===b.letter || a.color===b.color){
-              del.add(`${x},${y}`); del.add(`${nx},${ny}`);
-            }
-          }
+      for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+        const a=grid[y][x]; if(!a||partOfTarget(a.letter)) continue;
+        for(const [dx,dy] of [[1,0],[0,1],[-1,0],[0,-1]]){
+          const nx=x+dx, ny=y+dy; if(nx<0||nx>=W||ny<0||ny>=H) continue;
+          const b=grid[ny][nx]; if(!b||partOfTarget(b.letter)) continue;
+          if(a.letter===b.letter || a.color===b.color){ del.add(`${x},${y}`); del.add(`${nx},${ny}`); }
         }
       }
       if(!del.size) return;
@@ -722,10 +828,7 @@
       await Promise.all(Array.from(del).map(key=>new Promise(res=>{
         const [x,y]=key.split(',').map(Number);
         const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
-        if(c){
-          c.classList.add('pop');
-          setTimeout(()=>{ c.classList.remove('pop'); res(); },150);
-        } else res();
+        if(c){ c.classList.add('pop'); setTimeout(()=>{ c.classList.remove('pop'); res(); },150);} else res();
         grid[y][x]=null;
       })));
 
@@ -738,44 +841,37 @@
           }
         }
       }
-      for(let y=0;y<H;y++){
-        for(let x=0;x<W;x++){
-          const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
-          c.className='cell'; c.style.background='var(--cell-bg)'; c.textContent='';
-          if(grid[y][x]) drawBlock({...grid[y][x],x,y});
-        }
+      for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+        const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+        c.className='cell'; c.style.background='var(--cell-bg)'; c.textContent='';
+        if(grid[y][x]) drawBlock({...grid[y][x],x,y});
       }
     }
 
     async function checkWin(){
       if(!TARGET) return;
-      for(let y=0;y<H;y++){
-        for(let x=0;x<=W-TARGET.length;x++){
-          let ok=true;
+      for(let y=0;y<H;y++) for(let x=0;x<=W-TARGET.length;x++){
+        let ok=true;
+        for(let i=0;i<TARGET.length;i++){
+          const g=grid[y][x+i];
+          if(!g || g.letter!==TARGET[i]){ ok=false; break; }
+        }
+        if(ok){
           for(let i=0;i<TARGET.length;i++){
-            const g=grid[y][x+i];
-            if(!g || g.letter!==TARGET[i]){ ok=false; break; }
+            const c=gridEl.querySelector(`.cell[data-x="${x+i}"][data-y="${y}"]`);
+            if(c) c.style.transform='scale(1.05)';
           }
-          if(ok){
-            for(let i=0;i<TARGET.length;i++){
-              const c=gridEl.querySelector(`.cell[data-x="${x+i}"][data-y="${y}"]`);
-              if(c) c.style.transform='scale(1.05)';
-            }
-            setTimeout(()=>end(true), 450);
-            return;
-          }
+          setTimeout(()=>end(true), 450);
+          return;
         }
       }
     }
     function checkFail(){}
 
+    /* ---- Timer & control ---- */
     function setTime(v){ t=v; timeText.textContent=fmt(v); }
     function start(){
-      ended=false;
-      over.style.display='none';
-      shareMenu.classList.add('hidden');
-      stickyShareMenu.classList.add('hidden');
-      setTime(0);
+      ended=false; over.style.display='none'; shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden'); setTime(0);
       grid=Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
       cur=createBlock(); nxt=createBlock(); drawBlock(cur);
@@ -784,12 +880,9 @@
       gInt=setInterval(()=>{ if(!paused && !ended) move(0,1); },1000);
       tInt=setInterval(()=>{ if(!paused && !ended) setTime(t+1); },1000);
     }
-    function togglePause(){
-      if(ended) return;
-      paused=!paused;
-      btnPause.textContent = paused ? 'HERVAT' : 'POUSE';
-    }
+    function togglePause(){ if(ended) return; paused=!paused; btnPause.textContent = paused ? 'HERVAT' : 'POUSE'; }
 
+    /* N-R gate */
     let guestGateBypassOnce = false;
     function showNRGate(){ nrGate.style.display='flex'; }
     function hideNRGate(){ nrGate.style.display='none'; }
@@ -803,11 +896,13 @@
     gateRegBtn  .addEventListener('click', goRegister);
     gateRegLink .addEventListener('click', (e)=>{ e.preventDefault(); goRegister(); });
 
+    // gate-aware start
     btnStart.addEventListener('click', ()=>{
       if(!user && !guestGateBypassOnce){ showNRGate(); return; }
       guestGateBypassOnce=false; window.focus?.(); start();
     });
 
+    /* ---- Keyboard controls ---- */
     window.addEventListener('keydown', (e) => {
       const modalOpen = over && over.style.display === 'flex';
       if (modalOpen) return;
@@ -816,10 +911,10 @@
       if (['INPUT','TEXTAREA','SELECT'].includes(tag)) return;
 
       const gateOpen = nrGate && nrGate.style.display === 'flex';
-      const isGameplayKey =
-        e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
-        e.key === 'ArrowDown' || e.key === ' ' ||
-        e.key === 'Spacebar' || e.key === 'p' || e.key === 'P';
+      const isGameplayKey = (
+        e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowDown' ||
+        e.key === ' ' || e.key === 'Spacebar' || e.key === 'p' || e.key === 'P'
+      );
 
       if (gateOpen && isGameplayKey) {
         e.preventDefault();
@@ -838,101 +933,67 @@
       }
     });
 
+    /* ---- Share (modal & sticky & tile) ---- */
     function toggleShareMenu(){ shareMenu.classList.toggle('hidden'); }
-    modalShareBtn.addEventListener('click', (e)=>{
-      e.stopPropagation(); toggleShareMenu();
-    });
+    modalShareBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleShareMenu(); });
 
     document.addEventListener('click', (e)=>{
-      if(shareMenu && !shareMenu.contains(e.target) && e.target!==modalShareBtn){
-        shareMenu.classList.add('hidden');
-      }
-      if(stickyShareMenu &&
-         !stickyShareMenu.contains(e.target) &&
-         e.target!==stickyShareBtn){
-        stickyShareMenu.classList.add('hidden');
-      }
-      document.querySelectorAll('#actionBars .share-menu-local')
-        .forEach(m=>{ if(!m.contains(e.target)) m.classList.add('hidden'); });
+      if(shareMenu && !shareMenu.contains(e.target) && e.target!==modalShareBtn){ shareMenu.classList.add('hidden'); }
+      if(stickyShareMenu && !stickyShareMenu.contains(e.target) && e.target!==stickyShareBtn){ stickyShareMenu.classList.add('hidden'); }
+      document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>{ if(!m.contains(e.target)) m.classList.add('hidden'); });
     });
-    window.addEventListener('scroll', ()=>{
-      shareMenu.classList.add('hidden');
-      stickyShareMenu.classList.add('hidden');
-      document.querySelectorAll('#actionBars .share-menu-local')
-        .forEach(m=>m.classList.add('hidden'));
-    });
-    window.addEventListener('resize', ()=>{
-      shareMenu.classList.add('hidden');
-      stickyShareMenu.classList.add('hidden');
-      document.querySelectorAll('#actionBars .share-menu-local')
-        .forEach(m=>m.classList.add('hidden'));
-    });
+    window.addEventListener('scroll',  ()=>{ shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden'); document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>m.classList.add('hidden')); });
+    window.addEventListener('resize',  ()=>{ shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden'); document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>m.classList.add('hidden')); });
 
     async function trySystemShare(text){
       try{
-        const res  = await fetch(`${SITE_ORIGIN}/assets/BLITSTIEK_12SEP.png`);
+        const res = await fetch(`${SITE_ORIGIN}/assets/BLITSTIEK_12SEP.png`);
         const blob = await res.blob();
         const files = [new File([blob],'BLITSTIEK.png',{type:blob.type})];
         if(navigator.canShare && navigator.canShare({files})){
-          await navigator.share({
-            title:'BLITSTIEK – Kriptiek', text, files
-          });
+          await navigator.share({ title:'BLITSTIEK – Kriptiek', text, files });
           return true;
         }
       }catch{}
       try{
-        if(navigator.share){
-          await navigator.share({ text });
-          return true;
-        }
+        if(navigator.share){ await navigator.share({ text }); return true; }
       }catch{}
       return false;
     }
 
-    function openWhatsApp(text){
-      const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-      const w = window.open(url,'_blank','noopener,noreferrer');
-      if(!w && navigator.clipboard){
-        navigator.clipboard.writeText(text).then(()=>{
-          alert("Skakel gekopieer!");
-        });
-      }
-    }
-
-    mWA.onclick = () => { openWhatsApp(currentShareText()); shareMenu.classList.add('hidden'); };
+    mWA.onclick   = () => { openWhatsApp(currentShareText()); shareMenu.classList.add('hidden'); };
     mCopy.onclick = async () => {
       try{ await navigator.clipboard.writeText(currentShareText()); alert('Skakel gekopieer!'); }catch{}
       shareMenu.classList.add('hidden');
     };
-    mSys.onclick = async () => {
+    mSys.onclick  = async () => {
       const ok = await trySystemShare(currentShareText());
       if(!ok) openWhatsApp(currentShareText());
       shareMenu.classList.add('hidden');
     };
 
-    sWA.onclick = () => { openWhatsApp(currentShareText()); stickyShareMenu.classList.add('hidden'); };
+    sWA.onclick   = () => { openWhatsApp(currentShareText()); stickyShareMenu.classList.add('hidden'); };
     sCopy.onclick = async () => {
       try{ await navigator.clipboard.writeText(currentShareText()); alert('Skakel gekopieer!'); }catch{}
       stickyShareMenu.classList.add('hidden');
     };
-    sSys.onclick = async () => {
+    sSys.onclick  = async () => {
       const ok = await trySystemShare(currentShareText());
       if(!ok) openWhatsApp(currentShareText());
       stickyShareMenu.classList.add('hidden');
     };
 
+    function openWhatsApp(text){
+      const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+      const w = window.open(url,'_blank','noopener,noreferrer');
+      if(!w && navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>alert("Skakel gekopieer!")); }
+    }
     function enableStickyShare(payload){
       stickyPayload = { time: Number(payload?.time ?? t), target: TARGET };
       stickyShareBtn.classList.remove('hidden');
-      stickyShareBtn.onclick = (e)=>{
-        e.stopPropagation();
-        stickyShareMenu.classList.toggle('hidden');
-      };
+      stickyShareBtn.onclick = (e)=>{ e.stopPropagation(); stickyShareMenu.classList.toggle('hidden'); };
       try{
-        localStorage.setItem(
-          shareKey(GAME_ID),
-          JSON.stringify({ ...stickyPayload, at: Date.now() })
-        );
+        localStorage.setItem(shareKey(GAME_ID), JSON.stringify({ ...stickyPayload, at: Date.now() }));
       }catch{}
     }
     function maybeEnableStickyShareFromStorage(){
@@ -943,10 +1004,7 @@
         if(saved && Number.isFinite(saved.time) && saved.target){
           stickyPayload = { time:saved.time, target:saved.target };
           stickyShareBtn.classList.remove('hidden');
-          stickyShareBtn.onclick = (e)=>{
-            e.stopPropagation();
-            stickyShareMenu.classList.toggle('hidden');
-          };
+          stickyShareBtn.onclick = (e)=>{ e.stopPropagation(); stickyShareMenu.classList.toggle('hidden'); };
         }
       }catch{}
     }
@@ -956,31 +1014,22 @@
       const wa   = menu.querySelector('button.wa');
       const cp   = menu.querySelector('button.copy');
       const sys  = menu.querySelector('button.sys');
-
       btn.addEventListener('click', (e)=>{
         e.preventDefault(); e.stopPropagation();
-        document.querySelectorAll('#actionBars .share-menu-local')
-          .forEach(m=>{ if(m!==menu) m.classList.add('hidden'); });
+        document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>{ if(m!==menu) m.classList.add('hidden'); });
         menu.classList.toggle('hidden');
       });
-
       const txt = () => currentShareText();
       wa.onclick = () => { openWhatsApp(txt()); menu.classList.add('hidden'); };
-      cp.onclick = async () => {
-        try{ await navigator.clipboard.writeText(txt()); alert('Skakel gekopieer!'); }catch{}
-        menu.classList.add('hidden');
-      };
-      sys.onclick = async () => {
-        const ok = await trySystemShare(txt());
-        if(!ok) openWhatsApp(txt());
-        menu.classList.add('hidden');
-      };
+      cp.onclick = async () => { try{ await navigator.clipboard.writeText(txt()); alert('Skakel gekopieer!'); }catch{} menu.classList.add('hidden'); };
+      sys.onclick = async () => { const ok = await trySystemShare(txt()); if(!ok) openWhatsApp(txt()); menu.classList.add('hidden'); };
     }
     function initTileShareDropdowns(){
       document.querySelectorAll('.share-tile-wrap').forEach(wireShareTile);
     }
     initTileShareDropdowns();
 
+    /* ---- Leaderboard submit (canonical) ---- */
     async function submitTimeToBoard(){
       if(!user) return;
       const name    = currentUserName.slice(0,24);
@@ -989,30 +1038,38 @@
       const runsCol = collection(db,'blitstiekGames', GAME_ID, 'runs');
       const bestRef = doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid);
 
-      try{
+      // Upsert best (smaller is better). Keep timestamp for tiebreaks.
+      try {
         const bestSnap = await getDoc(bestRef);
         const prev = bestSnap.exists() ? Number(bestSnap.data().time) : null;
         if (prev == null || !Number.isFinite(prev) || newTime < prev){
-          await setDoc(bestRef,{
-            userName:name,time:newTime,timestamp:serverTimestamp()
-          },{merge:true});
+          await setDoc(bestRef, {
+            userName: name,
+            time: newTime,
+            timestamp: serverTimestamp()
+          }, { merge:true });
         } else {
-          await setDoc(bestRef,{userName:name},{merge:true});
+          // still update display name
+          await setDoc(bestRef, { userName: name }, { merge: true });
         }
-      }catch(e){ console.warn('BEST_UPDATE_FAILED',e); }
+      } catch (e) { console.warn('BEST_UPDATE_FAILED', e); }
 
-      try{
-        await setDoc(doc(runsCol),{
-          uid:user.uid,userName:name,time:newTime,timestamp:serverTimestamp()
+      // Append run (trim to last ~10 for the user)
+      try {
+        await setDoc(doc(runsCol), {
+          uid: user.uid,
+          userName: name,
+          time: newTime,
+          timestamp: serverTimestamp()
         });
-        const qy   = query(runsCol, where('uid','==',user.uid),
-                           orderBy('timestamp','desc'), limit(50));
+        const qy = query(runsCol, where('uid','==', user.uid), orderBy('timestamp','desc'), limit(50));
         const snap = await getDocs(qy);
         const toDelete = snap.docs.slice(10);
         await Promise.all(toDelete.map(d => deleteDoc(d.ref)));
-      }catch(e){ console.warn('RUN_APPEND/TRIM_FAILED',e); }
+      } catch (e) { console.warn('RUN_APPEND/TRIM_FAILED', e); }
     }
 
+    /* ==== Instant threshold awarding (client) ==== */
     function thresholdPointsFromSeconds(sec){
       if (sec < 30) return 200;
       if (sec < 60) return 100;
@@ -1024,7 +1081,7 @@
 
       const instant = thresholdPointsFromSeconds(Number(seconds));
       const playRef = doc(db, `userGames/${user.uid}/plays/${GAME_ID}`);
-      const snap    = await getDoc(playRef);
+      const snap = await getDoc(playRef);
 
       let prevInstant = 0, kPlace = 0;
       if (snap.exists()) {
@@ -1033,32 +1090,37 @@
         kPlace      = Number(d?.kBlit_place   || 0);
       }
 
+      // Upgrade 100 → 200 if improved today
       const newInstant = Math.max(prevInstant, instant);
+      // Client never applies supporter ×1.10; CF adds it at 23:55.
       const newTotal   = IS_ARCHIVE ? newInstant : (newInstant + kPlace);
 
-      await setDoc(playRef,{
-        finished:true,
-        kBlit_instant:newInstant,
-        kBlit_total:newTotal,
-        updatedAt:serverTimestamp()
-      },{merge:true});
+      await setDoc(playRef, {
+        finished: true,
+        kBlit_instant: newInstant,
+        kBlit_total: newTotal,
+        updatedAt: serverTimestamp()
+      }, { merge:true });
 
+      // Expose the running total on the leaderboard row for the green pill
       const bestRef = doc(db, `blitstiekGames/${GAME_ID}/leaderboard/${user.uid}`);
-      try{ await setDoc(bestRef,{kBlit_total:newTotal},{merge:true}); }catch{}
+      try { await setDoc(bestRef, { kBlit_total: newTotal }, { merge:true }); } catch {}
     }
 
+    /* ==== Keep leaderboard pill synced from play doc ==== */
     async function syncLeaderboardPillFromPlay(){
       if (!user || !GAME_ID) return;
       const playRef = doc(db, `userGames/${user.uid}/plays/${GAME_ID}`);
-      const snap    = await getDoc(playRef);
+      const snap = await getDoc(playRef);
       if (!snap.exists()) return;
-      const total   = Number(snap.data()?.kBlit_total || 0);
+      const total = Number(snap.data()?.kBlit_total || 0);
       const bestRef = doc(db, `blitstiekGames/${GAME_ID}/leaderboard/${user.uid}`);
-      try{ await setDoc(bestRef,{kBlit_total:total},{merge:true}); }catch{}
+      try { await setDoc(bestRef, { kBlit_total: total }, { merge:true }); } catch {}
     }
 
+    /* ---- LIVE Leaderboard (with green pill + TODAY fallback) ---- */
     function startLiveLeaderboard(){
-      if(lbUnsub){ lbUnsub(); lbUnsub=null; }
+      if(lbUnsub) { lbUnsub(); lbUnsub=null; }
 
       const qy = query(
         collection(db,'blitstiekGames', GAME_ID, 'leaderboard'),
@@ -1066,17 +1128,17 @@
         limit(25)
       );
 
-      lbUnsub = onSnapshot(qy,(snap)=>{
+      lbUnsub = onSnapshot(qy, (snap)=>{
         lbList.innerHTML = '';
 
-        if (snap.empty){
+        if (snap.empty) {
           bestText.textContent='--:--';
-          lbList.innerHTML =
-            `<li class="bg-green-100 font-medium"><span>Jy kan eerste op die leierbord wees!</span></li>`;
+          lbList.innerHTML = `<li class="bg-green-100 font-medium"><span>Jy kan eerste op die leierbord wees!</span></li>`;
           return;
         }
 
-        const rows = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+        // stable client-side tiebreak: time ASC, then timestamp ASC
+        const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         rows.sort((a,b)=>{
           const ta = Number(a.time) || Infinity;
           const tb = Number(b.time) || Infinity;
@@ -1090,10 +1152,9 @@
         if (top.length) bestText.textContent = fmt(Number(top[0].time));
 
         top.forEach(v => {
-          const you = user && v.id === user.uid
-            ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>'
-            : '';
+          const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
 
+          // Fallback: before CF runs at 23:55, show 100/200 if present via time
           const fallbackToday =
             !IS_ARCHIVE
               ? (Number(v.time) < 30 ? 200 : (Number(v.time) < 60 ? 100 : 0))
@@ -1109,20 +1170,18 @@
             : '';
 
           const li = document.createElement('li');
-          li.innerHTML =
-            `<span><strong>${(v.userName||'Onbekend')}</strong>${you}: ${fmt(Number(v.time))}</span>${pill}`;
+          li.innerHTML = `<span><strong>${(v.userName||'Onbekend')}</strong>${you}: ${fmt(Number(v.time))}</span>${pill}`;
           lbList.appendChild(li);
         });
 
-      },(err)=>{
-        console.warn('Leaderboard stream error:',err);
-        const msg = (err && (err.code || err.message))
-          ? ` – ${err.code||err.message}` : '';
-        lbList.innerHTML =
-          `<li class="px-2 py-1 rounded bg-red-50 text-red-700">Kon nie leierbord laai nie${msg}.</li>`;
+      }, (err) => {
+        console.warn('Leaderboard stream error:', err);
+        const msg = (err && (err.code || err.message)) ? ` – ${err.code||err.message}` : '';
+        lbList.innerHTML = `<li class="px-2 py-1 rounded bg-red-50 text-red-700">Kon nie leierbord laai nie${msg}.</li>`;
       });
     }
 
+    /* ---- Dynamic resolver ---- */
     async function resolveGameId(){
       if (explicitId) return explicitId;
       const todayId = `Game${todayISO()}`;
@@ -1130,40 +1189,39 @@
         const todaySnap = await getDoc(doc(db,'blitstiekGames',todayId));
         if (todaySnap.exists()) return todayId;
       } catch {}
-      try{
+      try {
         const gamesRef = collection(db,'blitstiekGames');
-        let q = query(gamesRef, where('status','==','active'),
-                      orderBy('createdAt','desc'), limit(1));
+        let q = query(gamesRef, where('status','==','active'), orderBy('createdAt','desc'), limit(1));
         let qs = await getDocs(q);
         if (!qs.empty) return qs.docs[0].id;
-
         q = query(gamesRef, orderBy('createdAt','desc'), limit(1));
         qs = await getDocs(q);
         if (!qs.empty) return qs.docs[0].id;
-      }catch{}
+      } catch {}
       return null;
     }
 
+    /* ---- Load game ---- */
     async function loadGame(){
       GAME_ID = await resolveGameId();
 
-      try{
-        if (GAME_ID){
+      // keep URL stable for sharing (avoid dangling "?")
+      try {
+        if (GAME_ID) {
           const urlObj = new URL(window.location.href);
           urlObj.searchParams.set('gameId', GAME_ID);
           urlObj.hash = '';
           const hasQuery = urlObj.searchParams.toString();
-          const canonical = hasQuery
-            ? `${urlObj.pathname}?${hasQuery}`
-            : urlObj.pathname;
+          const canonical = hasQuery ? `${urlObj.pathname}?${hasQuery}` : urlObj.pathname;
           const current = window.location.pathname + window.location.search;
-          if (current !== canonical){
-            history.replaceState(null,'',canonical);
+          if (current !== canonical) {
+            history.replaceState(null, '', canonical);
           }
         }
-      }catch{}
+      } catch {}
 
-      TODAY_ID  = `Game${todayISO()}`;
+      // NEW: set today's id & archive flag after GAME_ID is known
+      TODAY_ID = `Game${todayISO()}`;
       IS_ARCHIVE = !!(GAME_ID && GAME_ID !== TODAY_ID);
 
       if(!GAME_ID){
@@ -1180,14 +1238,11 @@
         return;
       }
 
-      const data = snap.data();
-      TARGET = (data.word||'').toUpperCase();
+      const data=snap.data();
+      TARGET=(data.word||'').toUpperCase();
 
       targetEl.innerHTML='';
-      (TARGET || '—').split('').forEach(ch=>{
-        const s=document.createElement('span');
-        s.textContent=ch; targetEl.appendChild(s);
-      });
+      (TARGET || '—').split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
 
       grid = Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
@@ -1195,44 +1250,45 @@
       maybeEnableStickyShareFromStorage();
       if(user){
         try{
-          const my = await getDoc(doc(
-            db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid
-          ));
+          const my = await getDoc(doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid));
           if(my.exists()){
             const v = my.data();
-            enableStickyShare({ time:v.time, target:TARGET });
+            enableStickyShare({ time: v.time, target: TARGET });
           }
         }catch{}
       }
 
       startLiveLeaderboard();
-      if (user) await syncLeaderboardPillFromPlay();
+
+      // If the user already has a play doc, sync pill to leaderboard
+      if (user) { await syncLeaderboardPillFromPlay(); }
     }
 
+    /* ---- Controls ---- */
     btnPause.addEventListener('click', ()=>togglePause());
     btnLeft .addEventListener('click', ()=>move(-1,0));
     btnRight.addEventListener('click',()=>move(1,0));
     btnDown .addEventListener('click', ()=>hardDrop());
 
+    /* ---- Finish ---- */
     async function end(win){
-      ended=true;
-      clearInterval(tInt); clearInterval(gInt);
+      ended=true; clearInterval(tInt); clearInterval(gInt);
       if(!win) return;
 
-      await submitTimeToBoard();
-      await awardThresholdForTime(t);
-      await syncLeaderboardPillFromPlay();
+      await submitTimeToBoard();             // write/upgrade best time
+      await awardThresholdForTime(t);        // instant 100/200 (or 0), update total & pill
+      await syncLeaderboardPillFromPlay();   // ensure pill reflects latest total
 
-      enableStickyShare({ time:t, target:TARGET });
+      enableStickyShare({ time: t, target: TARGET });
 
-      winMsg.innerHTML =
-        `Veels geluk, <strong>${currentUserName}</strong>, jy het <strong>${TARGET}</strong> in <strong>${fmt(t)}</strong> voltooi!`;
+      winMsg.innerHTML = `Veels geluk, <strong>${currentUserName}</strong>, jy het <strong>${TARGET}</strong> in <strong>${fmt(t)}</strong> voltooi!`;
       over.style.display='flex';
       modalCloseBtn.onclick = ()=>{ over.style.display='none'; };
 
       if(!user) showNRGate();
     }
 
+    /* ---- Init ---- */
     await loadGame();
   </script>
 
@@ -1252,8 +1308,7 @@
            class="inline-flex items-center justify-center px-5 py-3
                   bg-yellow-500 hover:bg-yellow-600 text-white font-bold
                   rounded-xl shadow-md transition duration-200"
-           aria-label="Help ons om Krip
-tiek gratis te hou">
+           aria-label="Help ons om Kriptiek gratis te hou">
           <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
         </a>
       </div>
