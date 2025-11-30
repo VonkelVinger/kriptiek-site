@@ -184,8 +184,7 @@
     <p class="welcome" id="welcomeLine">Welkom terug, <span id="playerName" class="font-semibold text-green-700">Speler</span>!</p>
   </header>
   <main class="flex-1">
-    <div class="max-w-3xl mx-auto px-4 py-4">
-
+    <div class="max-w-6xl mx-auto px-4 py-4">
       <!-- Admin backfill mini-panel -->
       <section id="adminPanel" class="mb-3">
         <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900 flex items-center gap-2 flex-wrap">
@@ -199,125 +198,154 @@
       </section>
 
       <div class="headline">TEIKENWOORD:</div>
-      <div id="targetWrap"><div id="target"><span>—</span></div></div>
 
-      <!-- small live row-multiplier hint -->
-      <div id="rowHint">Vermeningvuldiger: ×<b id="rowMultVal">1</b></div>
+      <!-- Layout: desktop = ad left + game right; mobile = game then ad below -->
+      <div class="mt-2 lg:flex lg:items-start lg:gap-8">
 
-      <!-- GAME card -->
-      <section class="card p-4">
-        <div class="relative game-wrap">
-          <div id="grid"></div>
-          <!-- FX overlay for floating scores -->
-          <div id="fx" aria-hidden="true"></div>
+        <!-- Desktop ad column -->
+        <aside class="hidden lg:block lg:w-64 xl:w-72">
+          <a href="/adverteer.html" class="block" title="Adverteer op Kriptiek">
+            <img
+              src="/assets/kriptiek-placeholder-300x250.png"
+              alt="Jou advertensie kan hier wees"
+              class="w-full h-auto rounded-xl shadow-md border border-slate-800"
+            />
+          </a>
+        </aside>
 
-          <!-- Success modal -->
-          <div id="over">
-            <div class="modal">
-              <p id="winMsg" class="mb-3 text-base"></p>
-              <div class="actions" style="display:flex;gap:.75rem;justify-content:center;margin-top:12px;">
-                <button id="modalShareBtn" type="button" class="btn">DEEL</button>
-                <button id="modalCloseBtn" type="button" class="btn gray">SLUIT</button>
+        <!-- Game column -->
+        <div class="flex-1">
+          <div id="targetWrap"><div id="target"><span>—</span></div></div>
+
+          <!-- small live row-multiplier hint -->
+          <div id="rowHint">Vermeningvuldiger: ×<b id="rowMultVal">1</b></div>
+
+          <!-- GAME card -->
+          <section class="card p-4">
+            <div class="relative game-wrap">
+              <div id="grid"></div>
+              <!-- FX overlay for floating scores -->
+              <div id="fx" aria-hidden="true"></div>
+
+              <!-- Success modal -->
+              <div id="over">
+                <div class="modal">
+                  <p id="winMsg" class="mb-3 text-base"></p>
+                  <div class="actions" style="display:flex;gap:.75rem;justify-content:center;margin-top:12px;">
+                    <button id="modalShareBtn" type="button" class="btn">DEEL</button>
+                    <button id="modalCloseBtn" type="button" class="btn gray">SLUIT</button>
+                  </div>
+                  <div id="shareMenu" class="hidden share-menu-local mx-auto mt-2">
+                    <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
+                    <div class="space-y-1">
+                      <button id="mWhatsApp" type="button">WhatsApp</button>
+                      <button id="mCopy" type="button">Kopieer skakel</button>
+                      <button id="mSystem" type="button">Stelsel-deel</button>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div id="shareMenu" class="hidden share-menu-local mx-auto mt-2">
-                <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
-                <div class="space-y-1">
-                  <button id="mWhatsApp" type="button">WhatsApp</button>
-                  <button id="mCopy" type="button">Kopieer skakel</button>
-                  <button id="mSystem" type="button">Stelsel-deel</button>
+
+              <!-- N-R gate -->
+              <div id="nrGate">
+                <div class="modal">
+                  <h3 class="text-lg font-extrabold mb-1">WELKOM BY SLIMSTIEK OP KRIPTIEK</h3>
+                  <p class="text-sm text-gray-600 mb-3">Jou opsies:</p>
+                  <div class="text-left space-y-2 text-gray-700">
+                    <p><strong>1)</strong> Speel Slimstiek as 'n ongeregistreerde speler met beperkte funksies.</p>
+                    <p><strong>2)</strong> <a href="/register.html" class="underline" id="gateRegLink">Registreer</a> sodat jy volle toegang tot alles op Kriptiek kan kry, insluitend Slimstiek.</p>
+                  </div>
+                  <div class="flex gap-2 justify-center mt-4">
+                    <button id="gateGuestBtn" class="btn">Speel sonder om te registreer</button>
+                    <button id="gateRegBtn"   class="btn gray">Registreer</button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- N-R gate -->
-          <div id="nrGate">
-            <div class="modal">
-              <h3 class="text-lg font-extrabold mb-1">WELKOM BY SLIMSTIEK OP KRIPTIEK</h3>
-              <p class="text-sm text-gray-600 mb-3">Jou opsies:</p>
-              <div class="text-left space-y-2 text-gray-700">
-                <p><strong>1)</strong> Speel Slimstiek as 'n ongeregistreerde speler met beperkte funksies.</p>
-                <p><strong>2)</strong> <a href="/register.html" class="underline" id="gateRegLink">Registreer</a> sodat jy volle toegang tot alles op Kriptiek kan kry, insluitend Slimstiek.</p>
-              </div>
-              <div class="flex gap-2 justify-center mt-4">
-                <button id="gateGuestBtn" class="btn">Speel sonder om te registreer</button>
-                <button id="gateRegBtn"   class="btn gray">Registreer</button>
+            <!-- Arrows -->
+            <div class="controls mt-3">
+              <div class="arrow-row">
+                <button id="btnLeft"  class="dir-btn" aria-label="Links">◀</button>
+                <button id="btnDown"  class="dir-btn" aria-label="Laat val">▼</button>
+                <button id="btnRight" class="dir-btn" aria-label="Regs">▶</button>
               </div>
             </div>
-          </div>
-        </div>
 
-        <!-- Arrows -->
-        <div class="controls mt-3">
-          <div class="arrow-row">
-            <button id="btnLeft"  class="dir-btn" aria-label="Links">◀</button>
-            <button id="btnDown"  class="dir-btn" aria-label="Laat val">▼</button>
-            <button id="btnRight" class="dir-btn" aria-label="Regs">▶</button>
-          </div>
-        </div>
+            <!-- Start/Pause -->
+            <div class="controls mt-3 flex items-center justify-center gap-2">
+              <button id="btnStart" class="btn">BEGIN</button>
+              <button id="btnPause" class="btn gray">POUSE</button>
+            </div>
 
-        <!-- Start/Pause -->
-        <div class="controls mt-3 flex items-center justify-center gap-2">
-          <button id="btnStart" class="btn">BEGIN</button>
-          <button id="btnPause" class="btn gray">POUSE</button>
-        </div>
+            <!-- Score pills -->
+            <div class="controls grid grid-cols-2 gap-2 mt-3">
+              <div id="bestBox" class="pill">Beste telling: <b>—</b></div>
+              <div id="scoreBox" class="pill">Huidige telling: <b>0</b></div>
+            </div>
 
-        <!-- Score pills -->
-        <div class="controls grid grid-cols-2 gap-2 mt-3">
-          <div id="bestBox" class="pill">Beste telling: <b>—</b></div>
-          <div id="scoreBox" class="pill">Huidige telling: <b>0</b></div>
-        </div>
+            <!-- ACTION BARS -->
+            <div class="controls mt-3" id="actionBars">
+              <!-- Guests -->
+              <div id="barNR" class="action-grid cols-3">
+                <a href="/register.html" title="Registreer">
+                  <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="120" height="120">
+                </a>
+                <a href="/forum.html" title="Gesels saam">
+                  <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
+                </a>
+                <div class="relative share-tile-wrap">
+                  <button type="button" class="share-tile" title="Deel">
+                    <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
+                  </button>
+                  <div class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
+                    <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
+                    <div class="space-y-1">
+                      <button class="wa" type="button">WhatsApp</button>
+                      <button class="copy" type="button">Kopieer skakel</button>
+                      <button class="sys" type="button">Stelsel-deel</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-        <!-- ACTION BARS -->
-        <div class="controls mt-3" id="actionBars">
-          <!-- Guests -->
-          <div id="barNR" class="action-grid cols-3">
-            <a href="/register.html" title="Registreer">
-              <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="120" height="120">
-            </a>
-            <a href="/forum.html" title="Gesels saam">
-              <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
-            </a>
-            <div class="relative share-tile-wrap">
-              <button type="button" class="share-tile" title="Deel">
-                <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
-              </button>
-              <div class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
-                <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
-                <div class="space-y-1">
-                  <button class="wa" type="button">WhatsApp</button>
-                  <button class="copy" type="button">Kopieer skakel</button>
-                  <button class="sys" type="button">Stelsel-deel</button>
+              <!-- Registered -->
+              <div id="barR" class="action-grid cols-3 hidden">
+                <a href="/forum.html" title="Gesels saam">
+                  <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
+                </a>
+                <a href="/slimstiek-argief.html" title="Slimstiek-argief">
+                  <img class="btn-img" src="/assets/S_ARGIEF_12SEP.png" alt="S Argief" width="120" height="120">
+                </a>
+                <div class="relative share-tile-wrap">
+                  <button type="button" class="share-tile" title="Deel">
+                    <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
+                  </button>
+                  <div class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
+                    <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
+                    <div class="space-y-1">
+                      <button class="wa" type="button">WhatsApp</button>
+                      <button class="copy" type="button">Kopieer skakel</button>
+                      <button class="sys" type="button">Stelsel-deel</button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </section>
 
-          <!-- Registered -->
-          <div id="barR" class="action-grid cols-3 hidden">
-            <a href="/forum.html" title="Gesels saam">
-              <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
+          <!-- Mobile ad under game -->
+          <div class="max-w-md mx-auto mt-6 lg:hidden">
+            <a href="/adverteer.html" class="block" title="Adverteer op Kriptiek">
+              <img
+                src="/assets/kriptiek-placeholder-300x250.png"
+                alt="Jou advertensie kan hier wees"
+                class="w-full h-auto rounded-xl shadow-md border border-slate-800"
+              />
             </a>
-            <a href="/slimstiek-argief.html" title="Slimstiek-argief">
-              <img class="btn-img" src="/assets/S_ARGIEF_12SEP.png" alt="S Argief" width="120" height="120">
-            </a>
-            <div class="relative share-tile-wrap">
-              <button type="button" class="share-tile" title="Deel">
-                <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
-              </button>
-              <div class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
-                <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
-                <div class="space-y-1">
-                  <button class="wa" type="button">WhatsApp</button>
-                  <button class="copy" type="button">Kopieer skakel</button>
-                  <button class="sys" type="button">Stelsel-deel</button>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
-      </section>
-
+      </div>
       <!-- HOE OM TE SPEEL -->
       <section class="mt-4 bg-white rounded shadow p-4">
         <h2 class="text-xl font-bold mb-2">HOE OM TE SPEEL</h2>
@@ -337,7 +365,7 @@
             <p class="font-semibold">3. Punte</p>
             <ul class="list-disc pl-6">
               <li><strong>+10 punte</strong> vir elke <em>paar</em> blokke wat verdwyn, <strong>vermenigvuldig met die boonste ry</strong> waarin daardie paar voorkom. (<em>Die heel onderste ry is ry 1; as die boonste van die twee blokke in ry 2 is, word die punte met 2 vermenigvuldig.</em>)</li>
-              <li><strong>+50 punte ekstra</strong> as <em>die letter en die kleur</em> van die twee blokke dieselfde is, ook vermenigvuldig met die boonste ry.</li>
+              <li><strong>+50 punte</strong> ekstra as <em>die letter en die kleur</em> van die twee blokke dieselfde is, ook vermenigvuldig met die boonste ry.</li>
               <li><strong>+100 bonuspunte</strong> sodra jy die teikenwoord gebou kry – die spel eindig dan ook.</li>
             </ul>
           </li>
@@ -369,6 +397,7 @@
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
+
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import { getAuth, onAuthStateChanged, getIdTokenResult } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
@@ -406,7 +435,6 @@
     const lbList     = document.getElementById('leaderboardList');
     const bestText   = document.querySelector('#bestBox b');
     const scoreText  = document.querySelector('#scoreBox b');
-
     const btnLeft = document.getElementById('btnLeft');
     const btnRight= document.getElementById('btnRight');
     const btnDown = document.getElementById('btnDown');
@@ -638,7 +666,6 @@
       const mult = H - y; // bottom = 1
       rowMultLabel.textContent = String(mult);
     }
-
     /* ---- Floating score badges ---- */
     function cellSizePx(){
       const raw = getComputedStyle(document.documentElement).getPropertyValue('--cellSize') || '32px';
