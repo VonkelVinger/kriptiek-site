@@ -195,6 +195,7 @@
       color:#6b7280;
     }
     #rowHint b{color:#065f46}
+
     /* Modal */
     #over{
       position:fixed;
@@ -393,48 +394,46 @@
       </section>
 
       <!-- MOBILE ad: visible under header / above game -->
-      <!-- MOBILE ad: visible under header / above game -->
-<div class="mt-2 mb-4 flex justify-center lg:hidden">
-  <a href="/advertisers.html"
-     class="inline-block rounded-2xl overflow-hidden shadow-lg border border-slate-800/40">
-    <img
-      src="/assets/kriptiek-placeholder-300x250.png"
-      alt="Jou advertensie kan hier wees – klik vir meer inligting"
-      class="block max-w-full md:w-[300px] h-auto">
-  </a>
-</div>
-     <!-- Game layout: centred column; desktop ads float left/right -->
-<div class="game-layout">
-  <!-- DESKTOP ad, positioned to the left of the centred column -->
-  <div id="desktopAdLeft" class="hidden lg:block absolute -left-[340px]">
-    <a href="/advertisers.html"
-       class="inline-block rounded-2xl overflow-hidden shadow-lg border border-slate-800/40">
-      <img
-        src="/assets/kriptiek-placeholder-300x250.png"
-        alt="Jou advertensie kan hier wees – klik vir meer inligting"
-        class="block max-w-full md:w-[300px] h-auto">
-    </a>
-  </div>
+      <div class="mt-2 mb-4 flex justify-center lg:hidden">
+        <a href="/advertisers.html"
+           class="inline-block rounded-2xl overflow-hidden shadow-lg border border-slate-800/40">
+          <img
+            src="/assets/kriptiek-placeholder-300x250.png"
+            alt="Jou advertensie kan hier wees – klik vir meer inligting"
+            class="block max-w-full md:w-[300px] h-auto">
+        </a>
+      </div>
 
-  <!-- DESKTOP ad, positioned to the right of the centred column -->
-  <div id="desktopAdRight" class="hidden lg:block absolute -right-[340px]">
-    <a href="/advertisers.html"
-       class="inline-block rounded-2xl overflow-hidden shadow-lg border border-slate-800/40">
-      <img
-        src="/assets/kriptiek-placeholder-300x250.png"
-        alt="Jou advertensie kan hier wees – klik vir meer inligting"
-        class="block max-w-full md:w-[300px] h-auto">
-    </a>
-  </div>
+      <!-- Game layout: centred column; desktop ads float left/right -->
+      <div class="game-layout">
+        <!-- DESKTOP ad, positioned to the left of the centred column -->
+        <div id="desktopAdLeft" class="hidden lg:block absolute -left-[340px]">
+          <a href="/advertisers.html"
+             class="inline-block rounded-2xl overflow-hidden shadow-lg border border-slate-800/40">
+            <img
+              src="/assets/kriptiek-placeholder-300x250.png"
+              alt="Jou advertensie kan hier wees – klik vir meer inligting"
+              class="block max-w-full md:w-[300px] h-auto">
+          </a>
+        </div>
 
-  <!-- Main game column (centred) -->
-  <div class="max-w-xl mx-auto">
+        <!-- DESKTOP ad, positioned to the right of the centred column -->
+        <div id="desktopAdRight" class="hidden lg:block absolute -right-[340px]">
+          <a href="/advertisers.html"
+             class="inline-block rounded-2xl overflow-hidden shadow-lg border border-slate-800/40">
+            <img
+              src="/assets/kriptiek-placeholder-300x250.png"
+              alt="Jou advertensie kan hier wees – klik vir meer inligting"
+              class="block max-w-full md:w-[300px] h-auto">
+          </a>
+        </div>
 
         <!-- Main game column (centred) -->
         <div class="max-w-xl mx-auto">
           <div class="headline">TEIKENWOORD:</div>
           <div id="targetWrap"><div id="target"><span>—</span></div></div>
           <div id="rowHint">Vermeningvuldiger: ×<b id="rowMultVal">1</b></div>
+
           <!-- GAME card -->
           <section class="card p-4">
             <div class="relative game-wrap">
@@ -555,7 +554,6 @@
           </section>
         </div><!-- /main game column -->
       </div><!-- /game-layout -->
-
       <!-- HOE OM TE SPEEL -->
       <section class="mt-4 bg-white rounded shadow p-4">
         <h2 class="text-xl font-bold mb-2">HOE OM TE SPEEL</h2>
@@ -607,6 +605,7 @@
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
+
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import { getAuth, onAuthStateChanged, getIdTokenResult } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
@@ -756,6 +755,7 @@
     }
     import { serverTimestamp as __serverTimestampForSTS } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
     function STS(){ const s = __serverTimestampForSTS(); s.__isServerTimestamp = true; return s; }
+
     /* ---- Auth ---- */
     let user=null, currentUserName='Speler', isAdminClient=false;
 
@@ -830,56 +830,54 @@
       adminPanel.style.display='none';
     }
 
- /* ---- Pixel-perfect grid sizing ---- */
-function resizeGrid(){
-  const wrap = gridEl.parentElement;
-  const availCss = Math.min(320, Math.floor(wrap.clientWidth));
-  const dpr = Math.max(1, window.devicePixelRatio || 1);
-  const toDp = v => Math.round(v * dpr);
-  const toCss = v => v / dpr;
-  const snap  = v => Math.floor(v / 8) * 8;
+    /* ---- Pixel-perfect grid sizing ---- */
+    function resizeGrid(){
+      const wrap = gridEl.parentElement;
+      const availCss = Math.min(320, Math.floor(wrap.clientWidth));
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      const toDp = v => Math.round(v * dpr);
+      const toCss = v => v / dpr;
+      const snap  = v => Math.floor(v / 8) * 8;
 
-  const availDp   = toDp(availCss);
-  const snappedDp = Math.max(toDp(240), snap(availDp));
-  const quantW    = toCss(snappedDp);
-  const cellCss   = Math.floor(quantW / 8);
-  const quantH    = cellCss * 10;
+      const availDp   = toDp(availCss);
+      const snappedDp = Math.max(toDp(240), snap(availDp));
+      const quantW    = toCss(snappedDp);
+      const cellCss   = Math.floor(quantW / 8);
+      const quantH    = cellCss * 10;
 
-  document.documentElement.style.setProperty('--cellSize', `${cellCss}px`);
-  document.documentElement.style.setProperty('--line', `${1 / dpr}px`);
-  gridEl.style.width  = quantW + 'px';
-  gridEl.style.height = quantH + 'px';
-  document.documentElement.style.setProperty('--gridW', quantW + 'px');
-  const glyph = Math.max(15, Math.min(28, Math.round(cellCss * 0.50)));
-  document.documentElement.style.setProperty('--cell-font', glyph + 'px');
-}
+      document.documentElement.style.setProperty('--cellSize', `${cellCss}px`);
+      document.documentElement.style.setProperty('--line', `${1 / dpr}px`);
+      gridEl.style.width  = quantW + 'px';
+      gridEl.style.height = quantH + 'px';
+      document.documentElement.style.setProperty('--gridW', quantW + 'px');
+      const glyph = Math.max(15, Math.min(28, Math.round(cellCss * 0.50)));
+      document.documentElement.style.setProperty('--cell-font', glyph + 'px');
+    }
 
-/* Align desktop ads (left/right) with the top of the playing grid */
-function alignDesktopAds(){
-  const layout = document.querySelector('.game-layout');
-  const grid   = document.getElementById('grid');
-  const leftAd  = document.getElementById('desktopAdLeft');
-  const rightAd = document.getElementById('desktopAdRight');
-  if (!layout || !grid) return;
+    /* Align desktop ads (left/right) with the top of the playing grid */
+    function alignDesktopAds(){
+      const layout = document.querySelector('.game-layout');
+      const grid   = document.getElementById('grid');
+      const leftAd  = document.getElementById('desktopAdLeft');
+      const rightAd = document.getElementById('desktopAdRight');
+      if (!layout || !grid) return;
 
-  const layoutRect = layout.getBoundingClientRect();
-  const gridRect   = grid.getBoundingClientRect();
-  const offset     = gridRect.top - layoutRect.top;
+      const layoutRect = layout.getBoundingClientRect();
+      const gridRect   = grid.getBoundingClientRect();
+      const offset     = gridRect.top - layoutRect.top;
 
-  // Simple sanity check so we don't fling the ads off-screen
-  if (offset >= 0 && offset < 2000){
-    if (leftAd)  leftAd.style.top  = offset + 'px';
-    if (rightAd) rightAd.style.top = offset + 'px';
-  }
-}
+      // Simple sanity check so we don't fling the ads off-screen
+      if (offset >= 0 && offset < 2000){
+        if (leftAd)  leftAd.style.top  = offset + 'px';
+        if (rightAd) rightAd.style.top = offset + 'px';
+      }
+    }
 
-function handleResize(){
-  resizeGrid();
-  alignDesktopAds();
-}
-window.addEventListener('resize', handleResize);
-
-
+    function handleResize(){
+      resizeGrid();
+      alignDesktopAds();
+    }
+    window.addEventListener('resize', handleResize);
     /* ---- Grid/Game ---- */
     const H=10, W=8;
     const COLORS=['#2196f3','#f44336','#4caf50','#ffc107','#9c27b0','#003366','#009688'];
@@ -892,20 +890,20 @@ window.addEventListener('resize', handleResize);
     let paused=false, ended=false, moving=false;
     let gInt=null;
     let score=0, bestScore=null;
-function drawGrid(){
-  gridEl.innerHTML = '';
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
-    const d = document.createElement('div');
-    d.className = 'cell';
-    d.dataset.x = x;
-    d.dataset.y = y;
-    gridEl.appendChild(d);
-  }
-  resizeGrid();
-  alignDesktopAds();
-}
 
-    
+    function drawGrid(){
+      gridEl.innerHTML = '';
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
+        const d = document.createElement('div');
+        d.className = 'cell';
+        d.dataset.x = x;
+        d.dataset.y = y;
+        gridEl.appendChild(d);
+      }
+      resizeGrid();
+      alignDesktopAds();
+    }
+
     function drawBlock(b){
       if(!b||b.x<0||b.x>=W||b.y<0||b.y>=H) return;
       const c=gridEl.querySelector(`.cell[data-x="${b.x}"][data-y="${b.y}"]`);
