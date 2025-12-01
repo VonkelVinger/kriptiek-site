@@ -10,9 +10,9 @@
     gtag('js', new Date());
     gtag('config', 'G-S9V4CMP1FP');
   </script>
-<!-- AdSense verification -->
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8199352351586797"
-        crossorigin="anonymous"></script>
+  <!-- AdSense verification -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8199352351586797"
+          crossorigin="anonymous"></script>
   
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -116,67 +116,115 @@
     <p class="text-sm text-gray-500">Welkom terug, <span id="playerName" class="font-semibold text-green-700"></span>!</p>
   </header>
 
-  <main class="flex-grow game-container">
-    <div id="clue" class="text-center text-lg mb-4 text-gray-700 font-semibold">Laai die leidraad...</div>
-    <div id="game-grid" class="mb-6"></div>
-    <div id="keyboard" class="mb-2"></div>
+  <main class="flex-grow">
+    <div class="max-w-6xl mx-auto px-4 py-4">
+      <div class="flex flex-col lg:flex-row lg:items-start lg:justify-center gap-4">
+        <!-- Desktop: left ad -->
+        <div class="hidden lg:block w-[300px] flex-shrink-0">
+          <a href="/advertisers.html" class="block rounded-xl overflow-hidden bg-white shadow">
+            <img
+              src="/assets/kriptiek-placeholder-300x250.png"
+              alt="Adverteer op Kriptiek"
+              class="w-full h-auto"
+              width="300"
+              height="250"
+            />
+          </a>
+        </div>
 
-    <p id="statusLine" class="text-center font-bold text-[#1e3a8a] mb-4" style="display:none;"></p>
-
-    <div id="barR" class="mt-4 hidden">
-      <div class="action-grid">
-        <a href="/forum.html" title="Gesels saam">
-          <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
-        </a>
-        <a href="/dilemma-argief.html" title="Dilemma-argief">
-          <img class="btn-img" src="/assets/D_ARGIEF_12SEP.png" alt="Argief" width="120" height="120">
-        </a>
-        <div class="relative">
-          <button id="tileShareBtn" type="button" title="Deel">
-            <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
-          </button>
-          <div id="shareMenuPersistent" class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
-            <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
-            <div class="space-y-1">
-              <button id="pWhatsApp" type="button">📲 WhatsApp</button>
-              <button id="pCopy" type="button">📋 Kopieer skakel</button>
-              <button id="pSystem" type="button">🖥️ Stelsel-deel</button>
-            </div>
+        <!-- Centre column with mobile ad + game -->
+        <div class="flex-1 flex flex-col items-stretch">
+          <!-- Mobile: single ad above the game -->
+          <div class="flex justify-center mb-4 lg:hidden">
+            <a href="/advertisers.html" class="block rounded-xl overflow-hidden bg-white shadow">
+              <img
+                src="/assets/kriptiek-placeholder-300x250.png"
+                alt="Adverteer op Kriptiek"
+                class="w-full h-auto max-w-[300px]"
+                width="300"
+                height="250"
+              />
+            </a>
           </div>
+
+          <div class="game-container">
+            <div id="clue" class="text-center text-lg mb-4 text-gray-700 font-semibold">Laai die leidraad...</div>
+            <div id="game-grid" class="mb-6"></div>
+            <div id="keyboard" class="mb-2"></div>
+
+            <p id="statusLine" class="text-center font-bold text-[#1e3a8a] mb-4" style="display:none;"></p>
+
+            <div id="barR" class="mt-4 hidden">
+              <div class="action-grid">
+                <a href="/forum.html" title="Gesels saam">
+                  <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
+                </a>
+                <a href="/dilemma-argief.html" title="Dilemma-argief">
+                  <img class="btn-img" src="/assets/D_ARGIEF_12SEP.png" alt="Argief" width="120" height="120">
+                </a>
+                <div class="relative">
+                  <button id="tileShareBtn" type="button" title="Deel">
+                    <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
+                  </button>
+                  <div id="shareMenuPersistent" class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
+                    <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
+                    <div class="space-y-1">
+                      <button id="pWhatsApp" type="button">📲 WhatsApp</button>
+                      <button id="pCopy" type="button">📋 Kopieer skakel</button>
+                      <button id="pSystem" type="button">🖥️ Stelsel-deel</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- HOW TO PLAY -->
+            <div class="mt-6 bg-white rounded shadow p-4">
+              <h2 class="text-xl font-bold mb-2">HOE OM DILEMMA TE SPEEL</h2>
+              <p class="text-gray-700 leading-relaxed mb-2">
+                Jy het ses kanse om die woord te raai.<br>
+                Jy mag vir elke probeerslag enige letters in enige volgorde kies, maar elke raaiskoot moet dieselfde aantal letters hê as die woord waarna jy soek. Dit hoef nie ook 'n woord te vorm nie.<br>
+                Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER.
+              </p>
+              <p class="text-gray-700 italic mb-2">WENK: Op kleiner skerms kan jy Dilemma soos 'n foto met jou vingers kleiner trek totdat dit heeltemal inpas.</p>
+              <p class="text-gray-700 leading-relaxed">
+                <span class="font-bold text-green-700">GROEN</span>: Die letter is in die antwoord en in die regte blokkie.<br>
+                <span class="font-bold text-yellow-600">GEEL</span>: Die letter is in die antwoord, maar nie in die regte blokkie nie.<br>
+                <span class="font-bold text-gray-500">GRYS</span>: Die letter is glad nie in die antwoord nie.
+              </p>
+              <h3 class="text-lg font-bold mt-4">JOU STATISTIEK</h3>
+              <ul class="list-disc pl-6 text-gray-700 space-y-1">
+                <li><strong>Een poging per raaisel:</strong> Wanneer jy klaar gespeel het (wen of verloor), word daardie raaisel vir jou gesluit.</li>
+                <li><strong>Ouer raaisels is oop:</strong> Jy kan enige vroeëre Dilemma doen as jy nog nie het nie.</li>
+                <li><strong>Alles tel:</strong> Elke voltooide raaisel tel vir jou <strong>sukseskoers</strong>.</li>
+                <li><strong>Wenlopie:</strong> Suksesvolle opeenvolgende Dilemmas (in enige volgorde).</li>
+                <li><strong>Leierbord:</strong> Jou naam verskyn net een keer per dag.</li>
+              </ul>
+            </div>
+
+            <!-- LEADERBOARD -->
+            <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
+              <div class="flex items-center justify-between mb-2">
+                <h2 class="text-xl font-bold">VANDAG SE BESTES</h2>
+              </div>
+              <ul id="leaderboardList" class="text-gray-700 text-left"><li>Laai...</li></ul>
+            </div>
+          </div> <!-- end .game-container -->
+        </div> <!-- end centre column -->
+
+        <!-- Desktop: right ad -->
+        <div class="hidden lg:block w-[300px] flex-shrink-0">
+          <a href="/advertisers.html" class="block rounded-xl overflow-hidden bg-white shadow">
+            <img
+              src="/assets/kriptiek-placeholder-300x250.png"
+              alt="Adverteer op Kriptiek"
+              class="w-full h-auto"
+              width="300"
+              height="250"
+            />
+          </a>
         </div>
       </div>
-    </div>
-
-    <!-- HOW TO PLAY -->
-    <div class="mt-6 bg-white rounded shadow p-4">
-      <h2 class="text-xl font-bold mb-2">HOE OM DILEMMA TE SPEEL</h2>
-      <p class="text-gray-700 leading-relaxed mb-2">
-        Jy het ses kanse om die woord te raai.<br>
-        Jy mag vir elke probeerslag enige letters in enige volgorde kies, maar elke raaiskoot moet dieselfde aantal letters hê as die woord waarna jy soek. Dit hoef nie ook 'n woord te vorm nie.<br>
-        Gebruik jou toetsbord of die een op die skerm om jou raaiskoot in te tik, dan ENTER.
-      </p>
-      <p class="text-gray-700 italic mb-2">WENK: Op kleiner skerms kan jy Dilemma soos 'n foto met jou vingers kleiner trek totdat dit heeltemal inpas.</p>
-      <p class="text-gray-700 leading-relaxed">
-        <span class="font-bold text-green-700">GROEN</span>: Die letter is in die antwoord en in die regte blokkie.<br>
-        <span class="font-bold text-yellow-600">GEEL</span>: Die letter is in die antwoord, maar nie in die regte blokkie nie.<br>
-        <span class="font-bold text-gray-500">GRYS</span>: Die letter is glad nie in die antwoord nie.
-      </p>
-      <h3 class="text-lg font-bold mt-4">JOU STATISTIEK</h3>
-      <ul class="list-disc pl-6 text-gray-700 space-y-1">
-        <li><strong>Een poging per raaisel:</strong> Wanneer jy klaar gespeel het (wen of verloor), word daardie raaisel vir jou gesluit.</li>
-        <li><strong>Ouer raaisels is oop:</strong> Jy kan enige vroeëre Dilemma doen as jy nog nie het nie.</li>
-        <li><strong>Alles tel:</strong> Elke voltooide raaisel tel vir jou <strong>sukseskoers</strong>.</li>
-        <li><strong>Wenlopie:</strong> Suksesvolle opeenvolgende Dilemmas (in enige volgorde).</li>
-        <li><strong>Leierbord:</strong> Jou naam verskyn net een keer per dag.</li>
-      </ul>
-    </div>
-
-    <!-- LEADERBOARD -->
-    <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
-      <div class="flex items-center justify-between mb-2">
-        <h2 class="text-xl font-bold">VANDAG SE BESTES</h2>
-      </div>
-      <ul id="leaderboardList" class="text-gray-700 text-left"><li>Laai...</li></ul>
     </div>
   </main>
 
@@ -210,7 +258,6 @@
       </div>
     </div>
   </div>
-
   <!-- ZA-safe resolver -->
   <script>
     function getZAISODate() {
@@ -403,7 +450,6 @@
     gridCols = targetWord.length || 5;
     document.getElementById("clue").textContent = game.clue || "Geen leidraad beskikbaar nie.";
   }
-
   function createGrid() {
     gameGrid.innerHTML = "";
     board = [];
@@ -685,7 +731,6 @@
       );
     } catch {}
   }
-
   async function ensureLeaderboardRow(summary) {
     try {
       if (!currentUid || !summary) return;
