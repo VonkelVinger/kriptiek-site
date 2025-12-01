@@ -1243,7 +1243,7 @@
     });
   </script>
 
-  <!-- BuyMeACoffee CTA above leaderboard (fixed class) -->
+  <!-- BuyMeACoffee CTA above leaderboard (fixed class, narrower on desktop) -->
   <script>
   document.addEventListener('DOMContentLoaded', () => {
     const target =
@@ -1255,9 +1255,10 @@
     if (!target || !target.parentElement) return;
 
     const wrap = document.createElement('div');
-    wrap.className = 'my-4';
+    // Center the CTA and limit its width to ~game column width
+    wrap.className = 'my-4 flex justify-center';
     wrap.innerHTML = `
-      <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800">
+      <div class="w-full max-w-[640px] rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800">
         <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
            onclick="window.gtag && gtag('event','bmac_click',{from:'dilemma-leaderboard'})"
            class="flex items-center justify-center w-full px-5 py-3
@@ -1271,6 +1272,7 @@
     target.parentElement.insertBefore(wrap, target);
   });
   </script>
+
 
 </body>
 </html>
