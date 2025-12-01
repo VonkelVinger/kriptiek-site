@@ -1256,19 +1256,20 @@
 
     const wrap = document.createElement('div');
     // Center the CTA and limit its width to ~game column width
-    wrap.className = 'my-4 flex justify-center';
-    wrap.innerHTML = `
-      <div class="w-full max-w-[640px] rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800">
-        <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
-           onclick="window.gtag && gtag('event','bmac_click',{from:'dilemma-leaderboard'})"
-           class="flex items-center justify-center w-full px-5 py-3
-                  bg-yellow-500 hover:bg-yellow-600 text-white font-bold
-                  rounded-xl shadow-md transition duration-200"
-           aria-label="Help ons om Kriptiek gratis te hou">
-          <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
-        </a>
-      </div>
-    `;
+    wrap.className = 'my-4 px-4 flex justify-center';
+wrap.innerHTML = `
+  <div class="w-full max-w-[900px] rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800">
+    <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
+       onclick="window.gtag && gtag('event','bmac_click',{from:'dilemma-leaderboard'})"
+       class="flex items-center justify-center w-full px-5 py-3
+              bg-yellow-500 hover:bg-yellow-600 text-white font-bold
+              rounded-xl shadow-md transition duration-200"
+       aria-label="Help ons om Kriptiek gratis te hou">
+      <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
+    </a>
+  </div>
+`;
+
     target.parentElement.insertBefore(wrap, target);
   });
   </script>
