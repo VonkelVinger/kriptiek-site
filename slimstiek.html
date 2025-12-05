@@ -846,11 +846,12 @@
       document.documentElement.style.setProperty('--line', `${1 / dpr}px`);
       gridEl.style.width  = quantW + 'px';
       gridEl.style.height = quantH + 'px';
-      document.documentElement.style.setProperty('--gridW', quantW + 'px`);
+      document.documentElement.style.setProperty('--gridW', quantW + 'px');
       const glyph = Math.max(15, Math.min(28, Math.round(cellCss * 0.50)));
-      document.documentElement.style.setProperty('--cell-font', glyph + 'px`);
+      document.documentElement.style.setProperty('--cell-font', glyph + 'px');
     }
 
+    
     /* Align desktop ads (left/right) with the top of the playing grid */
     function alignDesktopAds(){
       const layout = document.querySelector('.game-layout');
