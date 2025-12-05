@@ -133,8 +133,22 @@
           </a>
         </div>
 
-        <!-- Centre column with game -->
+        <!-- Centre column with mobile ad + game -->
         <div class="flex-1 flex flex-col items-stretch">
+          <!-- Mobile: single Brandkop ad above the game -->
+          <div class="flex justify-center mb-4 lg:hidden">
+            <a href="https://www.brandkopnc.co.za/" target="_blank" rel="noopener"
+               class="block rounded-xl overflow-hidden bg-white shadow">
+              <img
+                src="/assets/brandkop-300x250.png"
+                alt="Brandkop advertensie"
+                class="w-full h-auto max-w-[300px]"
+                width="300"
+                height="250"
+              />
+            </a>
+          </div>
+
           <div class="game-container">
             <div id="clue" class="text-center text-lg mb-4 text-gray-700 font-semibold">Laai die leidraad...</div>
             <div id="game-grid" class="mb-6"></div>
@@ -1226,7 +1240,7 @@
     });
   </script>
 
-  <!-- BuyMeACoffee CTA + Brandkop ad above leaderboard -->
+  <!-- BuyMeACoffee CTA above leaderboard (fixed class, narrower on desktop) -->
   <script>
   document.addEventListener('DOMContentLoaded', () => {
     const target =
@@ -1238,34 +1252,20 @@
     if (!target || !target.parentElement) return;
 
     const wrap = document.createElement('div');
+    // Center the CTA and limit its width to ~game column width
     wrap.className = 'my-4 px-4 flex justify-center';
     wrap.innerHTML = `
-      <div class="w-full max-w-[900px] space-y-4">
-        <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800">
-          <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
-             onclick="window.gtag && gtag('event','bmac_click',{from:'dilemma-leaderboard'})"
-             class="flex items-center justify-center w-full px-5 py-3
-                    bg-yellow-500 hover:bg-yellow-600 text-white font-bold
-                    rounded-xl shadow-md transition duration-200"
-             aria-label="Help ons om Kriptiek gratis te hou">
-            <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
-          </a>
-        </div>
-        <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-3 flex justify-center">
-          <a href="https://www.brandkopnc.co.za/" target="_blank" rel="noopener"
-             onclick="window.gtag && gtag('event','brandkop_click',{from:'dilemma-leaderboard'})"
-             class="block rounded-xl overflow-hidden bg-white shadow">
-            <img
-              src="/assets/brandkop-300x250.png"
-              alt="Brandkop advertensie"
-              class="w-full h-auto max-w-[300px]"
-              width="300"
-              height="250"
-            />
-          </a>
-        </div>
-      </div>
-    `;
+  <div class="w-full max-w-[900px] rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800">
+    <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
+       onclick="window.gtag && gtag('event','bmac_click',{from:'dilemma-leaderboard'})"
+       class="flex items-center justify-center w-full px-5 py-3
+              bg-yellow-500 hover:bg-yellow-600 text-white font-bold
+              rounded-xl shadow-md transition duration-200"
+       aria-label="Help ons om Kriptiek gratis te hou">
+      <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
+    </a>
+  </div>
+`;
 
     target.parentElement.insertBefore(wrap, target);
   });
