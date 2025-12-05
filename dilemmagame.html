@@ -119,12 +119,13 @@
   <main class="flex-grow">
     <div class="max-w-6xl mx-auto px-4 py-4">
       <div class="flex flex-col lg:flex-row lg:items-start lg:justify-center gap-4">
-        <!-- Desktop: left ad -->
+        <!-- Desktop: left Brandkop ad -->
         <div class="hidden lg:block w-[300px] flex-shrink-0">
-          <a href="/advertisers.html" class="block rounded-xl overflow-hidden bg-white shadow">
+          <a href="https://www.brandkopnc.co.za/" target="_blank" rel="noopener"
+             class="block rounded-xl overflow-hidden bg-white shadow">
             <img
-              src="/assets/kriptiek-placeholder-300x250.png"
-              alt="Adverteer op Kriptiek"
+              src="/assets/brandkop-300x250.png"
+              alt="Brandkop advertensie"
               class="w-full h-auto"
               width="300"
               height="250"
@@ -132,21 +133,8 @@
           </a>
         </div>
 
-        <!-- Centre column with mobile ad + game -->
+        <!-- Centre column with game -->
         <div class="flex-1 flex flex-col items-stretch">
-          <!-- Mobile: single ad above the game -->
-          <div class="flex justify-center mb-4 lg:hidden">
-            <a href="/advertisers.html" class="block rounded-xl overflow-hidden bg-white shadow">
-              <img
-                src="/assets/kriptiek-placeholder-300x250.png"
-                alt="Adverteer op Kriptiek"
-                class="w-full h-auto max-w-[300px]"
-                width="300"
-                height="250"
-              />
-            </a>
-          </div>
-
           <div class="game-container">
             <div id="clue" class="text-center text-lg mb-4 text-gray-700 font-semibold">Laai die leidraad...</div>
             <div id="game-grid" class="mb-6"></div>
@@ -212,12 +200,13 @@
           </div> <!-- end .game-container -->
         </div> <!-- end centre column -->
 
-        <!-- Desktop: right ad -->
+        <!-- Desktop: right Brandkop ad -->
         <div class="hidden lg:block w-[300px] flex-shrink-0">
-          <a href="/advertisers.html" class="block rounded-xl overflow-hidden bg-white shadow">
+          <a href="https://www.brandkopnc.co.za/" target="_blank" rel="noopener"
+             class="block rounded-xl overflow-hidden bg-white shadow">
             <img
-              src="/assets/kriptiek-placeholder-300x250.png"
-              alt="Adverteer op Kriptiek"
+              src="/assets/brandkop-300x250.png"
+              alt="Brandkop advertensie"
               class="w-full h-auto"
               width="300"
               height="250"
@@ -413,7 +402,7 @@
       const winIndex = rows.findIndex(r =>
         Array.isArray(r.states) && r.states.length && r.states.every(s => s === 'correct')
       );
-      return (winIndex >= 0) ? { didWin:true, guesses: winIndex+1 } : null; // never infer a loss
+      return (winIndex >= 0) ? { didWin:true, guesses:winIndex+1 } : null; // never infer a loss
     } catch { return null; }
   }
 
@@ -467,7 +456,6 @@
       gameGrid.appendChild(row);
     }
   }
-
   function createKeyboard() {
     keyboard.innerHTML = "";
     const layout = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
@@ -1017,7 +1005,6 @@
   onAuthStateChanged(auth, async (user) => {
     if (RESET_REQUESTED) return;
 
-    // Default: hide status & keep game enabled until we *know*
     statusLine.textContent = "";
     statusLine.style.display = "none";
 
@@ -1058,10 +1045,8 @@
     wireShareDropdown(tileShareBtn, pMenu);
     bindMenuActions(pMenu, { waBtn: pWA, copyBtn: pCopy, sysBtn: pSys });
 
-    // Decide whether the game is already finished for *today*
     let summary = null;
 
-    // 1) Firestore doc for today takes precedence
     try {
       const fsSnap = await getDoc(doc(db, "userGames", currentUid, "plays", GAME_ID));
       if (fsSnap?.exists() && isTodayGameId(fsSnap.id)) {
@@ -1072,13 +1057,11 @@
       }
     } catch {}
 
-    // 2) Otherwise, only accept a local loss/win explicitly for today
     if (!summary) {
       const local = readLocalResult();
       if (local && (local.didWin || localLossForToday())) {
         summary = local;
       } else {
-        // safe win-only inference from saved rows (never infers a loss)
         summary = deriveLocalSummaryFromProgress();
       }
     }
@@ -1243,7 +1226,7 @@
     });
   </script>
 
-  <!-- BuyMeACoffee CTA above leaderboard (fixed class, narrower on desktop) -->
+  <!-- BuyMeACoffee CTA + Brandkop ad above leaderboard -->
   <script>
   document.addEventListener('DOMContentLoaded', () => {
     const target =
@@ -1255,25 +1238,38 @@
     if (!target || !target.parentElement) return;
 
     const wrap = document.createElement('div');
-    // Center the CTA and limit its width to ~game column width
     wrap.className = 'my-4 px-4 flex justify-center';
-wrap.innerHTML = `
-  <div class="w-full max-w-[900px] rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800">
-    <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
-       onclick="window.gtag && gtag('event','bmac_click',{from:'dilemma-leaderboard'})"
-       class="flex items-center justify-center w-full px-5 py-3
-              bg-yellow-500 hover:bg-yellow-600 text-white font-bold
-              rounded-xl shadow-md transition duration-200"
-       aria-label="Help ons om Kriptiek gratis te hou">
-      <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
-    </a>
-  </div>
-`;
+    wrap.innerHTML = `
+      <div class="w-full max-w-[900px] space-y-4">
+        <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800">
+          <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
+             onclick="window.gtag && gtag('event','bmac_click',{from:'dilemma-leaderboard'})"
+             class="flex items-center justify-center w-full px-5 py-3
+                    bg-yellow-500 hover:bg-yellow-600 text-white font-bold
+                    rounded-xl shadow-md transition duration-200"
+             aria-label="Help ons om Kriptiek gratis te hou">
+            <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
+          </a>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-3 flex justify-center">
+          <a href="https://www.brandkopnc.co.za/" target="_blank" rel="noopener"
+             onclick="window.gtag && gtag('event','brandkop_click',{from:'dilemma-leaderboard'})"
+             class="block rounded-xl overflow-hidden bg-white shadow">
+            <img
+              src="/assets/brandkop-300x250.png"
+              alt="Brandkop advertensie"
+              class="w-full h-auto max-w-[300px]"
+              width="300"
+              height="250"
+            />
+          </a>
+        </div>
+      </div>
+    `;
 
     target.parentElement.insertBefore(wrap, target);
   });
   </script>
-
 
 </body>
 </html>
