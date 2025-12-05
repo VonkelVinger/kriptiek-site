@@ -332,23 +332,7 @@
   <main class="flex-1">
     <div class="max-w-5xl mx-auto px-4 py-4">
 
-      <!-- MOBILE Brandkop ad: under header / above game -->
-      <div class="mt-2 mb-4 flex justify-center lg:hidden">
-        <div class="bg-white shadow-md rounded-lg p-2 flex flex-col items-center border border-slate-200">
-          <div class="text-[10px] tracking-[0.2em] text-slate-500 uppercase mb-1 text-center">
-            ADVERTENSIE
-          </div>
-          <a href="https://www.brandkopnc.co.za/" target="_blank" rel="noopener"
-             class="inline-block rounded overflow-hidden">
-            <img
-              src="/assets/brandkop-300x250.png"
-              alt="Brandkop advertensie"
-              class="block w-[300px] max-w-full h-auto">
-          </a>
-        </div>
-      </div>
-
-      <!-- Game layout: centred column; desktop ads float left/right -->
+      <!-- Game layout: centred column; desktop Brandkop ads float left/right -->
       <div class="game-layout">
         <!-- DESKTOP Brandkop ad, left -->
         <div id="desktopAdLeft" class="hidden lg:block absolute -left-[340px]">
@@ -1309,17 +1293,19 @@
     /* ---- Init ---- */
     await loadGame();
   </script>
-
-  <!-- Buy Me a Coffee CTA above leaderboard -->
+  <!-- Buy Me a Coffee CTA + mobile Brandkop ad above leaderboard -->
   <script>
   document.addEventListener('DOMContentLoaded', () => {
-    const list = document.getElementById('leaderboardList');
+    const list    = document.getElementById('leaderboardList');
     const section = list ? list.closest('section') : null;
     if (!section || !section.parentElement) return;
 
-    const wrap = document.createElement('div');
-    wrap.className = 'my-4';
-    wrap.innerHTML = `
+    const container = section.parentElement;
+
+    // HELP ONS CTA (all breakpoints)
+    const ctaWrap = document.createElement('div');
+    ctaWrap.className = 'my-4';
+    ctaWrap.innerHTML = `
       <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800 text-center">
         <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
            onclick="gtag && gtag('event','bmac_click',{from:'blitstiek-leaderboard'})"
@@ -1331,7 +1317,28 @@
         </a>
       </div>
     `;
-    section.parentElement.insertBefore(wrap, section);
+    container.insertBefore(ctaWrap, section);
+
+    // MOBILE Brandkop ad directly under the CTA (hidden on lg+)
+    const adWrap = document.createElement('div');
+    adWrap.className = 'my-4 lg:hidden';
+    adWrap.innerHTML = `
+      <div class="flex justify-center">
+        <div class="bg-white shadow-md rounded-lg p-2 flex flex-col items-center border border-slate-200">
+          <div class="text-[10px] tracking-[0.2em] text-slate-500 uppercase mb-1 text-center">
+            ADVERTENSIE
+          </div>
+          <a href="https://www.brandkopnc.co.za/" target="_blank" rel="noopener"
+             class="inline-block rounded overflow-hidden">
+            <img
+              src="/assets/brandkop-300x250.png"
+              alt="Brandkop advertensie"
+              class="block w-[300px] max-w-full h-auto">
+          </a>
+        </div>
+      </div>
+    `;
+    container.insertBefore(adWrap, section);
   });
   </script>
 
