@@ -11,8 +11,8 @@
     gtag('config', 'G-S9V4CMP1FP');
   </script>
   <!-- AdSense verification -->
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8199352351586797"
-        crossorigin="anonymous"></script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8199352351586797"
+          crossorigin="anonymous"></script>
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
@@ -119,7 +119,6 @@
       font-weight:800;
       border:1px solid rgba(255,255,255,.12);
     }
-
     /* GRID */
     #grid{
       position:relative;
@@ -333,39 +332,54 @@
   <main class="flex-1">
     <div class="max-w-5xl mx-auto px-4 py-4">
 
-      <!-- MOBILE ad: visible under header / above game -->
+      <!-- MOBILE Brandkop ad: under header / above game -->
       <div class="mt-2 mb-4 flex justify-center lg:hidden">
-        <a href="/advertisers.html"
-           class="inline-block rounded-2xl overflow-hidden shadow-lg border border-slate-800/40">
-          <img
-            src="/assets/kriptiek-placeholder-300x250.png"
-            alt="Jou advertensie kan hier wees – klik vir meer inligting"
-            class="block max-w-full md:w-[300px] h-auto">
-        </a>
+        <div class="bg-white shadow-md rounded-lg p-2 flex flex-col items-center border border-slate-200">
+          <div class="text-[10px] tracking-[0.2em] text-slate-500 uppercase mb-1 text-center">
+            ADVERTENSIE
+          </div>
+          <a href="https://www.brandkopnc.co.za/" target="_blank" rel="noopener"
+             class="inline-block rounded overflow-hidden">
+            <img
+              src="/assets/brandkop-300x250.png"
+              alt="Brandkop advertensie"
+              class="block w-[300px] max-w-full h-auto">
+          </a>
+        </div>
       </div>
 
       <!-- Game layout: centred column; desktop ads float left/right -->
       <div class="game-layout">
-        <!-- DESKTOP ad, positioned to the left of the centred column -->
+        <!-- DESKTOP Brandkop ad, left -->
         <div id="desktopAdLeft" class="hidden lg:block absolute -left-[340px]">
-          <a href="/advertisers.html"
-             class="inline-block rounded-2xl overflow-hidden shadow-lg border border-slate-800/40">
-            <img
-              src="/assets/kriptiek-placeholder-300x250.png"
-              alt="Jou advertensie kan hier wees – klik vir meer inligting"
-              class="block max-w-full md:w-[300px] h-auto">
-          </a>
+          <div class="bg-white shadow-md rounded-lg p-2 flex flex-col items-center border border-slate-200">
+            <div class="text-[10px] tracking-[0.2em] text-slate-500 uppercase mb-1 text-center">
+              ADVERTENSIE
+            </div>
+            <a href="https://www.brandkopnc.co.za/" target="_blank" rel="noopener"
+               class="inline-block rounded overflow-hidden">
+              <img
+                src="/assets/brandkop-300x250.png"
+                alt="Brandkop advertensie"
+                class="block w-[300px] max-w-full h-auto">
+            </a>
+          </div>
         </div>
 
-        <!-- DESKTOP ad, positioned to the right of the centred column -->
+        <!-- DESKTOP Brandkop ad, right -->
         <div id="desktopAdRight" class="hidden lg:block absolute -right-[340px]">
-          <a href="/advertisers.html"
-             class="inline-block rounded-2xl overflow-hidden shadow-lg border border-slate-800/40">
-            <img
-              src="/assets/kriptiek-placeholder-300x250.png"
-              alt="Jou advertensie kan hier wees – klik vir meer inligting"
-              class="block max-w-full md:w-[300px] h-auto">
-          </a>
+          <div class="bg-white shadow-md rounded-lg p-2 flex flex-col items-center border border-slate-200">
+            <div class="text-[10px] tracking-[0.2em] text-slate-500 uppercase mb-1 text-center">
+              ADVERTENSIE
+            </div>
+            <a href="https://www.brandkopnc.co.za/" target="_blank" rel="noopener"
+               class="inline-block rounded overflow-hidden">
+              <img
+                src="/assets/brandkop-300x250.png"
+                alt="Brandkop advertensie"
+                class="block w-[300px] max-w-full h-auto">
+            </a>
+          </div>
         </div>
 
         <!-- Main game column (centred) -->
@@ -377,7 +391,6 @@
           <section class="card p-4">
             <div class="relative">
               <div id="grid"></div>
-
               <!-- Success modal -->
               <div id="over">
                 <div class="modal">
@@ -503,6 +516,7 @@
           </section>
         </div><!-- /main game column -->
       </div><!-- /game-layout -->
+
       <!-- HOE OM TE SPEEL -->
       <section class="mt-4 bg-white rounded shadow p-4">
         <h2 class="text-xl font-bold mb-2">HOE OM TE SPEEL</h2>
@@ -964,6 +978,12 @@
       return false;
     }
 
+    function openWhatsApp(text){
+      const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+      const w = window.open(url,'_blank','noopener,noreferrer');
+      if(!w && navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>alert("Skakel gekopieer!")); }
+    }
+
     mWA.onclick   = () => { openWhatsApp(currentShareText()); shareMenu.classList.add('hidden'); };
     mCopy.onclick = async () => {
       try{ await navigator.clipboard.writeText(currentShareText()); alert('Skakel gekopieer!'); }catch{}
@@ -986,11 +1006,6 @@
       stickyShareMenu.classList.add('hidden');
     };
 
-    function openWhatsApp(text){
-      const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-      const w = window.open(url,'_blank','noopener,noreferrer');
-      if(!w && navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>alert("Skakel gekopieer!")); }
-    }
     function enableStickyShare(payload){
       stickyPayload = { time: Number(payload?.time ?? t), target: TARGET };
       stickyShareBtn.classList.remove('hidden');
