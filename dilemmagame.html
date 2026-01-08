@@ -1,4 +1,3 @@
-<!-- dilemmagame.html (PART 1/7) -->
 <!DOCTYPE html>
 <html lang="af">
 <head>
@@ -120,7 +119,7 @@
   <main class="flex-grow">
     <div class="max-w-6xl mx-auto px-4 py-4">
       <div class="flex flex-col lg:flex-row lg:items-start lg:justify-center gap-4">
-<!-- dilemmagame.html (PART 2/7) -->
+
         <!-- Desktop: left Brandkop ad -->
         <div class="hidden lg:block w-[300px] flex-shrink-0">
           <div class="mb-2 text-center text-xs font-semibold tracking-wide uppercase text-gray-500">
@@ -193,7 +192,7 @@
                 <li><strong>Leierbord:</strong> Jou naam verskyn net een keer per dag.</li>
               </ul>
             </div>
-<!-- dilemmagame.html (PART 3/7) -->
+
             <!-- HELP ONS CTA (aligned with Slimstiek/Blitstiek) -->
             <div class="mt-4 mb-4 flex justify-center">
               <div class="w-full rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800">
@@ -288,7 +287,6 @@
       </div>
     </div>
   </div>
-
   <!-- ZA-safe resolver -->
   <script>
     function getZAISODate() {
@@ -306,7 +304,7 @@
     }
     window.GAME_ID = resolveGameId();
   </script>
-<!-- dilemmagame.html (PART 4/7) -->
+
   <!-- MAIN GAME MODULE -->
   <script type="module">
     import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
@@ -447,41 +445,11 @@
         return (winIndex >= 0) ? { didWin:true, guesses: winIndex+1 } : null; // never infer a loss
       } catch { return null; }
     }
-<!-- dilemmagame.html (PART 5/7) -->
+
     /* ---- Strict “today” helpers ---- */
     function todayPlain(){ return (window.GAME_ID || '').replace(/^Game/, ''); }
     function isTodayGameId(id){ return String(id||'').replace(/^Game/,'') === todayPlain(); }
     function localLossForToday(){ return localStorage.getItem(`${doneKey}-result`) === 'loss'; }
-
-    /* ---- NEW: previous-day answer helpers ---- */
-    function prevGameIdFrom(gameId) {
-      const plain = String(gameId || "").replace(/^Game/, ""); // "YYYY-MM-DD"
-      const [y, m, d] = plain.split("-").map(n => Number(n));
-      if (!y || !m || !d) return null;
-
-      // UTC math to avoid DST/timezone weirdness
-      const dt = new Date(Date.UTC(y, m - 1, d));
-      dt.setUTCDate(dt.getUTCDate() - 1);
-
-      const yyyy = dt.getUTCFullYear();
-      const mm = String(dt.getUTCMonth() + 1).padStart(2, "0");
-      const dd = String(dt.getUTCDate()).padStart(2, "0");
-      return `Game${yyyy}-${mm}-${dd}`;
-    }
-
-    async function fetchGameWord(gameId) {
-      // Try new + legacy IDs (same pattern you already use elsewhere)
-      const refNew = doc(db, "games", gameId);
-      const snapNew = await getDoc(refNew);
-      if (snapNew.exists()) return String(snapNew.data()?.word || "").toUpperCase();
-
-      const plain = String(gameId || "").replace(/^Game/, "");
-      const refLegacy = doc(db, "games", plain);
-      const snapLegacy = await getDoc(refLegacy);
-      if (snapLegacy.exists()) return String(snapLegacy.data()?.word || "").toUpperCase();
-
-      return "";
-    }
 
     /* ---- Safe game loader ---- */
     async function loadTodayGame(db) {
@@ -511,7 +479,6 @@
       gridCols = targetWord.length || 5;
       document.getElementById("clue").textContent = game.clue || "Geen leidraad beskikbaar nie.";
     }
-
     function createGrid() {
       gameGrid.innerHTML = "";
       board = [];
@@ -529,7 +496,6 @@
         gameGrid.appendChild(row);
       }
     }
-
     function createKeyboard() {
       keyboard.innerHTML = "";
       const layout = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
@@ -579,20 +545,18 @@
         currentCol++;
       }
     }
-
     function handleBackspace() {
       if (gameOver || currentCol === 0) return;
       currentCol--;
       board[currentRow][currentCol].textContent = "";
     }
-
     function handleEnter() {
       if (gameOver) return;
       if (currentCol < gridCols) return alert("Vul al die letters in!");
       const guess = board[currentRow].map(t => t.textContent).join("");
       checkGuessWithFlip(guess);
     }
-<!-- dilemmagame.html (PART 6/7) -->
+
     function computeStates(guess) {
       const states = new Array(gridCols).fill("absent");
       const letterCounts = {};
@@ -795,7 +759,7 @@
         );
       } catch {}
     }
-<!-- dilemmagame.html (PART 7/7) -->
+
     async function ensureLeaderboardRow(summary) {
       try {
         if (!currentUid || !summary) return;
@@ -969,7 +933,6 @@
       }
       return `Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${link}`;
     }
-
     function openWhatsApp(text){
       const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
       const w = window.open(url, '_blank', 'noopener,noreferrer');
@@ -990,7 +953,6 @@
       window.addEventListener('scroll', () => menuEl.classList.add('hidden'));
       window.addEventListener('resize', () => menuEl.classList.add('hidden'));
     }
-
     function bindMenuActions(menuEl, {waBtn, copyBtn, sysBtn}){
       const text = () => shareTextFromSummary(lastSummary);
       waBtn.onclick = () => { openWhatsApp(text()); menuEl.classList.add('hidden'); };
@@ -1035,15 +997,7 @@
       statusLine.textContent = `Jy kon nie hierdie Dilemma oplos nie`;
       statusLine.style.display = "block";
 
-      // 🔁 Show *previous day's* solution instead of today's
-      let prevWord = "";
-      try {
-        const prevId = prevGameIdFrom(GAME_ID);
-        if (prevId) prevWord = await fetchGameWord(prevId);
-      } catch {}
-
-      const fallback = "—";
-      resultMsg.textContent = `Jammer, ${displayName}! Gister se oplossing was ${prevWord || fallback}.`;
+      resultMsg.textContent = `Jammer, ${displayName}! Vandag se oplossing is ${targetWord}.`;
       modal.style.display = "flex";
 
       lastSummary = { didWin:false, guesses:null };
