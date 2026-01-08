@@ -328,6 +328,8 @@
     /* ✅ Define GAME_ID up-front so all functions can safely use it */
     const GAME_ID = window.GAME_ID;
 
+    const TODAY_GAME_ID = 'Game' + getZAISODate();
+
     /* ✅ Query params & reset flag */
     const __QP = new URLSearchParams(location.search);
     const RESET_REQUESTED = __QP.get('reset') === '1';
@@ -447,9 +449,16 @@
     }
 
     /* ---- Strict “today” helpers ---- */
-    function todayPlain(){ return (window.GAME_ID || '').replace(/^Game/, ''); }
-    function isTodayGameId(id){ return String(id||'').replace(/^Game/,'') === todayPlain(); }
-    function localLossForToday(){ return localStorage.getItem(`${doneKey}-result`) === 'loss'; }
+ function todayPlain(){ return String(TODAY_GAME_ID || '').replace(/^Game/, ''); }
+function isTodayGameId(id){
+  // true only when the id refers to *actual* ZA-today, not the archive date you’re viewing
+  return String(id||'').replace(/^Game/,'') === todayPlain();
+}
+function localLossForToday(){
+  // local loss is per-game (GAME_ID), so keep this as-is
+  return localStorage.getItem(`${doneKey}-result`) === 'loss';
+}
+
 
 /* ---- Previous-day answer helpers (for fail message) ---- */
 function prevGameIdFrom(gameId) {
