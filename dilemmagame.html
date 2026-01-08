@@ -451,6 +451,38 @@
     function isTodayGameId(id){ return String(id||'').replace(/^Game/,'') === todayPlain(); }
     function localLossForToday(){ return localStorage.getItem(`${doneKey}-result`) === 'loss'; }
 
+/* ---- Previous-day answer helpers (for fail message) ---- */
+function prevGameIdFrom(gameId) {
+  const plain = String(gameId || "").replace(/^Game/, ""); // "YYYY-MM-DD"
+  const [y, m, d] = plain.split("-").map(n => Number(n));
+  if (!y || !m || !d) return null;
+
+  // UTC math to avoid DST/timezone weirdness
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  dt.setUTCDate(dt.getUTCDate() - 1);
+
+  const yyyy = dt.getUTCFullYear();
+  const mm = String(dt.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(dt.getUTCDate()).padStart(2, "0");
+  return `Game${yyyy}-${mm}-${dd}`;
+}
+
+async function fetchGameWord(gameId) {
+  // Try new ID first
+  const refNew = doc(db, "games", gameId);
+  const snapNew = await getDoc(refNew);
+  if (snapNew.exists()) return String(snapNew.data()?.word || "").toUpperCase();
+
+  // Then legacy ID fallback (without "Game")
+  const plain = String(gameId || "").replace(/^Game/, "");
+  const refLegacy = doc(db, "games", plain);
+  const snapLegacy = await getDoc(refLegacy);
+  if (snapLegacy.exists()) return String(snapLegacy.data()?.word || "").toUpperCase();
+
+  return "";
+}
+
+    
     /* ---- Safe game loader ---- */
     async function loadTodayGame(db) {
       let gameRef  = doc(db, "games", GAME_ID);
@@ -997,7 +1029,17 @@
       statusLine.textContent = `Jy kon nie hierdie Dilemma oplos nie`;
       statusLine.style.display = "block";
 
-      resultMsg.textContent = `Jammer, ${displayName}! Vandag se oplossing is ${targetWord}.`;
+// 🔁 Show previous day's solution instead of today's
+let prevWord = "";
+try {
+  const prevId = prevGameIdFrom(GAME_ID);
+  if (prevId) prevWord = await fetchGameWord(prevId);
+} catch {}
+
+const fallback = "—";
+resultMsg.textContent = `Jammer, ${displayName}! Gister se oplossing was ${prevWord || fallback}.`;
+
+      
       modal.style.display = "flex";
 
       lastSummary = { didWin:false, guesses:null };
