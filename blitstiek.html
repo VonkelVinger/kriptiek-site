@@ -1192,8 +1192,8 @@
 
         top.forEach(v => {
           const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
-          const isSupporter = v?.isSupporter === true;
-const medaljes = normalizeMedaljes(v?.publicMedaljes || v?.inlineMedaljes || []);
+const isSupporter = v?.isSupporter === true;
+const medaljeArr = normalizeMedaljes(v?.publicMedaljes || v?.inlineMedaljes || []);
 
 
           // Fallback: before CF runs at 23:55, show 100/200 if present via time
@@ -1213,10 +1213,11 @@ const medaljes = normalizeMedaljes(v?.publicMedaljes || v?.inlineMedaljes || [])
 
           const safeName = escapeHtml(v.userName || 'Onbekend');
           const star = renderSupporterStar(isSupporter);
-          const medaljes = renderMedaljePillsInline(medaljes, isSupporter);
+const medaljesHtml = renderMedaljePillsInline(medaljeArr, isSupporter);
+
 
           const li = document.createElement('li');
-          li.innerHTML = `<span><strong>${safeName}</strong>${star}${medaljes}${you}: ${fmt(Number(v.time))}</span>${pill}`;
+li.innerHTML = `<span><strong>${safeName}</strong>${star}${medaljesHtml}${you}: ${fmt(Number(v.time))}</span>${pill}`;
           lbList.appendChild(li);
         });
 
