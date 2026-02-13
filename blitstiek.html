@@ -647,7 +647,6 @@
 
     /* ==== NEW: constants for the simplified scoring ==== */
     const LB_SIZE = 10; // leaderboard shows max 10
-    const userPublicMetaCache = new Map();
 
     function escapeHtml(v){
       return String(v ?? "")
@@ -682,23 +681,7 @@
         .join('');
     }
 
-    async function getUserPublicMeta(uid){
-      if (!uid) return { isSupporter:false, medaljes:[] };
-      if (userPublicMetaCache.has(uid)) return userPublicMetaCache.get(uid);
-      let meta = { isSupporter:false, medaljes:[] };
-      try {
-        const snap = await getDoc(doc(db, 'users', uid));
-        if (snap.exists()) {
-          const data = snap.data() || {};
-          const medaljes = normalizeMedaljes(
-            data.publicMedaljes || data.inlineMedaljes || data.blitstiekMedaljes || data.medaljes
-          );
-          meta = { isSupporter: data.isSupporter === true, medaljes };
-        }
-      } catch {}
-      userPublicMetaCache.set(uid, meta);
-      return meta;
-    }
+    
 
     /* ---- Mechanics ---- */
     const H = 10, W = 8;
@@ -1205,16 +1188,13 @@
         const top = rows.slice(0,LB_SIZE);
         if (top.length) bestText.textContent = fmt(Number(top[0].time));
 
-        const userMetaByUid = new Map();
-        await Promise.all(top.map(async (v) => {
-          const uid = v.uid || v.id;
-          userMetaByUid.set(uid, await getUserPublicMeta(uid));
-        }));
+        
 
         top.forEach(v => {
           const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
-          const uid = v.uid || v.id;
-          const meta = userMetaByUid.get(uid) || { isSupporter:false, medaljes:[] };
+          const isSupporter = v?.isSupporter === true;
+const medaljes = normalizeMedaljes(v?.publicMedaljes || v?.inlineMedaljes || []);
+
 
           // Fallback: before CF runs at 23:55, show 100/200 if present via time
           const fallbackToday =
@@ -1232,8 +1212,8 @@
             : '';
 
           const safeName = escapeHtml(v.userName || 'Onbekend');
-          const star = renderSupporterStar(meta.isSupporter);
-          const medaljes = renderMedaljePillsInline(meta.medaljes, meta.isSupporter);
+          const star = renderSupporterStar(isSupporter);
+          const medaljes = renderMedaljePillsInline(medaljes, isSupporter);
 
           const li = document.createElement('li');
           li.innerHTML = `<span><strong>${safeName}</strong>${star}${medaljes}${you}: ${fmt(Number(v.time))}</span>${pill}`;
