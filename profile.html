@@ -68,6 +68,7 @@
     .pill-green-dark { background:#e6fffb; color:#115e59; }
     .mono { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1, 'lnum' 1; }
     .mini { background:#f8fafc; border:1px solid #e5e7eb; border-radius:.75rem; padding:.5rem .6rem; text-align:center; }
+    .medalje-pill { display:inline-flex; align-items:center; border:1px solid #cbd5e1; background:#f8fafc; color:#334155; border-radius:999px; padding:.2rem .55rem; font-size:.72rem; font-weight:700; line-height:1; }
   </style>
 
   <!-- === Feature toggles === -->
@@ -321,6 +322,60 @@
     }
 
     /* === UI wiring === */
+
+
+    function normalizeMedaljes(raw){
+      if (!Array.isArray(raw)) return [];
+      return raw
+        .map((m)=>{
+          if (typeof m === "string") return m.trim();
+          if (m && typeof m.label === "string") return m.label.trim();
+          if (m && typeof m.name === "string") return m.name.trim();
+          return "";
+        })
+        .filter(Boolean);
+    }
+
+    function renderSupporterStarIcon(isSupporter){
+      return isSupporter === true
+        ? '<span class="inline-block ml-1 align-middle text-yellow-400" aria-label="Ondersteuner">★</span>'
+        : "";
+    }
+
+    function renderMedaljePillsInline(medaljes, isSupporter){
+      if (isSupporter !== true || !Array.isArray(medaljes) || !medaljes.length) return "";
+      return medaljes
+        .slice(0,2)
+        .map((label)=>`<span class="medalje-pill">${String(label).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')}</span>`)
+        .join("");
+    }
+
+    function renderProfileNameLine(name, userDoc){
+      const target = $("profileNameLine");
+      if (!target) return;
+      const isSupporter = userDoc?.isSupporter === true;
+      const medaljes = normalizeMedaljes(
+        userDoc?.publicMedaljes || userDoc?.inlineMedaljes || userDoc?.blitstiekMedaljes || userDoc?.medaljes
+      );
+      const safeName = String(name || "Gebruiker")
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;');
+      target.innerHTML = `<span class="font-black text-slate-900">${safeName}</span>${renderSupporterStarIcon(isSupporter)}${renderMedaljePillsInline(medaljes, isSupporter)}`;
+    }
+
+    function renderMedaljesCabinet(userDoc){
+      const cabinet = $("medaljesCabinet");
+      if (!cabinet) return;
+      const medaljes = normalizeMedaljes(userDoc?.blitstiekMedaljes || userDoc?.medaljes);
+      if (!medaljes.length){
+        cabinet.innerHTML = '<p class="text-sm text-slate-500">Nog geen medaljes hier nie.</p>';
+        return;
+      }
+      cabinet.innerHTML = medaljes
+        .map((label)=>`<span class="medalje-pill">${String(label).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')}</span>`)
+        .join(' ');
+    }
     function renderSupporterPill(state){
       const el=$("supporterPill"); if(!el) return;
       if(state.active){
@@ -369,6 +424,8 @@
       // Welcome name
       const displayName = user.displayName || userDoc.userName || "Gebruiker";
       setWbName(displayName);
+      renderProfileNameLine(displayName, userDoc);
+      renderMedaljesCabinet(userDoc);
 
       // Supporter banner
       const supporterBanner = document.getElementById("supporterBanner");
@@ -498,7 +555,8 @@
           Kliek hier om 'n betalende ondersteuner te word
         </a>
 
-        <h2 class="text-lg font-bold mb-2">Profiel</h2>
+        <h2 class="text-lg font-bold mb-1">Profiel</h2>
+        <div id="profileNameLine" class="flex flex-wrap items-center gap-1 mb-3 text-base"></div>
 
         <form id="profileForm" class="space-y-4" novalidate>
           <div>
@@ -517,6 +575,24 @@
             <button id="deleteBtn" type="button" class="px-4 py-2 rounded-xl bg-red-700 text-white font-bold">VERWYDER MY REKENING</button>
           </div>
         </form>
+      </section>
+
+      <!-- MEDALJES -->
+      <section class="card p-5 md:p-6">
+        <header class="flex flex-col gap-1 mb-3">
+          <div class="h-1 w-full bg-yellow-400 rounded-full"></div>
+          <h2 class="text-xl font-extrabold text-slate-900">MEDALJES</h2>
+        </header>
+
+        <p class="text-sm text-slate-700 mb-3">Medaljes wys langs jou naam as jy ’n betalende Ondersteuner is</p>
+        <a href="https://buymeacoffee.com/kriptiek" target="_blank" rel="noopener" class="inline-flex items-center px-4 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-600 text-white font-bold mb-4">Word ’n Ondersteuner</a>
+
+        <div class="rounded-xl border border-slate-200 bg-white p-4">
+          <h3 class="font-semibold text-slate-800 mb-2">Blitstiek medaljes-kabinet</h3>
+          <div id="medaljesCabinet" class="flex flex-wrap gap-2">
+            <p class="text-sm text-slate-500">Nog geen medaljes hier nie.</p>
+          </div>
+        </div>
       </section>
 
       <!-- OVERVIEW -->

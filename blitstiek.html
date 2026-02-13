@@ -647,6 +647,58 @@
 
     /* ==== NEW: constants for the simplified scoring ==== */
     const LB_SIZE = 10; // leaderboard shows max 10
+    const userPublicMetaCache = new Map();
+
+    function escapeHtml(v){
+      return String(v ?? "")
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function normalizeMedaljes(raw){
+      if (!Array.isArray(raw)) return [];
+      return raw
+        .map((m) => {
+          if (typeof m === 'string') return m.trim();
+          if (m && typeof m.label === 'string') return m.label.trim();
+          if (m && typeof m.name === 'string') return m.name.trim();
+          return '';
+        })
+        .filter(Boolean);
+    }
+
+    function renderSupporterStar(isSupporter){
+      if (!isSupporter) return '';
+      return '<span class="inline-block ml-1 align-middle text-yellow-400" aria-label="Ondersteuner">★</span>';
+    }
+
+    function renderMedaljePillsInline(medaljes, isSupporter){
+      if (!isSupporter || !Array.isArray(medaljes) || !medaljes.length) return '';
+      return medaljes.slice(0,2)
+        .map((label) => `<span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 ml-1 leading-none">${escapeHtml(label)}</span>`)
+        .join('');
+    }
+
+    async function getUserPublicMeta(uid){
+      if (!uid) return { isSupporter:false, medaljes:[] };
+      if (userPublicMetaCache.has(uid)) return userPublicMetaCache.get(uid);
+      let meta = { isSupporter:false, medaljes:[] };
+      try {
+        const snap = await getDoc(doc(db, 'users', uid));
+        if (snap.exists()) {
+          const data = snap.data() || {};
+          const medaljes = normalizeMedaljes(
+            data.publicMedaljes || data.inlineMedaljes || data.blitstiekMedaljes || data.medaljes
+          );
+          meta = { isSupporter: data.isSupporter === true, medaljes };
+        }
+      } catch {}
+      userPublicMetaCache.set(uid, meta);
+      return meta;
+    }
 
     /* ---- Mechanics ---- */
     const H = 10, W = 8;
@@ -1130,7 +1182,7 @@
         limit(25)
       );
 
-      lbUnsub = onSnapshot(qy, (snap)=>{
+      lbUnsub = onSnapshot(qy, async (snap)=>{
         lbList.innerHTML = '';
 
         if (snap.empty) {
@@ -1153,8 +1205,16 @@
         const top = rows.slice(0,LB_SIZE);
         if (top.length) bestText.textContent = fmt(Number(top[0].time));
 
+        const userMetaByUid = new Map();
+        await Promise.all(top.map(async (v) => {
+          const uid = v.uid || v.id;
+          userMetaByUid.set(uid, await getUserPublicMeta(uid));
+        }));
+
         top.forEach(v => {
           const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
+          const uid = v.uid || v.id;
+          const meta = userMetaByUid.get(uid) || { isSupporter:false, medaljes:[] };
 
           // Fallback: before CF runs at 23:55, show 100/200 if present via time
           const fallbackToday =
@@ -1171,8 +1231,12 @@
             ? `<span class="k-pill" title="Vandag se Blitstiek-telling">${pillValue}</span>`
             : '';
 
+          const safeName = escapeHtml(v.userName || 'Onbekend');
+          const star = renderSupporterStar(meta.isSupporter);
+          const medaljes = renderMedaljePillsInline(meta.medaljes, meta.isSupporter);
+
           const li = document.createElement('li');
-          li.innerHTML = `<span><strong>${(v.userName||'Onbekend')}</strong>${you}: ${fmt(Number(v.time))}</span>${pill}`;
+          li.innerHTML = `<span><strong>${safeName}</strong>${star}${medaljes}${you}: ${fmt(Number(v.time))}</span>${pill}`;
           lbList.appendChild(li);
         });
 
