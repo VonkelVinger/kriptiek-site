@@ -1,4 +1,4 @@
-<!-- PART 1/6 -->
+<!-- PART 1/4 — blitstiek.html (HTML + CSS + layout fixes) -->
 <!DOCTYPE html>
 <html lang="af">
 <head>
@@ -11,8 +11,9 @@
     gtag('js', new Date());
     gtag('config', 'G-S9V4CMP1FP');
   </script>
+
   <!-- AdSense verification -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8199352351586797"
+  <script async src="https://pagead2.googlesyndication.com/pagead/js?client=ca-pub-8199352351586797"
           crossorigin="anonymous"></script>
 
   <meta charset="UTF-8" />
@@ -120,6 +121,7 @@
       font-weight:800;
       border:1px solid rgba(255,255,255,.12);
     }
+
     /* GRID */
     #grid{
       position:relative;
@@ -315,8 +317,8 @@
     }
   </style>
 </head>
+
 <body class="min-h-screen flex flex-col">
-  <!-- HEADER -->
   <header>
     <div class="logo-container" aria-label="BLITSTIEK">
       <div class="letter-box">B</div><div class="letter-box">L</div>
@@ -329,11 +331,10 @@
       Welkom terug, <span id="playerName" class="font-semibold text-green-700">Speler</span>!
     </p>
   </header>
-<!-- PART 2/6 -->
+
   <main class="flex-1">
     <div class="max-w-5xl mx-auto px-4 py-4">
 
-      <!-- Game layout: centred column; desktop Brandkop ads float left/right -->
       <div class="game-layout">
         <!-- DESKTOP Brandkop ad, left -->
         <div id="desktopAdLeft" class="hidden lg:block absolute -left-[340px]">
@@ -343,10 +344,9 @@
             </div>
             <a href="https://www.brandkopnc.co.za/" target="_blank" rel="noopener"
                class="inline-block rounded overflow-hidden">
-              <img
-                src="/assets/brandkop-300x250.png"
-                alt="Brandkop advertensie"
-                class="block w-[300px] max-w-full h-auto">
+              <img src="/assets/brandkop-300x250.png"
+                   alt="Brandkop advertensie"
+                   class="block w-[300px] max-w-full h-auto">
             </a>
           </div>
         </div>
@@ -359,24 +359,22 @@
             </div>
             <a href="https://www.brandkopnc.co.za/" target="_blank" rel="noopener"
                class="inline-block rounded overflow-hidden">
-              <img
-                src="/assets/brandkop-300x250.png"
-                alt="Brandkop advertensie"
-                class="block w-[300px] max-w-full h-auto">
+              <img src="/assets/brandkop-300x250.png"
+                   alt="Brandkop advertensie"
+                   class="block w-[300px] max-w-full h-auto">
             </a>
           </div>
         </div>
 
-        <!-- Main game column (centred) -->
+        <!-- Main game column -->
         <div class="max-w-xl mx-auto">
           <div class="headline">TEIKENWOORD:</div>
           <div id="targetWrap"><div id="target"><span>—</span></div></div>
 
-          <!-- GAME card -->
           <section class="card p-4">
             <div class="relative">
               <div id="grid"></div>
-              <!-- Success modal -->
+
               <div id="over">
                 <div class="modal">
                   <p id="winMsg" class="mb-3 text-base"></p>
@@ -395,7 +393,6 @@
                 </div>
               </div>
 
-              <!-- N-R gate -->
               <div id="nrGate">
                 <div class="modal">
                   <h3 class="text-lg font-extrabold mb-1">WELKOM BY BLITSTIEK OP KRIPTIEK</h3>
@@ -403,9 +400,7 @@
                   <div class="text-left space-y-2 text-gray-700">
                     <p><strong>1)</strong> Speel Blitstiek as 'n ongeregistreerde speler met beperkte funksies.</p>
                     <p><strong>2)</strong>
-                      <a href="/register.html" class="underline" id="gateRegLink">
-                        Registreer
-                      </a>
+                      <a href="/register.html" class="underline" id="gateRegLink">Registreer</a>
                       sodat jy volle toegang tot alles op Kriptiek kan kry, insluitend Blitstiek.
                     </p>
                   </div>
@@ -417,7 +412,6 @@
               </div>
             </div>
 
-            <!-- Arrows -->
             <div class="controls mt-3">
               <div class="arrow-row">
                 <button id="btnLeft"  class="dir-btn" aria-label="Links">◀</button>
@@ -426,7 +420,6 @@
               </div>
             </div>
 
-            <!-- Start/Pause + Sticky share -->
             <div class="controls mt-3 flex items-center justify-center gap-2">
               <button id="btnStart" class="btn">BEGIN</button>
               <button id="btnPause" class="btn gray">POUSE</button>
@@ -444,15 +437,12 @@
               </div>
             </div>
 
-            <!-- Timers -->
             <div class="controls grid grid-cols-2 gap-2 mt-3">
               <div id="timeBox" class="pill">Jou tyd: <b>00:00</b></div>
               <div id="bestBox" class="pill">Beste tyd: <b>--:--</b></div>
             </div>
 
-            <!-- ACTION BARS -->
             <div class="controls mt-3" id="actionBars">
-              <!-- Guests -->
               <div id="barNR" class="action-grid">
                 <a href="/register.html" title="Registreer">
                   <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="120" height="120">
@@ -475,7 +465,6 @@
                 </div>
               </div>
 
-              <!-- Registered -->
               <div id="barR" class="action-grid hidden">
                 <a href="/forum.html" title="Gesels saam">
                   <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
@@ -499,44 +488,79 @@
               </div>
             </div>
           </section>
-        </div><!-- /main game column -->
-      </div><!-- /game-layout -->
-<!-- PART 3/6 -->
-      <!-- HOE OM TE SPEEL -->
-      <section class="mt-4 bg-white rounded shadow p-4 max-w-xl mx-auto">
-        <h2 class="text-xl font-bold mb-2">HOE OM TE SPEEL</h2>
-        <ol class="space-y-3 text-gray-700 leading-relaxed">
-          <li>
-            <p class="font-semibold">1. Doel</p>
-            <p>Probeer om die <strong>teikenwoord</strong> boaan so vinnig as moontlik te vorm deur die vallende blokke, elkeen met 'n lukrake letter en kleur, links en regs te skuif voordat hulle onder land. Die teikenwoord moet in <strong>dieselfde horisontale ry</strong> gevorm word, sonder gapings of verkeerde letters. Laat val onnodige letters eenkant, of gebruik die blokreëls onder om hulle te laat verdwyn. Daar is <strong>elke dag ’n nuwe woord</strong>, wat soms minder maar nooit meer as 8 letters sal hê nie.</p>
-          </li>
-          <li>
-            <p class="font-semibold">2. Kontroles</p>
-            <p><strong>Fisieke toetsbord:</strong> Gebruik die pyltjies op jou toetsbord om die blokke links en regs te skuif, en die spasiebalk om die blok dadelik tot onder te laat val.</p>
-            <p><strong>Raakskerm:</strong> Gebruik die pyltjies op die skerm om die blokke links en regs te skuif, en die af-pyltjie om die blok dadelik tot onder te laat val.</p>
-          </li>
-          <li>
-            <p class="font-semibold">3. Wat gebeur wanneer blokke aan mekaar raak?</p>
-            <ul class="list-disc pl-6">
-              <li><strong>Dieselfde letter:</strong> As twee blokke met dieselfde LETTER langs of op mekaar tot stilstand kom, verdwyn albei.</li>
-              <li><strong>Dieselfde kleur:</strong> As twee blokke met dieselfde KLEUR langs of op mekaar tot stilstand kom, verdwyn albei.</li>
-              <li><strong>MAAR:</strong> 'n Blok met 'n letter wat in die teikenwoord is, verdwyn nooit nie.</li>
-            </ul>
-          </li>
-          <li>
-            <p class="font-semibold">4. Leierbord</p>
-            <p>As jou tyd vinnig genoeg is, verskyn jou naam op die <strong>leierbord</strong>. Gebruik <strong>DEEL</strong> om jou vriende uit te daag en jou tyd te wys.</p>
-          </li>
-        </ol>
-      </section>
-
-      <!-- LEADERBOARD -->
-      <section class="card mt-6 p-4 max-w-xl mx-auto">
-        <div class="flex items-center justify-between mb-2">
-          <h2 class="text-xl font-bold">VANDAG SE TOP-10 (die afsnypunt is om 23:55)</h2>
         </div>
-        <ul id="leaderboardList" class="text-gray-700 text-left"><li>Laai...</li></ul>
-      </section>
+      </div>
+
+      <!-- BELOW-GAME WRAP (FIXED WIDTH: matches the centre column) -->
+      <div class="max-w-xl mx-auto">
+<!-- PART 2/4 — below-game sections + footer + start module script -->
+        <section class="mt-4 bg-white rounded shadow p-4">
+          <h2 class="text-xl font-bold mb-2">HOE OM TE SPEEL</h2>
+          <ol class="space-y-3 text-gray-700 leading-relaxed">
+            <li>
+              <p class="font-semibold">1. Doel</p>
+              <p>Probeer om die <strong>teikenwoord</strong> boaan so vinnig as moontlik te vorm deur die vallende blokke, elkeen met 'n lukrake letter en kleur, links en regs te skuif voordat hulle onder land. Die teikenwoord moet in <strong>dieselfde horisontale ry</strong> gevorm word, sonder gapings of verkeerde letters. Laat val onnodige letters eenkant, of gebruik die blokreëls onder om hulle te laat verdwyn. Daar is <strong>elke dag ’n nuwe woord</strong>, wat soms minder maar nooit meer as 8 letters sal hê nie.</p>
+            </li>
+            <li>
+              <p class="font-semibold">2. Kontroles</p>
+              <p><strong>Fisieke toetsbord:</strong> Gebruik die pyltjies op jou toetsbord om die blokke links en regs te skuif, en die spasiebalk om die blok dadelik tot onder te laat val.</p>
+              <p><strong>Raakskerm:</strong> Gebruik die pyltjies op die skerm om die blokke links en regs te skuif, en die af-pyltjie om die blok dadellik tot onder te laat val.</p>
+            </li>
+            <li>
+              <p class="font-semibold">3. Wat gebeur wanneer blokke aan mekaar raak?</p>
+              <ul class="list-disc pl-6">
+                <li><strong>Dieselfde letter:</strong> As twee blokke met dieselfde LETTER langs of op mekaar tot stilstand kom, verdwyn albei.</li>
+                <li><strong>Dieselfde kleur:</strong> As twee blokke met dieselfde KLEUR langs of op mekaar tot stilstand kom, verdwyn albei.</li>
+                <li><strong>MAAR:</strong> 'n Blok met 'n letter wat in die teikenwoord is, verdwyn nooit nie.</li>
+              </ul>
+            </li>
+            <li>
+              <p class="font-semibold">4. Leierbord</p>
+              <p>As jou tyd vinnig genoeg is, verskyn jou naam op die <strong>leierbord</strong>. Gebruik <strong>DEEL</strong> om jou vriende uit te daag en jou tyd te wys.</p>
+            </li>
+          </ol>
+        </section>
+
+        <!-- HELP ONS CTA (FIXED WIDTH) -->
+        <div class="my-4">
+          <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800 text-center">
+            <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
+               onclick="gtag && gtag('event','bmac_click',{from:'blitstiek-leaderboard'})"
+               class="inline-flex items-center justify-center px-5 py-3
+                      bg-yellow-500 hover:bg-yellow-600 text-white font-bold
+                      rounded-xl shadow-md transition duration-200"
+               aria-label="Help ons om Kriptiek gratis te hou">
+              <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- MOBILE Brandkop ad directly under the CTA (hidden on lg+) -->
+        <div class="my-4 lg:hidden">
+          <div class="flex justify-center">
+            <div class="bg-white shadow-md rounded-lg p-2 flex flex-col items-center border border-slate-200">
+              <div class="text-[10px] tracking-[0.2em] text-slate-500 uppercase mb-1 text-center">
+                ADVERTENSIE
+              </div>
+              <a href="https://www.brandkopnc.co.za/" target="_blank" rel="noopener"
+                 class="inline-block rounded overflow-hidden">
+                <img src="/assets/brandkop-300x250.png"
+                     alt="Brandkop advertensie"
+                     class="block w-[300px] max-w-full h-auto">
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- LEADERBOARD -->
+        <section class="card mt-6 p-4">
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="text-xl font-bold">VANDAG SE TOP-10 (die afsnypunt is om 23:55)</h2>
+          </div>
+          <ul id="leaderboardList" class="text-gray-700 text-left"><li>Laai...</li></ul>
+        </section>
+      </div><!-- /below-game wrap -->
+
     </div>
   </main>
 
@@ -552,16 +576,14 @@
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
 
-  <!-- Firebase + Logic -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
     import {
-      getFirestore, serverTimestamp, doc, getDoc, setDoc, deleteDoc,
+      initializeFirestore, serverTimestamp, doc, getDoc, setDoc, deleteDoc,
       collection, query, orderBy, limit, getDocs, onSnapshot, where
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
-    /* ---- Firebase ---- */
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
       authDomain: "kriptiek-c9ea2.firebaseapp.com",
@@ -573,9 +595,10 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db   = getFirestore(app);
 
-    /* ---- DOM ---- */
+    // FIX: Mitigates intermittent googleapis/QUIC/proxy issues by forcing long-polling.
+    const db = initializeFirestore(app, { experimentalForceLongPolling: true });
+
     const welcomeLine = document.getElementById('welcomeLine');
     const playerNameEl = document.getElementById('playerName');
     const targetEl   = document.getElementById('target');
@@ -612,9 +635,9 @@
     const gateRegBtn  = document.getElementById('gateRegBtn');
     const gateRegLink = document.getElementById('gateRegLink');
 
-    /* ---- Helpers ---- */
     const pad = n => String(n).padStart(2,'0');
     const fmt = s => s==null ? '--:--' : `${pad(Math.floor(s/60))}:${pad(s%60)}`;
+
     function nowZa(){
       const n=new Date(); const utc=n.getTime()+n.getTimezoneOffset()*60000;
       return new Date(utc + 120*60000);
@@ -625,30 +648,8 @@
     const explicitId = qs.get('gameId');
     const SITE_ORIGIN = location.hostname.endsWith('kriptiek.com') ? location.origin : 'https://www.kriptiek.com';
 
-    /* ---- Share helpers ---- */
-    const shareKey = gid => `blitstiekShare:${gid}`;
-    let stickyPayload = null;
-    function buildShareUrl(gameId){
-      const url = new URL('/blitstiek.html', SITE_ORIGIN);
-      if (gameId) url.searchParams.set('gameId', gameId);
-      return url.toString();
-    }
-    function shareTextLinkOnly(gid){
-      return `Kom speel vandag se BLITSTIEK op Kriptiek: ${buildShareUrl(gid)}`;
-    }
-    function buildWinShareText(payload){
-      const tt   = Number(payload?.time);
-      const word = String(payload?.target || TARGET || '—').toUpperCase();
-      return `Ek het ${word} op BLITSTIEK in ${fmt(tt)} gebou: ${buildShareUrl(GAME_ID)}`;
-    }
-    function currentShareText(){
-      return (stickyPayload && Number.isFinite(Number(stickyPayload.time)))
-        ? buildWinShareText(stickyPayload)
-        : shareTextLinkOnly(GAME_ID);
-    }
-
-    /* ==== NEW: constants for the simplified scoring ==== */
-    const LB_SIZE = 10; // leaderboard shows max 10
+    // Leaderboard size
+    const LB_SIZE = 10;
 
     function escapeHtml(v){
       return String(v ?? "")
@@ -682,7 +683,35 @@
         .map((label) => `<span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 ml-1 leading-none">${escapeHtml(label)}</span>`)
         .join('');
     }
-<!-- PART 4/6 -->
+
+    // Provisional (live) place points until CF finalises at 23:55
+    const PLACE_POINTS = [200,160,130,110,90,70,50,30,20,10];
+    function placePointsForRank(rank1){
+      return PLACE_POINTS[Math.max(0, Math.min(LB_SIZE, rank1)) - 1] ?? 0;
+    }
+<!-- PART 3/4 — module script ادامه (mechanics + auth + share + scoring sync) -->
+    /* ---- Share helpers ---- */
+    const shareKey = gid => `blitstiekShare:${gid}`;
+    let stickyPayload = null;
+    function buildShareUrl(gameId){
+      const url = new URL('/blitstiek.html', SITE_ORIGIN);
+      if (gameId) url.searchParams.set('gameId', gameId);
+      return url.toString();
+    }
+    function shareTextLinkOnly(gid){
+      return `Kom speel vandag se BLITSTIEK op Kriptiek: ${buildShareUrl(gid)}`;
+    }
+    function buildWinShareText(payload){
+      const tt   = Number(payload?.time);
+      const word = String(payload?.target || TARGET || '—').toUpperCase();
+      return `Ek het ${word} op BLITSTIEK in ${fmt(tt)} gebou: ${buildShareUrl(GAME_ID)}`;
+    }
+    function currentShareText(){
+      return (stickyPayload && Number.isFinite(Number(stickyPayload.time)))
+        ? buildWinShareText(stickyPayload)
+        : shareTextLinkOnly(GAME_ID);
+    }
+
     /* ---- Mechanics ---- */
     const H = 10, W = 8;
     const COLORS = ['#2196f3','#f44336','#4caf50','#ffc107','#9c27b0','#003366','#009688'];
@@ -693,8 +722,9 @@
     let user=null;
     let currentUserName='Speler';
     let GAME_ID=null, TARGET='';
-    let TODAY_ID=`Game${todayISO()}`; // set early; rechecked after resolve
-    let IS_ARCHIVE=false;             // set after GAME_ID is resolved
+    let TODAY_ID=`Game${todayISO()}`;
+    let IS_ARCHIVE=false;
+
     let grid=Array.from({length:H},()=>Array(W).fill(null));
     let cur=null, nxt=null;
     let paused=false, ended=false, moving=false;
@@ -718,20 +748,10 @@
       return 'Speler';
     }
 
-    /* ==== Keep leaderboard pill synced from play doc ==== */
-    async function syncLeaderboardPillFromPlay(){
-      if (!user || !GAME_ID) return;
-      const playRef = doc(db, `userGames/${user.uid}/plays/${GAME_ID}`);
-      const snap = await getDoc(playRef);
-      if (!snap.exists()) return;
-      const total = Number(snap.data()?.kBlit_total || 0);
-      const bestRef = doc(db, `blitstiekGames/${GAME_ID}/leaderboard/${user.uid}`);
-      try { await setDoc(bestRef, { kBlit_total: total }, { merge:true }); } catch {}
-    }
-
     /* ---- Auth ---- */
     onAuthStateChanged(auth, async (u)=>{
       user=u||null;
+
       if(user){
         currentUserName = await resolveUserName(user);
         playerNameEl.textContent = currentUserName;
@@ -739,11 +759,6 @@
         barR.classList.remove('hidden');
         barNR.classList.add('hidden');
         hideNRGate();
-
-        // FIX: if auth resolves after loadGame(), sync the pill now
-        if (GAME_ID) {
-          try { await syncLeaderboardPillFromPlay(); } catch {}
-        }
       } else {
         currentUserName = 'Speler';
         playerNameEl.textContent = currentUserName;
@@ -751,6 +766,14 @@
         barNR.classList.remove('hidden');
         barR.classList.add('hidden');
         showNRGate();
+      }
+
+      // FIX: force a leaderboard rerender once auth state is known (so "(jy)" updates)
+      if (GAME_ID) {
+        startLiveLeaderboard();
+        if (user) {
+          try { await syncLeaderboardPillFromPlay(); } catch {}
+        }
       }
     });
 
@@ -782,7 +805,6 @@
       document.documentElement.style.setProperty('--cell-font', glyph + 'px');
     }
 
-    /* Align desktop ads (left/right) with the top of the playing grid */
     function alignDesktopAds(){
       const layout = document.querySelector('.game-layout');
       const grid   = document.getElementById('grid');
@@ -816,6 +838,7 @@
       resizeGrid();
       alignDesktopAds();
     }
+
     function drawBlock(b){
       if(!b||b.x<0||b.x>=W||b.y<0||b.y>=H) return;
       const c=gridEl.querySelector(`.cell[data-x="${b.x}"][data-y="${b.y}"]`);
@@ -849,13 +872,14 @@
       else{ drawBlock(cur); }
       moving = false;
     }
+
     function hardDrop(){
       if(!cur||paused||ended) return;
       clearBlock(cur);
       while(cur.y<H-1 && !collide({...cur,y:cur.y+1})) cur.y++;
       place();
     }
-<!-- PART 5/6 -->
+
     async function place(){
       if(!cur||cur.y<0) return;
       grid[cur.y][cur.x]={...cur}; drawBlock(cur);
@@ -918,16 +942,21 @@
         }
       }
     }
-    function checkFail(){}
 
     /* ---- Timer & control ---- */
     function setTime(v){ t=v; timeText.textContent=fmt(v); }
     function start(){
-      ended=false; over.style.display='none'; shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden'); setTime(0);
+      ended=false;
+      over.style.display='none';
+      shareMenu.classList.add('hidden');
+      stickyShareMenu.classList.add('hidden');
+      setTime(0);
+
       grid=Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
       cur=createBlock(); nxt=createBlock(); drawBlock(cur);
       paused=false; btnPause.textContent='POUSE';
+
       clearInterval(tInt); clearInterval(gInt);
       gInt=setInterval(()=>{ if(!paused && !ended) move(0,1); },1000);
       tInt=setInterval(()=>{ if(!paused && !ended) setTime(t+1); },1000);
@@ -948,7 +977,6 @@
     gateRegBtn  .addEventListener('click', goRegister);
     gateRegLink .addEventListener('click', (e)=>{ e.preventDefault(); goRegister(); });
 
-    // gate-aware start
     btnStart.addEventListener('click', ()=>{
       if(!user && !guestGateBypassOnce){ showNRGate(); return; }
       guestGateBypassOnce=false; window.focus?.(); start();
@@ -1020,26 +1048,12 @@
     }
 
     mWA.onclick   = () => { openWhatsApp(currentShareText()); shareMenu.classList.add('hidden'); };
-    mCopy.onclick = async () => {
-      try{ await navigator.clipboard.writeText(currentShareText()); alert('Skakel gekopieer!'); }catch{}
-      shareMenu.classList.add('hidden');
-    };
-    mSys.onclick  = async () => {
-      const ok = await trySystemShare(currentShareText());
-      if(!ok) openWhatsApp(currentShareText());
-      shareMenu.classList.add('hidden');
-    };
+    mCopy.onclick = async () => { try{ await navigator.clipboard.writeText(currentShareText()); alert('Skakel gekopieer!'); }catch{} shareMenu.classList.add('hidden'); };
+    mSys.onclick  = async () => { const ok = await trySystemShare(currentShareText()); if(!ok) openWhatsApp(currentShareText()); shareMenu.classList.add('hidden'); };
 
     sWA.onclick   = () => { openWhatsApp(currentShareText()); stickyShareMenu.classList.add('hidden'); };
-    sCopy.onclick = async () => {
-      try{ await navigator.clipboard.writeText(currentShareText()); alert('Skakel gekopieer!'); }catch{}
-      stickyShareMenu.classList.add('hidden');
-    };
-    sSys.onclick  = async () => {
-      const ok = await trySystemShare(currentShareText());
-      if(!ok) openWhatsApp(currentShareText());
-      stickyShareMenu.classList.add('hidden');
-    };
+    sCopy.onclick = async () => { try{ await navigator.clipboard.writeText(currentShareText()); alert('Skakel gekopieer!'); }catch{} stickyShareMenu.classList.add('hidden'); };
+    sSys.onclick  = async () => { const ok = await trySystemShare(currentShareText()); if(!ok) openWhatsApp(currentShareText()); stickyShareMenu.classList.add('hidden'); };
 
     function enableStickyShare(payload){
       stickyPayload = { time: Number(payload?.time ?? t), target: TARGET };
@@ -1049,6 +1063,7 @@
         localStorage.setItem(shareKey(GAME_ID), JSON.stringify({ ...stickyPayload, at: Date.now() }));
       }catch{}
     }
+
     function maybeEnableStickyShareFromStorage(){
       try{
         const raw = localStorage.getItem(shareKey(GAME_ID));
@@ -1061,17 +1076,20 @@
         }
       }catch{}
     }
+
     function wireShareTile(wrapper){
       const btn  = wrapper.querySelector('.share-tile');
       const menu = wrapper.querySelector('.share-menu-local');
       const wa   = menu.querySelector('button.wa');
       const cp   = menu.querySelector('button.copy');
       const sys  = menu.querySelector('button.sys');
+
       btn.addEventListener('click', (e)=>{
         e.preventDefault(); e.stopPropagation();
         document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>{ if(m!==menu) m.classList.add('hidden'); });
         menu.classList.toggle('hidden');
       });
+
       const txt = () => currentShareText();
       wa.onclick = () => { openWhatsApp(txt()); menu.classList.add('hidden'); };
       cp.onclick = async () => { try{ await navigator.clipboard.writeText(txt()); alert('Skakel gekopieer!'); }catch{} menu.classList.add('hidden'); };
@@ -1081,7 +1099,7 @@
       document.querySelectorAll('.share-tile-wrap').forEach(wireShareTile);
     }
     initTileShareDropdowns();
-<!-- PART 6/6 -->
+
     /* ---- Leaderboard submit (canonical) ---- */
     async function submitTimeToBoard(){
       if(!user) return;
@@ -1091,7 +1109,6 @@
       const runsCol = collection(db,'blitstiekGames', GAME_ID, 'runs');
       const bestRef = doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid);
 
-      // Upsert best (smaller is better). Keep timestamp for tiebreaks.
       try {
         const bestSnap = await getDoc(bestRef);
         const prev = bestSnap.exists() ? Number(bestSnap.data().time) : null;
@@ -1102,12 +1119,10 @@
             timestamp: serverTimestamp()
           }, { merge:true });
         } else {
-          // still update display name
           await setDoc(bestRef, { userName: name }, { merge: true });
         }
       } catch (e) { console.warn('BEST_UPDATE_FAILED', e); }
 
-      // Append run (trim to last ~10 for the user)
       try {
         await setDoc(doc(runsCol), {
           uid: user.uid,
@@ -1122,7 +1137,7 @@
       } catch (e) { console.warn('RUN_APPEND/TRIM_FAILED', e); }
     }
 
-    /* ==== Instant threshold awarding (client) ==== */
+    /* ---- Scoring helpers ---- */
     function thresholdPointsFromSeconds(sec){
       if (sec < 30) return 200;
       if (sec < 60) return 100;
@@ -1143,24 +1158,50 @@
         kPlace      = Number(d?.kBlit_place   || 0);
       }
 
-      // Upgrade 100 → 200 if improved today
       const newInstant = Math.max(prevInstant, instant);
-      // Client never applies supporter ×1.10; CF adds it at 23:55.
       const newTotal   = IS_ARCHIVE ? newInstant : (newInstant + kPlace);
 
       await setDoc(playRef, {
         finished: true,
         kBlit_instant: newInstant,
+        kBlit_place: kPlace,
         kBlit_total: newTotal,
         updatedAt: serverTimestamp()
       }, { merge:true });
 
-      // Expose the running total on the leaderboard row for the green pill
+      // Write the components too (lets UI detect "final" once kBlit_place > 0)
       const bestRef = doc(db, `blitstiekGames/${GAME_ID}/leaderboard/${user.uid}`);
-      try { await setDoc(bestRef, { kBlit_total: newTotal }, { merge:true }); } catch {}
+      try {
+        await setDoc(bestRef, {
+          kBlit_instant: newInstant,
+          kBlit_place: kPlace,
+          kBlit_total: newTotal
+        }, { merge:true });
+      } catch {}
     }
 
-    /* ---- LIVE Leaderboard (with green pill; NO fallback) ---- */
+    async function syncLeaderboardPillFromPlay(){
+      if (!user || !GAME_ID) return;
+      const playRef = doc(db, `userGames/${user.uid}/plays/${GAME_ID}`);
+      const snap = await getDoc(playRef);
+      if (!snap.exists()) return;
+
+      const d = snap.data() || {};
+      const total   = Number(d?.kBlit_total || 0);
+      const instant = Number(d?.kBlit_instant || 0);
+      const place   = Number(d?.kBlit_place || 0);
+
+      const bestRef = doc(db, `blitstiekGames/${GAME_ID}/leaderboard/${user.uid}`);
+      try {
+        await setDoc(bestRef, {
+          kBlit_instant: instant,
+          kBlit_place: place,
+          kBlit_total: total
+        }, { merge:true });
+      } catch {}
+    }
+<!-- PART 4/4 — module script end (leaderboard render fixes + resolver + init) -->
+    /* ---- LIVE Leaderboard (fixed names + medals + NEW totals) ---- */
     function startLiveLeaderboard(){
       if(lbUnsub) { lbUnsub(); lbUnsub=null; }
 
@@ -1170,7 +1211,7 @@
         limit(25)
       );
 
-      lbUnsub = onSnapshot(qy, async (snap)=>{
+      lbUnsub = onSnapshot(qy, (snap)=>{
         lbList.innerHTML = '';
 
         if (snap.empty) {
@@ -1179,7 +1220,6 @@
           return;
         }
 
-        // stable client-side tiebreak: time ASC, then timestamp ASC
         const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         rows.sort((a,b)=>{
           const ta = Number(a.time) || Infinity;
@@ -1193,24 +1233,42 @@
         const top = rows.slice(0,LB_SIZE);
         if (top.length) bestText.textContent = fmt(Number(top[0].time));
 
-        top.forEach(v => {
-          const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
-          const isSupporter = v?.isSupporter === true;
-          const medaljeArr = normalizeMedaljes(v?.publicMedaljes || v?.inlineMedaljes || []);
+        top.forEach((v, idx) => {
+          const you = user && v.id === user.uid
+            ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>'
+            : '';
 
-          // NO fallback: only show pill when kBlit_total exists
-          const pillValue =
-            (typeof v.kBlit_total === 'number' && v.kBlit_total > 0)
-              ? v.kBlit_total
-              : 0;
+          const isSupporter = v?.isSupporter === true;
+          const medaljeArr  = normalizeMedaljes(v?.publicMedaljes || v?.inlineMedaljes || []);
+          const star        = renderSupporterStar(isSupporter);
+          const medaljesHtml= renderMedaljePillsInline(medaljeArr, isSupporter);
+
+          // FIX: Stop showing the old 100/200-only values.
+          // If CF has finalised (kBlit_place > 0), show stored kBlit_total.
+          // Otherwise, show a live provisional total = instant + provisional place points.
+          let pillValue = 0;
+
+          if (IS_ARCHIVE) {
+            pillValue = Number(v.kBlit_total || 0);
+          } else {
+            const storedPlace = Number(v.kBlit_place || 0);
+            const storedTotal = Number(v.kBlit_total || 0);
+            const isFinal = storedPlace > 0 && storedTotal > 0;
+
+            if (isFinal) {
+              pillValue = storedTotal;
+            } else {
+              const instant = thresholdPointsFromSeconds(Number(v.time));
+              const place   = placePointsForRank(idx + 1);
+              pillValue = instant + place;
+            }
+          }
 
           const pill = pillValue > 0
             ? `<span class="k-pill" title="Vandag se Blitstiek-telling">${pillValue}</span>`
             : '';
 
           const safeName = escapeHtml(v.userName || 'Onbekend');
-          const star = renderSupporterStar(isSupporter);
-          const medaljesHtml = renderMedaljePillsInline(medaljeArr, isSupporter);
 
           const li = document.createElement('li');
           li.innerHTML = `<span><strong>${safeName}</strong>${star}${medaljesHtml}${you}: ${fmt(Number(v.time))}</span>${pill}`;
@@ -1232,11 +1290,13 @@
         const todaySnap = await getDoc(doc(db,'blitstiekGames',todayId));
         if (todaySnap.exists()) return todayId;
       } catch {}
+
       try {
         const gamesRef = collection(db,'blitstiekGames');
         let q = query(gamesRef, where('status','==','active'), orderBy('createdAt','desc'), limit(1));
         let qs = await getDocs(q);
         if (!qs.empty) return qs.docs[0].id;
+
         q = query(gamesRef, orderBy('createdAt','desc'), limit(1));
         qs = await getDocs(q);
         if (!qs.empty) return qs.docs[0].id;
@@ -1248,7 +1308,6 @@
     async function loadGame(){
       GAME_ID = await resolveGameId();
 
-      // keep URL stable for sharing (avoid dangling "?")
       try {
         if (GAME_ID) {
           const urlObj = new URL(window.location.href);
@@ -1257,13 +1316,10 @@
           const hasQuery = urlObj.searchParams.toString();
           const canonical = hasQuery ? `${urlObj.pathname}?${hasQuery}` : urlObj.pathname;
           const current = window.location.pathname + window.location.search;
-          if (current !== canonical) {
-            history.replaceState(null, '', canonical);
-          }
+          if (current !== canonical) history.replaceState(null, '', canonical);
         }
       } catch {}
 
-      // set today's id & archive flag after GAME_ID is known
       TODAY_ID = `Game${todayISO()}`;
       IS_ARCHIVE = !!(GAME_ID && GAME_ID !== TODAY_ID);
 
@@ -1273,6 +1329,7 @@
         lbList.innerHTML = `<li class="text-red-600">Geen spel beskikbaar nie.</li>`;
         return;
       }
+
       const snap = await getDoc(doc(db,'blitstiekGames',GAME_ID));
       if(!snap.exists()){
         targetEl.innerHTML = `<span>—</span>`;
@@ -1285,12 +1342,17 @@
       TARGET=(data.word||'').toUpperCase();
 
       targetEl.innerHTML='';
-      (TARGET || '—').split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
+      (TARGET || '—').split('').forEach(ch=>{
+        const s=document.createElement('span');
+        s.textContent=ch;
+        targetEl.appendChild(s);
+      });
 
       grid = Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
 
       maybeEnableStickyShareFromStorage();
+
       if(user){
         try{
           const my = await getDoc(doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid));
@@ -1303,8 +1365,9 @@
 
       startLiveLeaderboard();
 
-      // If the user already has a play doc, sync pill to leaderboard
-      if (user) { await syncLeaderboardPillFromPlay(); }
+      if (user) {
+        try { await syncLeaderboardPillFromPlay(); } catch {}
+      }
     }
 
     /* ---- Controls ---- */
@@ -1318,9 +1381,9 @@
       ended=true; clearInterval(tInt); clearInterval(gInt);
       if(!win) return;
 
-      await submitTimeToBoard();             // write/upgrade best time
-      await awardThresholdForTime(t);        // instant 100/200 (or 0), update total & pill
-      await syncLeaderboardPillFromPlay();   // ensure pill reflects latest total
+      await submitTimeToBoard();
+      await awardThresholdForTime(t);
+      await syncLeaderboardPillFromPlay();
 
       enableStickyShare({ time: t, target: TARGET });
 
@@ -1331,58 +1394,8 @@
       if(!user) showNRGate();
     }
 
-    /* ---- Init ---- */
+    // Init
     await loadGame();
   </script>
-
-  <!-- Buy Me a Coffee CTA + mobile Brandkop ad above leaderboard -->
-  <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const list    = document.getElementById('leaderboardList');
-    const section = list ? list.closest('section') : null;
-    if (!section || !section.parentElement) return;
-
-    const container = section.parentElement;
-
-    // HELP ONS CTA (centered to match game column)
-    const ctaWrap = document.createElement('div');
-    ctaWrap.className = 'my-4 max-w-xl mx-auto';
-    ctaWrap.innerHTML = `
-      <div class="w-full rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800 text-center">
-        <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
-           onclick="gtag && gtag('event','bmac_click',{from:'blitstiek-leaderboard'})"
-           class="inline-flex items-center justify-center px-5 py-3
-                  bg-yellow-500 hover:bg-yellow-600 text-white font-bold
-                  rounded-xl shadow-md transition duration-200"
-           aria-label="Help ons om Kriptiek gratis te hou">
-          <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
-        </a>
-      </div>
-    `;
-    container.insertBefore(ctaWrap, section);
-
-    // MOBILE Brandkop ad directly under the CTA (hidden on lg+), centered to match game column
-    const adWrap = document.createElement('div');
-    adWrap.className = 'my-4 lg:hidden max-w-xl mx-auto';
-    adWrap.innerHTML = `
-      <div class="flex justify-center">
-        <div class="bg-white shadow-md rounded-lg p-2 flex flex-col items-center border border-slate-200">
-          <div class="text-[10px] tracking-[0.2em] text-slate-500 uppercase mb-1 text-center">
-            ADVERTENSIE
-          </div>
-          <a href="https://www.brandkopnc.co.za/" target="_blank" rel="noopener"
-             class="inline-block rounded overflow-hidden">
-            <img
-              src="/assets/brandkop-300x250.png"
-              alt="Brandkop advertensie"
-              class="block w-[300px] max-w-full h-auto">
-          </a>
-        </div>
-      </div>
-    `;
-    container.insertBefore(adWrap, section);
-  });
-  </script>
-
 </body>
 </html>
