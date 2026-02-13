@@ -1,3 +1,4 @@
+<!-- PART 1/6 -->
 <!DOCTYPE html>
 <html lang="af">
 <head>
@@ -328,7 +329,7 @@
       Welkom terug, <span id="playerName" class="font-semibold text-green-700">Speler</span>!
     </p>
   </header>
-
+<!-- PART 2/6 -->
   <main class="flex-1">
     <div class="max-w-5xl mx-auto px-4 py-4">
 
@@ -500,11 +501,10 @@
           </section>
         </div><!-- /main game column -->
       </div><!-- /game-layout -->
-
+<!-- PART 3/6 -->
       <!-- HOE OM TE SPEEL -->
-<section class="mt-4 bg-white rounded shadow p-4 max-w-xl mx-auto">
-
-      <h2 class="text-xl font-bold mb-2">HOE OM TE SPEEL</h2>
+      <section class="mt-4 bg-white rounded shadow p-4 max-w-xl mx-auto">
+        <h2 class="text-xl font-bold mb-2">HOE OM TE SPEEL</h2>
         <ol class="space-y-3 text-gray-700 leading-relaxed">
           <li>
             <p class="font-semibold">1. Doel</p>
@@ -531,7 +531,7 @@
       </section>
 
       <!-- LEADERBOARD -->
-     <section class="card mt-6 p-4 max-w-xl mx-auto">
+      <section class="card mt-6 p-4 max-w-xl mx-auto">
         <div class="flex items-center justify-between mb-2">
           <h2 class="text-xl font-bold">VANDAG SE TOP-10 (die afsnypunt is om 23:55)</h2>
         </div>
@@ -551,6 +551,7 @@
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
+
   <!-- Firebase + Logic -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
@@ -681,9 +682,7 @@
         .map((label) => `<span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 ml-1 leading-none">${escapeHtml(label)}</span>`)
         .join('');
     }
-
-    
-
+<!-- PART 4/6 -->
     /* ---- Mechanics ---- */
     const H = 10, W = 8;
     const COLORS = ['#2196f3','#f44336','#4caf50','#ffc107','#9c27b0','#003366','#009688'];
@@ -695,7 +694,7 @@
     let currentUserName='Speler';
     let GAME_ID=null, TARGET='';
     let TODAY_ID=`Game${todayISO()}`; // set early; rechecked after resolve
-    let IS_ARCHIVE=false;             // NEW: set after GAME_ID is resolved
+    let IS_ARCHIVE=false;             // set after GAME_ID is resolved
     let grid=Array.from({length:H},()=>Array(W).fill(null));
     let cur=null, nxt=null;
     let paused=false, ended=false, moving=false;
@@ -719,6 +718,17 @@
       return 'Speler';
     }
 
+    /* ==== Keep leaderboard pill synced from play doc ==== */
+    async function syncLeaderboardPillFromPlay(){
+      if (!user || !GAME_ID) return;
+      const playRef = doc(db, `userGames/${user.uid}/plays/${GAME_ID}`);
+      const snap = await getDoc(playRef);
+      if (!snap.exists()) return;
+      const total = Number(snap.data()?.kBlit_total || 0);
+      const bestRef = doc(db, `blitstiekGames/${GAME_ID}/leaderboard/${user.uid}`);
+      try { await setDoc(bestRef, { kBlit_total: total }, { merge:true }); } catch {}
+    }
+
     /* ---- Auth ---- */
     onAuthStateChanged(auth, async (u)=>{
       user=u||null;
@@ -729,6 +739,11 @@
         barR.classList.remove('hidden');
         barNR.classList.add('hidden');
         hideNRGate();
+
+        // FIX: if auth resolves after loadGame(), sync the pill now
+        if (GAME_ID) {
+          try { await syncLeaderboardPillFromPlay(); } catch {}
+        }
       } else {
         currentUserName = 'Speler';
         playerNameEl.textContent = currentUserName;
@@ -840,7 +855,7 @@
       while(cur.y<H-1 && !collide({...cur,y:cur.y+1})) cur.y++;
       place();
     }
-
+<!-- PART 5/6 -->
     async function place(){
       if(!cur||cur.y<0) return;
       grid[cur.y][cur.x]={...cur}; drawBlock(cur);
@@ -1066,7 +1081,7 @@
       document.querySelectorAll('.share-tile-wrap').forEach(wireShareTile);
     }
     initTileShareDropdowns();
-
+<!-- PART 6/6 -->
     /* ---- Leaderboard submit (canonical) ---- */
     async function submitTimeToBoard(){
       if(!user) return;
@@ -1145,18 +1160,7 @@
       try { await setDoc(bestRef, { kBlit_total: newTotal }, { merge:true }); } catch {}
     }
 
-    /* ==== Keep leaderboard pill synced from play doc ==== */
-    async function syncLeaderboardPillFromPlay(){
-      if (!user || !GAME_ID) return;
-      const playRef = doc(db, `userGames/${user.uid}/plays/${GAME_ID}`);
-      const snap = await getDoc(playRef);
-      if (!snap.exists()) return;
-      const total = Number(snap.data()?.kBlit_total || 0);
-      const bestRef = doc(db, `blitstiekGames/${GAME_ID}/leaderboard/${user.uid}`);
-      try { await setDoc(bestRef, { kBlit_total: total }, { merge:true }); } catch {}
-    }
-
-    /* ---- LIVE Leaderboard (with green pill + TODAY fallback) ---- */
+    /* ---- LIVE Leaderboard (with green pill; NO fallback) ---- */
     function startLiveLeaderboard(){
       if(lbUnsub) { lbUnsub(); lbUnsub=null; }
 
@@ -1189,24 +1193,16 @@
         const top = rows.slice(0,LB_SIZE);
         if (top.length) bestText.textContent = fmt(Number(top[0].time));
 
-        
-
         top.forEach(v => {
           const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
-const isSupporter = v?.isSupporter === true;
-const medaljeArr = normalizeMedaljes(v?.publicMedaljes || v?.inlineMedaljes || []);
+          const isSupporter = v?.isSupporter === true;
+          const medaljeArr = normalizeMedaljes(v?.publicMedaljes || v?.inlineMedaljes || []);
 
-
-          // Fallback: before CF runs at 23:55, show 100/200 if present via time
-          const fallbackToday =
-            !IS_ARCHIVE
-              ? (Number(v.time) < 30 ? 200 : (Number(v.time) < 60 ? 100 : 0))
-              : 0;
-
+          // NO fallback: only show pill when kBlit_total exists
           const pillValue =
             (typeof v.kBlit_total === 'number' && v.kBlit_total > 0)
               ? v.kBlit_total
-              : fallbackToday;
+              : 0;
 
           const pill = pillValue > 0
             ? `<span class="k-pill" title="Vandag se Blitstiek-telling">${pillValue}</span>`
@@ -1214,11 +1210,10 @@ const medaljeArr = normalizeMedaljes(v?.publicMedaljes || v?.inlineMedaljes || [
 
           const safeName = escapeHtml(v.userName || 'Onbekend');
           const star = renderSupporterStar(isSupporter);
-const medaljesHtml = renderMedaljePillsInline(medaljeArr, isSupporter);
-
+          const medaljesHtml = renderMedaljePillsInline(medaljeArr, isSupporter);
 
           const li = document.createElement('li');
-li.innerHTML = `<span><strong>${safeName}</strong>${star}${medaljesHtml}${you}: ${fmt(Number(v.time))}</span>${pill}`;
+          li.innerHTML = `<span><strong>${safeName}</strong>${star}${medaljesHtml}${you}: ${fmt(Number(v.time))}</span>${pill}`;
           lbList.appendChild(li);
         });
 
@@ -1268,7 +1263,7 @@ li.innerHTML = `<span><strong>${safeName}</strong>${star}${medaljesHtml}${you}: 
         }
       } catch {}
 
-      // NEW: set today's id & archive flag after GAME_ID is known
+      // set today's id & archive flag after GAME_ID is known
       TODAY_ID = `Game${todayISO()}`;
       IS_ARCHIVE = !!(GAME_ID && GAME_ID !== TODAY_ID);
 
@@ -1339,6 +1334,7 @@ li.innerHTML = `<span><strong>${safeName}</strong>${star}${medaljesHtml}${you}: 
     /* ---- Init ---- */
     await loadGame();
   </script>
+
   <!-- Buy Me a Coffee CTA + mobile Brandkop ad above leaderboard -->
   <script>
   document.addEventListener('DOMContentLoaded', () => {
@@ -1348,11 +1344,11 @@ li.innerHTML = `<span><strong>${safeName}</strong>${star}${medaljesHtml}${you}: 
 
     const container = section.parentElement;
 
-    // HELP ONS CTA (all breakpoints)
+    // HELP ONS CTA (centered to match game column)
     const ctaWrap = document.createElement('div');
-    ctaWrap.className = 'my-4';
+    ctaWrap.className = 'my-4 max-w-xl mx-auto';
     ctaWrap.innerHTML = `
-      <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800 text-center">
+      <div class="w-full rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800 text-center">
         <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
            onclick="gtag && gtag('event','bmac_click',{from:'blitstiek-leaderboard'})"
            class="inline-flex items-center justify-center px-5 py-3
@@ -1365,9 +1361,9 @@ li.innerHTML = `<span><strong>${safeName}</strong>${star}${medaljesHtml}${you}: 
     `;
     container.insertBefore(ctaWrap, section);
 
-    // MOBILE Brandkop ad directly under the CTA (hidden on lg+)
+    // MOBILE Brandkop ad directly under the CTA (hidden on lg+), centered to match game column
     const adWrap = document.createElement('div');
-    adWrap.className = 'my-4 lg:hidden';
+    adWrap.className = 'my-4 lg:hidden max-w-xl mx-auto';
     adWrap.innerHTML = `
       <div class="flex justify-center">
         <div class="bg-white shadow-md rounded-lg p-2 flex flex-col items-center border border-slate-200">
