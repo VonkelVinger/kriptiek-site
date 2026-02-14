@@ -723,6 +723,42 @@
         .map((label) => `<span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 ml-1 leading-none">${escapeHtml(label)}</span>`)
         .join('');
     }
+    function medalEmojiForRank(idx){
+  return idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '';
+}
+
+// Supporter truth comes from supportersPublic/{uid}.active
+const supporterCache = new Map();      // uid -> boolean
+const supporterInFlight = new Map();   // uid -> Promise<boolean>
+
+async function fetchSupporterActive(uid){
+  if (!uid) return false;
+  if (supporterCache.has(uid)) return supporterCache.get(uid);
+  if (supporterInFlight.has(uid)) return supporterInFlight.get(uid);
+
+  const p = (async ()=>{
+    try{
+      const s = await getDoc(doc(db, 'supportersPublic', uid));
+      const active = s.exists() && (s.data()?.active === true);
+      supporterCache.set(uid, active);
+      return active;
+    }catch{
+      supporterCache.set(uid, false);
+      return false;
+    }finally{
+      supporterInFlight.delete(uid);
+    }
+  })();
+
+  supporterInFlight.set(uid, p);
+  return p;
+}
+
+async function hydrateSupporterActives(uids){
+  const list = Array.isArray(uids) ? uids : [];
+  await Promise.all(list.map(fetchSupporterActive));
+}
+
 
     /* ---- Mechanics ---- */
     const H = 10, W = 8;
@@ -1136,99 +1172,143 @@
 
     /* ---- Leaderboard submit (canonical) ---- */
     async function submitTimeToBoard(){
-      if(!user) return;
-      const name    = currentUserName.slice(0,24);
-      const newTime = Number(t);
+  if(!user) return;
 
-      const runsCol = collection(db,'blitstiekGames', GAME_ID, 'runs');
-      const bestRef = doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid);
+  const name    = currentUserName.slice(0,24);
+  const newTime = Number(t);
 
-      try {
-        const bestSnap = await getDoc(bestRef);
-        const prev = bestSnap.exists() ? Number(bestSnap.data().time) : null;
-        if (prev == null || !Number.isFinite(prev) || newTime < prev){
-          await setDoc(bestRef, {
-            userName: name,
-            time: newTime,
-            timestamp: serverTimestamp()
-          }, { merge:true });
-        } else {
-          await setDoc(bestRef, { userName: name }, { merge: true });
-        }
-      } catch (e) { console.warn('BEST_UPDATE_FAILED', e); }
+  // Determine supporter status (source of truth)
+  let isSupporter = false;
+  try{
+    const s = await getDoc(doc(db,'supportersPublic', user.uid));
+    isSupporter = s.exists() && (s.data()?.active === true);
+  }catch{}
+  supporterCache.set(user.uid, isSupporter);
 
-      try {
-        await setDoc(doc(runsCol), {
-          uid: user.uid,
-          userName: name,
-          time: newTime,
-          timestamp: serverTimestamp()
-        });
-        const qy = query(runsCol, where('uid','==', user.uid), orderBy('timestamp','desc'), limit(50));
-        const snap = await getDocs(qy);
-        const toDelete = snap.docs.slice(10);
-        await Promise.all(toDelete.map(d => deleteDoc(d.ref)));
-      } catch (e) { console.warn('RUN_APPEND/TRIM_FAILED', e); }
+  const runsCol = collection(db,'blitstiekGames', GAME_ID, 'runs');
+  const bestRef = doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid);
+
+  try {
+    const bestSnap = await getDoc(bestRef);
+    const prev = bestSnap.exists() ? Number(bestSnap.data().time) : null;
+
+    if (prev == null || !Number.isFinite(prev) || newTime < prev){
+      await setDoc(bestRef, {
+        userName: name,
+        time: newTime,
+        isSupporter,
+        timestamp: serverTimestamp()
+      }, { merge:true });
+    } else {
+      await setDoc(bestRef, {
+        userName: name,
+        isSupporter
+      }, { merge:true });
     }
+  } catch (e) { console.warn('BEST_UPDATE_FAILED', e); }
+
+  try {
+    await setDoc(doc(runsCol), {
+      uid: user.uid,
+      userName: name,
+      time: newTime,
+      timestamp: serverTimestamp()
+    });
+    const qy = query(runsCol, where('uid','==', user.uid), orderBy('timestamp','desc'), limit(50));
+    const snap = await getDocs(qy);
+    const toDelete = snap.docs.slice(10);
+    await Promise.all(toDelete.map(d => deleteDoc(d.ref)));
+  } catch (e) { console.warn('RUN_APPEND/TRIM_FAILED', e); }
+}
 
     /* ---- LIVE Leaderboard (pill shows only real kBlit_total; no fallback) ---- */
-    function startLiveLeaderboard(){
-      if(lbUnsub) { lbUnsub(); lbUnsub=null; }
+    let lbRenderToken = 0;
 
-      const qy = query(
-        collection(db,'blitstiekGames', GAME_ID, 'leaderboard'),
-        orderBy('time','asc'),
-        limit(25)
-      );
+function startLiveLeaderboard(){
+  if(lbUnsub) { lbUnsub(); lbUnsub=null; }
 
-      lbUnsub = onSnapshot(qy, (snap)=>{
-        lbList.innerHTML = '';
+  const qy = query(
+    collection(db,'blitstiekGames', GAME_ID, 'leaderboard'),
+    orderBy('time','asc'),
+    limit(25)
+  );
 
-        if (snap.empty) {
-          bestText.textContent='--:--';
-          lbList.innerHTML = `<li class="bg-green-100 font-medium"><span>Jy kan eerste op die leierbord wees!</span></li>`;
-          return;
-        }
+  lbUnsub = onSnapshot(qy, (snap)=>{
+    const token = ++lbRenderToken;
 
-        const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        rows.sort((a,b)=>{
-          const ta = Number(a.time) || Infinity;
-          const tb = Number(b.time) || Infinity;
-          if (ta !== tb) return ta - tb;
-          const sa = a.timestamp?.toMillis?.() ? a.timestamp.toMillis() : 9e15;
-          const sb = b.timestamp?.toMillis?.() ? b.timestamp.toMillis() : 9e15;
-          return sa - sb;
-        });
-
-        const top = rows.slice(0,LB_SIZE);
-        if (top.length) bestText.textContent = fmt(Number(top[0].time));
-
-        top.forEach(v => {
-          const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
-          const isSupporter = v?.isSupporter === true;
-          const medaljeArr = normalizeMedaljes(v?.publicMedaljes || v?.inlineMedaljes || []);
-
-          const safeName = escapeHtml(v.userName || 'Onbekend');
-          const star = renderSupporterStar(isSupporter);
-          const medaljesHtml = renderMedaljePillsInline(medaljeArr, isSupporter);
-
-          const k = Number(v?.kBlit_total || 0);
-          const pillValue = (Number.isFinite(k) && k >= 25) ? k : 0;
-          const pill = pillValue
-            ? `<span class="k-pill" title="Blitstiek-telling">${pillValue}</span>`
-            : '';
-
-          const li = document.createElement('li');
-          li.innerHTML = `<span><strong>${safeName}</strong>${star}${medaljesHtml}${you}: ${fmt(Number(v.time))}</span>${pill}`;
-          lbList.appendChild(li);
-        });
-
-      }, (err) => {
-        console.warn('Leaderboard stream error:', err);
-        const msg = (err && (err.code || err.message)) ? ` – ${err.code||err.message}` : '';
-        lbList.innerHTML = `<li class="px-2 py-1 rounded bg-red-50 text-red-700">Kon nie leierbord laai nie${msg}.</li>`;
-      });
+    if (snap.empty) {
+      bestText.textContent='--:--';
+      lbList.innerHTML = `<li class="bg-green-100 font-medium"><span>Jy kan eerste op die leierbord wees!</span></li>`;
+      return;
     }
+
+    const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    rows.sort((a,b)=>{
+      const ta = Number(a.time) || Infinity;
+      const tb = Number(b.time) || Infinity;
+      if (ta !== tb) return ta - tb;
+      const sa = a.timestamp?.toMillis?.() ? a.timestamp.toMillis() : 9e15;
+      const sb = b.timestamp?.toMillis?.() ? b.timestamp.toMillis() : 9e15;
+      return sa - sb;
+    });
+
+    const top = rows.slice(0,LB_SIZE);
+
+    const render = ()=>{
+      if (token !== lbRenderToken) return;
+
+      lbList.innerHTML = '';
+      if (top.length) bestText.textContent = fmt(Number(top[0].time));
+
+      top.forEach((v, idx) => {
+        const you = user && v.id === user.uid
+          ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>'
+          : '';
+
+        // Prefer supportersPublic cache once available; fallback to row field
+        const isSupporter = supporterCache.has(v.id)
+          ? (supporterCache.get(v.id) === true)
+          : (v?.isSupporter === true);
+
+        const safeName = escapeHtml(v.userName || 'Onbekend');
+
+        // Rank medals for top 3
+        const rankMedal = medalEmojiForRank(idx);
+        const medalHtml = rankMedal ? `<span class="mr-1" aria-hidden="true">${rankMedal}</span>` : '';
+
+        // Supporter star
+        const star = renderSupporterStar(isSupporter);
+
+        // Optional supporter-only medalje pills if you later store arrays on rows
+        const medaljeArr = normalizeMedaljes(v?.publicMedaljes || v?.inlineMedaljes || []);
+        const medaljesHtml = renderMedaljePillsInline(medaljeArr, isSupporter);
+
+        const k = Number(v?.kBlit_total || 0);
+        const pillValue = (Number.isFinite(k) && k >= 25) ? k : 0;
+        const pill = pillValue
+          ? `<span class="k-pill" title="Blitstiek-telling">${pillValue}</span>`
+          : '';
+
+        const li = document.createElement('li');
+        li.innerHTML = `<span>${medalHtml}<strong>${safeName}</strong>${star}${medaljesHtml}${you}: ${fmt(Number(v.time))}</span>${pill}`;
+        lbList.appendChild(li);
+      });
+    };
+
+    render();
+
+    // Fetch supporter actives for top rows (one-time per uid per session)
+    const need = top.map(r => r.id).filter(uid => uid && !supporterCache.has(uid));
+    if (need.length){
+      hydrateSupporterActives(need).then(render).catch(()=>{});
+    }
+
+  }, (err) => {
+    console.warn('Leaderboard stream error:', err);
+    const msg = (err && (err.code || err.message)) ? ` – ${err.code||err.message}` : '';
+    lbList.innerHTML = `<li class="px-2 py-1 rounded bg-red-50 text-red-700">Kon nie leierbord laai nie${msg}.</li>`;
+  });
+}
 
     /* ---- Dynamic resolver ---- */
     async function resolveGameId(){
