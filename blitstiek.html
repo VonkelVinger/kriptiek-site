@@ -1,602 +1,367 @@
 <!DOCTYPE html>
 <html lang="af">
 <head>
-
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9V4CMP1FP"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-S9V4CMP1FP');
+    gtag('js', new Date()); gtag('config', 'G-S9V4CMP1FP');
   </script>
 
-  <!-- AdSense verification (FIXED URL) -->
-  <script async
-    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8199352351586797"
-    crossorigin="anonymous"></script>
-
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>BLITSTIEK – Kriptiek</title>
 
-  <!-- Open Graph / Twitter -->
+  <!-- Canonical & Open Graph / Twitter -->
   <link rel="canonical" href="https://www.kriptiek.com/blitstiek.html" />
   <meta property="og:title" content="BLITSTIEK – Kriptiek" />
-  <meta property="og:description" content="Kom speel vandag se BLITSTIEK op Kriptiek." />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://www.kriptiek.com/blitstiek.html" />
+  <meta property="og:description" content="Speel vandag se BLITSTIEK op Kriptiek." />
   <meta property="og:image" content="https://www.kriptiek.com/assets/BLITSTIEK_12SEP.png" />
-  <meta property="og:image:alt" content="BLITSTIEK knoppie (groen)" />
+  <meta property="og:url" content="https://www.kriptiek.com/blitstiek.html" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="BLITSTIEK – Kriptiek" />
-  <meta name="twitter:description" content="Kom speel vandag se BLITSTIEK op Kriptiek." />
   <meta name="twitter:image" content="https://www.kriptiek.com/assets/BLITSTIEK_12SEP.png" />
 
-  <!-- Tailwind + font -->
+  <!-- Favicons -->
+  <link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=3">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png?v=3">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=3">
+  <link rel="manifest" href="/assets/site.webmanifest?v=3">
+
+  <!-- Styles -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800&display=swap" rel="stylesheet" />
 
   <style>
-    :root{
-      --brand:#1e3a8a;
-      --cell-bg:#004d40;
-      --gridW:320px;
-      --cell-font:16px;
-      --cellSize:32px;
-      --line:1px;
-    }
-    html,body{height:100%}
-    body{
-      font-family:'Montserrat',system-ui,Segoe UI,Roboto,Arial,sans-serif;
-      background:#f9fafb;
-      color:#1f2937;
-    }
+    body { font-family: 'Montserrat', sans-serif; }
+    .mono{ font-variant-numeric: tabular-nums; }
 
-    /* HEADER */
-    header{
-      background:#fff;
-      box-shadow:0 2px 4px rgba(0,0,0,.08);
-      padding:1rem;
-      text-align:center;
-      position:relative;
+    /* Header logo */
+    .logo-container {
+      position: relative; display: flex; justify-content: center; align-items: center;
+      width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden;
+      isolation: isolate;
     }
-    .logo-container{
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      margin-bottom:10px;
+    .logo-container::before{
+      content:""; position:absolute; inset:-2px; border-radius:1rem;
+      background:conic-gradient(from 180deg at 50% 50%, #1e3a8a, #334155, #1e3a8a);
+      animation:spin 14s linear infinite; z-index:0; padding:2px;
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
     }
-    .logo-container .letter-box{
-      width:40px;height:40px;margin:2px;
-      display:flex;justify-content:center;align-items:center;
-      background:#374151;color:#fff;
-      font-size:1.2rem;font-weight:700;border-radius:6px;
-    }
-    .welcome{font-size:.9rem;color:#6b7280}
+    @keyframes spin{ to{ transform:rotate(1turn); } }
+    @media (prefers-reduced-motion: reduce){ .logo-container::before{ animation:none; } }
 
-    .card{
-      background:#fff;
-      border:1px solid #e5e7eb;
-      border-radius:16px;
-      box-shadow:0 2px 8px rgba(0,0,0,.05);
+    .crossword-grid { display: grid; grid-template-columns: repeat(8, minmax(40px, 1fr)); gap: 4px; position: relative; z-index: 10; }
+    .letter-box {
+      width: 50px; height: 50px; display:flex; align-items:center; justify-content:center;
+      background:#374151; color:#fff; font-size:1.8rem; font-weight:800; border:2px solid #1f2937; border-radius:.375rem;
+      text-transform:uppercase; box-shadow: inset 0 0 5px rgba(0,0,0,.2);
     }
-    .headline{
-      text-align:center;
-      font-size:1.125rem;
-      font-weight:700;
-      color:#374151;
-      margin:16px 0 8px;
-    }
+    .flipped-k { transform: scaleX(-1); }
 
-    /* Game area wrapper: centred column, ads float left/right on large screens */
-    .game-layout{
-      width:100%;
-      max-width:720px;
-      margin:0 auto;
-      position:relative;
-    }
-
-    /* Target chips */
-    #targetWrap{
-      width:100%;
-      max-width:var(--gridW);
-      margin:0 auto 8px;
-      display:flex;
-      justify-content:center;
-    }
-    #target{
-      display:inline-flex;
-      gap:1px;
-      background:var(--cell-bg);
-      color:#fff;
-      padding:2px;
-      border-radius:6px;
-      min-height:34px;
-      align-items:center;
-    }
-    #target span{
-      width:30px;height:30px;
-      display:grid;place-items:center;
-      font-weight:800;
-      border:1px solid rgba(255,255,255,.12);
-    }
-
-    /* GRID */
-    #grid{
-      position:relative;
+    .background-crossword{
+      position:absolute; top:0; left:0; width:100%; height:100%;
       display:grid;
-      grid-template-columns:repeat(8,1fr);
-      grid-template-rows:repeat(10,1fr);
-      gap:0;
-      background:#fff;
-      border:var(--line) solid #0c4a3e;
-      border-radius:8px;
-      overflow:hidden;
-      width:var(--gridW);
-      height:400px;
-      margin:10px auto 8px;
+      grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
+      grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
+      opacity:.5; z-index:1; pointer-events:none;
     }
-    #grid::after{
-      content:'';
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-      z-index:5;
-      background:
-        repeating-linear-gradient(to right,
-          transparent 0 calc(var(--cellSize) - var(--line)),
-          rgba(255,255,255,.28) 0 var(--cellSize)),
-        repeating-linear-gradient(to bottom,
-          transparent 0 calc(var(--cellSize) - var(--line)),
-          rgba(255,255,255,.28) 0 var(--cellSize));
+    .bg-letter-box{
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.1rem; font-weight:800; color:#9ca3af;
+      border:1px solid #e5e7eb; background:transparent; user-select:none;
+    }
+
+    /* UI */
+    .card{ background:#fff; border-radius:1rem; box-shadow:0 8px 18px rgba(0,0,0,.08); }
+    .kbtn{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.7rem 1rem; border-radius:1rem; background:#1d4ed8; color:#fff; font-weight:800; box-shadow:0 10px 24px rgba(29,78,216,.25); }
+    .kbtn:hover{ background:#1e40af; }
+    .kbtn-ghost{ background:#e5e7eb; color:#111827; font-weight:800; border-radius:1rem; padding:.7rem 1rem; }
+    .kbtn-ghost:hover{ background:#d1d5db; }
+    .pill{ display:inline-flex; align-items:center; gap:.45rem; padding:.4rem .85rem; border-radius:999px; font-weight:900; color:#fff; }
+    .pill-green{ background: linear-gradient(180deg, #22C55E 0%, #0EA55B 100%); }
+    .pill-yellow{ background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); }
+    .pill-red{ background: linear-gradient(180deg, #ef4444 0%, #b91c1c 100%); }
+
+    /* Grid */
+    :root{
+      --cols: 8;
+      --rows: 10;
+      --cell: 38px; /* will be overridden by JS for crisp sizing */
+      --gap: 2px;
+    }
+    .grid-wrap{
+      display:flex; justify-content:center;
+    }
+    .game-grid{
+      display:grid;
+      grid-template-columns: repeat(var(--cols), var(--cell));
+      grid-template-rows: repeat(var(--rows), var(--cell));
+      gap: var(--gap);
+      background:#0b1220;
+      padding:10px;
+      border-radius:1rem;
+      box-shadow: 0 18px 40px rgba(2,6,23,.25);
+      border: 1px solid rgba(30,58,138,.25);
     }
     .cell{
-      position:relative;
-      background:var(--cell-bg);
-      transition:transform .15s ease-out,opacity .15s ease-out;
+      width:var(--cell); height:var(--cell);
+      display:flex; align-items:center; justify-content:center;
+      border-radius:.55rem;
+      font-weight:900;
+      text-transform:uppercase;
+      user-select:none;
+      letter-spacing:.02em;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
     }
-    .cell.f{
-      display:grid;place-items:center;
-      color:#fff;font-weight:800;
-      font-size:var(--cell-font);
-      text-shadow:0 1px 1px rgba(0,0,0,.35);
-    }
-    .cell.pop{transform:scale(1.15);opacity:0;}
+    .cell-empty{ background: rgba(148,163,184,.06); color: rgba(148,163,184,.25); }
+    .cell-solid{ color:#0b1220; }
 
     /* Modal */
-    #over{
-      position:fixed;
-      inset:0;
-      display:none;
-      align-items:center;
-      justify-content:center;
-      background:rgba(0,0,0,.55);
-      z-index:50;
-    }
-    .modal{
-      background:#fff;
-      border-radius:16px;
-      box-shadow:0 20px 50px rgba(0,0,0,.2);
-      width:min(92%,520px);
-      padding:18px;
-      text-align:center;
-      border:1px solid #e5e7eb;
-    }
-    .btn{
-      background:#1e3a8a;
-      color:#fff;
-      font-weight:700;
-      padding:10px 16px;
-      border-radius:10px;
-    }
-    .btn.gray{background:#6b7280}
-    .btn:disabled{opacity:.6;cursor:not-allowed;}
+    .modal-backdrop{ position:fixed; inset:0; background:rgba(2,6,23,.6); display:flex; align-items:center; justify-content:center; padding:16px; z-index:50; }
+    .modal{ width:min(520px, 100%); }
+    .hidden{ display:none !important; }
 
-    /* Controls */
-    .controls{width:100%;max-width:calc(var(--gridW));margin:8px auto 0;}
-    .arrow-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;}
-    .dir-btn{
-      width:100%;
-      aspect-ratio:1/1;
-      min-width:56px;min-height:56px;
-      display:flex;align-items:center;justify-content:center;
-      background:#053a6b;color:#fff;
-      border-radius:14px;
-      font-weight:800;font-size:24px;
+    /* Dropdown */
+    .dd{ position:relative; }
+    .dd-menu{
+      position:absolute; right:0; top:calc(100% + 10px);
+      width: min(260px, 90vw);
+      background:#fff; border:1px solid #e5e7eb; border-radius:1rem;
+      box-shadow: 0 18px 40px rgba(2,6,23,.18);
+      overflow:hidden;
+      z-index:40;
     }
-    @media (min-width:460px){
-      .dir-btn{min-width:64px;min-height:64px;font-size:26px}
-    }
-    @media (min-width:640px){
-      .dir-btn{min-width:72px;min-height:72px;font-size:28px}
-    }
+    .dd-item{ width:100%; text-align:left; padding:.8rem 1rem; font-weight:800; }
+    .dd-item:hover{ background:#f1f5f9; }
 
-    .pill{
-      background:#0c4a3e;
-      color:#fff;
-      font-weight:700;
-      padding:6px 10px;
-      border-radius:8px;
-      text-align:center;
-    }
-    #leaderboardList li{
-      padding:.35rem .5rem;
-      border-radius:.375rem;
-      display:flex;
-      gap:.5rem;
-      align-items:center;
-      justify-content:space-between;
-    }
-    #leaderboardList li:nth-child(odd){background:#f3f4f6;}
-    #leaderboardList li:first-child{
-      background:#d1fae5;
-      font-weight:700;
-    }
-
-    /* Green K badge (no dot) */
-    .k-pill{
-      display:inline-flex;
-      align-items:center;
-      background:#16a34a;
-      color:#fff;
-      font-weight:800;
-      border-radius:999px;
-      padding:.15rem .5rem;
-      font-size:.75rem;
-      line-height:1;
-    }
-
-    /* Share dropdown */
-    .share-menu-local{
-      background:#fff;
-      border:1px solid #e5e7eb;
-      box-shadow:0 8px 24px rgba(0,0,0,.12);
-      border-radius:.5rem;
-      width:240px;
-      padding:.5rem;
-      z-index:3000;
-      line-height:1.25;
-    }
-    .share-menu-local button{
-      width:100%;
-      text-align:left;
-      padding:.5rem .75rem;
-      border-radius:.375rem;
-      font-weight:600;
-      line-height:1.25rem;
-      display:flex;
-      align-items:center;
-      gap:.5rem;
-      white-space:nowrap;
-    }
-    .share-menu-local button:hover{background:#f3f4f6;}
-
-    /* ACTION BARS */
-    .action-grid{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:.5rem;
-      justify-items:center;
-      align-items:center;
-    }
-    .action-grid > a,
-    .action-grid > button{
-      display:grid;place-items:center;
-      width:100%;aspect-ratio:1/1;
-      max-width:120px;
-      padding:0;margin:0;
-      background:transparent !important;
-      border:0;border-radius:0;line-height:0;
-      box-shadow:none;cursor:pointer;
-    }
-    .btn-img{
-      width:100%;height:100%;
-      display:block;object-fit:contain;
-      border-radius:0;
-      box-shadow:0 6px 15px rgba(0,0,0,.25);
-    }
-    .btn-img:hover{
-      transform:translateY(-1px);
-      filter:brightness(1.02);
-    }
-    .btn-img:active{
-      transform:translateY(0);
-      filter:brightness(.98);
-    }
-
-    /* N-R gate */
-    #nrGate{
-      position:fixed;
-      inset:0;
-      display:none;
-      align-items:center;
-      justify-content:center;
-      background:rgba(0,0,0,.55);
-      z-index:60;
+    /* Support checkpoint */
+    .support-box{
+      border:1px solid rgba(30,58,138,.18);
+      background: linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,252,1) 100%);
+      border-radius:1rem;
+      box-shadow:0 10px 24px rgba(2,6,23,.08);
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col">
-  <!-- HEADER -->
-  <header>
-    <div class="logo-container" aria-label="BLITSTIEK">
-      <div class="letter-box">B</div><div class="letter-box">L</div>
-      <div class="letter-box">I</div><div class="letter-box">T</div>
-      <div class="letter-box">S</div><div class="letter-box">T</div>
-      <div class="letter-box">I</div><div class="letter-box">E</div>
-      <div class="letter-box">K</div>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+  <!-- Header -->
+  <header class="bg-white shadow p-4">
+    <div class="logo-container">
+      <div id="backgroundCrossword" class="background-crossword"></div>
+      <div class="crossword-grid">
+        <div class="letter-box flipped-k">K</div><div class="letter-box flipped-k">R</div><div class="letter-box">I</div>
+        <div class="letter-box flipped-k">P</div><div class="letter-box">T</div><div class="letter-box">I</div>
+        <div class="letter-box flipped-k">E</div><div class="letter-box">K</div>
+      </div>
     </div>
-    <p class="welcome" id="welcomeLine">
-      Welkom terug, <span id="playerName" class="font-semibold text-green-700">Speler</span>!
-    </p>
   </header>
 
-  <main class="flex-1">
-    <div class="max-w-5xl mx-auto px-4 py-4">
-
-      <!-- Game layout: centred column; desktop Brandkop ads float left/right -->
-      <div class="game-layout">
-        <!-- DESKTOP Brandkop ad, left -->
-        <div id="desktopAdLeft" class="hidden lg:block absolute -left-[340px]">
-          <div class="bg-white shadow-md rounded-lg p-2 flex flex-col items-center border border-slate-200">
-            <div class="text-[10px] tracking-[0.2em] text-slate-500 uppercase mb-1 text-center">
-              ADVERTENSIE
-            </div>
-            <a href="https://www.brandkopnc.co.za/" target="_blank" rel="noopener"
-               class="inline-block rounded overflow-hidden">
-              <img
-                src="/assets/brandkop-300x250.png"
-                alt="Brandkop advertensie"
-                class="block w-[300px] max-w-full h-auto">
-            </a>
-          </div>
+  <main class="flex-grow p-4">
+    <div class="max-w-6xl mx-auto">
+      <!-- Top line -->
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+        <div>
+          <div class="text-2xl font-extrabold text-slate-900">BLITSTIEK</div>
+          <div id="welcomeLine" class="text-sm text-slate-600 mt-1">Laai…</div>
         </div>
 
-        <!-- DESKTOP Brandkop ad, right -->
-        <div id="desktopAdRight" class="hidden lg:block absolute -right-[340px]">
-          <div class="bg-white shadow-md rounded-lg p-2 flex flex-col items-center border border-slate-200">
-            <div class="text-[10px] tracking-[0.2em] text-slate-500 uppercase mb-1 text-center">
-              ADVERTENSIE
-            </div>
-            <a href="https://www.brandkopnc.co.za/" target="_blank" rel="noopener"
-               class="inline-block rounded overflow-hidden">
-              <img
-                src="/assets/brandkop-300x250.png"
-                alt="Brandkop advertensie"
-                class="block w-[300px] max-w-full h-auto">
-            </a>
+        <div class="flex items-center gap-2">
+          <span id="supporterPill" class="pill pill-green hidden">ONDERSTEUNER</span>
+
+          <div id="authBtns" class="flex items-center gap-2 hidden">
+            <a class="kbtn-ghost" href="/login.html">Meld aan</a>
+            <a class="kbtn" href="/register.html">Registreer</a>
           </div>
+
+          <button id="logoutBtn" class="kbtn-ghost hidden" type="button">Meld af</button>
+        </div>
+      </div>
+
+      <!-- Alert -->
+      <div id="alertBox" class="hidden mb-4 rounded-lg border px-3 py-2 text-sm"></div>
+
+      <!-- Support checkpoint (optional, shown after first completion or by trigger) -->
+      <div id="supportGate" class="hidden mb-4 support-box p-4">
+        <div class="text-center text-lg font-extrabold text-slate-900">
+          Baie dankie dat jy BLITSTIEK speel!
+        </div>
+        <div class="text-center text-slate-700 mt-2 leading-relaxed">
+          As jy kan help om Kriptiek aan die gang te hou, oorweeg asseblief ’n klein bydrae.
+          Ondersteuners kry ’n <span class="font-extrabold">ONDERSTEUNER</span>-kenteken op ranglyste.
         </div>
 
-        <!-- Main game column (centred) -->
-        <div class="max-w-xl mx-auto">
-          <div class="headline">TEIKENWOORD:</div>
-          <div id="targetWrap"><div id="target"><span>—</span></div></div>
+        <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <a id="bmacBtn" class="kbtn justify-center" href="https://www.buymeacoffee.com/" target="_blank" rel="noopener">Buy Me a Coffee</a>
+          <button id="supportLaterBtn" type="button" class="kbtn-ghost justify-center">Miskien later</button>
+          <a class="kbtn-ghost justify-center text-center" href="/about.html">Lees meer</a>
+        </div>
+      </div>
 
-          <!-- GAME card -->
-          <section class="card p-4">
-            <div class="relative">
-              <div id="grid"></div>
+      <!-- Main layout -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <!-- Left: actions -->
+        <aside class="lg:col-span-3">
+          <div class="card p-4">
+            <div class="text-sm font-extrabold text-slate-900">Skakels</div>
 
-              <!-- Success modal -->
-              <div id="over">
-                <div class="modal">
-                  <p id="winMsg" class="mb-3 text-base"></p>
-                  <div class="actions" style="display:flex;gap:.75rem;justify-content:center;margin-top:12px;">
-                    <button id="modalShareBtn" type="button" class="btn">DEEL</button>
-                    <button id="modalCloseBtn" type="button" class="btn gray">SLUIT</button>
-                  </div>
-                  <div id="shareMenu" class="hidden share-menu-local mx-auto mt-2">
-                    <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
-                    <div class="space-y-1">
-                      <button id="mWhatsApp" type="button">WhatsApp</button>
-                      <button id="mCopy" type="button">Kopieer skakel</button>
-                      <button id="mSystem" type="button">Stelsel-deel</button>
-                    </div>
-                  </div>
+            <div class="mt-3 grid grid-cols-1 gap-2">
+              <a class="kbtn-ghost text-center" href="/forum.html">Gesels saam</a>
+              <a class="kbtn-ghost text-center" href="/blitstiek-argief.html">Argief</a>
+
+              <div class="dd">
+                <button id="shareBtnTop" type="button" class="kbtn w-full justify-center">Deel</button>
+                <div id="shareMenuTop" class="dd-menu hidden">
+                  <button class="dd-item" type="button" data-share="whatsapp">WhatsApp</button>
+                  <button class="dd-item" type="button" data-share="copy">Kopieer</button>
+                  <button class="dd-item" type="button" data-share="system">Stelsel</button>
                 </div>
               </div>
 
-              <!-- N-R gate -->
-              <div id="nrGate">
-                <div class="modal">
-                  <h3 class="text-lg font-extrabold mb-1">WELKOM BY BLITSTIEK OP KRIPTIEK</h3>
-                  <p class="text-sm text-gray-600 mb-3">Jou opsies:</p>
-                  <div class="text-left space-y-2 text-gray-700">
-                    <p><strong>1)</strong> Speel Blitstiek as 'n ongeregistreerde speler met beperkte funksies.</p>
-                    <p><strong>2)</strong>
-                      <a href="/register.html" class="underline" id="gateRegLink">Registreer</a>
-                      sodat jy volle toegang tot alles op Kriptiek kan kry, insluitend Blitstiek.
-                    </p>
-                  </div>
-                  <div class="flex gap-2 justify-center mt-4">
-                    <button id="gateGuestBtn" class="btn">Speel sonder om te registreer</button>
-                    <button id="gateRegBtn"   class="btn gray">Registreer</button>
-                  </div>
-                </div>
-              </div>
+              <a class="kbtn-ghost text-center" href="/profile.html">My profiel</a>
             </div>
 
-            <!-- Arrows -->
-            <div class="controls mt-3">
-              <div class="arrow-row">
-                <button id="btnLeft"  class="dir-btn" aria-label="Links">◀</button>
-                <button id="btnDown"  class="dir-btn" aria-label="Laat val">▼</button>
-                <button id="btnRight" class="dir-btn" aria-label="Regs">▶</button>
-              </div>
+            <div class="mt-4 text-xs text-slate-500 leading-relaxed">
+              Wen deur die teikenwoord in een ry te vorm. Gebruik ← → en <span class="font-extrabold">spasie</span> (hard drop).
             </div>
-
-            <!-- Start/Pause + Sticky share -->
-            <div class="controls mt-3 flex items-center justify-center gap-2">
-              <button id="btnStart" class="btn">BEGIN</button>
-              <button id="btnPause" class="btn gray">POUSE</button>
-
-              <div class="relative">
-                <button id="stickyShareBtn" class="btn hidden">DEEL</button>
-                <div id="stickyShareMenu" class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
-                  <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
-                  <div class="space-y-1">
-                    <button id="sWhatsApp" type="button">WhatsApp</button>
-                    <button id="sCopy" type="button">Kopieer skakel</button>
-                    <button id="sSystem" type="button">Stelsel-deel</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Timers -->
-            <div class="controls grid grid-cols-2 gap-2 mt-3">
-              <div id="timeBox" class="pill">Jou tyd: <b>00:00</b></div>
-              <div id="bestBox" class="pill">Beste tyd: <b>--:--</b></div>
-            </div>
-
-            <!-- ACTION BARS -->
-            <div class="controls mt-3" id="actionBars">
-              <!-- Guests -->
-              <div id="barNR" class="action-grid">
-                <a href="/register.html" title="Registreer">
-                  <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="120" height="120">
-                </a>
-                <a href="/forum.html" title="Gesels saam">
-                  <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
-                </a>
-                <div class="relative share-tile-wrap">
-                  <button type="button" class="share-tile" title="Deel">
-                    <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
-                  </button>
-                  <div class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
-                    <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
-                    <div class="space-y-1">
-                      <button class="wa"  type="button">WhatsApp</button>
-                      <button class="copy" type="button">Kopieer skakel</button>
-                      <button class="sys"  type="button">Stelsel-deel</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Registered -->
-              <div id="barR" class="action-grid hidden">
-                <a href="/forum.html" title="Gesels saam">
-                  <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
-                </a>
-                <a href="/blitstiek-argief.html" title="Blitstiek-argief">
-                  <img class="btn-img" src="/assets/B_ARGIEF_12SEP.png" alt="B Argief" width="120" height="120">
-                </a>
-                <div class="relative share-tile-wrap">
-                  <button type="button" class="share-tile" title="Deel">
-                    <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
-                  </button>
-                  <div class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
-                    <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
-                    <div class="space-y-1">
-                      <button class="wa"  type="button">WhatsApp</button>
-                      <button class="copy" type="button">Kopieer skakel</button>
-                      <button class="sys"  type="button">Stelsel-deel</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        </div><!-- /main game column -->
-      </div><!-- /game-layout -->
-
-      <!-- Centred column for all content below the game (FIXED WIDTH) -->
-      <div class="max-w-xl mx-auto">
-
-        <!-- HOE OM TE SPEEL -->
-        <section class="mt-4 bg-white rounded shadow p-4">
-          <h2 class="text-xl font-bold mb-2">HOE OM TE SPEEL</h2>
-          <ol class="space-y-3 text-gray-700 leading-relaxed">
-            <li>
-              <p class="font-semibold">1. Doel</p>
-              <p>Probeer om die <strong>teikenwoord</strong> boaan so vinnig as moontlik te vorm deur die vallende blokke, elkeen met 'n lukrake letter en kleur, links en regs te skuif voordat hulle onder land. Die teikenwoord moet in <strong>dieselfde horisontale ry</strong> gevorm word, sonder gapings of verkeerde letters. Laat val onnodige letters eenkant, of gebruik die blokreëls onder om hulle te laat verdwyn. Daar is <strong>elke dag ’n nuwe woord</strong>, wat soms minder maar nooit meer as 8 letters sal hê nie.</p>
-            </li>
-            <li>
-              <p class="font-semibold">2. Kontroles</p>
-              <p><strong>Fisieke toetsbord:</strong> Gebruik die pyltjies op jou toetsbord om die blokke links en regs te skuif, en die spasiebalk om die blok dadelik tot onder te laat val.</p>
-              <p><strong>Raakskerm:</strong> Gebruik die pyltjies op die skerm om die blokke links en regs te skuif, en die af-pyltjie om die blok dadelik tot onder te laat val.</p>
-            </li>
-            <li>
-              <p class="font-semibold">3. Wat gebeur wanneer blokke aan mekaar raak?</p>
-              <ul class="list-disc pl-6">
-                <li><strong>Dieselfde letter:</strong> As twee blokke met dieselfde LETTER langs of op mekaar tot stilstand kom, verdwyn albei.</li>
-                <li><strong>Dieselfde kleur:</strong> As twee blokke met dieselfde KLEUR langs of op mekaar tot stilstand kom, verdwyn albei.</li>
-                <li><strong>MAAR:</strong> 'n Blok met 'n letter wat in die teikenwoord is, verdwyn nooit nie.</li>
-              </ul>
-            </li>
-            <li>
-              <p class="font-semibold">4. Leierbord</p>
-              <p>As jou tyd vinnig genoeg is, verskyn jou naam op die <strong>leierbord</strong>. Gebruik <strong>DEEL</strong> om jou vriende uit te daag en jou tyd te wys.</p>
-            </li>
-          </ol>
-        </section>
-
-        <!-- Buy Me a Coffee CTA (moved into HTML, centred) -->
-        <section class="my-4">
-          <div class="rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800 text-center">
-            <a href="https://www.buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
-               onclick="window.gtag && window.gtag('event','bmac_click',{from:'blitstiek-leaderboard'})"
-               class="inline-flex items-center justify-center px-5 py-3 bg-yellow-500 hover:bg-yellow-600 text-white font-bold rounded-xl shadow-md transition duration-200"
-               aria-label="Help ons om Kriptiek gratis te hou">
-              <span>HELP ONS OM KRIPTIEK GRATIS TE HOU</span>
-            </a>
           </div>
-        </section>
+        </aside>
 
-        <!-- MOBILE Brandkop ad (centred, hidden on lg+) -->
-        <section class="my-4 lg:hidden">
-          <div class="flex justify-center">
-            <div class="bg-white shadow-md rounded-lg p-2 flex flex-col items-center border border-slate-200">
-              <div class="text-[10px] tracking-[0.2em] text-slate-500 uppercase mb-1 text-center">
-                ADVERTENSIE
+        <!-- Center: game -->
+        <section class="lg:col-span-6">
+          <div class="card p-4 md:p-5">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <div class="text-sm text-slate-500">Vandag se teiken</div>
+                <div id="targetChips" class="flex flex-wrap gap-2 mt-2"></div>
               </div>
-              <a href="https://www.brandkopnc.co.za/" target="_blank" rel="noopener"
-                 class="inline-block rounded overflow-hidden">
-                <img
-                  src="/assets/brandkop-300x250.png"
-                  alt="Brandkop advertensie"
-                  class="block w-[300px] max-w-full h-auto">
-              </a>
+
+              <div class="flex items-center gap-3">
+                <div class="text-right">
+                  <div class="text-xs text-slate-500">Jou tyd</div>
+                  <div id="yourTime" class="mono text-xl font-extrabold text-slate-900">00:00.0</div>
+                </div>
+                <div class="text-right">
+                  <div class="text-xs text-slate-500">Beste tyd</div>
+                  <div id="bestTime" class="mono text-xl font-extrabold text-slate-900">—</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 flex items-center gap-2">
+              <button id="startBtn" type="button" class="kbtn">Begin</button>
+              <button id="pauseBtn" type="button" class="kbtn-ghost hidden">Pouse</button>
+              <button id="resetGameBtn" type="button" class="kbtn-ghost">Herbegin</button>
+
+              <div class="ml-auto flex items-center gap-2">
+                <button id="leftBtn" type="button" class="kbtn-ghost">←</button>
+                <button id="rightBtn" type="button" class="kbtn-ghost">→</button>
+                <button id="dropBtn" type="button" class="kbtn">Drop</button>
+              </div>
+            </div>
+
+            <div class="mt-4 grid-wrap">
+              <div id="grid" class="game-grid" aria-label="Blitstiek rooster"></div>
+            </div>
+
+            <div id="statusLine" class="mt-4 text-sm font-extrabold text-blue-800 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+              Laai spel…
+            </div>
+          </div>
+
+          <!-- Result modal -->
+          <div id="resultModal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+            <div class="modal card p-5">
+              <div class="text-xl font-extrabold text-slate-900">Klaar!</div>
+              <div id="resultText" class="mt-2 text-slate-700 leading-relaxed"></div>
+
+              <div class="mt-4 flex items-center gap-2">
+                <button id="closeResultBtn" class="kbtn-ghost" type="button">Maak toe</button>
+
+                <div class="ml-auto dd">
+                  <button id="shareBtnModal" class="kbtn" type="button">Deel</button>
+                  <div id="shareMenuModal" class="dd-menu hidden">
+                    <button class="dd-item" type="button" data-share="whatsapp">WhatsApp</button>
+                    <button class="dd-item" type="button" data-share="copy">Kopieer</button>
+                    <button class="dd-item" type="button" data-share="system">Stelsel</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-3 text-xs text-slate-500">
+                Deel jou tyd met vriende. Ondersteuners kry ’n kenteken op ranglyste.
+              </div>
+            </div>
+          </div>
+
+          <!-- Guest gate modal -->
+          <div id="guestGate" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+            <div class="modal card p-5">
+              <div class="text-xl font-extrabold text-slate-900">Meld aan of speel as gas</div>
+              <div class="mt-2 text-slate-700 leading-relaxed">
+                Jy kan speel as gas (beperkte funksies), of registreer om jou beste tye op die ranglys te stoor.
+              </div>
+
+              <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button id="playGuestBtn" type="button" class="kbtn-ghost">Speel as gas</button>
+                <a id="goRegisterBtn" class="kbtn text-center" href="/register.html">Registreer</a>
+              </div>
+
+              <div class="mt-3 text-xs text-slate-500">
+                Jy kan later enige tyd registreer en terugkom.
+              </div>
             </div>
           </div>
         </section>
+        <!-- Right: leaderboard -->
+        <aside class="lg:col-span-3">
+          <div class="card p-4">
+            <div class="flex items-center justify-between">
+              <div class="text-sm font-extrabold text-slate-900">Vandag se bestes</div>
+              <button id="refreshBoardBtn" type="button" class="kbtn-ghost px-3 py-2 text-sm">Herlaai</button>
+            </div>
 
-        <!-- LEADERBOARD -->
-        <section class="card mt-6 p-4">
-          <div class="flex items-center justify-between mb-2">
-            <h2 class="text-xl font-bold">VANDAG SE TOP-10 (die afsnypunt is om 23:55)</h2>
+            <div class="mt-3 text-xs text-slate-500">
+              Ondersteuners word gemerk met ’n kenteken.
+            </div>
+
+            <div id="boardList" class="mt-3 space-y-2"></div>
           </div>
-          <ul id="leaderboardList" class="text-gray-700 text-left"><li>Laai...</li></ul>
-        </section>
 
-      </div><!-- /centred lower column -->
+          <div class="card p-4 mt-4">
+            <div class="text-sm font-extrabold text-slate-900">Spelreëls</div>
+            <ul class="mt-2 text-sm text-slate-700 list-disc pl-5 space-y-1">
+              <li>Blokke val. Skuif met ← → en gebruik spasie vir ’n hard drop.</li>
+              <li>Groepe van dieselfde <span class="font-extrabold">letter+kleur</span> verdwyn (behalwe as die letter in die teikenwoord is).</li>
+              <li>Jy wen as die teikenwoord aaneenlopend in enige ry vorm.</li>
+            </ul>
+          </div>
+        </aside>
+      </div>
     </div>
   </main>
 
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
     &copy; 2025 Kriptiek. Alle regte voorbehou. |
-    <a href="/index.html" class="underline">Tuis</a> |
-    <a href="/profile.html" class="underline">My profiel</a> |
-    <a href="/forum.html" class="underline">Gesels saam</a> |
-    <a href="/privacy.html" class="underline">Privaatheidsbeleid</a> |
-    <a href="/terms.html" class="underline">Voorwaardes</a> |
-    <a href="/faq.html" class="underline">Gereelde vrae</a> |
-    <a href="/about.html" class="underline">Oor Kriptiek</a> |
-    <a href="/contact.html" class="underline">Kontak ons</a>
+    <a href="/privacy.html" class="underline px-1.5">Privaatheidsbeleid</a> |
+    <a href="/terms.html" class="underline px-1.5">Voorwaardes</a> |
+    <a href="/faq.html" class="underline px-1.5">Gereelde vrae</a> |
+    <a href="/about.html" class="underline px-1.5">Oor Kriptiek</a> |
+    <a href="/contact.html" class="underline px-1.5">Kontak ons</a>
   </footer>
-  <script type="module">
-    // PART 3/5 (module)
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
-    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
-    import {
-      initializeFirestore, serverTimestamp, doc, getDoc, setDoc, deleteDoc,
-      collection, query, orderBy, limit, getDocs, onSnapshot, where
-    } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
-    /* ---- Firebase ---- */
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import {
+      getAuth, onAuthStateChanged, signOut
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc, setDoc, addDoc, collection, getDocs,
+      query, limit, where
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
       authDomain: "kriptiek-c9ea2.firebaseapp.com",
@@ -606,725 +371,895 @@
       appId: "1:620450620939:web:e93a18ac23b53b33db890e"
     };
 
-    const app  = initializeApp(firebaseConfig);
+    const SITE_ORIGIN = location.origin;
+    const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
 
-    // Helps on networks/browsers that struggle with QUIC/streams.
-    const db = initializeFirestore(app, {
-      experimentalForceLongPolling: true,
-      useFetchStreams: false
+    const $ = (id)=>document.getElementById(id);
+
+    const showAlert = (msg, kind="info")=>{
+      const box = $("alertBox");
+      box.classList.remove("hidden");
+      box.innerHTML = msg;
+      box.className = "mb-4 rounded-lg border px-3 py-2 text-sm " + (
+        kind==="ok" ? "border-green-300 bg-green-50 text-green-800"
+        : kind==="error" ? "border-red-300 bg-red-50 text-red-800"
+        : "border-blue-300 bg-blue-50 text-blue-800"
+      );
+    };
+    const hideAlert = ()=>{ $("alertBox").classList.add("hidden"); };
+
+    // Header background letters
+    (function headerBG(){
+      const el = document.getElementById('backgroundCrossword');
+      if (!el) return;
+      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      function rand() { return letters[Math.floor(Math.random()*letters.length)]; }
+      function draw() {
+        el.innerHTML = '';
+        const numRows = Math.ceil(el.offsetHeight / 30);
+        const numCols = Math.ceil(el.offsetWidth / 30);
+        const total = (numRows * numCols) || 300;
+        for (let i=0;i<total;i++){
+          const d=document.createElement('div');
+          d.className='bg-letter-box';
+          d.textContent=rand();
+          el.appendChild(d);
+        }
+      }
+      window.addEventListener('load', draw);
+      window.addEventListener('resize', ()=>{ clearTimeout(window.__bgT); window.__bgT=setTimeout(draw,120); });
+    })();
+
+    // --- Supporter badge (public) ---
+    const supporterCache = new Map(); // uid -> boolean
+    async function isSupporter(uid){
+      if (!uid) return false;
+      if (supporterCache.has(uid)) return supporterCache.get(uid);
+      try{
+        const snap = await getDoc(doc(db, "supportersPublic", uid));
+        const val = !!(snap.exists() && snap.data()?.active === true);
+        supporterCache.set(uid, val);
+        return val;
+      }catch{
+        supporterCache.set(uid, false);
+        return false;
+      }
+    }
+
+    // --- Auth state ---
+    let currentUser = null;
+    let guestMode = false;
+
+    $("logoutBtn").addEventListener("click", async ()=>{
+      try { await signOut(auth); } finally {
+        try { localStorage.clear(); sessionStorage.clear(); } catch {}
+        window.location.href = "/login.html?new=1";
+      }
     });
 
-    /* ---- DOM ---- */
-    const welcomeLine = document.getElementById('welcomeLine');
-    const playerNameEl = document.getElementById('playerName');
-    const targetEl   = document.getElementById('target');
-    const gridEl     = document.getElementById('grid');
-    const over       = document.getElementById('over');
-    const winMsg     = document.getElementById('winMsg');
-    const modalShareBtn = document.getElementById('modalShareBtn');
-    const modalCloseBtn = document.getElementById('modalCloseBtn');
-    const shareMenu  = document.getElementById('shareMenu');
+    $("playGuestBtn").addEventListener("click", ()=>{
+      guestMode = true;
+      $("guestGate").classList.add("hidden");
+      renderAuthUI(null);
+      initAfterAuth();
+    });
 
-    const lbList     = document.getElementById('leaderboardList');
-    const timeText   = document.querySelector('#timeBox b');
-    const bestText   = document.querySelector('#bestBox b');
+    // --- Game constants ---
+    const COLS = 8;
+    const ROWS = 10;
 
-    const btnLeft = document.getElementById('btnLeft');
-    const btnRight= document.getElementById('btnRight');
-    const btnDown = document.getElementById('btnDown');
-    const btnStart= document.getElementById('btnStart');
-    const btnPause= document.getElementById('btnPause');
+    const COLORS = [
+      { bg:"#60a5fa", fg:"#0b1220" }, // blue
+      { bg:"#34d399", fg:"#0b1220" }, // green
+      { bg:"#fbbf24", fg:"#0b1220" }, // yellow
+      { bg:"#fb7185", fg:"#0b1220" }, // pink
+      { bg:"#a78bfa", fg:"#0b1220" }, // purple
+    ];
 
-    const stickyShareBtn   = document.getElementById('stickyShareBtn');
-    const stickyShareMenu  = document.getElementById('stickyShareMenu');
-    const sWA   = document.getElementById('sWhatsApp');
-    const sCopy = document.getElementById('sCopy');
-    const sSys  = document.getElementById('sSystem');
-    const mWA   = document.getElementById('mWhatsApp');
-    const mCopy = document.getElementById('mCopy');
-    const mSys  = document.getElementById('mSystem');
-
-    const barNR       = document.getElementById('barNR');
-    const barR        = document.getElementById('barR');
-    const nrGate      = document.getElementById('nrGate');
-    const gateGuestBtn= document.getElementById('gateGuestBtn');
-    const gateRegBtn  = document.getElementById('gateRegBtn');
-    const gateRegLink = document.getElementById('gateRegLink');
-
-    /* ---- Helpers ---- */
-    const pad = n => String(n).padStart(2,'0');
-    const fmt = s => s==null ? '--:--' : `${pad(Math.floor(s/60))}:${pad(s%60)}`;
-    function nowZa(){
-      const n=new Date(); const utc=n.getTime()+n.getTimezoneOffset()*60000;
-      return new Date(utc + 120*60000);
-    }
-    const todayISO = () => { const d=nowZa(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
-
-    const qs = new URLSearchParams(location.search);
-    const explicitId = qs.get('gameId');
-    const SITE_ORIGIN = location.hostname.endsWith('kriptiek.com') ? location.origin : 'https://www.kriptiek.com';
-
-    /* ---- Share helpers ---- */
-    const shareKey = gid => `blitstiekShare:${gid}`;
-    let stickyPayload = null;
-
-    function buildShareUrl(gameId){
-      const url = new URL('/blitstiek.html', SITE_ORIGIN);
-      if (gameId) url.searchParams.set('gameId', gameId);
-      return url.toString();
-    }
-    function shareTextLinkOnly(gid){
-      return `Kom speel vandag se BLITSTIEK op Kriptiek: ${buildShareUrl(gid)}`;
-    }
-    function buildWinShareText(payload){
-      const tt   = Number(payload?.time);
-      const word = String(payload?.target || TARGET || '—').toUpperCase();
-      return `Ek het ${word} op BLITSTIEK in ${fmt(tt)} gebou: ${buildShareUrl(GAME_ID)}`;
-    }
-    function currentShareText(){
-      return (stickyPayload && Number.isFinite(Number(stickyPayload.time)))
-        ? buildWinShareText(stickyPayload)
-        : shareTextLinkOnly(GAME_ID);
+    function pad2(n){ return String(n).padStart(2,"0"); }
+    function formatMs(ms){
+      if (!isFinite(ms) || ms < 0) return "—";
+      const total = Math.floor(ms/100);
+      const s = Math.floor(total/10);
+      const d = total%10;
+      const m = Math.floor(s/60);
+      const ss = s%60;
+      return `${pad2(m)}:${pad2(ss)}.${d}`;
     }
 
-    /* ---- Leaderboard constants ---- */
-    const LB_SIZE = 10;
-
-    function escapeHtml(v){
-      return String(v ?? "")
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#39;');
+    function nowZA(){
+      // ZA-safe "today" resolver (approx): uses local time but forces Africa/Johannesburg
+      const d = new Date();
+      const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Africa/Johannesburg',
+        year:'numeric', month:'2-digit', day:'2-digit'
+      }).formatToParts(d);
+      const y = parts.find(p=>p.type==='year')?.value;
+      const m = parts.find(p=>p.type==='month')?.value;
+      const da = parts.find(p=>p.type==='day')?.value;
+      return `${y}-${m}-${da}`;
     }
 
-    function normalizeMedaljes(raw){
-      if (!Array.isArray(raw)) return [];
-      return raw
-        .map((m) => {
-          if (typeof m === 'string') return m.trim();
-          if (m && typeof m.label === 'string') return m.label.trim();
-          if (m && typeof m.name === 'string') return m.name.trim();
-          return '';
-        })
-        .filter(Boolean);
+    function gameIdForToday(){
+      return `Game${nowZA()}`;
     }
+    // --- Firestore: resolve GAME_ID + load target ---
+    let GAME_ID = null;
+    let TARGET = null; // string
+    let TARGET_SET = null; // Set of letters
 
-    function renderSupporterStar(isSupporter){
-      if (!isSupporter) return '';
-      return '<span class="inline-block ml-1 align-middle text-yellow-400" aria-label="Ondersteuner">★</span>';
-    }
-
-    function renderMedaljePillsInline(medaljes, isSupporter){
-      if (!isSupporter || !Array.isArray(medaljes) || !medaljes.length) return '';
-      return medaljes.slice(0,2)
-        .map((label) => `<span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 ml-1 leading-none">${escapeHtml(label)}</span>`)
-        .join('');
-    }
-
-    /* ---- Mechanics ---- */
-    const H = 10, W = 8;
-    const COLORS = ['#2196f3','#f44336','#4caf50','#ffc107','#9c27b0','#003366','#009688'];
-    const CONS   = 'BCDFGHJKLMNPQRSTVWXZ';
-    const VOWS   = 'AEIOUY';
-
-    /* ---- State ---- */
-    let user=null;
-    let currentUserName='Speler';
-    let GAME_ID=null, TARGET='';
-    let TODAY_ID=`Game${todayISO()}`;
-    let IS_ARCHIVE=false;
-
-    let grid=Array.from({length:H},()=>Array(W).fill(null));
-    let cur=null, nxt=null;
-    let paused=false, ended=false, moving=false;
-    let t=0, tInt=null, gInt=null;
-    let lbUnsub=null;
-
-    /* ---- Username ---- */
-    async function resolveUserName(u){
+    async function resolveGameId(){
+      const todayId = gameIdForToday();
       try{
-        const uref = doc(db,'users',u.uid);
-        const snap = await getDoc(uref);
-        if(snap.exists() && snap.data().userName){
-          return String(snap.data().userName).slice(0,24);
+        const snap = await getDoc(doc(db, "blitstiekGames", todayId));
+        if (snap.exists()) return { id: todayId, data: snap.data() || {} };
+      }catch{}
+
+      // Fallback 1: any active game (no composite index; we pick best client-side)
+      try{
+        const col = collection(db, "blitstiekGames");
+        const q1 = query(col, where("status", "==", "active"), limit(25));
+        const s1 = await getDocs(q1);
+        if (!s1.empty) {
+          let best = null;
+          s1.forEach(d=>{
+            const data = d.data() || {};
+            const score = Number(data.createdAtMs || 0);
+            if (!best || score > best.score) best = { id: d.id, data, score };
+          });
+          if (best) return { id: best.id, data: best.data };
         }
       }catch{}
-      if (u.displayName) return String(u.displayName).slice(0,24);
-      if (u.email){
-        const local = u.email.split('@')[0];
-        return local ? local.slice(0,24) : 'Speler';
-      }
-      return 'Speler';
-    }
 
-    /* ---- Auth ---- */
-    onAuthStateChanged(auth, async (u)=>{
-      user=u||null;
-      if(user){
-        currentUserName = await resolveUserName(user);
-        playerNameEl.textContent = currentUserName;
-        welcomeLine.style.display = '';
-        barR.classList.remove('hidden');
-        barNR.classList.add('hidden');
-        hideNRGate();
-      } else {
-        currentUserName = 'Speler';
-        playerNameEl.textContent = currentUserName;
-        welcomeLine.style.display = 'none';
-        barNR.classList.remove('hidden');
-        barR.classList.add('hidden');
-        showNRGate();
-      }
-    });
-
-    /* ---- Pixel-perfect grid sizing ---- */
-    function resizeGrid(){
-      const wrap = gridEl.parentElement;
-      const availCss = Math.min(320, Math.floor(wrap.clientWidth));
-      const dpr = Math.max(1, window.devicePixelRatio || 1);
-      const toDp   = vCss => Math.round(vCss * dpr);
-      const toCss  = vDp  => vDp / dpr;
-      const snapDp = vDp  => Math.floor(vDp / 8) * 8;
-
-      const availDp   = toDp(availCss);
-      const snappedDp = Math.max(toDp(240), snapDp(availDp));
-      const quantW    = toCss(snappedDp);
-
-      const cellCss = Math.floor(quantW / 8);
-      const quantH  = cellCss * 10;
-
-      document.documentElement.style.setProperty('--cellSize', `${cellCss}px`);
-      const lineCss = 1 / dpr;
-      document.documentElement.style.setProperty('--line', `${lineCss}px`);
-
-      gridEl.style.width  = quantW + 'px';
-      gridEl.style.height = quantH + 'px';
-      document.documentElement.style.setProperty('--gridW', quantW + 'px');
-
-      const glyph = Math.max(15, Math.min(28, Math.round(cellCss * 0.50)));
-      document.documentElement.style.setProperty('--cell-font', glyph + 'px');
-    }
-
-    function alignDesktopAds(){
-      const layout = document.querySelector('.game-layout');
-      const gridEl2 = document.getElementById('grid');
-      const leftAd  = document.getElementById('desktopAdLeft');
-      const rightAd = document.getElementById('desktopAdRight');
-      if (!layout || !gridEl2) return;
-
-      const layoutRect = layout.getBoundingClientRect();
-      const gridRect   = gridEl2.getBoundingClientRect();
-      const offset     = gridRect.top - layoutRect.top;
-
-      if (offset >= 0 && offset < 2000){
-        if (leftAd)  leftAd.style.top  = offset + 'px';
-        if (rightAd) rightAd.style.top = offset + 'px';
-      }
-    }
-
-    function handleResize(){
-      resizeGrid();
-      alignDesktopAds();
-    }
-    window.addEventListener('resize', handleResize);
-    // PART 4/5 (module continuation)
-
-    /* ---- Grid rendering ---- */
-    function drawGrid(){
-      gridEl.innerHTML='';
-      for(let y=0;y<H;y++) for(let x=0;x<W;x++){
-        const d=document.createElement('div'); d.className='cell'; d.dataset.x=x; d.dataset.y=y;
-        gridEl.appendChild(d);
-      }
-      resizeGrid();
-      alignDesktopAds();
-    }
-
-    function drawBlock(b){
-      if(!b||b.x<0||b.x>=W||b.y<0||b.y>=H) return;
-      const c=gridEl.querySelector(`.cell[data-x="${b.x}"][data-y="${b.y}"]`);
-      if(!c) return;
-      c.className='cell f'; c.style.background=b.color; c.textContent=b.letter;
-    }
-
-    function clearBlock(b){
-      if(!b) return;
-      const c=gridEl.querySelector(`.cell[data-x="${b.x}"][data-y="${b.y}"]`);
-      if(!c) return;
-      c.className='cell'; c.style.background='var(--cell-bg)'; c.textContent='';
-    }
-
-    const partOfTarget = L => TARGET.includes(L);
-    const collide = b => !b || b.x<0||b.x>=W||b.y>=H || (b.y>=0 && grid[b.y][b.x]);
-
-    function createBlock(){
-      const color = COLORS[Math.floor(Math.random()*COLORS.length)];
-      const letter = Math.random()<0.3 ? VOWS[Math.floor(Math.random()*VOWS.length)]
-                                       : CONS[Math.floor(Math.random()*CONS.length)];
-      return { color, letter, x:Math.floor(W/2), y:0 };
-    }
-
-    async function move(dx,dy){
-      if(!cur||paused||ended||moving) return;
-      moving = true;
-      clearBlock(cur);
-      const test = { ...cur, x:cur.x+dx, y:cur.y+dy };
-      if(!collide(test)){ cur=test; drawBlock(cur); }
-      else if(dy>0){ drawBlock(cur); place(); }
-      else{ drawBlock(cur); }
-      moving = false;
-    }
-
-    function hardDrop(){
-      if(!cur||paused||ended) return;
-      clearBlock(cur);
-      while(cur.y<H-1 && !collide({...cur,y:cur.y+1})) cur.y++;
-      place();
-    }
-
-    async function place(){
-      if(!cur||cur.y<0) return;
-      grid[cur.y][cur.x]={...cur}; drawBlock(cur);
-      await matchAndDrop();
-      await checkWin();
-      cur=nxt; nxt=createBlock();
-      if(cur) drawBlock(cur);
-    }
-
-    async function matchAndDrop(){
-      const del=new Set();
-      for(let y=0;y<H;y++) for(let x=0;x<W;x++){
-        const a=grid[y][x]; if(!a||partOfTarget(a.letter)) continue;
-        for(const [dx,dy] of [[1,0],[0,1],[-1,0],[0,-1]]){
-          const nx=x+dx, ny=y+dy; if(nx<0||nx>=W||ny<0||ny>=H) continue;
-          const b=grid[ny][nx]; if(!b||partOfTarget(b.letter)) continue;
-          if(a.letter===b.letter || a.color===b.color){ del.add(`${x},${y}`); del.add(`${nx},${ny}`); }
+      // Fallback 2: newest by createdAtMs (client-side from limited sample)
+      try{
+        const col = collection(db, "blitstiekGames");
+        const q2 = query(col, limit(50));
+        const s2 = await getDocs(q2);
+        if (!s2.empty) {
+          let best = null;
+          s2.forEach(d=>{
+            const data = d.data() || {};
+            const score = Number(data.createdAtMs || 0);
+            if (!best || score > best.score) best = { id: d.id, data, score };
+          });
+          if (best) return { id: best.id, data: best.data };
         }
-      }
-      if(!del.size) return;
+      }catch{}
 
-      await Promise.all(Array.from(del).map(key=>new Promise(res=>{
-        const [x,y]=key.split(',').map(Number);
-        const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
-        if(c){ c.classList.add('pop'); setTimeout(()=>{ c.classList.remove('pop'); res(); },150);} else res();
-        grid[y][x]=null;
-      })));
-
-      for(let x=0;x<W;x++){
-        let wY=H-1;
-        for(let y=H-1;y>=0;y--){
-          if(grid[y][x]){
-            if(y!==wY){ grid[wY][x]=grid[y][x]; grid[y][x]=null; }
-            wY--;
-          }
-        }
-      }
-
-      for(let y=0;y<H;y++) for(let x=0;x<W;x++){
-        const c=gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
-        c.className='cell'; c.style.background='var(--cell-bg)'; c.textContent='';
-        if(grid[y][x]) drawBlock({...grid[y][x],x,y});
-      }
+      return { id: todayId, data: {} };
     }
 
-    async function checkWin(){
-      if(!TARGET) return;
-      for(let y=0;y<H;y++) for(let x=0;x<=W-TARGET.length;x++){
-        let ok=true;
-        for(let i=0;i<TARGET.length;i++){
-          const g=grid[y][x+i];
-          if(!g || g.letter!==TARGET[i]){ ok=false; break; }
-        }
-        if(ok){
-          for(let i=0;i<TARGET.length;i++){
-            const c=gridEl.querySelector(`.cell[data-x="${x+i}"][data-y="${y}"]`);
-            if(c) c.style.transform='scale(1.05)';
-          }
-          setTimeout(()=>end(true), 450);
+    function renderTargetChips(word){
+      const el = $("targetChips");
+      el.innerHTML = "";
+      const letters = String(word || "").toUpperCase().split("");
+      letters.forEach(ch=>{
+        const span = document.createElement("span");
+        span.className = "inline-flex items-center justify-center px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-900 font-extrabold";
+        span.textContent = ch;
+        el.appendChild(span);
+      });
+    }
+
+    // --- Leaderboard ---
+    let leaderboard = [];
+    async function loadLeaderboard(){
+      $("boardList").innerHTML = `<div class="text-sm text-slate-500">Laai ranglys…</div>`;
+      leaderboard = [];
+
+      if (!GAME_ID) return;
+
+      try{
+        const col = collection(db, "blitstiekGames", GAME_ID, "leaderboard");
+        const snap = await getDocs(query(col, limit(25))); // we sort client-side
+        const rows = [];
+        snap.forEach(d=>{
+          const data = d.data() || {};
+          rows.push({
+            uid: d.id,
+            userName: String(data.userName || data.name || "Onbekend"),
+            bestMs: Number(data.bestMs ?? data.bestTimeMs ?? data.timeMs ?? NaN),
+          });
+        });
+
+        rows.sort((a,b)=> (a.bestMs - b.bestMs));
+        leaderboard = rows.filter(r=>isFinite(r.bestMs) && r.bestMs > 0).slice(0, 15);
+
+        // Best time at top
+        const top = leaderboard[0];
+        $("bestTime").textContent = top ? formatMs(top.bestMs) : "—";
+
+        // Render with supporter badges (lazy per row)
+        const list = $("boardList");
+        list.innerHTML = "";
+
+        if (!leaderboard.length) {
+          list.innerHTML = `<div class="text-sm text-slate-500">Nog geen tye vandag nie.</div>`;
           return;
         }
-      }
-    }
 
-    function setTime(v){ t=v; timeText.textContent=fmt(v); }
+        for (const row of leaderboard) {
+          const line = document.createElement("div");
+          line.className = "flex items-center justify-between gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2";
 
-    function start(){
-      ended=false;
-      over.style.display='none';
-      shareMenu.classList.add('hidden');
-      stickyShareMenu.classList.add('hidden');
-      setTime(0);
+          const left = document.createElement("div");
+          left.className = "min-w-0";
 
-      grid=Array.from({length:H},()=>Array(W).fill(null));
-      drawGrid();
-      cur=createBlock(); nxt=createBlock(); drawBlock(cur);
+          const name = document.createElement("div");
+          name.className = "text-sm font-extrabold text-slate-900 truncate";
+          name.textContent = row.userName;
 
-      paused=false;
-      btnPause.textContent='POUSE';
+          const meta = document.createElement("div");
+          meta.className = "text-xs text-slate-500 mono";
+          meta.textContent = formatMs(row.bestMs);
 
-      clearInterval(tInt); clearInterval(gInt);
-      gInt=setInterval(()=>{ if(!paused && !ended) move(0,1); },1000);
-      tInt=setInterval(()=>{ if(!paused && !ended) setTime(t+1); },1000);
-    }
+          left.appendChild(name);
+          left.appendChild(meta);
 
-    function togglePause(){
-      if(ended) return;
-      paused=!paused;
-      btnPause.textContent = paused ? 'HERVAT' : 'POUSE';
-    }
+          const right = document.createElement("div");
+          right.className = "flex items-center gap-2 flex-shrink-0";
 
-    /* ---- N-R gate ---- */
-    let guestGateBypassOnce = false;
-    function showNRGate(){ nrGate.style.display='flex'; }
-    function hideNRGate(){ nrGate.style.display='none'; }
-    function chooseGuest(){ guestGateBypassOnce = true; hideNRGate(); window.focus?.(); }
+          const badge = document.createElement("span");
+          badge.className = "pill pill-green hidden";
+          badge.style.fontSize = "11px";
+          badge.style.padding = ".25rem .6rem";
+          badge.textContent = "ONDERSTEUNER";
 
-    function goRegister(){
-      const returnUrl = location.pathname + location.search;
-      sessionStorage.setItem('returnAfterAuth', returnUrl);
-      location.href = `/register.html?return=${encodeURIComponent(returnUrl)}`;
-    }
+          right.appendChild(badge);
 
-    gateGuestBtn.addEventListener('click', chooseGuest);
-    gateRegBtn  .addEventListener('click', goRegister);
-    gateRegLink .addEventListener('click', (e)=>{ e.preventDefault(); goRegister(); });
+          line.appendChild(left);
+          line.appendChild(right);
+          list.appendChild(line);
 
-    btnStart.addEventListener('click', ()=>{
-      if(!user && !guestGateBypassOnce){ showNRGate(); return; }
-      guestGateBypassOnce=false; window.focus?.(); start();
-    });
-
-    /* ---- Keyboard controls ---- */
-    window.addEventListener('keydown', (e) => {
-      const modalOpen = over && over.style.display === 'flex';
-      if (modalOpen) return;
-
-      const tag = (document.activeElement && document.activeElement.tagName) || '';
-      if (['INPUT','TEXTAREA','SELECT'].includes(tag)) return;
-
-      const gateOpen = nrGate && nrGate.style.display === 'flex';
-      const isGameplayKey = (
-        e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowDown' ||
-        e.key === ' ' || e.key === 'Spacebar' || e.key === 'p' || e.key === 'P'
-      );
-
-      if (gateOpen && isGameplayKey) {
-        e.preventDefault();
-        chooseGuest();
-        if (!cur) start();
-      }
-
-      switch (e.key) {
-        case 'ArrowLeft':  e.preventDefault(); move(-1, 0); break;
-        case 'ArrowRight': e.preventDefault(); move( 1, 0); break;
-        case 'ArrowDown':
-        case ' ':
-        case 'Spacebar':   e.preventDefault(); hardDrop();  break;
-        case 'p':
-        case 'P':          e.preventDefault(); togglePause(); break;
-      }
-    });
-
-    btnPause.addEventListener('click', ()=>togglePause());
-    btnLeft .addEventListener('click', ()=>move(-1,0));
-    btnRight.addEventListener('click', ()=>move(1,0));
-    btnDown .addEventListener('click', ()=>hardDrop());
-    // PART 5/5 (module continuation)
-
-    /* ---- Share (modal & sticky & tile) ---- */
-    function toggleShareMenu(){ shareMenu.classList.toggle('hidden'); }
-    modalShareBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleShareMenu(); });
-
-    document.addEventListener('click', (e)=>{
-      if(shareMenu && !shareMenu.contains(e.target) && e.target!==modalShareBtn){ shareMenu.classList.add('hidden'); }
-      if(stickyShareMenu && !stickyShareMenu.contains(e.target) && e.target!==stickyShareBtn){ stickyShareMenu.classList.add('hidden'); }
-      document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>{ if(!m.contains(e.target)) m.classList.add('hidden'); });
-    });
-    window.addEventListener('scroll',  ()=>{ shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden'); document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>m.classList.add('hidden')); });
-    window.addEventListener('resize',  ()=>{ shareMenu.classList.add('hidden'); stickyShareMenu.classList.add('hidden'); document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>m.classList.add('hidden')); });
-
-    async function trySystemShare(text){
-      try{
-        const res = await fetch(`${SITE_ORIGIN}/assets/BLITSTIEK_12SEP.png`);
-        const blob = await res.blob();
-        const files = [new File([blob],'BLITSTIEK.png',{type:blob.type})];
-        if(navigator.canShare && navigator.canShare({files})){
-          await navigator.share({ title:'BLITSTIEK – Kriptiek', text, files });
-          return true;
+          // resolve supporter badge
+          isSupporter(row.uid).then((ok)=>{
+            if (ok) badge.classList.remove("hidden");
+          });
         }
-      }catch{}
+      }catch(err){
+        console.error(err);
+        $("boardList").innerHTML = `<div class="text-sm text-red-600">Kon nie ranglys laai nie.</div>`;
+      }
+    }
+
+    $("refreshBoardBtn").addEventListener("click", ()=> loadLeaderboard());
+
+    // --- UI: auth rendering ---
+    async function renderAuthUI(user){
+      currentUser = user || null;
+
+      const authBtns = $("authBtns");
+      const logoutBtn = $("logoutBtn");
+      const supporterPill = $("supporterPill");
+
+      if (currentUser) {
+        authBtns.classList.add("hidden");
+        logoutBtn.classList.remove("hidden");
+
+        const name = (currentUser.displayName || "").trim();
+        $("welcomeLine").textContent = name
+          ? `Welkom terug, ${name.toUpperCase()}`
+          : `Welkom terug!`;
+
+        // supporter badge
+        const ok = await isSupporter(currentUser.uid);
+        if (ok) supporterPill.classList.remove("hidden"); else supporterPill.classList.add("hidden");
+      } else {
+        logoutBtn.classList.add("hidden");
+
+        if (guestMode) {
+          authBtns.classList.remove("hidden");
+          supporterPill.classList.add("hidden");
+          $("welcomeLine").textContent = "Jy speel tans as gas (beperkte funksies).";
+        } else {
+          authBtns.classList.remove("hidden");
+          supporterPill.classList.add("hidden");
+          $("welcomeLine").textContent = "Meld aan om jou beste tye op die ranglys te stoor.";
+        }
+      }
+    }
+
+    // --- Dropdown helpers ---
+    function closeDropdowns(){
+      $("shareMenuTop").classList.add("hidden");
+      $("shareMenuModal").classList.add("hidden");
+    }
+    function setupDropdown(btnId, menuId){
+      const btn = $(btnId), menu = $(menuId);
+      btn.addEventListener("click", (e)=>{
+        e.stopPropagation();
+        const isOpen = !menu.classList.contains("hidden");
+        closeDropdowns();
+        if (!isOpen) menu.classList.remove("hidden");
+      });
+    }
+    setupDropdown("shareBtnTop","shareMenuTop");
+    setupDropdown("shareBtnModal","shareMenuModal");
+
+    window.addEventListener("click", closeDropdowns);
+    window.addEventListener("scroll", closeDropdowns, { passive:true });
+    window.addEventListener("resize", closeDropdowns);
+
+    // --- Share ---
+    function buildShareText(){
+      const url = `${SITE_ORIGIN}/blitstiek.html`;
+      if (!TARGET) return `BLITSTIEK – Kriptiek\n${url}`;
+
+      const t = formatMs(gameState.bestRunMs || gameState.elapsedMs || 0);
+      const line = gameState.won
+        ? `Ek het BLITSTIEK vandag gewen in ${t}.`
+        : `Kom speel vandag se BLITSTIEK.`;
+
+      return `${line}\nTeiken: ${TARGET}\n${url}`;
+    }
+
+    async function shareVia(kind){
+      const txt = buildShareText();
+      const url = `${SITE_ORIGIN}/blitstiek.html`;
+
+      if (kind === "copy") {
+        try{
+          await navigator.clipboard.writeText(txt);
+          showAlert("Gekopieer.", "ok");
+        }catch{
+          showAlert("Kon nie kopieer nie.", "error");
+        }
+        return;
+      }
+
+      if (kind === "whatsapp") {
+        const wa = `https://wa.me/?text=${encodeURIComponent(txt)}`;
+        window.open(wa, "_blank", "noopener");
+        return;
+      }
+
+      // system share
       try{
-        if(navigator.share){ await navigator.share({ text }); return true; }
-      }catch{}
+        if (!navigator.share) {
+          showAlert("Stelseldeel is nie beskikbaar op hierdie toestel nie.", "error");
+          return;
+        }
+
+        // Try attach image
+        let files = undefined;
+        try{
+          const res = await fetch("/assets/BLITSTIEK_12SEP.png", { cache:"no-store" });
+          const blob = await res.blob();
+          const file = new File([blob], "BLITSTIEK_12SEP.png", { type: blob.type || "image/png" });
+          files = [file];
+        }catch{}
+
+        const payload = files ? { text: txt, url, files } : { text: txt, url };
+        await navigator.share(payload);
+      }catch{
+        // user canceled or failed
+      }
+    }
+
+    document.querySelectorAll('[data-share]').forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        closeDropdowns();
+        shareVia(btn.getAttribute("data-share"));
+      });
+    });
+
+    $("closeResultBtn").addEventListener("click", ()=> $("resultModal").classList.add("hidden"));
+    // --- Game state + rendering ---
+    const gridEl = $("grid");
+
+    function computeCellSize(){
+      // keep crisp sizing: fit within center column, clamp
+      const container = gridEl.parentElement;
+      const maxW = Math.min(520, Math.max(320, container.clientWidth - 2));
+      const cell = Math.floor((maxW - 20 - (COLS-1)*2) / COLS); // 20 padding + gaps
+      document.documentElement.style.setProperty("--cell", `${cell}px`);
+    }
+    window.addEventListener("resize", ()=>{ clearTimeout(window.__cellT); window.__cellT=setTimeout(computeCellSize, 80); });
+
+    function makeEmptyGrid(){
+      const g = [];
+      for (let r=0;r<ROWS;r++){
+        const row = [];
+        for (let c=0;c<COLS;c++) row.push(null);
+        g.push(row);
+      }
+      return g;
+    }
+
+    const gameState = {
+      running:false,
+      paused:false,
+      won:false,
+      startedAtMs:0,
+      elapsedMs:0,
+      bestRunMs:0,
+      tickTimer:null,
+      dropMs:520,
+      grid: makeEmptyGrid(),
+      falling: null, // {r,c,letter,colorIdx}
+    };
+
+    function setStatus(msg){
+      $("statusLine").textContent = msg;
+    }
+
+    function drawGrid(){
+      gridEl.innerHTML = "";
+      gridEl.style.setProperty("--cols", COLS);
+      gridEl.style.setProperty("--rows", ROWS);
+
+      for (let r=0;r<ROWS;r++){
+        for (let c=0;c<COLS;c++){
+          const cell = document.createElement("div");
+          cell.className = "cell cell-empty";
+          const v = gameState.grid[r][c];
+
+          if (v) {
+            cell.className = "cell cell-solid";
+            cell.style.background = COLORS[v.colorIdx]?.bg || "#94a3b8";
+            cell.style.color = COLORS[v.colorIdx]?.fg || "#0b1220";
+            cell.textContent = v.letter;
+          } else {
+            cell.textContent = "";
+          }
+
+          gridEl.appendChild(cell);
+        }
+      }
+    }
+
+    function paintFallingOnGrid(){
+      // draw base grid then overlay falling
+      drawGrid();
+      if (!gameState.falling) return;
+
+      const { r, c, letter, colorIdx } = gameState.falling;
+      if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return;
+
+      const idx = r*COLS + c;
+      const cell = gridEl.children[idx];
+      if (!cell) return;
+
+      cell.className = "cell cell-solid";
+      cell.style.background = COLORS[colorIdx]?.bg || "#94a3b8";
+      cell.style.color = COLORS[colorIdx]?.fg || "#0b1220";
+      cell.textContent = letter;
+    }
+
+    function randomLetter(){
+      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      const allow = TARGET ? (alphabet + TARGET) : alphabet;
+      const i = Math.floor(Math.random()*allow.length);
+      return allow[i];
+    }
+
+    function spawn(){
+      const letter = randomLetter();
+      const colorIdx = Math.floor(Math.random()*COLORS.length);
+      const c = Math.floor(COLS/2);
+      const r = 0;
+
+      // If spawn blocked -> reset
+      if (gameState.grid[r][c]) {
+        setStatus("Rooster vol – herbegin.");
+        gameState.running = false;
+        gameState.paused = false;
+        $("pauseBtn").classList.add("hidden");
+        $("startBtn").classList.remove("hidden");
+        return;
+      }
+
+      gameState.falling = { r, c, letter, colorIdx };
+      paintFallingOnGrid();
+    }
+
+    function canMove(dr, dc){
+      const f = gameState.falling;
+      if (!f) return false;
+      const nr = f.r + dr;
+      const nc = f.c + dc;
+      if (nc < 0 || nc >= COLS) return false;
+      if (nr < 0 || nr >= ROWS) return false;
+      return !gameState.grid[nr][nc];
+    }
+
+    function move(dr, dc){
+      if (!gameState.running || gameState.paused || gameState.won) return;
+      if (!gameState.falling) return;
+      if (!canMove(dr, dc)) return;
+      gameState.falling.r += dr;
+      gameState.falling.c += dc;
+      paintFallingOnGrid();
+    }
+
+    function lockFalling(){
+      const f = gameState.falling;
+      if (!f) return;
+      gameState.grid[f.r][f.c] = { letter: f.letter, colorIdx: f.colorIdx };
+      gameState.falling = null;
+    }
+
+    function neighbors4(r,c){
+      return [
+        [r-1,c],[r+1,c],[r,c-1],[r,c+1]
+      ].filter(([rr,cc])=> rr>=0 && rr<ROWS && cc>=0 && cc<COLS);
+    }
+
+    function findGroups(){
+      const seen = new Set();
+      const groups = [];
+      for (let r=0;r<ROWS;r++){
+        for (let c=0;c<COLS;c++){
+          const v = gameState.grid[r][c];
+          if (!v) continue;
+          const key = `${r},${c}`;
+          if (seen.has(key)) continue;
+
+          const stack = [[r,c]];
+          const cells = [];
+          seen.add(key);
+
+          while (stack.length){
+            const [rr,cc] = stack.pop();
+            cells.push([rr,cc]);
+            for (const [nr,nc] of neighbors4(rr,cc)){
+              const vv = gameState.grid[nr][nc];
+              if (!vv) continue;
+              if (vv.letter !== v.letter) continue;
+              if (vv.colorIdx !== v.colorIdx) continue;
+              const k = `${nr},${nc}`;
+              if (seen.has(k)) continue;
+              seen.add(k);
+              stack.push([nr,nc]);
+            }
+          }
+
+          groups.push({ letter: v.letter, colorIdx: v.colorIdx, cells });
+        }
+      }
+      return groups;
+    }
+
+    function applyGravity(){
+      for (let c=0;c<COLS;c++){
+        let write = ROWS-1;
+        for (let r=ROWS-1;r>=0;r--){
+          const v = gameState.grid[r][c];
+          if (v){
+            if (write !== r){
+              gameState.grid[write][c] = v;
+              gameState.grid[r][c] = null;
+            }
+            write--;
+          }
+        }
+      }
+    }
+    function clearMatches(){
+      // remove groups size>=3, unless letter is in target
+      let any = false;
+      const groups = findGroups();
+      for (const g of groups){
+        if (g.cells.length < 3) continue;
+        if (TARGET_SET && TARGET_SET.has(g.letter)) continue; // protect target letters
+        any = true;
+        for (const [r,c] of g.cells) gameState.grid[r][c] = null;
+      }
+      if (any) applyGravity();
+      return any;
+    }
+
+    function checkWin(){
+      if (!TARGET) return false;
+      const t = TARGET.toUpperCase();
+      for (let r=0;r<ROWS;r++){
+        let row = "";
+        for (let c=0;c<COLS;c++){
+          row += (gameState.grid[r][c]?.letter || ".");
+        }
+        if (row.includes(t)) return true;
+      }
       return false;
     }
 
-    function openWhatsApp(text){
-      const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-      const w = window.open(url,'_blank','noopener,noreferrer');
-      if(!w && navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>alert("Skakel gekopieer!")); }
+    function updateTimer(){
+      if (!gameState.running || gameState.paused || gameState.won) return;
+      gameState.elapsedMs = Date.now() - gameState.startedAtMs;
+      $("yourTime").textContent = formatMs(gameState.elapsedMs);
     }
 
-    mWA.onclick   = () => { openWhatsApp(currentShareText()); shareMenu.classList.add('hidden'); };
-    mCopy.onclick = async () => {
-      try{ await navigator.clipboard.writeText(currentShareText()); alert('Skakel gekopieer!'); }catch{}
-      shareMenu.classList.add('hidden');
-    };
-    mSys.onclick  = async () => {
-      const ok = await trySystemShare(currentShareText());
-      if(!ok) openWhatsApp(currentShareText());
-      shareMenu.classList.add('hidden');
-    };
+    function tick(){
+      if (!gameState.running || gameState.paused || gameState.won) return;
 
-    sWA.onclick   = () => { openWhatsApp(currentShareText()); stickyShareMenu.classList.add('hidden'); };
-    sCopy.onclick = async () => {
-      try{ await navigator.clipboard.writeText(currentShareText()); alert('Skakel gekopieer!'); }catch{}
-      stickyShareMenu.classList.add('hidden');
-    };
-    sSys.onclick  = async () => {
-      const ok = await trySystemShare(currentShareText());
-      if(!ok) openWhatsApp(currentShareText());
-      stickyShareMenu.classList.add('hidden');
-    };
+      updateTimer();
 
-    function enableStickyShare(payload){
-      stickyPayload = { time: Number(payload?.time ?? t), target: TARGET };
-      stickyShareBtn.classList.remove('hidden');
-      stickyShareBtn.onclick = (e)=>{ e.stopPropagation(); stickyShareMenu.classList.toggle('hidden'); };
-      try{
-        localStorage.setItem(shareKey(GAME_ID), JSON.stringify({ ...stickyPayload, at: Date.now() }));
-      }catch{}
-    }
+      if (!gameState.falling) spawn();
 
-    function maybeEnableStickyShareFromStorage(){
-      try{
-        const raw = localStorage.getItem(shareKey(GAME_ID));
-        if(!raw) return;
-        const saved = JSON.parse(raw);
-        if(saved && Number.isFinite(saved.time) && saved.target){
-          stickyPayload = { time:saved.time, target:saved.target };
-          stickyShareBtn.classList.remove('hidden');
-          stickyShareBtn.onclick = (e)=>{ e.stopPropagation(); stickyShareMenu.classList.toggle('hidden'); };
-        }
-      }catch{}
-    }
-
-    function wireShareTile(wrapper){
-      const btn  = wrapper.querySelector('.share-tile');
-      const menu = wrapper.querySelector('.share-menu-local');
-      const wa   = menu.querySelector('button.wa');
-      const cp   = menu.querySelector('button.copy');
-      const sys  = menu.querySelector('button.sys');
-      btn.addEventListener('click', (e)=>{
-        e.preventDefault(); e.stopPropagation();
-        document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>{ if(m!==menu) m.classList.add('hidden'); });
-        menu.classList.toggle('hidden');
-      });
-      const txt = () => currentShareText();
-      wa.onclick = () => { openWhatsApp(txt()); menu.classList.add('hidden'); };
-      cp.onclick = async () => { try{ await navigator.clipboard.writeText(txt()); alert('Skakel gekopieer!'); }catch{} menu.classList.add('hidden'); };
-      sys.onclick = async () => { const ok = await trySystemShare(txt()); if(!ok) openWhatsApp(txt()); menu.classList.add('hidden'); };
-    }
-
-    function initTileShareDropdowns(){
-      document.querySelectorAll('.share-tile-wrap').forEach(wireShareTile);
-    }
-    initTileShareDropdowns();
-
-    /* ---- Leaderboard submit (canonical) ---- */
-    async function submitTimeToBoard(){
-      if(!user) return;
-      const name    = currentUserName.slice(0,24);
-      const newTime = Number(t);
-
-      const runsCol = collection(db,'blitstiekGames', GAME_ID, 'runs');
-      const bestRef = doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid);
-
-      try {
-        const bestSnap = await getDoc(bestRef);
-        const prev = bestSnap.exists() ? Number(bestSnap.data().time) : null;
-        if (prev == null || !Number.isFinite(prev) || newTime < prev){
-          await setDoc(bestRef, {
-            userName: name,
-            time: newTime,
-            timestamp: serverTimestamp()
-          }, { merge:true });
-        } else {
-          await setDoc(bestRef, { userName: name }, { merge: true });
-        }
-      } catch (e) { console.warn('BEST_UPDATE_FAILED', e); }
-
-      try {
-        await setDoc(doc(runsCol), {
-          uid: user.uid,
-          userName: name,
-          time: newTime,
-          timestamp: serverTimestamp()
-        });
-        const qy = query(runsCol, where('uid','==', user.uid), orderBy('timestamp','desc'), limit(50));
-        const snap = await getDocs(qy);
-        const toDelete = snap.docs.slice(10);
-        await Promise.all(toDelete.map(d => deleteDoc(d.ref)));
-      } catch (e) { console.warn('RUN_APPEND/TRIM_FAILED', e); }
-    }
-
-    /* ---- LIVE Leaderboard (pill shows only real kBlit_total; no fallback) ---- */
-    function startLiveLeaderboard(){
-      if(lbUnsub) { lbUnsub(); lbUnsub=null; }
-
-      const qy = query(
-        collection(db,'blitstiekGames', GAME_ID, 'leaderboard'),
-        orderBy('time','asc'),
-        limit(25)
-      );
-
-      lbUnsub = onSnapshot(qy, (snap)=>{
-        lbList.innerHTML = '';
-
-        if (snap.empty) {
-          bestText.textContent='--:--';
-          lbList.innerHTML = `<li class="bg-green-100 font-medium"><span>Jy kan eerste op die leierbord wees!</span></li>`;
-          return;
-        }
-
-        const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        rows.sort((a,b)=>{
-          const ta = Number(a.time) || Infinity;
-          const tb = Number(b.time) || Infinity;
-          if (ta !== tb) return ta - tb;
-          const sa = a.timestamp?.toMillis?.() ? a.timestamp.toMillis() : 9e15;
-          const sb = b.timestamp?.toMillis?.() ? b.timestamp.toMillis() : 9e15;
-          return sa - sb;
-        });
-
-        const top = rows.slice(0,LB_SIZE);
-        if (top.length) bestText.textContent = fmt(Number(top[0].time));
-
-        top.forEach(v => {
-          const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
-          const isSupporter = v?.isSupporter === true;
-          const medaljeArr = normalizeMedaljes(v?.publicMedaljes || v?.inlineMedaljes || []);
-
-          const safeName = escapeHtml(v.userName || 'Onbekend');
-          const star = renderSupporterStar(isSupporter);
-          const medaljesHtml = renderMedaljePillsInline(medaljeArr, isSupporter);
-
-          const k = Number(v?.kBlit_total || 0);
-          const pillValue = (Number.isFinite(k) && k >= 25) ? k : 0;
-          const pill = pillValue
-            ? `<span class="k-pill" title="Blitstiek-telling">${pillValue}</span>`
-            : '';
-
-          const li = document.createElement('li');
-          li.innerHTML = `<span><strong>${safeName}</strong>${star}${medaljesHtml}${you}: ${fmt(Number(v.time))}</span>${pill}`;
-          lbList.appendChild(li);
-        });
-
-      }, (err) => {
-        console.warn('Leaderboard stream error:', err);
-        const msg = (err && (err.code || err.message)) ? ` – ${err.code||err.message}` : '';
-        lbList.innerHTML = `<li class="px-2 py-1 rounded bg-red-50 text-red-700">Kon nie leierbord laai nie${msg}.</li>`;
-      });
-    }
-
-    /* ---- Dynamic resolver ---- */
-    async function resolveGameId(){
-      if (explicitId) return explicitId;
-      const todayId = `Game${todayISO()}`;
-      try {
-        const todaySnap = await getDoc(doc(db,'blitstiekGames',todayId));
-        if (todaySnap.exists()) return todayId;
-      } catch {}
-      try {
-        const gamesRef = collection(db,'blitstiekGames');
-        let q1 = query(gamesRef, where('status','==','active'), orderBy('createdAt','desc'), limit(1));
-        let qs1 = await getDocs(q1);
-        if (!qs1.empty) return qs1.docs[0].id;
-        let q2 = query(gamesRef, orderBy('createdAt','desc'), limit(1));
-        let qs2 = await getDocs(q2);
-        if (!qs2.empty) return qs2.docs[0].id;
-      } catch {}
-      return null;
-    }
-
-    /* ---- Load game ---- */
-    async function loadGame(){
-      GAME_ID = await resolveGameId();
-
-      try {
-        if (GAME_ID) {
-          const urlObj = new URL(window.location.href);
-          urlObj.searchParams.set('gameId', GAME_ID);
-          urlObj.hash = '';
-          const hasQuery = urlObj.searchParams.toString();
-          const canonical = hasQuery ? `${urlObj.pathname}?${hasQuery}` : urlObj.pathname;
-          const current = window.location.pathname + window.location.search;
-          if (current !== canonical) history.replaceState(null, '', canonical);
-        }
-      } catch {}
-
-      TODAY_ID = `Game${todayISO()}`;
-      IS_ARCHIVE = !!(GAME_ID && GAME_ID !== TODAY_ID);
-
-      if(!GAME_ID){
-        targetEl.innerHTML = `<span>—</span>`;
-        drawGrid();
-        lbList.innerHTML = `<li class="text-red-600">Geen spel beskikbaar nie.</li>`;
+      // try move down; if cannot -> lock + clear + win check + spawn
+      if (canMove(1,0)) {
+        move(1,0);
         return;
       }
 
-      const snap = await getDoc(doc(db,'blitstiekGames',GAME_ID));
-      if(!snap.exists()){
-        targetEl.innerHTML = `<span>—</span>`;
-        drawGrid();
-        lbList.innerHTML = `<li class="text-red-600">Kon nie spel laai nie.</li>`;
+      lockFalling();
+
+      // clear chains
+      let loops = 0;
+      while (clearMatches() && loops < 12) loops++;
+
+      if (checkWin()) {
+        finishWin();
         return;
       }
 
-      const data=snap.data();
-      TARGET=(data.word||'').toUpperCase();
+      spawn();
+    }
 
-      targetEl.innerHTML='';
-      (TARGET || '—').split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
+    function hardDrop(){
+      if (!gameState.running || gameState.paused || gameState.won) return;
+      if (!gameState.falling) return;
+      while (canMove(1,0)) gameState.falling.r += 1;
+      paintFallingOnGrid();
+      // force lock + resolve
+      tick();
+    }
 
-      grid = Array.from({length:H},()=>Array(W).fill(null));
+    function resetGame(keepTarget=true){
+      gameState.running=false;
+      gameState.paused=false;
+      gameState.won=false;
+      gameState.startedAtMs=0;
+      gameState.elapsedMs=0;
+      gameState.grid = makeEmptyGrid();
+      gameState.falling=null;
+
+      if (gameState.tickTimer) clearInterval(gameState.tickTimer);
+      gameState.tickTimer = null;
+
+      $("yourTime").textContent = "00:00.0";
+      $("pauseBtn").classList.add("hidden");
+      $("startBtn").classList.remove("hidden");
+      setStatus(keepTarget ? "Gereed. Klik Begin." : "Laai…");
       drawGrid();
+    }
 
-      maybeEnableStickyShareFromStorage();
+    function startGame(){
+      if (!TARGET) { setStatus("Geen teiken nie."); return; }
+      if (gameState.running) return;
 
-      if(user){
-        try{
-          const my = await getDoc(doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid));
-          if(my.exists()){
-            const v = my.data();
-            enableStickyShare({ time: v.time, target: TARGET });
+      gameState.running=true;
+      gameState.paused=false;
+      gameState.won=false;
+      gameState.startedAtMs = Date.now();
+      gameState.elapsedMs = 0;
+      $("startBtn").classList.add("hidden");
+      $("pauseBtn").classList.remove("hidden");
+      setStatus("Speel!");
+      spawn();
+      gameState.tickTimer = setInterval(tick, gameState.dropMs);
+    }
+
+    function togglePause(){
+      if (!gameState.running || gameState.won) return;
+      gameState.paused = !gameState.paused;
+      if (gameState.paused) {
+        setStatus("Pouse.");
+        $("pauseBtn").textContent = "Gaan voort";
+      } else {
+        setStatus("Speel!");
+        $("pauseBtn").textContent = "Pouse";
+        // adjust start time so timer remains correct
+        gameState.startedAtMs = Date.now() - gameState.elapsedMs;
+      }
+    }
+
+    $("startBtn").addEventListener("click", startGame);
+    $("pauseBtn").addEventListener("click", togglePause);
+    $("resetGameBtn").addEventListener("click", ()=> resetGame(true));
+    $("leftBtn").addEventListener("click", ()=> move(0,-1));
+    $("rightBtn").addEventListener("click", ()=> move(0,1));
+    $("dropBtn").addEventListener("click", hardDrop);
+
+    // Keyboard
+    window.addEventListener("keydown", (e)=>{
+      if (["ArrowLeft","ArrowRight"," "].includes(e.key)) e.preventDefault();
+      if (e.key === "ArrowLeft") move(0,-1);
+      if (e.key === "ArrowRight") move(0,1);
+      if (e.key === " ") hardDrop();
+    }, { passive:false });
+
+    // --- Result + submission ---
+    function openResultModal(){
+      $("resultModal").classList.remove("hidden");
+    }
+
+    async function finishWin(){
+      gameState.won = true;
+      gameState.running = false;
+      if (gameState.tickTimer) clearInterval(gameState.tickTimer);
+      gameState.tickTimer = null;
+
+      gameState.bestRunMs = gameState.elapsedMs;
+      $("yourTime").textContent = formatMs(gameState.elapsedMs);
+      setStatus("Jy het gewen!");
+
+      // Show checkpoint after first completion (local)
+      try{
+        const key = `blitstiek-${GAME_ID}-done`;
+        localStorage.setItem(key, "1");
+        // show gate once
+        const gateKey = `blitstiek-supportgate-${GAME_ID}`;
+        if (!localStorage.getItem(gateKey)) {
+          $("supportGate").classList.remove("hidden");
+          localStorage.setItem(gateKey, "1");
+        }
+      }catch{}
+
+      // Modal text
+      const t = formatMs(gameState.elapsedMs);
+      $("resultText").innerHTML = `Jy het vandag se teiken (<span class="font-extrabold">${TARGET}</span>) gevorm in <span class="font-extrabold">${t}</span>.`;
+
+      // Submit only if signed in (not guest)
+      if (currentUser && !guestMode) {
+        await submitTimeToBoard(gameState.elapsedMs);
+      } else {
+        showAlert("Jy speel as gas; jou tyd word nie gestoor nie. Meld aan om op die ranglys te verskyn.", "info");
+      }
+
+      openResultModal();
+      await loadLeaderboard();
+    }
+
+    async function submitTimeToBoard(ms){
+      if (!currentUser || !GAME_ID) return;
+
+      const uid = currentUser.uid;
+      const name = (currentUser.displayName || "").trim() || "Speler";
+      const rowRef = doc(db, "blitstiekGames", GAME_ID, "leaderboard", uid);
+
+      // Read existing best
+      let prevBest = Infinity;
+      try{
+        const snap = await getDoc(rowRef);
+        if (snap.exists()) {
+          const d = snap.data() || {};
+          const x = Number(d.bestMs ?? d.bestTimeMs ?? Infinity);
+          if (isFinite(x) && x > 0) prevBest = x;
+        }
+      }catch{}
+
+      const bestMs = Math.min(prevBest, ms);
+      try{
+        await setDoc(rowRef, {
+          userName: name,
+          bestMs,
+          updatedAtMs: Date.now()
+        }, { merge:true });
+      }catch(err){
+        console.error(err);
+        showAlert("Kon nie jou tyd stoor nie. Kyk Firestore-regte.", "error");
+        return;
+      }
+
+      // Append run
+      try{
+        const runsCol = collection(db, "blitstiekGames", GAME_ID, "leaderboard", uid, "runs");
+        await addDoc(runsCol, { ms, atMs: Date.now() });
+      }catch{
+        // ignore run log failure
+      }
+
+      showAlert("Jou tyd is op die ranglys gestoor.", "ok");
+    }
+    // Support gate buttons
+    $("supportLaterBtn").addEventListener("click", ()=> $("supportGate").classList.add("hidden"));
+
+    // --- Init after auth/game load ---
+    async function initAfterAuth(){
+      computeCellSize();
+      resetGame(false);
+
+      setStatus("Laai vandag se spel…");
+
+      const resolved = await resolveGameId();
+      GAME_ID = resolved.id;
+
+      // Expect game doc to have target (field names supported)
+      const data = resolved.data || {};
+      TARGET = String(
+        data.target || data.word || data.targetWord || data.teiken || data.teikenwoord || ""
+      ).toUpperCase().trim();
+
+      if (!TARGET) {
+        TARGET = "KRIPTIEK"; // safe fallback so the page doesn't dead-end
+        showAlert("Kon nie vandag se teiken laai nie; val terug na ’n veilige teiken.", "error");
+      }
+
+      TARGET_SET = new Set(TARGET.split(""));
+
+      renderTargetChips(TARGET);
+      resetGame(true);
+
+      // Restore best-time display from leaderboard
+      await loadLeaderboard();
+
+      // If already done, show small message + allow play
+      try{
+        const key = `blitstiek-${GAME_ID}-done`;
+        if (localStorage.getItem(key) === "1") {
+          setStatus("Jy het vandag reeds gewen. Jy kan weer speel vir pret.");
+          // show checkpoint (but not every refresh)
+          const gateKey = `blitstiek-supportgate-${GAME_ID}`;
+          if (!localStorage.getItem(gateKey)) {
+            $("supportGate").classList.remove("hidden");
+            localStorage.setItem(gateKey, "1");
           }
+        }
+      }catch{}
+
+      // Show share tile after first completion (optional)
+      // (kept simple here; share is always available)
+    }
+
+    // --- Guest gate: show if not signed in and no guest choice yet ---
+    function maybeShowGuestGate(){
+      if (currentUser) {
+        $("guestGate").classList.add("hidden");
+        return;
+      }
+      if (guestMode) {
+        $("guestGate").classList.add("hidden");
+        return;
+      }
+      $("guestGate").classList.remove("hidden");
+    }
+
+    // --- Auth listener ---
+    onAuthStateChanged(auth, async (user)=>{
+      hideAlert();
+      currentUser = user || null;
+
+      if (currentUser) {
+        guestMode = false;
+        $("guestGate").classList.add("hidden");
+      } else {
+        // If we came back from login/register
+        try{
+          const ret = sessionStorage.getItem("returnAfterAuth") || localStorage.getItem("redirectAfterLogin");
+          if (ret === "/blitstiek.html") { /* no-op */ }
         }catch{}
       }
 
-      startLiveLeaderboard();
-    }
+      await renderAuthUI(currentUser);
+      maybeShowGuestGate();
 
-    /* ---- Finish ---- */
-    async function end(win){
-      ended=true; clearInterval(tInt); clearInterval(gInt);
-      if(!win) return;
+      // Always init once (or re-init if auth changes)
+      await initAfterAuth();
+    });
 
-      await submitTimeToBoard();
-      enableStickyShare({ time: t, target: TARGET });
+    // Ensure register link returns here
+    (function wireReturnUrls(){
+      try{
+        sessionStorage.setItem("returnAfterAuth", "/blitstiek.html");
+        localStorage.setItem("redirectAfterLogin", "/blitstiek.html");
+        const reg = $("goRegisterBtn");
+        if (reg) reg.href = "/register.html";
+      }catch{}
+    })();
 
-      winMsg.innerHTML = `Veels geluk, <strong>${currentUserName}</strong>, jy het <strong>${TARGET}</strong> in <strong>${fmt(t)}</strong> voltooi!`;
-      over.style.display='flex';
-      modalCloseBtn.onclick = ()=>{ over.style.display='none'; };
-
-      if(!user) showNRGate();
-    }
-
-    await loadGame();
+    // Initial paint
+    drawGrid();
+    setStatus("Laai…");
   </script>
-
 </body>
 </html>
+<!--
+NOTAS (vir jou verwysing):
+- Hierdie lêer lees Ondersteuner-status uit: supportersPublic/{uid}.active (public-read).
+- Jou useradmin.html skryf daardie boolean wanneer jy "Stoor" druk.
+- Ranglys: blitstiekGames/{GAME_ID}/leaderboard/{uid} met bestMs en userName.
+- "Speel as gas" werk sonder Auth, maar stoor niks na Firestore nie.
+-->
