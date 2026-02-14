@@ -109,7 +109,6 @@
         </form>
         <p class="text-xs text-slate-500 mt-2">Soek eers in <code>users</code>; as niks gevind word nie, val terug na <code>registrations</code>. E-pos of presiese gebruikersnaam werk.</p>
       </section>
-
       <!-- Result -->
       <section id="resultCard" class="card p-5 md:p-6 hidden">
         <div class="flex items-center justify-between">
@@ -192,10 +191,9 @@
 
   <!-- Firebase + logic -->
   <script type="module">
-    // Firebase 11.9.1 (same series as login.html)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import {
-      getAuth, onAuthStateChanged, getIdTokenResult, signOut
+      getAuth, onAuthStateChanged, signOut
     } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
     import {
       getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, query, where, getDocs, limit
@@ -228,53 +226,44 @@
     };
     const hideAlert = ()=>{ $("alertBox").classList.add("hidden"); };
 
-       // --- Auth gate ---
-    const HARDCODED_ADMIN_UID = "jI7f0Wk4MqfPq7p69vjl8OlJUvS2"; // in your rules
+    const HARDCODED_ADMIN_UID = "jI7f0Wk4MqfPq7p69vjl8OlJUvS2";
 
     async function computeIsAdmin(u){
       if (!u) return false;
       if (u.uid === HARDCODED_ADMIN_UID) return true;
 
-      // Custom claim (optional, if you ever use it)
-      try{
-        const token = await getIdTokenResult(u, true);
-        if (!!token.claims?.admin) return true;
-      }catch{}
-
-      // Match your rules: admins/{uid} exists
+      // Match your rules: admins/{uid} must exist
       try{
         const aSnap = await getDoc(doc(db, "admins", u.uid));
         if (aSnap.exists()) return true;
       }catch{
-        // If not admin, this may permission-deny; treat as false
+        // permission-denied or missing -> treat as not admin
       }
       return false;
     }
 
     onAuthStateChanged(auth, async (user)=>{
       if (!user) {
-        try { sessionStorage.setItem("returnAfterAuth", "/useradmin.html"); } catch {}
+        try {
+          localStorage.setItem("redirectAfterLogin", "/useradmin.html");
+          sessionStorage.setItem("returnAfterAuth", "/useradmin.html");
+        } catch {}
         window.location.href = "/login.html";
         return;
       }
 
       const isAdmin = await computeIsAdmin(user);
-
       if (!isAdmin) {
         $("adminPill").classList.remove("hidden");
         showAlert("Jy het nie admin-regte nie. Meld aan met ’n admin-rekening.", "error");
         setTimeout(()=>{ window.location.href="/index.html"; }, 2200);
         return;
-      } else {
-        $("adminPill").classList.add("hidden");
-        hideAlert();
       }
+
+      $("adminPill").classList.add("hidden");
+      hideAlert();
     });
 
-    // Logout
-
-
-    // Logout
     $("logoutBtn").addEventListener("click", async ()=>{
       try { await signOut(auth); } finally {
         try { localStorage.clear(); sessionStorage.clear(); } catch {}
@@ -293,16 +282,19 @@
         const numRows = Math.ceil(el.offsetHeight / 30);
         const numCols = Math.ceil(el.offsetWidth / 30);
         const total = (numRows * numCols) || 300;
-        for (let i=0;i<total;i++){ const d=document.createElement('div'); d.className='bg-letter-box'; d.textContent=rand(); el.appendChild(d); }
+        for (let i=0;i<total;i++){
+          const d=document.createElement('div');
+          d.className='bg-letter-box';
+          d.textContent=rand();
+          el.appendChild(d);
+        }
       }
       window.addEventListener('load', draw);
       window.addEventListener('resize', ()=>{ clearTimeout(window.__bgT); window.__bgT=setTimeout(draw,120); });
     })();
 
     // --- Search + Edit state ---
-    let loaded = null; // { uid, email, name, lastLogin, profile:{...}, ref: docRef }
-
-    // Helpers: single-field equality queries (no composite index needed)
+    let loaded = null; // { uid, email, name, lastLogin, profile:{...}, ref, supporterPublicActive }
     async function findInUsersBy(field, value) {
       const usersCol = collection(db, "users");
       const q1 = query(usersCol, where(field, "==", value), limit(5));
@@ -318,12 +310,10 @@
 
     async function lookupByEmail(term) {
       const email = term.trim().toLowerCase();
-      // users first
       let docHit = await findInUsersBy("email", email);
-      if (!docHit) docHit = await findInUsersBy("emailLower", email); // optional mirror field
+      if (!docHit) docHit = await findInUsersBy("emailLower", email);
       if (docHit) return { source: "users", docHit };
 
-      // registrations fallback
       docHit = await findInRegsBy("email", email);
       if (!docHit) docHit = await findInRegsBy("emailLower", email);
       if (docHit) return { source: "registrations", docHit };
@@ -335,7 +325,6 @@
       const raw = term.trim();
       const lower = raw.toLowerCase();
 
-      // users first
       let docHit =
         (await findInUsersBy("userName", raw)) ||
         (await findInUsersBy("name", raw)) ||
@@ -343,7 +332,6 @@
         (await findInUsersBy("nameLower", lower));
       if (docHit) return { source: "users", docHit };
 
-      // registrations fallback
       docHit =
         (await findInRegsBy("userName", raw)) ||
         (await findInRegsBy("name", raw)) ||
@@ -354,38 +342,52 @@
       return null;
     }
 
-      async function hydrateLoadedFromHit(hit, searchTerm, preferUsersDoc = true) {
+    async function hydrateLoadedFromHit(hit, searchTerm) {
       const { source, docHit } = hit;
-
-      // If registrations docs are not keyed by UID, support a uid field fallback
       const hitData = docHit.data() || {};
-      const uid = (source !== "users" && typeof hitData.uid === "string" && hitData.uid)
-        ? hitData.uid
-        : docHit.id;
 
-      let profile = source === "users" ? (hitData || {}) : {};
-      let name = profile.name || profile.userName || "";
+      // UID resolution:
+      // - users: doc id is uid
+      // - registrations: prefer hitData.uid, else ONLY accept doc id if users/{docId} exists
+      let uid = docHit.id;
+      const uidFromField = (source !== "users" && typeof hitData.uid === "string" && hitData.uid.trim())
+        ? hitData.uid.trim()
+        : null;
 
-      // If hit came from registrations, try enrich from users/{uid}
-      if (source !== "users" || (preferUsersDoc && !profile.lastLogin)) {
-        const uref = doc(db, "users", uid);
-        const udoc = await getDoc(uref);
-        if (udoc.exists()) {
-          const pdata = udoc.data() || {};
-          profile = { ...pdata, ...profile }; // prefer users doc values by default
-          name = profile.name || profile.userName || name || "";
+      if (source !== "users") uid = uidFromField || uid;
+
+      // Load/enrich from users/{uid} when possible
+      let usersSnap = null;
+      try{
+        usersSnap = await getDoc(doc(db, "users", uid));
+      }catch{
+        usersSnap = null;
+      }
+
+      if (source !== "users" && !uidFromField) {
+        // If registrations doc id isn't a real uid, we must avoid writing to a wrong users/{id}
+        if (!usersSnap || !usersSnap.exists()) {
+          showAlert("Dié registrasie-item het nie ’n UID nie (en die dokument-ID bestaan nie in <code>users</code> nie). Voeg asb. ’n <code>uid</code>-veld by <code>registrations</code> vir hierdie gebruiker, of soek die gebruiker direk in <code>users</code>.", "error");
+          return;
         }
       }
 
-      // Email to display: from user doc if present, else infer from search term
+      // Profile data: prefer users doc, but keep whatever we can
+      let profile = (source === "users") ? (hitData || {}) : {};
+      if (usersSnap && usersSnap.exists()) {
+        const pdata = usersSnap.data() || {};
+        profile = { ...pdata, ...profile };
+      }
+
+      const name = profile.name || profile.userName || "";
+
       const emailOut = profile.email
         || (searchTerm.includes("@") ? searchTerm.toLowerCase() : "");
 
-      // Canonical supporter truth (public doc used by games)
+      // Canonical supporter truth used by games
       let supporterPublicActive = null; // null = no doc yet
       try{
-        const sref = doc(db, "supportersPublic", uid);
-        const ssnap = await getDoc(sref);
+        const ssnap = await getDoc(doc(db, "supportersPublic", uid));
         if (ssnap.exists()) supporterPublicActive = (ssnap.data()?.active === true);
       }catch{
         supporterPublicActive = null;
@@ -403,35 +405,10 @@
 
       renderLoaded();
       $("resultCard").classList.remove("hidden");
-      gtag('event','admin_user_lookup');
-    }
-
-
-      // If hit came from registrations, try enrich from users/{uid}
-      if (source !== "users" || (preferUsersDoc && !profile.lastLogin)) {
-        const uref = doc(db, "users", uid);
-        const udoc = await getDoc(uref);
-        if (udoc.exists()) {
-          const pdata = udoc.data() || {};
-          profile = { ...pdata, ...profile }; // prefer users doc values by default
-          name = profile.name || profile.userName || name || "";
-        }
-      }
-
-      // Email to display: from user doc if present, else infer from search term
-      const emailOut = profile.email || (searchTerm.includes("@") ? searchTerm.toLowerCase() : (profile.email || ""));
-
-      loaded = {
-        uid,
-        email: emailOut || "",
-        name,
-        lastLogin: profile.lastLogin || null,
-        profile,
-        ref: doc(db, "users", uid),
-      };
-      renderLoaded();
-      $("resultCard").classList.remove("hidden");
-      gtag('event','admin_user_lookup');
+      const msg = $("saveMsg");
+      msg.classList.add("hidden");
+      msg.textContent = "";
+      try { gtag('event','admin_user_lookup'); } catch {}
     }
 
     $("searchForm").addEventListener("submit", async (e)=>{
@@ -446,14 +423,14 @@
 
       try{
         const looksLikeEmail = term.includes("@");
-
         let hit = null;
+
         if (looksLikeEmail) {
           hit = await lookupByEmail(term);
-          if (!hit) hit = await lookupByName(term); // fallback
+          if (!hit) hit = await lookupByName(term);
         } else {
           hit = await lookupByName(term);
-          if (!hit) hit = await lookupByEmail(term); // fallback
+          if (!hit) hit = await lookupByEmail(term);
         }
 
         if (!hit) {
@@ -481,71 +458,46 @@
         ? lastLogin.toDate().toLocaleString('af-ZA')
         : (lastLogin || "—");
 
-      // Old fields (kept for now, but not the canonical truth)
       const supporterActiveOld = !!profile?.supporterActive;
       const supporterUntilStr = profile?.supporterUntil ? toYMD(profile.supporterUntil) : "";
       const manualBonus = Number(profile?.manualBonus || 0);
       const manualBonusNote = profile?.manualBonusNote || "";
 
-      // Canonical truth (what games should use)
       const now = new Date();
-      const activeByDate = supporterUntilStr ? new Date(supporterUntilStr+"T12:00:00") > now : false;
+      const activeByDate = supporterUntilStr ? (new Date(supporterUntilStr+"T12:00:00") > now) : false;
       const derivedActive = supporterActiveOld || activeByDate;
 
       const effectiveActive =
         (loaded.supporterPublicActive === true) ? true :
         (loaded.supporterPublicActive === false) ? false :
-        derivedActive; // if no supportersPublic doc yet
+        derivedActive;
 
-      // Controls: default checkbox to effectiveActive (so “Stoor” will sync truth)
       $("supporterActive").checked = effectiveActive;
       $("supporterUntil").value = supporterUntilStr;
       $("manualBonus").value = (manualBonus || 0);
       $("manualBonusNote").value = manualBonusNote;
 
-      // Pill
       const pill = $("supporterStatusPill");
       pill.classList.remove("hidden");
       pill.className = "pill " + (effectiveActive ? "pill-green" : "pill-red");
       pill.textContent = effectiveActive ? "Ondersteuner: aktief" : "Ondersteuner: nie aktief";
     }
 
-    
-      // Fields
-      const supporterActive = !!profile?.supporterActive;
-      const supporterUntilStr = profile?.supporterUntil ? toYMD(profile.supporterUntil) : "";
-      const manualBonus = Number(profile?.manualBonus || 0);
-      const manualBonusNote = profile?.manualBonusNote || "";
-
-      $("supporterActive").checked = supporterActive;
-      $("supporterUntil").value = supporterUntilStr;
-      $("manualBonus").value = (manualBonus || 0);
-      $("manualBonusNote").value = manualBonusNote;
-
-      // Pill
-      const pill = $("supporterStatusPill");
-      const now = new Date();
-      const activeByDate = supporterUntilStr ? new Date(supporterUntilStr+"T12:00:00") > now : false;
-      const isActive = supporterActive || activeByDate;
-      pill.classList.remove("hidden");
-      pill.className = "pill " + (isActive ? "pill-green" : "pill-red");
-      pill.textContent = isActive ? "Ondersteuner: aktief" : "Ondersteuner: nie aktief";
-    }
-
-    // Quick date helpers
     function toYMD(input){
       try{
         if (!input) return "";
         if (typeof input === "string") {
+          if (/^\d{4}-\d{2}-\d{2}$/.test(input)) return input;
           const d = new Date(input);
           if (isFinite(d)) return d.toISOString().slice(0,10);
-          if (/^\d{4}-\d{2}-\d{2}$/.test(input)) return input;
+          return "";
         }
-        if (input?.toDate) { return input.toDate().toISOString().slice(0,10); }
+        if (input?.toDate) return input.toDate().toISOString().slice(0,10);
         const d = (input instanceof Date) ? input : new Date(input);
         return isFinite(d) ? d.toISOString().slice(0,10) : "";
       }catch{return "";}
     }
+
     function addDaysToInput(days){
       const el = $("supporterUntil");
       const base = el.value ? new Date(el.value+"T12:00:00") : new Date();
@@ -557,26 +509,24 @@
       btn.addEventListener('click', ()=> addDaysToInput(Number(btn.dataset.addDays||0)));
     });
     $("clearUntil").addEventListener('click', ()=> $("supporterUntil").value="");
-
-    // Save + Reset
-
     $("editForm").addEventListener("submit", async (e)=>{
-      e.preventDefault(); if (!loaded) return;
+      e.preventDefault();
+      if (!loaded) return;
       hideAlert();
-      const btn = $("saveBtn"); btn.disabled = true;
+      const btn = $("saveBtn");
+      btn.disabled = true;
 
       try{
         const ymd = $("supporterUntil").value.trim();
         const now = new Date();
         const activeByDate = ymd ? (new Date(ymd+"T12:00:00") > now) : false;
 
-        // Checkbox is your manual override
+        // Checkbox is manual override
         const manualActive = $("supporterActive").checked;
 
-        // Canonical “truth” boolean (used by games)
+        // Canonical truth boolean used by games
         const activeNow = manualActive || activeByDate;
 
-        // Patch for users/{uid} (keep existing fields for now)
         const patch = {
           supporterActive: manualActive,
           supporterUntil: ymd ? ymd : null,
@@ -591,21 +541,21 @@
           updatedAt: serverTimestamp()
         };
 
-        // IMPORTANT: never overwrite email/name with null/blank
+        // Never overwrite email/name with null/blank
         const userWrite = { ...patch };
         if (loaded.email) userWrite.email = loaded.email;
         if (loaded.name)  userWrite.name  = loaded.name;
 
+        // users/{uid} (private; admin allowed)
         await setDoc(loaded.ref, userWrite, { merge:true });
 
-        // Canonical supporter public doc used by the games
+        // supportersPublic/{uid} (public read; admin write)
         await setDoc(doc(db, "supportersPublic", loaded.uid), {
           active: activeNow,
           updatedAt: serverTimestamp(),
           updatedAtMs: Date.now()
         }, { merge:true });
 
-        // Update local copy + re-render
         loaded.profile = { ...(loaded.profile||{}), ...patch };
         loaded.supporterPublicActive = activeNow;
         renderLoaded();
@@ -615,33 +565,7 @@
         msg.className = "text-sm mt-2 text-green-600";
         msg.classList.remove("hidden");
 
-        gtag('event','admin_user_save');
-      }catch(err){
-        console.error(err);
-        showAlert("Kon nie stoor nie. Kyk jou Firestore-regte of probeer weer.", "error");
-      }finally{
-        btn.disabled = false;
-      }
-    });
-
-    
-        // Ensure user doc exists (merge:true covers both)
-        await setDoc(loaded.ref, {
-          email: loaded.email || null,
-          name: loaded.name || null,
-          ...patch
-        }, { merge:true });
-
-        // Update local copy + re-render
-        loaded.profile = { ...(loaded.profile||{}), ...patch };
-        renderLoaded();
-
-        const msg = $("saveMsg");
-        msg.textContent = "Veranderinge gestoor.";
-        msg.className = "text-sm mt-2 text-green-600";
-        msg.classList.remove("hidden");
-
-        gtag('event','admin_user_save');
+        try { gtag('event','admin_user_save'); } catch {}
       }catch(err){
         console.error(err);
         showAlert("Kon nie stoor nie. Kyk jou Firestore-regte of probeer weer.", "error");
