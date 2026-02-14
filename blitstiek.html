@@ -234,18 +234,29 @@
       font-weight:700;
     }
 
-    /* Green K badge (no dot) */
-    .k-pill{
+       /* Medalje key + badge pills */
+    #medalKey{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background:rgba(0,0,0,.55);
+      z-index:55;
+    }
+    .badge-pill{
       display:inline-flex;
       align-items:center;
-      background:#16a34a;
-      color:#fff;
+      border:1px solid #e5e7eb;
+      background:#f1f5f9;
+      color:#334155;
       font-weight:800;
       border-radius:999px;
       padding:.15rem .5rem;
-      font-size:.75rem;
+      font-size:10px;
       line-height:1;
     }
+
 
     /* Share dropdown */
     .share-menu-local{
@@ -564,13 +575,36 @@
           </div>
         </section>
 
-        <!-- LEADERBOARD -->
+              <!-- LEADERBOARD -->
         <section class="card mt-6 p-4">
-          <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center justify-between mb-2 gap-2">
             <h2 class="text-xl font-bold">VANDAG SE TOP-10 (die afsnypunt is om 23:55)</h2>
+            <button id="medalKeyBtn" type="button"
+              class="text-xs font-extrabold tracking-wide text-slate-600 hover:text-slate-800 underline">
+              SLEUTEL
+            </button>
           </div>
+
           <ul id="leaderboardList" class="text-gray-700 text-left"><li>Laai...</li></ul>
+
+          <!-- MEDALJE SLEUTEL -->
+          <div id="medalKey" aria-hidden="true">
+            <div class="modal">
+              <h3 class="text-lg font-extrabold mb-2">MEDALJE-SLEUTEL</h3>
+
+              <div class="text-left text-sm text-gray-700 space-y-2 leading-relaxed">
+                <p><span class="font-extrabold">⭐</span> <strong>Ondersteuner</strong> (betaalde ondersteuner)</p>
+                <p><span class="font-extrabold">🎮</span> <strong>Spele</strong>: hoeveel BLITSTIEK-dae jy al met ’n tyd voltooi het</p>
+                <p><span class="font-extrabold">⏱</span> <strong>Onder 1 minuut</strong>: hoeveel dae jy BLITSTIEK in minder as 1 minuut voltooi het</p>
+              </div>
+
+              <div class="flex justify-center mt-4">
+                <button id="medalKeyCloseBtn" type="button" class="btn gray">SLUIT</button>
+              </div>
+            </div>
+          </div>
         </section>
+
 
       </div><!-- /centred lower column -->
     </div>
@@ -592,8 +626,9 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
     import {
-      initializeFirestore, serverTimestamp, doc, getDoc, setDoc, deleteDoc,
-      collection, query, orderBy, limit, getDocs, onSnapshot, where
+           initializeFirestore, serverTimestamp, doc, getDoc, setDoc, deleteDoc,
+      collection, query, orderBy, limit, getDocs, onSnapshot, where, increment, documentId
+
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
     /* ---- Firebase ---- */
@@ -627,8 +662,13 @@
     const shareMenu  = document.getElementById('shareMenu');
 
     const lbList     = document.getElementById('leaderboardList');
+    const medalKeyBtn= document.getElementById('medalKeyBtn');
+    const medalKey   = document.getElementById('medalKey');
+    const medalKeyCloseBtn = document.getElementById('medalKeyCloseBtn');
+
     const timeText   = document.querySelector('#timeBox b');
     const bestText   = document.querySelector('#bestBox b');
+
 
     const btnLeft = document.getElementById('btnLeft');
     const btnRight= document.getElementById('btnRight');
@@ -691,7 +731,7 @@
     /* ---- Leaderboard constants ---- */
     const LB_SIZE = 10;
 
-    function escapeHtml(v){
+        function escapeHtml(v){
       return String(v ?? "")
         .replaceAll('&', '&amp;')
         .replaceAll('<', '&lt;')
@@ -700,16 +740,43 @@
         .replaceAll("'", '&#39;');
     }
 
-    function normalizeMedaljes(raw){
-      if (!Array.isArray(raw)) return [];
-      return raw
-        .map((m) => {
-          if (typeof m === 'string') return m.trim();
-          if (m && typeof m.label === 'string') return m.label.trim();
-          if (m && typeof m.name === 'string') return m.name.trim();
-          return '';
-        })
-        .filter(Boolean);
+    const BADGE_UNDER_S = 60; // < 1 minuut
+
+    const supporterCache = new Map(); // uid -> boolean (active)
+
+    function uniq(arr){
+      return Array.from(new Set((arr || []).filter(Boolean)));
+    }
+    function chunk(arr, size){
+      const out = [];
+      for(let i=0;i<arr.length;i+=size) out.push(arr.slice(i,i+size));
+      return out;
+    }
+
+    async function hydrateSupporterCache(uids){
+      const list = uniq(uids);
+      const missing = list.filter(uid => !supporterCache.has(uid));
+      if(!missing.length) return;
+
+      try{
+        const colRef = collection(db,'supporters');
+        for(const part of chunk(missing, 10)){
+          const qy = query(colRef, where(documentId(), 'in', part));
+          const snap = await getDocs(qy);
+
+          // Default missing to false (not supporter)
+          part.forEach(uid => supporterCache.set(uid, false));
+
+          // Mark active supporters as true
+          snap.docs.forEach(d => {
+            const data = d.data() || {};
+            supporterCache.set(d.id, data.active === true);
+          });
+        }
+      }catch(e){
+        console.warn('SUPPORTER_LOOKUP_FAILED', e);
+        // Leave as unknown (no star) if lookup fails
+      }
     }
 
     function renderSupporterStar(isSupporter){
@@ -717,12 +784,35 @@
       return '<span class="inline-block ml-1 align-middle text-yellow-400" aria-label="Ondersteuner">★</span>';
     }
 
-    function renderMedaljePillsInline(medaljes, isSupporter){
-      if (!isSupporter || !Array.isArray(medaljes) || !medaljes.length) return '';
-      return medaljes.slice(0,2)
-        .map((label) => `<span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 ml-1 leading-none">${escapeHtml(label)}</span>`)
-        .join('');
+    function safeCount(n){
+      const x = Number(n);
+      if (!Number.isFinite(x)) return 0;
+      return Math.max(0, Math.floor(x));
     }
+
+    function renderBadgePills(playedCount, under1mCount){
+      const p = safeCount(playedCount);
+      const u = safeCount(under1mCount);
+
+      const pills = [];
+      if (p > 0) pills.push(`<span class="badge-pill" title="Spele">🎮 ${p}</span>`);
+      if (u > 0) pills.push(`<span class="badge-pill" title="Onder 1 minuut">⏱ ${u}</span>`);
+
+      if (!pills.length) return '';
+      return `<span class="inline-flex items-center gap-1 ml-2 align-middle">${pills.join('')}</span>`;
+    }
+
+    function isPastCutoffZa(){
+      const d = nowZa();
+      const h = d.getHours();
+      const m = d.getMinutes();
+      return (h > 23) || (h === 23 && m >= 55);
+    }
+
+    function canWriteForTodayGame(){
+      return !!(user && GAME_ID && TODAY_ID && GAME_ID === TODAY_ID && !isPastCutoffZa());
+    }
+
 
     /* ---- Mechanics ---- */
     const H = 10, W = 8;
@@ -1134,8 +1224,119 @@
     }
     initTileShareDropdowns();
 
-    /* ---- Leaderboard submit (canonical) ---- */
+        /* ---- Medalje sleutel ---- */
+    function openMedalKey(){
+      if (medalKey) medalKey.style.display = 'flex';
+    }
+    function closeMedalKey(){
+      if (medalKey) medalKey.style.display = 'none';
+    }
+    if (medalKeyBtn){
+      medalKeyBtn.addEventListener('click', (e)=>{ e.stopPropagation(); openMedalKey(); });
+    }
+    if (medalKeyCloseBtn){
+      medalKeyCloseBtn.addEventListener('click', closeMedalKey);
+    }
+    if (medalKey){
+      medalKey.addEventListener('click', (e)=>{ if (e.target === medalKey) closeMedalKey(); });
+    }
+
+
+       /* ---- Leaderboard submit (badges + cutoff gate) ---- */
+    async function bumpBadgesAndGetTotals(newTime){
+      const userRef = doc(db,'users', user.uid);
+      const playRef = doc(db,'userGames', user.uid, 'blitstiekPlays', GAME_ID);
+
+      const under = Number.isFinite(newTime) && newTime < BADGE_UNDER_S;
+
+      try{
+        const playSnap = await getDoc(playRef);
+        const pdata = playSnap.exists() ? (playSnap.data() || {}) : {};
+
+        const incPlayed = (pdata.countedPlayed !== true);
+        const incUnder  = (under && pdata.countedUnder1m !== true);
+
+        const prevBest = Number(pdata.bestTime);
+        const bestTime = (!Number.isFinite(prevBest) || newTime < prevBest) ? newTime : prevBest;
+
+        await setDoc(playRef, {
+          bestTime,
+          countedPlayed: true,
+          countedUnder1m: under ? true : (pdata.countedUnder1m === true),
+          updatedAt: serverTimestamp()
+        }, { merge:true });
+
+        if (incPlayed || incUnder){
+          const upd = { updatedAt: serverTimestamp() };
+          if (incPlayed) upd.blitstiekPlayedTotal = increment(1);
+          if (incUnder)  upd.blitstiekUnder1mTotal = increment(1);
+          await setDoc(userRef, upd, { merge:true });
+        }
+
+        const uSnap = await getDoc(userRef);
+        const udata = uSnap.exists() ? (uSnap.data() || {}) : {};
+        return {
+          playedTotal: Number(udata.blitstiekPlayedTotal || 0),
+          under1mTotal: Number(udata.blitstiekUnder1mTotal || 0)
+        };
+      }catch(e){
+        console.warn('BADGE_UPDATE_FAILED', e);
+        return null;
+      }
+    }
+
     async function submitTimeToBoard(){
+      if(!user) return;
+
+      // Hard gate: only today's game, only before 23:55 (ZA)
+      if(!canWriteForTodayGame()) return;
+
+      const name    = currentUserName.slice(0,24);
+      const newTime = Number(t);
+
+      const runsCol = collection(db,'blitstiekGames', GAME_ID, 'runs');
+      const bestRef = doc(db,'blitstiekGames', GAME_ID, 'leaderboard', user.uid);
+
+      // Update totals (private) and get snapshot counts for this leaderboard row (public)
+      const totals = await bumpBadgesAndGetTotals(newTime);
+
+      try{
+        const bestSnap = await getDoc(bestRef);
+        const prev = bestSnap.exists() ? Number(bestSnap.data().time) : null;
+        const improve = (prev == null || !Number.isFinite(prev) || newTime < prev);
+
+        const payload = { userName: name };
+        if (improve){
+          payload.time = newTime;
+          payload.timestamp = serverTimestamp();
+        }
+        if (totals){
+          payload.badgePlayed  = Number(totals.playedTotal || 0);
+          payload.badgeUnder1m = Number(totals.under1mTotal || 0);
+        }
+
+        await setDoc(bestRef, payload, { merge:true });
+      }catch(e){
+        console.warn('BEST_UPDATE_FAILED', e);
+      }
+
+      try{
+        await setDoc(doc(runsCol), {
+          uid: user.uid,
+          userName: name,
+          time: newTime,
+          timestamp: serverTimestamp()
+        });
+
+        const qy = query(runsCol, where('uid','==', user.uid), orderBy('timestamp','desc'), limit(50));
+        const snap = await getDocs(qy);
+        const toDelete = snap.docs.slice(10);
+        await Promise.all(toDelete.map(d => deleteDoc(d.ref)));
+      }catch(e){
+        console.warn('RUN_APPEND/TRIM_FAILED', e);
+      }
+    }
+
       if(!user) return;
       const name    = currentUserName.slice(0,24);
       const newTime = Number(t);
@@ -1171,7 +1372,7 @@
       } catch (e) { console.warn('RUN_APPEND/TRIM_FAILED', e); }
     }
 
-    /* ---- LIVE Leaderboard (pill shows only real kBlit_total; no fallback) ---- */
+    /* ---- LIVE Leaderboard (supporter star + badge counts) ---- */
     function startLiveLeaderboard(){
       if(lbUnsub) { lbUnsub(); lbUnsub=null; }
 
@@ -1182,53 +1383,51 @@
       );
 
       lbUnsub = onSnapshot(qy, (snap)=>{
-        lbList.innerHTML = '';
+        void (async ()=>{
+          lbList.innerHTML = '';
 
-        if (snap.empty) {
-          bestText.textContent='--:--';
-          lbList.innerHTML = `<li class="bg-green-100 font-medium"><span>Jy kan eerste op die leierbord wees!</span></li>`;
-          return;
-        }
+          if (snap.empty) {
+            bestText.textContent='--:--';
+            lbList.innerHTML = `<li class="bg-green-100 font-medium"><span>Jy kan eerste op die leierbord wees!</span></li>`;
+            return;
+          }
 
-        const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        rows.sort((a,b)=>{
-          const ta = Number(a.time) || Infinity;
-          const tb = Number(b.time) || Infinity;
-          if (ta !== tb) return ta - tb;
-          const sa = a.timestamp?.toMillis?.() ? a.timestamp.toMillis() : 9e15;
-          const sb = b.timestamp?.toMillis?.() ? b.timestamp.toMillis() : 9e15;
-          return sa - sb;
-        });
+          const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          rows.sort((a,b)=>{
+            const ta = Number(a.time) || Infinity;
+            const tb = Number(b.time) || Infinity;
+            if (ta !== tb) return ta - tb;
+            const sa = a.timestamp?.toMillis?.() ? a.timestamp.toMillis() : 9e15;
+            const sb = b.timestamp?.toMillis?.() ? b.timestamp.toMillis() : 9e15;
+            return sa - sb;
+          });
 
-        const top = rows.slice(0,LB_SIZE);
-        if (top.length) bestText.textContent = fmt(Number(top[0].time));
+          const top = rows.slice(0,LB_SIZE);
+          if (top.length) bestText.textContent = fmt(Number(top[0].time));
 
-        top.forEach(v => {
-          const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
-          const isSupporter = v?.isSupporter === true;
-          const medaljeArr = normalizeMedaljes(v?.publicMedaljes || v?.inlineMedaljes || []);
+          await hydrateSupporterCache(top.map(r => r.id));
 
-          const safeName = escapeHtml(v.userName || 'Onbekend');
-          const star = renderSupporterStar(isSupporter);
-          const medaljesHtml = renderMedaljePillsInline(medaljeArr, isSupporter);
+          top.forEach(v => {
+            const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
+            const safeName = escapeHtml(v.userName || 'Onbekend');
 
-          const k = Number(v?.kBlit_total || 0);
-          const pillValue = (Number.isFinite(k) && k >= 25) ? k : 0;
-          const pill = pillValue
-            ? `<span class="k-pill" title="Blitstiek-telling">${pillValue}</span>`
-            : '';
+            const isSupporter = supporterCache.get(v.id) === true;
+            const star = renderSupporterStar(isSupporter);
 
-          const li = document.createElement('li');
-          li.innerHTML = `<span><strong>${safeName}</strong>${star}${medaljesHtml}${you}: ${fmt(Number(v.time))}</span>${pill}`;
-          lbList.appendChild(li);
-        });
+            const badges = renderBadgePills(v.badgePlayed, v.badgeUnder1m);
 
+            const li = document.createElement('li');
+            li.innerHTML = `<span><strong>${safeName}</strong>${star}${badges}${you}: ${fmt(Number(v.time))}</span><span></span>`;
+            lbList.appendChild(li);
+          });
+        })();
       }, (err) => {
         console.warn('Leaderboard stream error:', err);
         const msg = (err && (err.code || err.message)) ? ` – ${err.code||err.message}` : '';
         lbList.innerHTML = `<li class="px-2 py-1 rounded bg-red-50 text-red-700">Kon nie leierbord laai nie${msg}.</li>`;
       });
     }
+
 
     /* ---- Dynamic resolver ---- */
     async function resolveGameId(){
