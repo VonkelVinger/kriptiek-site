@@ -228,21 +228,37 @@
     };
     const hideAlert = ()=>{ $("alertBox").classList.add("hidden"); };
 
-    // --- Auth gate ---
+       // --- Auth gate ---
     const HARDCODED_ADMIN_UID = "jI7f0Wk4MqfPq7p69vjl8OlJUvS2"; // in your rules
+
+    async function computeIsAdmin(u){
+      if (!u) return false;
+      if (u.uid === HARDCODED_ADMIN_UID) return true;
+
+      // Custom claim (optional, if you ever use it)
+      try{
+        const token = await getIdTokenResult(u, true);
+        if (!!token.claims?.admin) return true;
+      }catch{}
+
+      // Match your rules: admins/{uid} exists
+      try{
+        const aSnap = await getDoc(doc(db, "admins", u.uid));
+        if (aSnap.exists()) return true;
+      }catch{
+        // If not admin, this may permission-deny; treat as false
+      }
+      return false;
+    }
 
     onAuthStateChanged(auth, async (user)=>{
       if (!user) {
-        try { localStorage.setItem("redirectAfterLogin", "/useradmin.html"); } catch {}
+        try { sessionStorage.setItem("returnAfterAuth", "/useradmin.html"); } catch {}
         window.location.href = "/login.html";
         return;
       }
-      // Claims
-      let isAdmin = false;
-      try{
-        const token = await getIdTokenResult(user, true);
-        isAdmin = !!token.claims?.admin || user.uid === HARDCODED_ADMIN_UID;
-      }catch{}
+
+      const isAdmin = await computeIsAdmin(user);
 
       if (!isAdmin) {
         $("adminPill").classList.remove("hidden");
@@ -250,9 +266,13 @@
         setTimeout(()=>{ window.location.href="/index.html"; }, 2200);
         return;
       } else {
+        $("adminPill").classList.add("hidden");
         hideAlert();
       }
     });
+
+    // Logout
+
 
     // Logout
     $("logoutBtn").addEventListener("click", async ()=>{
@@ -334,11 +354,58 @@
       return null;
     }
 
-    async function hydrateLoadedFromHit(hit, searchTerm, preferUsersDoc = true) {
+      async function hydrateLoadedFromHit(hit, searchTerm, preferUsersDoc = true) {
       const { source, docHit } = hit;
-      const uid = docHit.id;
-      let profile = source === "users" ? (docHit.data() || {}) : {};
+
+      // If registrations docs are not keyed by UID, support a uid field fallback
+      const hitData = docHit.data() || {};
+      const uid = (source !== "users" && typeof hitData.uid === "string" && hitData.uid)
+        ? hitData.uid
+        : docHit.id;
+
+      let profile = source === "users" ? (hitData || {}) : {};
       let name = profile.name || profile.userName || "";
+
+      // If hit came from registrations, try enrich from users/{uid}
+      if (source !== "users" || (preferUsersDoc && !profile.lastLogin)) {
+        const uref = doc(db, "users", uid);
+        const udoc = await getDoc(uref);
+        if (udoc.exists()) {
+          const pdata = udoc.data() || {};
+          profile = { ...pdata, ...profile }; // prefer users doc values by default
+          name = profile.name || profile.userName || name || "";
+        }
+      }
+
+      // Email to display: from user doc if present, else infer from search term
+      const emailOut = profile.email
+        || (searchTerm.includes("@") ? searchTerm.toLowerCase() : "");
+
+      // Canonical supporter truth (public doc used by games)
+      let supporterPublicActive = null; // null = no doc yet
+      try{
+        const sref = doc(db, "supportersPublic", uid);
+        const ssnap = await getDoc(sref);
+        if (ssnap.exists()) supporterPublicActive = (ssnap.data()?.active === true);
+      }catch{
+        supporterPublicActive = null;
+      }
+
+      loaded = {
+        uid,
+        email: emailOut || "",
+        name,
+        lastLogin: profile.lastLogin || null,
+        profile,
+        ref: doc(db, "users", uid),
+        supporterPublicActive
+      };
+
+      renderLoaded();
+      $("resultCard").classList.remove("hidden");
+      gtag('event','admin_user_lookup');
+    }
+
 
       // If hit came from registrations, try enrich from users/{uid}
       if (source !== "users" || (preferUsersDoc && !profile.lastLogin)) {
@@ -410,8 +477,40 @@
       $("uidOut").textContent = uid || "—";
       $("emailOut").textContent = email || "—";
       $("nameOut").textContent = name || profile?.name || profile?.userName || "—";
-      $("lastLoginOut").textContent = lastLogin?.toDate ? lastLogin.toDate().toLocaleString('af-ZA') : (lastLogin||"—");
+      $("lastLoginOut").textContent = lastLogin?.toDate
+        ? lastLogin.toDate().toLocaleString('af-ZA')
+        : (lastLogin || "—");
 
+      // Old fields (kept for now, but not the canonical truth)
+      const supporterActiveOld = !!profile?.supporterActive;
+      const supporterUntilStr = profile?.supporterUntil ? toYMD(profile.supporterUntil) : "";
+      const manualBonus = Number(profile?.manualBonus || 0);
+      const manualBonusNote = profile?.manualBonusNote || "";
+
+      // Canonical truth (what games should use)
+      const now = new Date();
+      const activeByDate = supporterUntilStr ? new Date(supporterUntilStr+"T12:00:00") > now : false;
+      const derivedActive = supporterActiveOld || activeByDate;
+
+      const effectiveActive =
+        (loaded.supporterPublicActive === true) ? true :
+        (loaded.supporterPublicActive === false) ? false :
+        derivedActive; // if no supportersPublic doc yet
+
+      // Controls: default checkbox to effectiveActive (so “Stoor” will sync truth)
+      $("supporterActive").checked = effectiveActive;
+      $("supporterUntil").value = supporterUntilStr;
+      $("manualBonus").value = (manualBonus || 0);
+      $("manualBonusNote").value = manualBonusNote;
+
+      // Pill
+      const pill = $("supporterStatusPill");
+      pill.classList.remove("hidden");
+      pill.className = "pill " + (effectiveActive ? "pill-green" : "pill-red");
+      pill.textContent = effectiveActive ? "Ondersteuner: aktief" : "Ondersteuner: nie aktief";
+    }
+
+    
       // Fields
       const supporterActive = !!profile?.supporterActive;
       const supporterUntilStr = profile?.supporterUntil ? toYMD(profile.supporterUntil) : "";
@@ -460,26 +559,72 @@
     $("clearUntil").addEventListener('click', ()=> $("supporterUntil").value="");
 
     // Save + Reset
+
     $("editForm").addEventListener("submit", async (e)=>{
       e.preventDefault(); if (!loaded) return;
       hideAlert();
       const btn = $("saveBtn"); btn.disabled = true;
 
       try{
+        const ymd = $("supporterUntil").value.trim();
+        const now = new Date();
+        const activeByDate = ymd ? (new Date(ymd+"T12:00:00") > now) : false;
+
+        // Checkbox is your manual override
+        const manualActive = $("supporterActive").checked;
+
+        // Canonical “truth” boolean (used by games)
+        const activeNow = manualActive || activeByDate;
+
+        // Patch for users/{uid} (keep existing fields for now)
         const patch = {
-          supporterActive: $("supporterActive").checked,
+          supporterActive: manualActive,
+          supporterUntil: ymd ? ymd : null,
+          manualBonus: (() => {
+            const manual = Number($("manualBonus").value || 0);
+            return (isFinite(manual) ? Math.round(manual) : 0);
+          })(),
+          manualBonusNote: (() => {
+            const note = $("manualBonusNote").value.trim();
+            return note || null;
+          })(),
           updatedAt: serverTimestamp()
         };
 
-        const ymd = $("supporterUntil").value.trim();
-        if (ymd) patch.supporterUntil = ymd; else patch.supporterUntil = null;
+        // IMPORTANT: never overwrite email/name with null/blank
+        const userWrite = { ...patch };
+        if (loaded.email) userWrite.email = loaded.email;
+        if (loaded.name)  userWrite.name  = loaded.name;
 
-        const manual = Number($("manualBonus").value || 0);
-        patch.manualBonus = isFinite(manual) ? Math.round(manual) : 0;
+        await setDoc(loaded.ref, userWrite, { merge:true });
 
-        const note = $("manualBonusNote").value.trim();
-        patch.manualBonusNote = note || null;
+        // Canonical supporter public doc used by the games
+        await setDoc(doc(db, "supportersPublic", loaded.uid), {
+          active: activeNow,
+          updatedAt: serverTimestamp(),
+          updatedAtMs: Date.now()
+        }, { merge:true });
 
+        // Update local copy + re-render
+        loaded.profile = { ...(loaded.profile||{}), ...patch };
+        loaded.supporterPublicActive = activeNow;
+        renderLoaded();
+
+        const msg = $("saveMsg");
+        msg.textContent = "Veranderinge gestoor.";
+        msg.className = "text-sm mt-2 text-green-600";
+        msg.classList.remove("hidden");
+
+        gtag('event','admin_user_save');
+      }catch(err){
+        console.error(err);
+        showAlert("Kon nie stoor nie. Kyk jou Firestore-regte of probeer weer.", "error");
+      }finally{
+        btn.disabled = false;
+      }
+    });
+
+    
         // Ensure user doc exists (merge:true covers both)
         await setDoc(loaded.ref, {
           email: loaded.email || null,
