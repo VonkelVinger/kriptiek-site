@@ -712,8 +712,9 @@
         .filter(Boolean);
     }
 
-if (!isSupporter) return '';
-return '<span class="inline-block ml-1 align-middle text-yellow-400 text-[18px] leading-none" aria-label="Ondersteuner">★</span>';
+function renderSupporterStar(isSupporter){
+  if (!isSupporter) return '';
+  return '<span class="inline-block ml-1 align-middle text-yellow-400 text-[18px] leading-none" aria-label="Ondersteuner">★</span>';
 }
 
 
