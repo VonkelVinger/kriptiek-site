@@ -65,8 +65,9 @@
     .card{ background:#fff; border-radius:1rem; box-shadow:0 8px 18px rgba(0,0,0,.08); }
     .pill { display:inline-flex; align-items:center; gap:.5rem; padding:.5rem .9rem; border-radius:999px; font-weight:800; color:#fff; }
     .pill-green { background: linear-gradient(180deg, #22C55E 0%, #0EA55B 100%); }
-    .pill-red { background: linear-gradient(180deg, #ef4444 0%, #b91c1c 100%); }
-  </style>
+   .pill-red { background: linear-gradient(180deg, #ef4444 0%, #b91c1c 100%); }
+.pill-amber { background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); }
+
 </head>
 
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -111,11 +112,20 @@
       </section>
       <!-- Result -->
       <section id="resultCard" class="card p-5 md:p-6 hidden">
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg font-bold">Gebruikersprofiel</h3>
-          <div id="supporterStatusPill" class="pill hidden"></div>
-        </div>
 
+    <div class="flex items-center justify-between">
+  <h3 class="text-lg font-bold">Gebruikersprofiel</h3>
+  <div class="flex items-center gap-2">
+    <div id="supporterStatusPill" class="pill hidden"></div>
+    <div id="supporterPublicPill" class="pill hidden"></div>
+  </div>
+</div>
+
+<p class="text-xs text-slate-500 mt-2">
+  <span class="font-semibold">Ster-status</span> kom uit <code>supportersPublic/&lt;uid&gt;.active</code>. Druk <strong>Stoor veranderinge</strong> om dit te sinkroniseer.
+</p>
+
+    
         <div class="grid md:grid-cols-2 gap-4 mt-4">
           <div>
             <div class="text-xs text-slate-500">UID</div>
@@ -477,10 +487,27 @@
       $("manualBonus").value = (manualBonus || 0);
       $("manualBonusNote").value = manualBonusNote;
 
-      const pill = $("supporterStatusPill");
-      pill.classList.remove("hidden");
-      pill.className = "pill " + (effectiveActive ? "pill-green" : "pill-red");
-      pill.textContent = effectiveActive ? "Ondersteuner: aktief" : "Ondersteuner: nie aktief";
+      // 1) “Ondersteuner” pill = effectiveActive (old fields may still influence this)
+const pill = $("supporterStatusPill");
+pill.classList.remove("hidden");
+pill.className = "pill " + (effectiveActive ? "pill-green" : "pill-red");
+pill.textContent = effectiveActive ? "Ondersteuner: aktief" : "Ondersteuner: nie aktief";
+
+// 2) “Ster” pill = ONLY supportersPublic/{uid}.active (source of truth for games)
+const sp = $("supporterPublicPill");
+sp.classList.remove("hidden");
+
+if (loaded.supporterPublicActive === true) {
+  sp.className = "pill pill-green";
+  sp.textContent = "Ster: aktief";
+} else if (loaded.supporterPublicActive === false) {
+  sp.className = "pill pill-red";
+  sp.textContent = "Ster: af";
+} else {
+  sp.className = "pill pill-amber";
+  sp.textContent = "Ster: geen rekord";
+}
+
     }
 
     function toYMD(input){
