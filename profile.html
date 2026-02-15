@@ -11,7 +11,7 @@
     gtag('config', 'G-S9V4CMP1FP');
   </script>
 
-    <!-- AdSense verification -->
+  <!-- AdSense verification -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8199352351586797"
           crossorigin="anonymous"></script>
 
@@ -73,7 +73,7 @@
 
   <!-- === Feature toggles === -->
   <script>
-    const FEATURES = { blitstiek: true, slimstiek: false };
+    const FEATURES = { dilemma: true, blitstiek: true, slimstiek: false };
     function applyFeatureToggles() {
       const known = new Set(Object.keys(FEATURES));
       document.querySelectorAll('[data-section]').forEach(el => {
@@ -86,6 +86,7 @@
     }
     document.addEventListener('DOMContentLoaded', applyFeatureToggles);
   </script>
+
   <!-- Firebase setup -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
@@ -105,12 +106,6 @@
       appId: "1:620450620939:web:e93a18ac23b53b33db890e"
     };
 
-    /* === DILEMMA scoring constants === */
-    const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
-    const STREAK_THRESHOLD = 5;
-    const STREAK_MULTIPLIER = 1.10;
-    const SUPPORTER_MULTIPLIER = 1.10;
-
     /* === Helpers === */
     function todayZaISO(){
       const now = new Date();
@@ -118,22 +113,15 @@
       const za  = new Date(utc + 120*60000);
       return za.toISOString().slice(0,10);
     }
-    function gameIdFor(daysFromToday){
-      const now = new Date();
-      const utc = now.getTime() + now.getTimezoneOffset()*60000;
-      const za  = new Date(utc + 120*60000);
-      za.setDate(za.getDate() + daysFromToday);
-      return `Game${za.toISOString().slice(0,10)}`;
-    }
     const GAME_TODAY = `Game${todayZaISO()}`;
 
     const $ = (id) => document.getElementById(id);
     const fmt = (n) => (typeof n === "number" ? n.toLocaleString("af-ZA") : n);
+    const toInt = (v) => (typeof v === "number" ? Math.trunc(v) : (v == null ? 0 : Math.trunc(Number(v) || 0)));
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
-
     function setWbName(name){
       const el = $("wbName");
       if (el) el.textContent = (name || "Gebruiker").toUpperCase();
@@ -155,74 +143,8 @@
       return { active, untilTs };
     }
 
-    /* === Dilemma scoring (overall + today) === */
-    function computeDilemma(plays, supporterActive){
-      const byDate = new Map();
-      plays.slice().reverse().forEach(p => byDate.set(p.date, p));
-      const dates = Array.from(byDate.keys()).sort();
-
-      let cur = 0, prev = null;
-      for (const d of dates) {
-        const consec = prev && (new Date(d) - new Date(prev) === 24*60*60*1000);
-        if (!consec) cur = 0;
-        const p = byDate.get(d);
-        if (p?.win) cur++; else cur = 0;
-        prev = d;
-      }
-
-      const dist = {1:0,2:0,3:0,4:0,5:0,6:0,fail:0};
-      for (const p of byDate.values()) {
-        if (p.win) {
-          const g = Math.min(Math.max(1, p.guesses || 6), 6);
-          dist[g] += 1;
-        } else dist.fail += 1;
-      }
-
-      const subtotal =
-        dist[1]*BASE_POINTS[1] + dist[2]*BASE_POINTS[2] + dist[3]*BASE_POINTS[3] +
-        dist[4]*BASE_POINTS[4] + dist[5]*BASE_POINTS[5] + dist[6]*BASE_POINTS[6] +
-        dist.fail*BASE_POINTS.fail;
-
-      const streakMult = (cur >= STREAK_THRESHOLD) ? STREAK_MULTIPLIER : 1;
-      const supporterMult = supporterActive ? SUPPORTER_MULTIPLIER : 1;
-
-      const streakBonus = Math.round(subtotal * (streakMult - 1));
-      const overall = subtotal + streakBonus;
-      const overallWithSupport = Math.round(overall * supporterMult);
-
-      const today = byDate.get(todayZaISO());
-      let todayPoints = null;
-      if (today) {
-        if (today.win) {
-          const base = BASE_POINTS[Math.min(Math.max(1, today.guesses || 6), 6)];
-          const baseWithStreak = Math.round(base * streakMult);
-          todayPoints = Math.round(baseWithStreak * supporterMult);
-        } else {
-          todayPoints = BASE_POINTS.fail;
-        }
-      }
-
-      return { overall: overallWithSupport, today: todayPoints };
-    }
-
-    async function loadDilemma(uid, supporterActive){
-      const playsRef = collection(db, "userGames", uid, "plays");
-      const q = query(playsRef, orderBy("finishedAt", "desc"), limit(200));
-      const snap = await getDocs(q);
-
-      const plays = [];
-      snap.forEach(docSnap => {
-        const d = docSnap.data();
-        const gameId = docSnap.id; // "GameYYYY-MM-DD"
-        const theDate = gameId.replace(/^Game/, "");
-        plays.push({ date: theDate, win: d?.result === "win" || d?.finished === true, guesses: Number(d?.guesses || 0) });
-      });
-
-      return computeDilemma(plays, supporterActive);
-    }
     /* === BLITSTIEK (instant tiers + confirmed history) === */
 
-    // Parse milliseconds from possible shapes: timeMs number, time seconds, or "MM:SS"
     function parseBlitTimeMs(row){
       if (!row) return NaN;
       if (typeof row.timeMs === "number") return row.timeMs;
@@ -235,7 +157,6 @@
       return NaN;
     }
 
-    // Instant bonus: <30s => 200, <60s => 100, else 0
     function blitInstantBonus(timeMs){
       if (!Number.isFinite(timeMs)) return 0;
       if (timeMs < 30000) return 200;
@@ -243,26 +164,22 @@
       return 0;
     }
 
-    // Resolve daily points from a leaderboard row (prefer canonical; infer instant if needed)
     function blitPointsFromRow(row){
-      if (typeof row?.dailyPoints === "number") return row.dailyPoints; // canonical
-      if (typeof row?.points === "number")      return row.points;      // legacy
-      if (typeof row?.totalPoints === "number") return row.totalPoints; // legacy
+      if (typeof row?.dailyPoints === "number") return row.dailyPoints;
+      if (typeof row?.points === "number")      return row.points;
+      if (typeof row?.totalPoints === "number") return row.totalPoints;
 
       let p = 0;
-      if (typeof row?.placePoints === "number") p += row.placePoints;   // legacy
-      if (typeof row?.instant === "number")     p += row.instant;       // legacy
-      p += blitInstantBonus(parseBlitTimeMs(row));                      // inference
+      if (typeof row?.placePoints === "number") p += row.placePoints;
+      if (typeof row?.instant === "number")     p += row.instant;
+      p += blitInstantBonus(parseBlitTimeMs(row));
       return p;
     }
 
-    // Today tile: BEFORE 23:55 → instant only; AFTER 23:55 → instant + dailyPoints
     async function loadBlitstiekToday(uid, userDoc){
-      // Try direct doc: id == uid
       let snap = await getDoc(doc(db, "blitstiekGames", GAME_TODAY, "leaderboard", uid));
       let row = snap.exists() ? { id: snap.id, ...snap.data() } : null;
 
-      // Fallback: auto-ID with uid field
       if (!row) {
         try {
           const qs = await getDocs(query(
@@ -284,11 +201,9 @@
       return { instant, place };
     }
 
-    // Overall (Algeheel): confirmed history only — EXCLUDE today entirely
     async function loadBlitstiekOverall(userDoc, uid){
       const toNum = v => (typeof v === "number" ? v : (v==null ? 0 : Number(v)));
 
-      // Prefer confirmed total maintained by the 23:55 job
       let base = toNum(
         userDoc?.blitstiekTotalConfirmed ??
         userDoc?.kBlit_total ??
@@ -298,7 +213,6 @@
       );
       if (base) return base;
 
-      // Recompute by summing past days (exclude GAME_TODAY)
       const todayId = GAME_TODAY;
       let sum = 0;
 
@@ -321,61 +235,50 @@
       return sum;
     }
 
-    /* === UI wiring === */
+    /* === Medaljes (profile summary) === */
 
+    function renderBlitstiekMedalCounts(userDoc){
+      const line = $("medalsBlitLine");
+      const breakdown = $("medalsBlitBreakdown");
+      const empty = $("medalsBlitEmpty");
 
-    function normalizeMedaljes(raw){
-      if (!Array.isArray(raw)) return [];
-      return raw
-        .map((m)=>{
-          if (typeof m === "string") return m.trim();
-          if (m && typeof m.label === "string") return m.label.trim();
-          if (m && typeof m.name === "string") return m.name.trim();
-          return "";
-        })
-        .filter(Boolean);
+      const gold = toInt(userDoc?.medals?.blitstiek?.gold);
+      const silver = toInt(userDoc?.medals?.blitstiek?.silver);
+      const bronze = toInt(userDoc?.medals?.blitstiek?.bronze);
+      const total = gold + silver + bronze;
+
+      if (line) line.textContent = `Medaljes: ${fmt(total)}`;
+
+      if (total > 0) {
+        if (breakdown) {
+          breakdown.textContent = `🥇 ${fmt(gold)}  •  🥈 ${fmt(silver)}  •  🥉 ${fmt(bronze)}`;
+          breakdown.classList.remove("hidden");
+        }
+        if (empty) empty.classList.add("hidden");
+      } else {
+        if (breakdown) breakdown.classList.add("hidden");
+        if (empty) empty.classList.remove("hidden");
+      }
     }
-
     function renderSupporterStarIcon(isSupporter){
       return isSupporter === true
         ? '<span class="inline-block ml-1 align-middle text-yellow-400" aria-label="Ondersteuner">★</span>'
         : "";
     }
 
-    function renderMedaljePillsInline(medaljes, isSupporter){
-      if (isSupporter !== true || !Array.isArray(medaljes) || !medaljes.length) return "";
-      return medaljes
-        .slice(0,2)
-        .map((label)=>`<span class="medalje-pill">${String(label).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')}</span>`)
-        .join("");
-    }
-
     function renderProfileNameLine(name, userDoc){
       const target = $("profileNameLine");
       if (!target) return;
+
       const isSupporter = userDoc?.isSupporter === true;
-      const medaljes = normalizeMedaljes(
-        userDoc?.publicMedaljes || userDoc?.inlineMedaljes || userDoc?.blitstiekMedaljes || userDoc?.medaljes
-      );
       const safeName = String(name || "Gebruiker")
         .replaceAll('&','&amp;')
         .replaceAll('<','&lt;')
         .replaceAll('>','&gt;');
-      target.innerHTML = `<span class="font-black text-slate-900">${safeName}</span>${renderSupporterStarIcon(isSupporter)}${renderMedaljePillsInline(medaljes, isSupporter)}`;
+
+      target.innerHTML = `<span class="font-black text-slate-900">${safeName}</span>${renderSupporterStarIcon(isSupporter)}`;
     }
 
-    function renderMedaljesCabinet(userDoc){
-      const cabinet = $("medaljesCabinet");
-      if (!cabinet) return;
-      const medaljes = normalizeMedaljes(userDoc?.blitstiekMedaljes || userDoc?.medaljes);
-      if (!medaljes.length){
-        cabinet.innerHTML = '<p class="text-sm text-slate-500">Nog geen medaljes hier nie.</p>';
-        return;
-      }
-      cabinet.innerHTML = medaljes
-        .map((label)=>`<span class="medalje-pill">${String(label).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')}</span>`)
-        .join(' ');
-    }
     function renderSupporterPill(state){
       const el=$("supporterPill"); if(!el) return;
       if(state.active){
@@ -390,18 +293,18 @@
       }
     }
 
-    function renderNumbers({kScore, dlmOverall, dlmToday, bltOverall, bltToday}){
-      if ($("pillOverall"))       $("pillOverall").textContent       = `JOU KRIPTIEK-TELLING: ${fmt(kScore ?? 0)}`;
-      if ($("pillDilemmaLive"))   $("pillDilemmaLive").textContent   = `JOU DILEMMA-TELLING: ${fmt(dlmOverall ?? 0)}`;
-      if ($("pillBlitLive"))      $("pillBlitLive").textContent      = `JOU BLITSTIEK-TELLING: ${fmt(bltOverall ?? 0)}`;
+    function renderNumbers({ bltOverall, bltToday }){
+      const overallPill = $("pillOverall");
+      if (overallPill) overallPill.textContent = "JOU KRIPTIEK-TELLING: BINNEKORT";
 
-      if ($("dilOverallScore"))   $("dilOverallScore").textContent   = fmt(dlmOverall ?? 0);
-      if ($("calcTime"))          $("calcTime").textContent          = new Date().toLocaleString("af-ZA");
-      if ($("totalPoints"))       $("totalPoints").textContent       = (dlmToday==null ? "—" : fmt(dlmToday));
+      const dilPill = $("pillDilemmaLive");
+      if (dilPill) dilPill.textContent = "JOU DILEMMA-TELLING: BINNEKORT";
 
-      if ($("blitOverallScore"))  $("blitOverallScore").textContent  = fmt(bltOverall ?? 0);
-      if ($("calcTimeBlit"))      $("calcTimeBlit").textContent      = new Date().toLocaleString("af-ZA");
-      if ($("totalPointsBlit"))   $("totalPointsBlit").textContent   = (bltToday==null ? "—" : fmt(bltToday));
+      if ($("pillBlitLive")) $("pillBlitLive").textContent = `JOU BLITSTIEK-TELLING: ${fmt(bltOverall ?? 0)}`;
+
+      if ($("blitOverallScore")) $("blitOverallScore").textContent = fmt(bltOverall ?? 0);
+      if ($("calcTimeBlit")) $("calcTimeBlit").textContent = new Date().toLocaleString("af-ZA");
+      if ($("totalPointsBlit")) $("totalPointsBlit").textContent = (bltToday==null ? "—" : fmt(bltToday));
     }
 
     async function hydrateProfile(user){
@@ -410,24 +313,27 @@
       if(nameEl)  nameEl.value  = user.displayName || "";
       if(emailEl) emailEl.value = user.email || "";
 
-      // Ensure users doc exists
       const uref = doc(db, "users", user.uid);
       let userDocSnap = await getDoc(uref);
       if (!userDocSnap.exists()) {
-        await setDoc(uref, { userName: user.displayName || "Gebruiker", createdAt: serverTimestamp(), updatedAt: serverTimestamp() }, { merge: true });
+        await setDoc(
+          uref,
+          { userName: user.displayName || "Gebruiker", createdAt: serverTimestamp(), updatedAt: serverTimestamp() },
+          { merge: true }
+        );
         userDocSnap = await getDoc(uref);
       }
       const userDoc = userDocSnap.data() || {};
+
       const supporter = getSupporterState(userDoc);
       renderSupporterPill(supporter);
 
-      // Welcome name
       const displayName = user.displayName || userDoc.userName || "Gebruiker";
       setWbName(displayName);
       renderProfileNameLine(displayName, userDoc);
-      renderMedaljesCabinet(userDoc);
 
-      // Supporter banner
+      renderBlitstiekMedalCounts(userDoc);
+
       const supporterBanner = document.getElementById("supporterBanner");
       if (supporterBanner) {
         if (supporter.active) {
@@ -439,7 +345,6 @@
         }
       }
 
-      // Blitstiek (historic confirmed + today instant-only until 23:55)
       const bltOverall = await loadBlitstiekOverall(userDoc, user.uid);
       const { instant: bltInstant, place: bltPlace } = await loadBlitstiekToday(user.uid, userDoc);
       let bltTodayTotal = null;
@@ -449,19 +354,10 @@
       const blitOverallUpdated = document.getElementById("blitOverallUpdated");
       if (blitOverallUpdated) blitOverallUpdated.textContent = new Date().toLocaleString("af-ZA");
 
-      // Dilemma
-      const { overall: dlmOverall, today: dlmToday } = await loadDilemma(user.uid, supporter.active);
-      const upd = document.getElementById("dilOverallUpdated");
-      if (upd) upd.textContent = new Date().toLocaleString("af-ZA");
-
-      // Kriptiek total (Dilemma + Blitstiek)
-      const kScore = Number(dlmOverall || 0) + Number(bltOverall || 0);
-
-      renderNumbers({ kScore, dlmOverall, dlmToday, bltOverall, bltToday: bltTodayTotal });
+      renderNumbers({ bltOverall, bltToday: bltTodayTotal });
 
       if (typeof gtag === 'function') gtag('event','profile_view',{ uid: user.uid });
     }
-
     function wireProfileForm(user){
       const form = $("profileForm");
       const resetBtn = $("resetPwBtn");
@@ -482,6 +378,7 @@
           }catch(err){ console.error(err); alert("Kon nie jou profiel opdateer nie."); }
         });
       }
+
       if(resetBtn){
         resetBtn.addEventListener("click", async ()=>{
           try{
@@ -490,6 +387,7 @@
           }catch(err){ console.error(err); alert("Kon nie wagwoordherstel stuur nie."); }
         });
       }
+
       if(delBtn){
         delBtn.addEventListener("click", async ()=>{
           if(!confirm("Is jy seker? Jou rekening sal verwyder word.")) return;
@@ -507,7 +405,6 @@
       }
     }
 
-    // ---- Auth gate + bootstrap ----
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         const ret = encodeURIComponent("/profile.html");
@@ -547,7 +444,6 @@
 
   <main class="flex-grow p-4 pb-16">
     <div class="max-w-6xl mx-auto flex flex-col gap-6 items-stretch">
-
       <!-- PROFILE CARD -->
       <section class="card p-5 md:p-6">
         <a id="supporterBanner" href="https://buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
@@ -584,32 +480,57 @@
           <h2 class="text-xl font-extrabold text-slate-900">MEDALJES</h2>
         </header>
 
-        <p class="text-sm text-slate-700 mb-3">Medaljes wys langs jou naam as jy ’n betalende Ondersteuner is</p>
-        <a href="https://buymeacoffee.com/kriptiek" target="_blank" rel="noopener" class="inline-flex items-center px-4 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-600 text-white font-bold mb-4">Word ’n Ondersteuner</a>
+        <p class="text-sm text-slate-700 mb-3">
+          ’n Ondersteuner-ster (★) wys langs jou naam as jy ’n betalende Ondersteuner is.
+          Medaljes hieronder wys jou podium-prestasies per speletjie.
+        </p>
 
-        <div class="rounded-xl border border-slate-200 bg-white p-4">
-          <h3 class="font-semibold text-slate-800 mb-2">Blitstiek medaljes-kabinet</h3>
-          <div id="medaljesCabinet" class="flex flex-wrap gap-2">
-            <p class="text-sm text-slate-500">Nog geen medaljes hier nie.</p>
+        <a href="https://buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
+           class="inline-flex items-center px-4 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-600 text-white font-bold mb-4">
+          Word ’n Ondersteuner
+        </a>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="mini">
+            <div class="text-xs uppercase tracking-wide text-slate-500 font-extrabold">Dilemma</div>
+            <div class="mt-1 text-lg font-extrabold text-slate-900">Medaljes: BINNEKORT</div>
+            <div class="text-sm text-slate-500 mt-1">Kom binnekort</div>
+          </div>
+
+          <div class="mini">
+            <div class="text-xs uppercase tracking-wide text-slate-500 font-extrabold">Blitstiek</div>
+            <div id="medalsBlitLine" class="mt-1 text-lg font-extrabold text-slate-900">Medaljes: 0</div>
+            <div id="medalsBlitBreakdown" class="hidden text-sm font-bold text-slate-700 mt-1">🥇 0  •  🥈 0  •  🥉 0</div>
+            <div id="medalsBlitEmpty" class="text-sm text-slate-500 mt-1">Nog geen medaljes in Blitstiek nie</div>
+          </div>
+
+          <div class="mini">
+            <div class="text-xs uppercase tracking-wide text-slate-500 font-extrabold">Slimstiek</div>
+            <div class="mt-1 text-lg font-extrabold text-slate-900">Medaljes: BINNEKORT</div>
+            <div class="text-sm text-slate-500 mt-1">Kom binnekort</div>
           </div>
         </div>
       </section>
-
       <!-- OVERVIEW -->
       <section class="card p-5 md:p-6">
         <div class="mb-2">
-          <span id="supporterPill" class="pill pill-lg" style="background:#f1f5f9;color:#0f172a;border:1px solid #e2e8f0">ONDERSTEUNER: NIE AKTIEF NIE</span>
+          <span id="supporterPill" class="pill pill-lg" style="background:#f1f5f9;color:#0f172a;border:1px solid #e2e8f0">
+            ONDERSTEUNER: NIE AKTIEF NIE
+          </span>
         </div>
+
         <div class="mb-4">
-          <span id="pillOverall" class="pill pill-lg pill-blue">JOU KRIPTIEK-TELLING: 0</span>
+          <span id="pillOverall" class="pill pill-lg pill-blue">JOU KRIPTIEK-TELLING: BINNEKORT</span>
         </div>
+
         <div class="flex flex-wrap gap-2 mb-4 items-start">
-          <span id="pillDilemmaLive" class="pill pill-lg pill-orange">JOU DILEMMA-TELLING: 0</span>
+          <span id="pillDilemmaLive" class="pill pill-lg pill-orange">JOU DILEMMA-TELLING: BINNEKORT</span>
           <span id="pillBlitLive" class="pill pill-lg pill-green">JOU BLITSTIEK-TELLING: 0</span>
           <span class="pill pill-lg pill-green-dark">JOU SLIMSTIEK-TELLING: BINNEKORT</span>
         </div>
+
         <p class="text-sm text-slate-600">
-          Jou Kriptiek-telling is die som van jou <strong>Dilemma</strong>- en <strong>Blitstiek</strong>-tellings (Slimstiek volg later).
+          Die ou “telling”-stelsel word vervang. Jou medalje-opsomming per speletjie is bo.
         </p>
       </section>
 
@@ -620,60 +541,14 @@
           <h2 class="text-xl font-extrabold text-slate-900">DILEMMA</h2>
         </header>
 
-        <div class="rounded-xl border border-slate-200 bg-white p-4 mb-3">
-          <div class="flex items-end justify-between">
-            <div>
-              <div id="dilOverallScore" class="text-6xl font-black mono text-slate-900 tracking-tight">0</div>
-              <div class="text-xs uppercase tracking-wide text-slate-500">Algeheel (totaal)</div>
-            </div>
-            <div class="text-right">
-              <div class="text-xs text-slate-500">Laas opgedateer</div>
-              <div id="dilOverallUpdated" class="text-sm mono">—</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="rounded-xl border border-orange-200 bg-orange-50 p-4 mb-4">
-          <div class="flex items-end justify-between">
-            <div>
-              <div id="totalPoints" class="text-4xl font-extrabold mono text-orange-900">—</div>
-              <div class="text-xs uppercase tracking-wide text-orange-900/70">Vandag</div>
-            </div>
-            <div class="text-right">
-              <div class="text-xs text-orange-900/70">Laas bereken</div>
-              <div id="calcTime" class="text-sm mono">—</div>
-            </div>
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div class="text-sm font-semibold text-slate-800">Medaljes vir Dilemma kom binnekort.</div>
+          <div class="text-xs text-slate-500 mt-1">
+            Hier gaan jou podium-prestasies wys sodra die nuwe medalje-stelsel vir Dilemma klaar is.
           </div>
         </div>
       </section>
 
-<div class="rounded-xl bg-gray-50 p-4 border border-gray-200 mt-3">
-  <h3 class="font-semibold text-gray-800 mb-2">Dilemma: Telling & ranglys</h3>
-  <ul class="list-disc list-inside text-gray-700 space-y-1">
-    <li>Jy kry <strong>6 raaiskote</strong> om elke dag se Dilemma op te los.</li>
-    <li>Hoe minder raaiskote jy nodig het, hoe meer punte kry jy.</li>
-  </ul>
-
-  <ul class="list-disc list-inside text-gray-700 space-y-1 ml-5">
-    <li><strong>150 punte</strong> vir ’n oplossing in <strong>1 raaiskoot</strong></li>
-    <li><strong>135 punte</strong> vir ’n oplossing in <strong>2 raaiskote</strong></li>
-    <li><strong>120 punte</strong> vir ’n oplossing in <strong>3 raaiskote</strong></li>
-    <li><strong>110 punte</strong> vir ’n oplossing in <strong>4 raaiskote</strong></li>
-    <li><strong>105 punte</strong> vir ’n oplossing in <strong>5 raaiskote</strong></li>
-    <li><strong>100 punte</strong> vir ’n oplossing in <strong>6 raaiskote</strong></li>
-  </ul>
-
-  <ul class="list-disc list-inside text-gray-700 space-y-1 mt-2">
-    <li>As jy nie die woord in ses raaiskote kry nie, <strong>verloor jy 50 punte</strong>.</li>
-    <li>’n Lopie (ononderbroke sukses) van <strong>meer as 5 dae</strong> gee vir jou 'n <strong>10%-lopiebonus vir die dag</strong> 
-        op al jou Dilemma-punte.</li>
-    <li>Betalende Kriptiek-ondersteuners kry ’n <strong>10%-bonus</strong> 
-        by hul totale Dilemma-telling.</li>
-    <li>Jou <strong>algehele Dilemma-telling</strong> is die som van al jou vorige dae se tellings, 
-        met lopie- en ondersteunerbonusse bygereken.</li>
-  </ul>
-</div>
-      
       <!-- BLITSTIEK -->
       <section class="card p-5 md:p-6" data-section="blitstiek">
         <header class="flex flex-col gap-1 mb-3">
@@ -707,44 +582,43 @@
           </div>
         </div>
 
-       <div class="rounded-xl bg-gray-50 p-4 border border-gray-200 mt-3">
-  <h3 class="font-semibold text-gray-800 mb-2">Blitstiek: Telling & ranglys</h3>
+        <div class="rounded-xl bg-gray-50 p-4 border border-gray-200 mt-3">
+          <h3 class="font-semibold text-gray-800 mb-2">Blitstiek: Telling & ranglys</h3>
 
-  <ul class="list-disc list-inside text-gray-700 space-y-1">
-    <li>Die ranglys wys <strong>die dag se 10 beste tye.</strong></li>
-    <li>Jou naam verskyn hoogstens een keer op die dag se lys, en ’n beter tyd vervang jou vorige swakker tyd.</li>
-  </ul>
+          <ul class="list-disc list-inside text-gray-700 space-y-1">
+            <li>Die ranglys wys <strong>die dag se 10 beste tye.</strong></li>
+            <li>Jou naam verskyn hoogstens een keer op die dag se lys, en ’n beter tyd vervang jou vorige swakker tyd.</li>
+          </ul>
 
-  <ul class="list-disc list-inside text-gray-700 space-y-1 ml-5">
-    <li><strong>200 punte</strong> vir ’n voltooiing in <strong>onder 30 sekondes</strong></li>
-    <li><strong>100 punte</strong> vir ’n voltooiing in <strong>onder 60 sekondes</strong></li>
-  </ul>
+          <ul class="list-disc list-inside text-gray-700 space-y-1 ml-5">
+            <li><strong>200 punte</strong> vir ’n voltooiing in <strong>onder 30 sekondes</strong></li>
+            <li><strong>100 punte</strong> vir ’n voltooiing in <strong>onder 60 sekondes</strong></li>
+          </ul>
 
-  <ul class="list-disc list-inside text-gray-700 space-y-1 mt-2">
-    <li>Jy kry <strong>bonuspunte vir jou posisie op die ranglys om 23:55</strong>:</li>
-  </ul>
+          <ul class="list-disc list-inside text-gray-700 space-y-1 mt-2">
+            <li>Jy kry <strong>bonuspunte vir jou posisie op die ranglys om 23:55</strong>:</li>
+          </ul>
 
-  <ul class="list-disc list-inside text-gray-700 space-y-1 ml-5">
-    <li><strong>1ste plek</strong> – 200 punte</li>
-    <li><strong>2de plek</strong> – 175 punte</li>
-    <li><strong>3de plek</strong> – 150 punte</li>
-    <li><strong>4de plek</strong> – 125 punte</li>
-    <li><strong>5de plek</strong> – 100 punte</li>
-    <li><strong>6de plek</strong> – 75 punte</li>
-    <li><strong>7de plek</strong> – 50 punte</li>
-    <li><strong>8ste plek</strong> – 40 punte</li>
-    <li><strong>9de plek</strong> – 30 punte</li>
-    <li><strong>10de plek</strong> – 20 punte</li>
-  </ul>
+          <ul class="list-disc list-inside text-gray-700 space-y-1 ml-5">
+            <li><strong>1ste plek</strong> – 200 punte</li>
+            <li><strong>2de plek</strong> – 175 punte</li>
+            <li><strong>3de plek</strong> – 150 punte</li>
+            <li><strong>4de plek</strong> – 125 punte</li>
+            <li><strong>5de plek</strong> – 100 punte</li>
+            <li><strong>6de plek</strong> – 75 punte</li>
+            <li><strong>7de plek</strong> – 50 punte</li>
+            <li><strong>8ste plek</strong> – 40 punte</li>
+            <li><strong>9de plek</strong> – 30 punte</li>
+            <li><strong>10de plek</strong> – 20 punte</li>
+          </ul>
 
-  <ul class="list-disc list-inside text-gray-700 space-y-1 mt-2">
-    <li>Betalende Kriptiek-ondersteuners kry ’n <strong>10%-bonus</strong> op die dag se ranglyspunte.</li>
-    <li>Jou <strong>algehele Blitstiek-telling</strong> is die som van al jou vorige dae se bevestigde tellings, 
-        met ondersteunerbonusse bygereken.</li>
-  </ul>
-</div>
-
-
+          <ul class="list-disc list-inside text-gray-700 space-y-1 mt-2">
+            <li>Betalende Kriptiek-ondersteuners kry ’n <strong>10%-bonus</strong> op die dag se ranglyspunte.</li>
+            <li>Jou <strong>algehele Blitstiek-telling</strong> is die som van al jou vorige dae se bevestigde tellings,
+                met ondersteunerbonusse bygereken.</li>
+          </ul>
+        </div>
+      </section>
       <!-- SLIMSTIEK (hidden for now) -->
       <section class="card p-5 md:p-6" data-section="slimstiek" aria-hidden="true" style="display:none">
         <header class="flex flex-col gap-1 mb-3">
