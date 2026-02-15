@@ -131,6 +131,8 @@
       let active = false, untilTs = null;
       if (u?.supporterActive === true) active = true;
       if (u?.isPaid === true) active = true;
+      if (u?.isSupporter === true) active = true;
+
 
       const until =
         (u?.supporterUntil?.toMillis && u.supporterUntil.toMillis()) ||
@@ -242,13 +244,32 @@ function inferBlitMedalsFromArray(arr){
   if (!Array.isArray(arr)) return out;
 
   for (const raw of arr){
+
+    // 1) Object-shaped medals (recommended legacy support)
+    if (raw && typeof raw === "object") {
+      const place = Number(raw.place ?? raw.rank ?? raw.position ?? raw.pos ?? raw.podium ?? NaN);
+      if (place === 1) out.gold++;
+      else if (place === 2) out.silver++;
+      else if (place === 3) out.bronze++;
+      else {
+        const medal = String(raw.medal ?? raw.type ?? raw.name ?? raw.label ?? "").toLowerCase();
+        if (medal === "gold" || medal === "goud" || medal.includes("1")) out.gold++;
+        else if (medal === "silver" || medal === "silwer" || medal.includes("2")) out.silver++;
+        else if (medal === "bronze" || medal === "brons" || medal.includes("3")) out.bronze++;
+      }
+      continue;
+    }
+
+    // 2) String-shaped medals
     const s = String(raw || "").toLowerCase();
     if (/\b1ste\b|\beerste\b|🥇/.test(s)) out.gold++;
     else if (/\b2de\b|\btweede\b|🥈/.test(s)) out.silver++;
     else if (/\b3de\b|\bderde\b|🥉/.test(s)) out.bronze++;
   }
+
   return out;
 }
+
 
 function renderBlitstiekMedalCounts(userDoc){
   const line = $("medalsBlitLine");
