@@ -237,47 +237,84 @@
 
     /* === Medaljes (profile summary) === */
 
-    function renderBlitstiekMedalCounts(userDoc){
-      const line = $("medalsBlitLine");
-      const breakdown = $("medalsBlitBreakdown");
-      const empty = $("medalsBlitEmpty");
+function inferBlitMedalsFromArray(arr){
+  const out = { gold: 0, silver: 0, bronze: 0 };
+  if (!Array.isArray(arr)) return out;
 
-      const gold = toInt(userDoc?.medals?.blitstiek?.gold);
-      const silver = toInt(userDoc?.medals?.blitstiek?.silver);
-      const bronze = toInt(userDoc?.medals?.blitstiek?.bronze);
-      const total = gold + silver + bronze;
+  for (const raw of arr){
+    const s = String(raw || "").toLowerCase();
+    if (/\b1ste\b|\beerste\b|🥇/.test(s)) out.gold++;
+    else if (/\b2de\b|\btweede\b|🥈/.test(s)) out.silver++;
+    else if (/\b3de\b|\bderde\b|🥉/.test(s)) out.bronze++;
+  }
+  return out;
+}
 
-      if (line) line.textContent = `Medaljes: ${fmt(total)}`;
+function renderBlitstiekMedalCounts(userDoc){
+  const line = $("medalsBlitLine");
+  const breakdown = $("medalsBlitBreakdown");
+  const empty = $("medalsBlitEmpty");
 
-      if (total > 0) {
-        if (breakdown) {
-          breakdown.textContent = `🥇 ${fmt(gold)}  •  🥈 ${fmt(silver)}  •  🥉 ${fmt(bronze)}`;
-          breakdown.classList.remove("hidden");
-        }
-        if (empty) empty.classList.add("hidden");
-      } else {
-        if (breakdown) breakdown.classList.add("hidden");
-        if (empty) empty.classList.remove("hidden");
-      }
+  let gold = toInt(userDoc?.medals?.blitstiek?.gold);
+  let silver = toInt(userDoc?.medals?.blitstiek?.silver);
+  let bronze = toInt(userDoc?.medals?.blitstiek?.bronze);
+
+  // Fallback while migrating: infer from legacy arrays if aggregates aren't present yet
+  if ((gold + silver + bronze) === 0) {
+    const legacy =
+      userDoc?.blitstiekMedaljes ||
+      userDoc?.medaljes ||
+      userDoc?.publicMedaljes ||
+      userDoc?.inlineMedaljes;
+
+    const inf = inferBlitMedalsFromArray(legacy);
+    if ((inf.gold + inf.silver + inf.bronze) > 0) {
+      gold = inf.gold; silver = inf.silver; bronze = inf.bronze;
     }
+  }
+
+  const total = gold + silver + bronze;
+
+  if (line) line.textContent = `Medaljes: ${fmt(total)}`;
+
+  if (total > 0) {
+    if (breakdown) {
+      breakdown.textContent = `🥇 ${fmt(gold)}  •  🥈 ${fmt(silver)}  •  🥉 ${fmt(bronze)}`;
+      breakdown.classList.remove("hidden");
+    }
+    if (empty) empty.classList.add("hidden");
+  } else {
+    if (breakdown) breakdown.classList.add("hidden");
+    if (empty) empty.classList.remove("hidden");
+  }
+}
+
+
+
+    
+
+
+    
     function renderSupporterStarIcon(isSupporter){
       return isSupporter === true
         ? '<span class="inline-block ml-1 align-middle text-yellow-400" aria-label="Ondersteuner">★</span>'
         : "";
     }
 
-    function renderProfileNameLine(name, userDoc){
-      const target = $("profileNameLine");
-      if (!target) return;
+   function renderProfileNameLine(name, supporterActive){
+  const target = $("profileNameLine");
+  if (!target) return;
 
-      const isSupporter = userDoc?.isSupporter === true;
-      const safeName = String(name || "Gebruiker")
-        .replaceAll('&','&amp;')
-        .replaceAll('<','&lt;')
-        .replaceAll('>','&gt;');
+  const safeName = String(name || "Gebruiker")
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;');
 
-      target.innerHTML = `<span class="font-black text-slate-900">${safeName}</span>${renderSupporterStarIcon(isSupporter)}`;
-    }
+  target.innerHTML =
+    `<span class="font-black text-slate-900">${safeName}</span>` +
+    renderSupporterStarIcon(!!supporterActive);
+}
+
 
     function renderSupporterPill(state){
       const el=$("supporterPill"); if(!el) return;
@@ -330,7 +367,7 @@
 
       const displayName = user.displayName || userDoc.userName || "Gebruiker";
       setWbName(displayName);
-      renderProfileNameLine(displayName, userDoc);
+renderProfileNameLine(displayName, supporter.active);
 
       renderBlitstiekMedalCounts(userDoc);
 
