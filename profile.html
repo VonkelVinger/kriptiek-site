@@ -276,9 +276,18 @@ function renderBlitstiekMedalCounts(userDoc){
   const breakdown = $("medalsBlitBreakdown");
   const empty = $("medalsBlitEmpty");
 
-  let gold = toInt(userDoc?.medals?.blitstiek?.gold);
-  let silver = toInt(userDoc?.medals?.blitstiek?.silver);
-  let bronze = toInt(userDoc?.medals?.blitstiek?.bronze);
+    // Accept multiple schema shapes (gold/silver/bronze OR first/second/third OR 1/2/3)
+  const m =
+    userDoc?.medals?.blitstiek ??
+    userDoc?.blitstiekMedals ??
+    userDoc?.blit_medals ??
+    userDoc?.blitMedals ??
+    null;
+
+  let gold = toInt(m?.gold ?? m?.goud ?? m?.first ?? m?.firstPlace ?? m?.place1 ?? m?.["1"]);
+  let silver = toInt(m?.silver ?? m?.silwer ?? m?.second ?? m?.secondPlace ?? m?.place2 ?? m?.["2"]);
+  let bronze = toInt(m?.bronze ?? m?.brons ?? m?.third ?? m?.thirdPlace ?? m?.place3 ?? m?.["3"]);
+
 
   // Fallback while migrating: infer from legacy arrays if aggregates aren't present yet
   if ((gold + silver + bronze) === 0) {
