@@ -239,6 +239,30 @@
 
     /* === Medaljes (profile summary) === */
 
+    async function loadBlitstiekMedalsFromPlacements(uid){
+  const out = { gold: 0, silver: 0, bronze: 0 };
+  if (!uid) return out;
+
+  try{
+    const qs = await getDocs(query(
+      collectionGroup(db, "leaderboard"),
+      where(documentId(), "==", uid),
+      limit(500)
+    ));
+
+    qs.forEach(d => {
+      const p = Number(d.data()?.placementPlace);
+      if (p === 1) out.gold++;
+      else if (p === 2) out.silver++;
+      else if (p === 3) out.bronze++;
+    });
+  }catch(e){
+    console.warn("MEDALS_PLACE_QUERY_FAILED", e);
+  }
+
+  return out;
+}
+
 function inferBlitMedalsFromArray(arr){
   const out = { gold: 0, silver: 0, bronze: 0 };
   if (!Array.isArray(arr)) return out;
@@ -270,8 +294,7 @@ function inferBlitMedalsFromArray(arr){
   return out;
 }
 
-
-function renderBlitstiekMedalCounts(userDoc){
+function renderBlitstiekMedalCounts(userDoc, derived){
   const line = $("medalsBlitLine");
   const breakdown = $("medalsBlitBreakdown");
   const empty = $("medalsBlitEmpty");
@@ -303,6 +326,14 @@ function renderBlitstiekMedalCounts(userDoc){
     }
   }
 
+  // Fallback: derive from placementPlace history (cutoff results)
+  if ((gold + silver + bronze) === 0 && derived && typeof derived === "object") {
+    const dg = toInt(derived.gold);
+    const ds = toInt(derived.silver);
+    const dbz = toInt(derived.bronze);
+    if ((dg + ds + dbz) > 0) { gold = dg; silver = ds; bronze = dbz; }
+  }
+  
   const total = gold + silver + bronze;
 
   if (line) line.textContent = `Medaljes: ${fmt(total)}`;
@@ -399,8 +430,19 @@ function renderBlitstiekMedalCounts(userDoc){
       setWbName(displayName);
 renderProfileNameLine(displayName, supporter.active);
 
-      renderBlitstiekMedalCounts(userDoc);
+      let derived = null;
 
+      const aggTotal =
+        toInt(userDoc?.medals?.blitstiek?.gold) +
+        toInt(userDoc?.medals?.blitstiek?.silver) +
+        toInt(userDoc?.medals?.blitstiek?.bronze);
+
+      if (aggTotal === 0) {
+        derived = await loadBlitstiekMedalsFromPlacements(user.uid);
+      }
+
+      renderBlitstiekMedalCounts(userDoc, derived);
+      
       const supporterBanner = document.getElementById("supporterBanner");
       if (supporterBanner) {
         if (supporter.active) {
