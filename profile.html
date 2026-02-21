@@ -1,3 +1,4 @@
+<!-- PART 1/3 -->
 <!DOCTYPE html>
 <html lang="af">
 <head>
@@ -84,6 +85,7 @@
     .mono { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1, 'lnum' 1; }
     .mini { background:#f8fafc; border:1px solid #e5e7eb; border-radius:.75rem; padding:.5rem .6rem; text-align:center; }
   </style>
+
   <!-- Firebase setup -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
@@ -171,8 +173,8 @@
         el.classList.add("font-extrabold");
       }
     }
-    /* === Medaljes (profile summary) === */
 
+    /* === Medaljes (profile summary) === */
     async function loadBlitstiekMedalsFromPlacements(uid){
       const out = { gold: 0, silver: 0, bronze: 0 };
       if (!uid) return out;
@@ -255,6 +257,47 @@
       return out;
     }
 
+    async function loadSlimstiekMedalsFromPlacements(uid){
+      const out = { gold: 0, silver: 0, bronze: 0 };
+      if (!uid) return out;
+
+      try{
+        let gamesSnap = null;
+        try{
+          gamesSnap = await getDocs(query(
+            collection(db, "slimstiekGames"),
+            orderBy("createdAt", "desc"),
+            limit(400)
+          ));
+        }catch{
+          gamesSnap = await getDocs(query(
+            collection(db, "slimstiekGames"),
+            limit(400)
+          ));
+        }
+
+        const reads = [];
+        gamesSnap.forEach(g => {
+          reads.push(getDoc(doc(db, "slimstiekGames", g.id, "leaderboard", uid)));
+        });
+
+        const snaps = await Promise.all(reads);
+
+        snaps.forEach(s => {
+          if (!s.exists()) return;
+          const p = Number(s.data()?.placementPlace);
+          if (p === 1) out.gold++;
+          else if (p === 2) out.silver++;
+          else if (p === 3) out.bronze++;
+        });
+
+      }catch(e){
+        console.warn("SLIMSTIEK_MEDALS_PLACE_QUERY_FAILED", e);
+      }
+
+      return out;
+    }
+
     function renderDilemmaMedalCounts(derived){
       const line = $("medalsDilLine");
       const breakdown = $("medalsDilBreakdown");
@@ -278,11 +321,35 @@
         if (empty) empty.classList.remove("hidden");
       }
     }
-
+<!-- PART 2/3 -->
     function renderBlitstiekMedalCounts(derived){
       const line = $("medalsBlitLine");
       const breakdown = $("medalsBlitBreakdown");
       const empty = $("medalsBlitEmpty");
+
+      const gold = toInt(derived?.gold);
+      const silver = toInt(derived?.silver);
+      const bronze = toInt(derived?.bronze);
+      const total = gold + silver + bronze;
+
+      if (line) line.textContent = `Medaljes: ${fmt(total)}`;
+
+      if (total > 0) {
+        if (breakdown) {
+          breakdown.textContent = `🥇 ${fmt(gold)}  •  🥈 ${fmt(silver)}  •  🥉 ${fmt(bronze)}`;
+          breakdown.classList.remove("hidden");
+        }
+        if (empty) empty.classList.add("hidden");
+      } else {
+        if (breakdown) breakdown.classList.add("hidden");
+        if (empty) empty.classList.remove("hidden");
+      }
+    }
+
+    function renderSlimstiekMedalCounts(derived){
+      const line = $("medalsSlimLine");
+      const breakdown = $("medalsSlimBreakdown");
+      const empty = $("medalsSlimEmpty");
 
       const gold = toInt(derived?.gold);
       const silver = toInt(derived?.silver);
@@ -333,12 +400,15 @@
       setWbName(displayName);
       renderProfileNameLine(displayName, supporter.active);
 
-      // Medals
+      // Medals (placements from leaderboard rows)
       const blit = await loadBlitstiekMedalsFromPlacements(user.uid);
       renderBlitstiekMedalCounts(blit);
 
       const dil = await loadDilemmaMedalsFromPlacements(user.uid);
       renderDilemmaMedalCounts(dil);
+
+      const slim = await loadSlimstiekMedalsFromPlacements(user.uid);
+      renderSlimstiekMedalCounts(slim);
 
       // Supporter banner
       const supporterBanner = document.getElementById("supporterBanner");
@@ -478,7 +548,7 @@
           </div>
         </form>
       </section>
-
+<!-- PART 3/3 -->
       <!-- MEDALJES -->
       <section class="card p-5 md:p-6">
         <header class="flex flex-col gap-1 mb-3">
@@ -516,8 +586,9 @@
 
           <div class="mini">
             <div class="text-xs uppercase tracking-wide text-slate-500 font-extrabold">Slimstiek</div>
-            <div class="mt-1 text-lg font-extrabold text-slate-900">Medaljes: BINNEKORT</div>
-            <div class="text-sm text-slate-500 mt-1">Kom binnekort</div>
+            <div id="medalsSlimLine" class="mt-1 text-lg font-extrabold text-slate-900">Medaljes: 0</div>
+            <div id="medalsSlimBreakdown" class="hidden text-sm font-bold text-slate-700 mt-1">🥇 0  •  🥈 0  •  🥉 0</div>
+            <div id="medalsSlimEmpty" class="text-sm text-slate-500 mt-1">Nog geen medaljes in Slimstiek nie</div>
           </div>
         </div>
       </section>
@@ -530,11 +601,11 @@
         </header>
 
         <div class="text-sm text-slate-700 space-y-2 leading-relaxed">
-          <p><strong>DILEMMA:</strong> Medaljes word om <strong>23:55</strong> elke dag toegeken op grond van jou <strong>aantal raaiskote</strong>:</p>
+          <p><strong>DILEMMA:</strong> Medaljes word om <strong>23:55</strong> elke dag toegeken op grond van jou <strong>aantal raaiskote</strong>:
             <strong>🥇 vir 1</strong>, <strong>🥈 vir 2</strong>, <strong>🥉 vir 3</strong>.
           </p>
           <p><strong>BLITSTIEK:</strong> Medaljes word om <strong>23:55</strong> toegeken op grond van die dag se <strong>beste tye</strong> op die ranglys.</p>
-          <p><strong>SLIMSTIEK:</strong> Kom binnekort.</p>
+          <p><strong>SLIMSTIEK:</strong> Medaljes word om <strong>23:55</strong> toegeken op grond van die dag se <strong>beste tellings</strong> op die ranglys.</p>
         </div>
       </section>
 
@@ -578,4 +649,5 @@
 </html>
 
 
-  
+
+    
