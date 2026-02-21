@@ -158,13 +158,13 @@
 
       if(state.active){
         const extra = state.untilTs ? ` — tot ${new Date(state.untilTs).toLocaleDateString("af-ZA")}` : "";
-        el.textContent = "ONDERSTEUNER: AKTIEF" + extra;
+        el.textContent = "ONDERSTEUNER: JA" + extra;
         el.style.background = "#dcfce7";
         el.style.color = "#065f46";
         el.style.border = "1px solid #bbf7d0";
         el.classList.add("font-extrabold");
       }else{
-        el.textContent = "ONDERSTEUNER: NIE AKTIEF NIE";
+        el.textContent = "ONDERSTEUNER: NOG NIE";
         el.style.background = "#fef2f2";
         el.style.color = "#991b1b";
         el.style.border = "1px solid #fecaca";
@@ -488,7 +488,7 @@
 
         <p class="text-sm text-slate-700 mb-3">
           ’n Ondersteuner-ster (★) wys langs jou naam as jy ’n betalende Ondersteuner is.
-          Medaljes hieronder wys jou podium-prestasies per speletjie.
+          Die syfers onder wys jou getal en soort medaljes per speletjie.
         </p>
 
         <!-- Only visible if NOT supporter -->
@@ -530,7 +530,7 @@
         </header>
 
         <div class="text-sm text-slate-700 space-y-2 leading-relaxed">
-          <p><strong>DILEMMA:</strong> Medaljes word om <strong>23:55</strong> toegeken op grond van jou <strong>aantal raaiskote</strong>:
+          <p><strong>DILEMMA:</strong> Medaljes word om <strong>23:55</strong> elke dag toegeken op grond van jou <strong>aantal raaiskote</strong>:
             <strong>🥇 1</strong>, <strong>🥈 2</strong>, <strong>🥉 3</strong>.
           </p>
           <p><strong>BLITSTIEK:</strong> Medaljes word om <strong>23:55</strong> toegeken op grond van die dag se <strong>beste tye</strong> op die ranglys.</p>
