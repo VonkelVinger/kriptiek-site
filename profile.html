@@ -79,40 +79,18 @@
 
     /* --- Card + pill styling --- */
     .card { background:#fff; border:1px solid #e5e7eb; border-radius:0.75rem; box-shadow:0 2px 6px rgba(2,6,23,.04); }
-    .pill { display:inline-flex; align-items:center; border-radius:999px; padding:.35rem .9rem; font-weight:800; font-size:.9rem; }
+    .pill { display:inline-flex; align-items:center; border-radius:999px; padding:.3rem .75rem; font-weight:800; font-size:.85rem; }
     .pill-lg { padding:.45rem .95rem; font-size:1rem; }
-    .pill-blue { background:#e0e7ff; color:#1e3a8a; }
-    .pill-orange { background:#fff1e6; color:#c2410c; }
-    .pill-green { background:#e8fff3; color:#065f46; }
-    .pill-green-dark { background:#e6fffb; color:#115e59; }
     .mono { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1, 'lnum' 1; }
     .mini { background:#f8fafc; border:1px solid #e5e7eb; border-radius:.75rem; padding:.5rem .6rem; text-align:center; }
   </style>
-
-  <!-- === Feature toggles === -->
-  <script>
-    const FEATURES = { dilemma: true, blitstiek: true, slimstiek: false };
-    function applyFeatureToggles() {
-      const known = new Set(Object.keys(FEATURES));
-      document.querySelectorAll('[data-section]').forEach(el => {
-        const key = el.getAttribute('data-section');
-        if (!known.has(key)) return;
-        const on = !!FEATURES[key];
-        el.style.display = on ? '' : 'none';
-        el.setAttribute('aria-hidden', on ? 'false' : 'true');
-      });
-    }
-    document.addEventListener('DOMContentLoaded', applyFeatureToggles);
-  </script>
-
   <!-- Firebase setup -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, sendPasswordResetEmail, deleteUser, updateProfile } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
     import {
       getFirestore, doc, getDoc, setDoc, updateDoc,
-      collection, query, orderBy, limit, getDocs, serverTimestamp,
-      where
+      collection, query, orderBy, limit, getDocs, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -123,15 +101,6 @@
       messagingSenderId: "620450620939",
       appId: "1:620450620939:web:e93a18ac23b53b33db890e"
     };
-
-    /* === Helpers === */
-    function todayZaISO(){
-      const now = new Date();
-      const utc = now.getTime() + now.getTimezoneOffset()*60000;
-      const za  = new Date(utc + 120*60000);
-      return za.toISOString().slice(0,10);
-    }
-    const GAME_TODAY = `Game${todayZaISO()}`;
 
     const $ = (id) => document.getElementById(id);
     const fmt = (n) => (typeof n === "number" ? n.toLocaleString("af-ZA") : n);
@@ -163,64 +132,45 @@
       return { active, untilTs };
     }
 
-    /* === BLITSTIEK (today + overall) === */
-    function parseBlitTimeMs(row){
-      if (!row) return NaN;
-      if (typeof row.timeMs === "number") return row.timeMs;
-      if (typeof row.time === "number")   return row.time * 1000;
-      if (typeof row.time === "string") {
-        const parts = row.time.split(":").map(Number);
-        if (parts.length === 2) return (parts[0]*60 + parts[1]) * 1000;
-        if (parts.length === 1) return parts[0] * 1000;
+    function renderSupporterStarIcon(isSupporter){
+      return isSupporter === true
+        ? '<span class="inline-block ml-1 align-middle text-yellow-400" aria-label="Ondersteuner">★</span>'
+        : "";
+    }
+
+    function renderProfileNameLine(name, supporterActive){
+      const target = $("profileNameLine");
+      if (!target) return;
+
+      const safeName = String(name || "Gebruiker")
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;');
+
+      target.innerHTML =
+        `<span class="font-black text-slate-900">${safeName}</span>` +
+        renderSupporterStarIcon(!!supporterActive);
+    }
+
+    function renderSupporterPill(state){
+      const el = $("supporterPillTop");
+      if(!el) return;
+
+      if(state.active){
+        const extra = state.untilTs ? ` — tot ${new Date(state.untilTs).toLocaleDateString("af-ZA")}` : "";
+        el.textContent = "ONDERSTEUNER: AKTIEF" + extra;
+        el.style.background = "#dcfce7";
+        el.style.color = "#065f46";
+        el.style.border = "1px solid #bbf7d0";
+        el.classList.add("font-extrabold");
+      }else{
+        el.textContent = "ONDERSTEUNER: NIE AKTIEF NIE";
+        el.style.background = "#fef2f2";
+        el.style.color = "#991b1b";
+        el.style.border = "1px solid #fecaca";
+        el.classList.add("font-extrabold");
       }
-      return NaN;
     }
-
-    function blitInstantBonus(timeMs){
-      if (!Number.isFinite(timeMs)) return 0;
-      if (timeMs < 30000) return 200;
-      if (timeMs < 60000) return 100;
-      return 0;
-    }
-
-    async function loadBlitstiekToday(uid, userDoc){
-      let snap = await getDoc(doc(db, "blitstiekGames", GAME_TODAY, "leaderboard", uid));
-      let row = snap.exists() ? { id: snap.id, ...snap.data() } : null;
-
-      if (!row) {
-        try {
-          const qs = await getDocs(query(
-            collection(db, "blitstiekGames", GAME_TODAY, "leaderboard"),
-            where("uid", "==", uid),
-            limit(1)
-          ));
-          qs.forEach(d => { if (!row) row = { id: d.id, ...d.data() }; });
-        } catch {}
-      }
-
-      const ms = parseBlitTimeMs(row);
-      const instant = blitInstantBonus(ms);
-
-      let place = null;
-      if (row && typeof row.total === "number") place = row.total;
-      if (row && typeof row.dailyPoints === "number") place = row.dailyPoints;
-      if (typeof userDoc?.blit_todayPoints === "number") place = userDoc.blit_todayPoints;
-
-      return { instant, place };
-    }
-
-    async function loadBlitstiekOverall(userDoc){
-      const n =
-        userDoc?.blitstiekTotalConfirmed ??
-        userDoc?.blitstiekTotal ??
-        userDoc?.kBlit_total ??
-        userDoc?.kBlitTotal ??
-        userDoc?.blit_total ??
-        0;
-
-      return (typeof n === "number") ? n : Number(n || 0);
-    }
-
     /* === Medaljes (profile summary) === */
 
     async function loadBlitstiekMedalsFromPlacements(uid){
@@ -329,15 +279,14 @@
       }
     }
 
-    function renderBlitstiekMedalCounts(userDoc, derived){
+    function renderBlitstiekMedalCounts(derived){
       const line = $("medalsBlitLine");
       const breakdown = $("medalsBlitBreakdown");
       const empty = $("medalsBlitEmpty");
 
-      let gold = toInt(derived?.gold);
-      let silver = toInt(derived?.silver);
-      let bronze = toInt(derived?.bronze);
-
+      const gold = toInt(derived?.gold);
+      const silver = toInt(derived?.silver);
+      const bronze = toInt(derived?.bronze);
       const total = gold + silver + bronze;
 
       if (line) line.textContent = `Medaljes: ${fmt(total)}`;
@@ -354,62 +303,13 @@
       }
     }
 
-    function renderSupporterStarIcon(isSupporter){
-      return isSupporter === true
-        ? '<span class="inline-block ml-1 align-middle text-yellow-400" aria-label="Ondersteuner">★</span>'
-        : "";
-    }
-
-    function renderProfileNameLine(name, supporterActive){
-      const target = $("profileNameLine");
-      if (!target) return;
-
-      const safeName = String(name || "Gebruiker")
-        .replaceAll('&','&amp;')
-        .replaceAll('<','&lt;')
-        .replaceAll('>','&gt;');
-
-      target.innerHTML =
-        `<span class="font-black text-slate-900">${safeName}</span>` +
-        renderSupporterStarIcon(!!supporterActive);
-    }
-
-    function renderSupporterPill(state){
-      const el = $("supporterPillTop");
-      if(!el) return;
-
-      if(state.active){
-        const extra = state.untilTs ? ` — tot ${new Date(state.untilTs).toLocaleDateString("af-ZA")}` : "";
-        el.textContent = "ONDERSTEUNER: AKTIEF"+extra;
-        el.style.background="#dcfce7"; el.style.color="#065f46"; el.style.border="1px solid #bbf7d0";
-        el.classList.add("font-extrabold");
-      }else{
-        el.textContent="ONDERSTEUNER: NIE AKTIEF NIE";
-        el.style.background="#fef2f2"; el.style.color="#991b1b"; el.style.border="1px solid #fecaca";
-        el.classList.add("font-extrabold");
-      }
-    }
-
-    function renderNumbers({ bltOverall, bltToday }){
-      const overallPill = $("pillOverall");
-      if (overallPill) overallPill.textContent = "JOU KRIPTIEK-TELLING: BINNEKORT";
-
-      const dilPill = $("pillDilemmaLive");
-      if (dilPill) dilPill.textContent = "JOU DILEMMA-TELLING: BINNEKORT";
-
-      if ($("pillBlitLive")) $("pillBlitLive").textContent = `JOU BLITSTIEK-TELLING: ${fmt(bltOverall ?? 0)}`;
-
-      if ($("blitOverallScore")) $("blitOverallScore").textContent = fmt(bltOverall ?? 0);
-      if ($("calcTimeBlit")) $("calcTimeBlit").textContent = new Date().toLocaleString("af-ZA");
-      if ($("totalPointsBlit")) $("totalPointsBlit").textContent = (bltToday==null ? "—" : fmt(bltToday));
-    }
-
     async function hydrateProfile(user){
       const nameEl  = $("nameInput");
       const emailEl = $("emailInput");
       if(nameEl)  nameEl.value  = user.displayName || "";
       if(emailEl) emailEl.value = user.email || "";
 
+      // Ensure users doc exists
       const uref = doc(db, "users", user.uid);
       let userDocSnap = await getDoc(uref);
       if (!userDocSnap.exists()) {
@@ -425,17 +325,20 @@
       const supporter = getSupporterState(userDoc);
       renderSupporterPill(supporter);
 
+      // Hide "Word ’n Ondersteuner" if already active
+      const cta = document.getElementById("supporterCtaWrap");
+      if (cta) cta.style.display = supporter.active ? "none" : "";
+
       const displayName = user.displayName || userDoc.userName || "Gebruiker";
       setWbName(displayName);
       renderProfileNameLine(displayName, supporter.active);
 
-      // Blitstiek medals
-      let derivedBlit = await loadBlitstiekMedalsFromPlacements(user.uid);
-      renderBlitstiekMedalCounts(userDoc, derivedBlit);
+      // Medals
+      const blit = await loadBlitstiekMedalsFromPlacements(user.uid);
+      renderBlitstiekMedalCounts(blit);
 
-      // Dilemma medals
-      let derivedDil = await loadDilemmaMedalsFromPlacements(user.uid);
-      renderDilemmaMedalCounts(derivedDil);
+      const dil = await loadDilemmaMedalsFromPlacements(user.uid);
+      renderDilemmaMedalCounts(dil);
 
       // Supporter banner
       const supporterBanner = document.getElementById("supporterBanner");
@@ -448,19 +351,6 @@
           supporterBanner.textContent = "Kliek hier om 'n betalende ondersteuner te word";
         }
       }
-
-      // Blitstiek (overall + today)
-      const bltOverall = await loadBlitstiekOverall(userDoc);
-      const { instant: bltInstant, place: bltPlace } = await loadBlitstiekToday(user.uid, userDoc);
-
-      let bltTodayTotal = null;
-      if (bltPlace != null) bltTodayTotal = Number(bltInstant) + Number(bltPlace);
-      else if (bltInstant)  bltTodayTotal = Number(bltInstant);
-
-      const blitOverallUpdated = document.getElementById("blitOverallUpdated");
-      if (blitOverallUpdated) blitOverallUpdated.textContent = new Date().toLocaleString("af-ZA");
-
-      renderNumbers({ bltOverall, bltToday: bltTodayTotal });
 
       if (typeof gtag === 'function') gtag('event','profile_view',{ uid: user.uid });
     }
@@ -512,6 +402,7 @@
       }
     }
 
+    // ---- Auth gate + bootstrap ----
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         const ret = encodeURIComponent("/profile.html");
@@ -527,7 +418,7 @@
     });
   </script>
 </head>
-  <body class="bg-gray-100 min-h-screen flex flex-col">
+<body class="bg-gray-100 min-h-screen flex flex-col">
   <!-- Header -->
   <header class="bg-white shadow p-4">
     <div class="logo-container">
@@ -567,6 +458,7 @@
             <label for="nameInput" class="block text-sm font-semibold text-gray-700">Naam (kan ’n skuilnaam wees)</label>
             <input id="nameInput" type="text" minlength="2" maxlength="40" required class="mt-1 w-full border border-gray-300 rounded p-2" value="Speler"/>
           </div>
+
           <div>
             <label for="emailInput" class="block text-sm font-semibold text-gray-700">E-posadres</label>
             <input id="emailInput" type="email" required class="mt-1 w-full border border-gray-300 rounded p-2" value="speler@example.com" disabled/>
@@ -577,6 +469,12 @@
             <button type="submit" class="px-4 py-2 rounded-xl bg-blue-900 text-white font-bold">BÊRE</button>
             <button id="resetPwBtn" type="button" class="px-4 py-2 rounded-xl bg-slate-800 text-white font-bold">VRA NUWE WAGWOORD</button>
             <button id="deleteBtn" type="button" class="px-4 py-2 rounded-xl bg-red-700 text-white font-bold">VERWYDER MY REKENING</button>
+
+            <!-- Supporter pill moved next to delete -->
+            <span id="supporterPillTop" class="pill"
+                  style="background:#f1f5f9;color:#0f172a;border:1px solid #e2e8f0">
+              ONDERSTEUNER: —
+            </span>
           </div>
         </form>
       </section>
@@ -593,10 +491,13 @@
           Medaljes hieronder wys jou podium-prestasies per speletjie.
         </p>
 
-        <a href="https://buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
-           class="inline-flex items-center px-4 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-600 text-white font-bold mb-4">
-          Word ’n Ondersteuner
-        </a>
+        <!-- Only visible if NOT supporter -->
+        <div id="supporterCtaWrap">
+          <a href="https://buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
+             class="inline-flex items-center px-4 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-600 text-white font-bold mb-4">
+            Word ’n Ondersteuner
+          </a>
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div class="mini">
@@ -619,13 +520,6 @@
             <div class="text-sm text-slate-500 mt-1">Kom binnekort</div>
           </div>
         </div>
-
-        <!-- Ondersteuner status moved here -->
-        <div class="mt-4">
-          <span id="supporterPillTop" class="pill pill-lg" style="background:#f1f5f9;color:#0f172a;border:1px solid #e2e8f0">
-            ONDERSTEUNER: —
-          </span>
-        </div>
       </section>
 
       <!-- HOE MEDALJES WERK -->
@@ -641,58 +535,6 @@
           </p>
           <p><strong>BLITSTIEK:</strong> Medaljes word om <strong>23:55</strong> toegeken op grond van die dag se <strong>beste tye</strong> op die ranglys.</p>
           <p><strong>SLIMSTIEK:</strong> Kom binnekort.</p>
-          <p class="text-xs text-slate-500">Let wel: Die ou “telling”-stelsel word vervang. Medaljes is nou die hoof opsomming op jou profiel.</p>
-        </div>
-      </section>
-
-      <!-- OVERVIEW -->
-      <section class="card p-5 md:p-6">
-        <div class="mb-4">
-          <span id="pillOverall" class="pill pill-lg pill-blue">JOU KRIPTIEK-TELLING: BINNEKORT</span>
-        </div>
-
-        <div class="flex flex-wrap gap-2 mb-4 items-start">
-          <span id="pillDilemmaLive" class="pill pill-lg pill-orange">JOU DILEMMA-TELLING: BINNEKORT</span>
-          <span id="pillBlitLive" class="pill pill-lg pill-green">JOU BLITSTIEK-TELLING: 0</span>
-          <span class="pill pill-lg pill-green-dark">JOU SLIMSTIEK-TELLING: BINNEKORT</span>
-        </div>
-
-        <p class="text-sm text-slate-600">
-          Die ou “telling”-stelsel word vervang. Jou medalje-opsomming per speletjie is bo.
-        </p>
-      </section>
-
-      <!-- BLITSTIEK INFO (kept minimal for now) -->
-      <section class="card p-5 md:p-6">
-        <header class="flex flex-col gap-1 mb-3">
-          <div class="h-1 w-full bg-emerald-500 rounded-full"></div>
-          <h2 class="text-xl font-extrabold text-slate-900">BLITSTIEK</h2>
-        </header>
-
-        <div class="rounded-xl border border-slate-200 bg-white p-4 mb-3">
-          <div class="flex items-end justify-between">
-            <div>
-              <div id="blitOverallScore" class="text-6xl font-black mono text-slate-900 tracking-tight">0</div>
-              <div class="text-xs uppercase tracking-wide text-slate-500">Algeheel (totaal)</div>
-            </div>
-            <div class="text-right">
-              <div class="text-xs text-slate-500">Laas opgedateer</div>
-              <div id="blitOverallUpdated" class="text-sm mono">—</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-          <div class="flex items-end justify-between">
-            <div>
-              <div id="totalPointsBlit" class="text-4xl font-extrabold mono text-emerald-900">—</div>
-              <div class="text-xs uppercase tracking-wide text-emerald-900/70">Vandag</div>
-            </div>
-            <div class="text-right">
-              <div class="text-xs text-emerald-900/70">Laas bereken</div>
-              <div id="calcTimeBlit" class="text-sm mono">—</div>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -734,3 +576,6 @@
 
 </body>
 </html>
+
+
+  
