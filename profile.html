@@ -671,11 +671,14 @@ renderDilemmaMedalCounts(derivedDil);
         </a>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+
           <div class="mini">
-            <div class="text-xs uppercase tracking-wide text-slate-500 font-extrabold">Dilemma</div>
-            <div class="mt-1 text-lg font-extrabold text-slate-900">Medaljes: BINNEKORT</div>
-            <div class="text-sm text-slate-500 mt-1">Kom binnekort</div>
-          </div>
+  <div class="text-xs uppercase tracking-wide text-slate-500 font-extrabold">Dilemma</div>
+
+  <div id="medalsDilLine" class="mt-1 text-lg font-extrabold text-slate-900">Medaljes: 0</div>
+  <div id="medalsDilBreakdown" class="hidden text-sm font-bold text-slate-700 mt-1">🥇 0  •  🥈 0  •  🥉 0</div>
+  <div id="medalsDilEmpty" class="text-sm text-slate-500 mt-1">Kom binnekort</div>
+</div>
 
           <div class="mini">
             <div class="text-xs uppercase tracking-wide text-slate-500 font-extrabold">Blitstiek</div>
@@ -723,13 +726,13 @@ renderDilemmaMedalCounts(derivedDil);
         </header>
 
 <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-  <div id="medalsDilLine" class="text-sm font-semibold text-slate-800">
+  <div id="medalsDilLine2" class="text-sm font-semibold text-slate-800">
     Medaljes: 0
   </div>
 
-  <div id="medalsDilBreakdown" class="text-xs text-slate-600 mt-1 hidden"></div>
+  <div id="medalsDilBreakdown2" class="text-xs text-slate-600 mt-1 hidden"></div>
 
-  <div id="medalsDilEmpty" class="text-xs text-slate-500 mt-1">
+  <div id="medalsDilEmpty2" class="text-xs text-slate-500 mt-1">
     Medaljes vir Dilemma kom binnekort.
     <span class="block">
       Al jou Dilemma-medaljes sal binnekort hier wys.
