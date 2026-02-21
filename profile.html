@@ -253,6 +253,74 @@
       return out;
     }
 
+// Count podium/tiers from cutoff results: games/{gameId}/leaderboard/{uid}.placementPlace
+async function loadDilemmaMedalsFromPlacements(uid){
+  const out = { gold: 0, silver: 0, bronze: 0 };
+  if (!uid) return out;
+
+  try{
+    let gamesSnap = null;
+
+    // Prefer createdAt ordering if it exists, else fallback (no orderBy)
+    try{
+      gamesSnap = await getDocs(query(
+        collection(db, "games"),
+        orderBy("createdAt", "desc"),
+        limit(400)
+      ));
+    }catch{
+      gamesSnap = await getDocs(query(
+        collection(db, "games"),
+        limit(400)
+      ));
+    }
+
+    const reads = [];
+    gamesSnap.forEach(g => {
+      reads.push(getDoc(doc(db, "games", g.id, "leaderboard", uid)));
+    });
+
+    const snaps = await Promise.all(reads);
+
+    snaps.forEach(s => {
+      if (!s.exists()) return;
+      const p = Number(s.data()?.placementPlace);
+      if (p === 1) out.gold++;
+      else if (p === 2) out.silver++;
+      else if (p === 3) out.bronze++;
+    });
+
+  }catch(e){
+    console.warn("DILEMMA_MEDALS_PLACE_QUERY_FAILED", e);
+  }
+
+  return out;
+}
+
+function renderDilemmaMedalCounts(derived){
+  const line = $("medalsDilLine");
+  const breakdown = $("medalsDilBreakdown");
+  const empty = $("medalsDilEmpty");
+
+  const gold = toInt(derived?.gold);
+  const silver = toInt(derived?.silver);
+  const bronze = toInt(derived?.bronze);
+  const total = gold + silver + bronze;
+
+  if (line) line.textContent = `Medaljes: ${fmt(total)}`;
+
+  if (total > 0) {
+    if (breakdown) {
+      breakdown.textContent = `🥇 ${fmt(gold)}  •  🥈 ${fmt(silver)}  •  🥉 ${fmt(bronze)}`;
+      breakdown.classList.remove("hidden");
+    }
+    if (empty) empty.classList.add("hidden");
+  } else {
+    if (breakdown) breakdown.classList.add("hidden");
+    if (empty) empty.classList.remove("hidden");
+  }
+}
+    
     function inferBlitMedalsFromArray(arr){
       const out = { gold: 0, silver: 0, bronze: 0 };
       if (!Array.isArray(arr)) return out;
@@ -647,13 +715,21 @@
           <h2 class="text-xl font-extrabold text-slate-900">DILEMMA</h2>
         </header>
 
-        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <div class="text-sm font-semibold text-slate-800">Medaljes vir Dilemma kom binnekort.</div>
-          <div class="text-xs text-slate-500 mt-1">
-            Hier gaan jou podium-prestasies wys sodra die nuwe medalje-stelsel vir Dilemma klaar is.
-          </div>
-        </div>
-      </section>
+<div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+  <div id="medalsDilLine" class="text-sm font-semibold text-slate-800">
+    Medaljes: 0
+  </div>
+
+  <div id="medalsDilBreakdown" class="text-xs text-slate-600 mt-1 hidden"></div>
+
+  <div id="medalsDilEmpty" class="text-xs text-slate-500 mt-1">
+    Medaljes vir Dilemma kom binnekort.
+    <span class="block">
+      Al jou Dilemma-medaljes sal binnekort hier wys.
+    </span>
+  </div>
+</div>
+        
 
       <!-- BLITSTIEK -->
       <section class="card p-5 md:p-6" data-section="blitstiek">
