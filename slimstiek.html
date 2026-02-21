@@ -760,6 +760,47 @@
     import { serverTimestamp as __serverTimestampForSTS } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
     function STS(){ const s = __serverTimestampForSTS(); s.__isServerTimestamp = true; return s; }
 
+// --- Supporter star (★) cache (source of truth: supportersPublic/{uid}.active) ---
+const supporterCache = new Map();      // uid -> boolean
+const supporterInflight = new Map();   // uid -> Promise<boolean>
+
+function renderSupporterStar(isSupporter){
+  return isSupporter
+    ? ' <span class="inline-block align-middle text-yellow-400" aria-label="Ondersteuner">★</span>'
+    : '';
+}
+
+async function fetchSupporterActive(uid){
+  if(!db || !uid) return false;
+  if(supporterCache.has(uid)) return supporterCache.get(uid) === true;
+
+  if(supporterInflight.has(uid)) return supporterInflight.get(uid);
+
+  const p = (async ()=>{
+    try{
+      const snap = await getDoc(doc(db, 'supportersPublic', String(uid)));
+      const active = !!(snap.exists() && snap.data() && snap.data().active === true);
+      supporterCache.set(uid, active);
+      return active;
+    }catch{
+      supporterCache.set(uid, false);
+      return false;
+    }finally{
+      supporterInflight.delete(uid);
+    }
+  })();
+
+  supporterInflight.set(uid, p);
+  return p;
+}
+
+async function hydrateSupporterActives(uids){
+  if(!db) return;
+  const uniq = Array.from(new Set((uids||[]).filter(Boolean)));
+  await Promise.all(uniq.map(uid => fetchSupporterActive(uid)));
+}
+
+    
     /* ---- Auth ---- */
     let user=null, currentUserName='Speler', isAdminClient=false;
 
@@ -1292,8 +1333,8 @@
       return m;
     }
 
-    function renderMerged(){
-      const map = rowsToMap([...liveRows, ...legacyRows]);
+async function renderMerged(){
+    const map = rowsToMap([...liveRows, ...legacyRows]);
       const combined = Array.from(map.values())
         .sort((a,b)=> (b.score|0)-(a.score|0) || (a.ts||9e15)-(b.ts||9e15))
         .slice(0, 100);
@@ -1320,14 +1361,21 @@
       }
 
       bestText.textContent = String(combined[0].score ?? '—');
-
+// Preload supporter actives for visible rows (top 10)
+try{
+  const topUids = combined.slice(0,10).map(v => v.id);
+  await hydrateSupporterActives(topUids);
+}catch{}
       combined.slice(0,10).forEach(v=>{
         const you = user && v.id === user.uid
           ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>'
           : '';
         const li  = document.createElement('li');
-        const left =
-          `<span class="flex-1"><strong>${(v.userName||'Onbekend')}</strong>${you}: ${(v.score??0)} punte</span>`;
+        const isSupp = supporterCache.get(v.id) === true;
+const star = renderSupporterStar(isSupp);
+
+const left =
+  `<span class="flex-1"><strong>${(v.userName||'Onbekend')}</strong>${star}${you}: ${(v.score??0)} punte</span>`;
         const pill =
           (Number(v.kSlim_total||0) > 0)
             ? `<span class="k-pill">${Number(v.kSlim_total)}</span>` : '';
@@ -1409,14 +1457,24 @@
       if (!db || !user) return;
 
       let supporterActive = false;
-      try {
-        const uSnap = await getDoc(doc(db, "users", user.uid));
-        if (uSnap.exists()){
-          const u = uSnap.data();
-          supporterActive = !!(u?.supporterActive === true ||
-            (u?.supporterUntil?.toMillis && u.supporterUntil.toMillis() > Date.now()));
-        }
-      } catch {}
+
+// Source of truth (site-wide): supportersPublic/{uid}.active
+try{
+  const sSnap = await getDoc(doc(db, "supportersPublic", user.uid));
+  supporterActive = !!(sSnap.exists() && sSnap.data() && sSnap.data().active === true);
+}catch{}
+
+// Fallback (older user fields) – keeps compatibility if needed
+if(!supporterActive){
+  try{
+    const uSnap = await getDoc(doc(db, "users", user.uid));
+    if (uSnap.exists()){
+      const u = uSnap.data();
+      supporterActive = !!(u?.supporterActive === true ||
+        (u?.supporterUntil?.toMillis && u.supporterUntil.toMillis() > Date.now()));
+    }
+  }catch{}
+}
 
       const liveBestRef = doc(db,'slimstiekGames', `Game${currentDate}`, 'leaderboard', user.uid);
       const liveBestSnap = await getDoc(liveBestRef);
