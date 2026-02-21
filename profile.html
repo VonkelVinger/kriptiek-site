@@ -1,4 +1,4 @@
-<!-- PART 1/3 -->
+<!-- PART 1/4 -->
 <!DOCTYPE html>
 <html lang="af">
 <head>
@@ -112,11 +112,14 @@
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
+    // Debug breadcrumb so you can confirm the module ran.
+    console.log("[profile] module loaded");
+
     function setWbName(name){
       const el = $("wbName");
       if (el) el.textContent = (name || "Gebruiker").toUpperCase();
     }
-
+<!-- PART 2/4 -->
     function getSupporterState(u){
       let active = false, untilTs = null;
       if (u?.supporterActive === true) active = true;
@@ -175,7 +178,7 @@
     }
 
     /* === Medaljes (profile summary) === */
-    async function loadBlitstiekMedalsFromPlacements(uid){
+    async function loadMedalsFromPlacements({ uid, gameCollection, leaderboardSub }) {
       const out = { gold: 0, silver: 0, bronze: 0 };
       if (!uid) return out;
 
@@ -183,20 +186,20 @@
         let gamesSnap = null;
         try{
           gamesSnap = await getDocs(query(
-            collection(db, "blitstiekGames"),
+            collection(db, gameCollection),
             orderBy("createdAt", "desc"),
             limit(400)
           ));
         }catch{
           gamesSnap = await getDocs(query(
-            collection(db, "blitstiekGames"),
+            collection(db, gameCollection),
             limit(400)
           ));
         }
 
         const reads = [];
         gamesSnap.forEach(g => {
-          reads.push(getDoc(doc(db, "blitstiekGames", g.id, "leaderboard", uid)));
+          reads.push(getDoc(doc(db, gameCollection, g.id, leaderboardSub, uid)));
         });
 
         const snaps = await Promise.all(reads);
@@ -210,98 +213,16 @@
         });
 
       }catch(e){
-        console.warn("MEDALS_PLACE_QUERY_FAILED", e);
+        console.warn("MEDALS_PLACE_QUERY_FAILED", gameCollection, e);
       }
 
       return out;
     }
 
-    async function loadDilemmaMedalsFromPlacements(uid){
-      const out = { gold: 0, silver: 0, bronze: 0 };
-      if (!uid) return out;
-
-      try{
-        let gamesSnap = null;
-        try{
-          gamesSnap = await getDocs(query(
-            collection(db, "games"),
-            orderBy("createdAt", "desc"),
-            limit(400)
-          ));
-        }catch{
-          gamesSnap = await getDocs(query(
-            collection(db, "games"),
-            limit(400)
-          ));
-        }
-
-        const reads = [];
-        gamesSnap.forEach(g => {
-          reads.push(getDoc(doc(db, "games", g.id, "leaderboard", uid)));
-        });
-
-        const snaps = await Promise.all(reads);
-
-        snaps.forEach(s => {
-          if (!s.exists()) return;
-          const p = Number(s.data()?.placementPlace);
-          if (p === 1) out.gold++;
-          else if (p === 2) out.silver++;
-          else if (p === 3) out.bronze++;
-        });
-
-      }catch(e){
-        console.warn("DILEMMA_MEDALS_PLACE_QUERY_FAILED", e);
-      }
-
-      return out;
-    }
-
-    async function loadSlimstiekMedalsFromPlacements(uid){
-      const out = { gold: 0, silver: 0, bronze: 0 };
-      if (!uid) return out;
-
-      try{
-        let gamesSnap = null;
-        try{
-          gamesSnap = await getDocs(query(
-            collection(db, "slimstiekGames"),
-            orderBy("createdAt", "desc"),
-            limit(400)
-          ));
-        }catch{
-          gamesSnap = await getDocs(query(
-            collection(db, "slimstiekGames"),
-            limit(400)
-          ));
-        }
-
-        const reads = [];
-        gamesSnap.forEach(g => {
-          reads.push(getDoc(doc(db, "slimstiekGames", g.id, "leaderboard", uid)));
-        });
-
-        const snaps = await Promise.all(reads);
-
-        snaps.forEach(s => {
-          if (!s.exists()) return;
-          const p = Number(s.data()?.placementPlace);
-          if (p === 1) out.gold++;
-          else if (p === 2) out.silver++;
-          else if (p === 3) out.bronze++;
-        });
-
-      }catch(e){
-        console.warn("SLIMSTIEK_MEDALS_PLACE_QUERY_FAILED", e);
-      }
-
-      return out;
-    }
-
-    function renderDilemmaMedalCounts(derived){
-      const line = $("medalsDilLine");
-      const breakdown = $("medalsDilBreakdown");
-      const empty = $("medalsDilEmpty");
+    function renderMedalCounts({ lineId, breakdownId, emptyId }, derived){
+      const line = $(lineId);
+      const breakdown = $(breakdownId);
+      const empty = $(emptyId);
 
       const gold = toInt(derived?.gold);
       const silver = toInt(derived?.silver);
@@ -321,55 +242,7 @@
         if (empty) empty.classList.remove("hidden");
       }
     }
-<!-- PART 2/3 -->
-    function renderBlitstiekMedalCounts(derived){
-      const line = $("medalsBlitLine");
-      const breakdown = $("medalsBlitBreakdown");
-      const empty = $("medalsBlitEmpty");
-
-      const gold = toInt(derived?.gold);
-      const silver = toInt(derived?.silver);
-      const bronze = toInt(derived?.bronze);
-      const total = gold + silver + bronze;
-
-      if (line) line.textContent = `Medaljes: ${fmt(total)}`;
-
-      if (total > 0) {
-        if (breakdown) {
-          breakdown.textContent = `🥇 ${fmt(gold)}  •  🥈 ${fmt(silver)}  •  🥉 ${fmt(bronze)}`;
-          breakdown.classList.remove("hidden");
-        }
-        if (empty) empty.classList.add("hidden");
-      } else {
-        if (breakdown) breakdown.classList.add("hidden");
-        if (empty) empty.classList.remove("hidden");
-      }
-    }
-
-    function renderSlimstiekMedalCounts(derived){
-      const line = $("medalsSlimLine");
-      const breakdown = $("medalsSlimBreakdown");
-      const empty = $("medalsSlimEmpty");
-
-      const gold = toInt(derived?.gold);
-      const silver = toInt(derived?.silver);
-      const bronze = toInt(derived?.bronze);
-      const total = gold + silver + bronze;
-
-      if (line) line.textContent = `Medaljes: ${fmt(total)}`;
-
-      if (total > 0) {
-        if (breakdown) {
-          breakdown.textContent = `🥇 ${fmt(gold)}  •  🥈 ${fmt(silver)}  •  🥉 ${fmt(bronze)}`;
-          breakdown.classList.remove("hidden");
-        }
-        if (empty) empty.classList.add("hidden");
-      } else {
-        if (breakdown) breakdown.classList.add("hidden");
-        if (empty) empty.classList.remove("hidden");
-      }
-    }
-
+<!-- PART 3/4 -->
     async function hydrateProfile(user){
       const nameEl  = $("nameInput");
       const emailEl = $("emailInput");
@@ -393,25 +266,46 @@
       renderSupporterPill(supporter);
 
       // Hide "Word ’n Ondersteuner" if already active
-      const cta = document.getElementById("supporterCtaWrap");
+      const cta = $("supporterCtaWrap");
       if (cta) cta.style.display = supporter.active ? "none" : "";
 
       const displayName = user.displayName || userDoc.userName || "Gebruiker";
       setWbName(displayName);
       renderProfileNameLine(displayName, supporter.active);
 
-      // Medals (placements from leaderboard rows)
-      const blit = await loadBlitstiekMedalsFromPlacements(user.uid);
-      renderBlitstiekMedalCounts(blit);
+      // Medals
+      const blit = await loadMedalsFromPlacements({
+        uid: user.uid,
+        gameCollection: "blitstiekGames",
+        leaderboardSub: "leaderboard"
+      });
+      renderMedalCounts(
+        { lineId:"medalsBlitLine", breakdownId:"medalsBlitBreakdown", emptyId:"medalsBlitEmpty" },
+        blit
+      );
 
-      const dil = await loadDilemmaMedalsFromPlacements(user.uid);
-      renderDilemmaMedalCounts(dil);
+      const dil = await loadMedalsFromPlacements({
+        uid: user.uid,
+        gameCollection: "games",
+        leaderboardSub: "leaderboard"
+      });
+      renderMedalCounts(
+        { lineId:"medalsDilLine", breakdownId:"medalsDilBreakdown", emptyId:"medalsDilEmpty" },
+        dil
+      );
 
-      const slim = await loadSlimstiekMedalsFromPlacements(user.uid);
-      renderSlimstiekMedalCounts(slim);
+      const slim = await loadMedalsFromPlacements({
+        uid: user.uid,
+        gameCollection: "slimstiekGames",
+        leaderboardSub: "leaderboard"
+      });
+      renderMedalCounts(
+        { lineId:"medalsSlimLine", breakdownId:"medalsSlimBreakdown", emptyId:"medalsSlimEmpty" },
+        slim
+      );
 
       // Supporter banner
-      const supporterBanner = document.getElementById("supporterBanner");
+      const supporterBanner = $("supporterBanner");
       if (supporterBanner) {
         if (supporter.active) {
           supporterBanner.className = "block text-center font-bold rounded-lg p-3 mb-4 bg-green-50 border border-green-200 text-green-800";
@@ -422,6 +316,7 @@
         }
       }
 
+      console.log("[profile] hydrated", { uid: user.uid });
       if (typeof gtag === 'function') gtag('event','profile_view',{ uid: user.uid });
     }
 
@@ -472,7 +367,6 @@
       }
     }
 
-    // ---- Auth gate + bootstrap ----
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         const ret = encodeURIComponent("/profile.html");
@@ -509,7 +403,7 @@
   <div class="max-w-6xl mx-auto px-4 pt-2 text-center text-2xl font-bold text-[#1e3a8a]">
     WELKOM TERUG, <span id="wbName">GEBRUIKER</span>
   </div>
-
+<!-- PART 4/4 -->
   <main class="flex-grow p-4 pb-16">
     <div class="max-w-6xl mx-auto flex flex-col gap-6 items-stretch">
 
@@ -540,7 +434,6 @@
             <button id="resetPwBtn" type="button" class="px-4 py-2 rounded-xl bg-slate-800 text-white font-bold">VRA NUWE WAGWOORD</button>
             <button id="deleteBtn" type="button" class="px-4 py-2 rounded-xl bg-red-700 text-white font-bold">VERWYDER MY REKENING</button>
 
-            <!-- Supporter pill moved next to delete -->
             <span id="supporterPillTop" class="pill pill-lg rounded-xl"
                   style="background:#f1f5f9;color:#0f172a;border:1px solid #e2e8f0">
               ONDERSTEUNER: —
@@ -548,7 +441,7 @@
           </div>
         </form>
       </section>
-<!-- PART 3/3 -->
+
       <!-- MEDALJES -->
       <section class="card p-5 md:p-6">
         <header class="flex flex-col gap-1 mb-3">
@@ -561,7 +454,6 @@
           Die syfers onder wys jou getal en soort medaljes per speletjie.
         </p>
 
-        <!-- Only visible if NOT supporter -->
         <div id="supporterCtaWrap">
           <a href="https://buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
              class="inline-flex items-center px-4 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-600 text-white font-bold mb-4">
@@ -623,7 +515,6 @@
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
 
-  <!-- Background crossword init -->
   <script>
     document.addEventListener('DOMContentLoaded', function(){
       const bg = document.getElementById('backgroundCrossword'); if(!bg)return;
@@ -647,7 +538,5 @@
 
 </body>
 </html>
-
-
 
     
