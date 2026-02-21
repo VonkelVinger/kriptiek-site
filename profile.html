@@ -34,29 +34,48 @@
     body { font-family: 'Montserrat', sans-serif; background-color: #f3f4f6; }
 
     /* --- Header/logo styles --- */
-    .logo-container { position: relative; display: flex; justify-content: center; align-items: center;
-      width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem; background-color: white; overflow: hidden; isolation: isolate; }
-    .logo-container::before{ content:""; position:absolute; inset:-2px; border-radius:1rem;
+    .logo-container {
+      position: relative; display: flex; justify-content: center; align-items: center;
+      width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem;
+      background-color: white; overflow: hidden; isolation: isolate;
+    }
+    .logo-container::before{
+      content:""; position:absolute; inset:-2px; border-radius:1rem;
       background:conic-gradient(from 180deg at 50% 50%, #1e3a8a, #334155, #1e3a8a);
       animation:spin 14s linear infinite; z-index:0; padding:2px;
       mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-      -webkit-mask-composite: xor; mask-composite: exclude; }
+      -webkit-mask-composite: xor; mask-composite: exclude;
+    }
     @keyframes spin{ to{ transform:rotate(1turn); } }
     @media (prefers-reduced-motion: reduce){ .logo-container::before{ animation:none; } }
 
-    .crossword-grid { display: grid; grid-template-columns: repeat(8, minmax(40px, 1fr)); gap: 4px; position: relative; z-index: 10; }
-    .letter-box { width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
-      background-color: #374151; color: white; font-size: 1.8rem; font-weight: bold; border: 2px solid #1f2937; border-radius: 0.375rem;
-      text-transform: uppercase; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2); }
+    .crossword-grid {
+      display: grid; grid-template-columns: repeat(8, minmax(40px, 1fr));
+      gap: 4px; position: relative; z-index: 10;
+    }
+    .letter-box {
+      width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
+      background-color: #374151; color: white; font-size: 1.8rem; font-weight: bold;
+      border: 2px solid #1f2937; border-radius: 0.375rem;
+      text-transform: uppercase; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    }
     .flipped-k { transform: scaleX(-1); }
 
-    .background-crossword { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
-      opacity: 0.5; z-index: 1; pointer-events: none; animation: bgFloat 30s linear infinite; }
+    .background-crossword {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
+      grid-template-rows: repeat(auto-fill, minmax(30px, 1fr));
+      opacity: 0.5; z-index: 1; pointer-events: none;
+      animation: bgFloat 30s linear infinite;
+    }
     @keyframes bgFloat{ 0%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } 100%{ transform:translateY(0); } }
 
-    .bg-letter-box { display: flex; justify-content: center; align-items: center; font-size: 1.1rem;
-      font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb; background-color: transparent; user-select: none; }
+    .bg-letter-box {
+      display: flex; justify-content: center; align-items: center; font-size: 1.1rem;
+      font-weight: bold; color: #9ca3af; border: 1px solid #e5e7eb;
+      background-color: transparent; user-select: none;
+    }
 
     /* --- Card + pill styling --- */
     .card { background:#fff; border:1px solid #e5e7eb; border-radius:0.75rem; box-shadow:0 2px 6px rgba(2,6,23,.04); }
@@ -68,7 +87,6 @@
     .pill-green-dark { background:#e6fffb; color:#115e59; }
     .mono { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1, 'lnum' 1; }
     .mini { background:#f8fafc; border:1px solid #e5e7eb; border-radius:.75rem; padding:.5rem .6rem; text-align:center; }
-    .medalje-pill { display:inline-flex; align-items:center; border:1px solid #cbd5e1; background:#f8fafc; color:#334155; border-radius:999px; padding:.2rem .55rem; font-size:.72rem; font-weight:700; line-height:1; }
   </style>
 
   <!-- === Feature toggles === -->
@@ -144,8 +162,8 @@
       if (Number.isFinite(until) && until > Date.now()) { active = true; untilTs = until; }
       return { active, untilTs };
     }
-        /* === BLITSTIEK (today + overall) === */
 
+    /* === BLITSTIEK (today + overall) === */
     function parseBlitTimeMs(row){
       if (!row) return NaN;
       if (typeof row.timeMs === "number") return row.timeMs;
@@ -166,11 +184,9 @@
     }
 
     async function loadBlitstiekToday(uid, userDoc){
-      // direct doc id = uid
       let snap = await getDoc(doc(db, "blitstiekGames", GAME_TODAY, "leaderboard", uid));
       let row = snap.exists() ? { id: snap.id, ...snap.data() } : null;
 
-      // fallback if any legacy wrote uid field in an auto-id doc
       if (!row) {
         try {
           const qs = await getDocs(query(
@@ -185,7 +201,6 @@
       const ms = parseBlitTimeMs(row);
       const instant = blitInstantBonus(ms);
 
-      // Your cutoff function writes `total`, not `dailyPoints`
       let place = null;
       if (row && typeof row.total === "number") place = row.total;
       if (row && typeof row.dailyPoints === "number") place = row.dailyPoints;
@@ -195,7 +210,6 @@
     }
 
     async function loadBlitstiekOverall(userDoc){
-      // Your existing function writes users/{uid}.blitstiekTotal
       const n =
         userDoc?.blitstiekTotalConfirmed ??
         userDoc?.blitstiekTotal ??
@@ -209,15 +223,12 @@
 
     /* === Medaljes (profile summary) === */
 
-    // Count podium finishes from cutoff results: blitstiekGames/{gameId}/leaderboard/{uid}.placementPlace
     async function loadBlitstiekMedalsFromPlacements(uid){
       const out = { gold: 0, silver: 0, bronze: 0 };
       if (!uid) return out;
 
       try{
         let gamesSnap = null;
-
-        // Prefer createdAt ordering if it exists, else fallback (no orderBy)
         try{
           gamesSnap = await getDocs(query(
             collection(db, "blitstiekGames"),
@@ -253,144 +264,79 @@
       return out;
     }
 
-// Count podium/tiers from cutoff results: games/{gameId}/leaderboard/{uid}.placementPlace
-async function loadDilemmaMedalsFromPlacements(uid){
-  const out = { gold: 0, silver: 0, bronze: 0 };
-  if (!uid) return out;
-
-  try{
-    let gamesSnap = null;
-
-    // Prefer createdAt ordering if it exists, else fallback (no orderBy)
-    try{
-      gamesSnap = await getDocs(query(
-        collection(db, "games"),
-        orderBy("createdAt", "desc"),
-        limit(400)
-      ));
-    }catch{
-      gamesSnap = await getDocs(query(
-        collection(db, "games"),
-        limit(400)
-      ));
-    }
-
-    const reads = [];
-    gamesSnap.forEach(g => {
-      reads.push(getDoc(doc(db, "games", g.id, "leaderboard", uid)));
-    });
-
-    const snaps = await Promise.all(reads);
-
-    snaps.forEach(s => {
-      if (!s.exists()) return;
-      const p = Number(s.data()?.placementPlace);
-      if (p === 1) out.gold++;
-      else if (p === 2) out.silver++;
-      else if (p === 3) out.bronze++;
-    });
-
-  }catch(e){
-    console.warn("DILEMMA_MEDALS_PLACE_QUERY_FAILED", e);
-  }
-
-  return out;
-}
-
-function renderDilemmaMedalCounts(derived){
-  const line = $("medalsDilLine");
-  const breakdown = $("medalsDilBreakdown");
-  const empty = $("medalsDilEmpty");
-
-  const gold = toInt(derived?.gold);
-  const silver = toInt(derived?.silver);
-  const bronze = toInt(derived?.bronze);
-  const total = gold + silver + bronze;
-
-  if (line) line.textContent = `Medaljes: ${fmt(total)}`;
-
-  if (total > 0) {
-    if (breakdown) {
-      breakdown.textContent = `🥇 ${fmt(gold)}  •  🥈 ${fmt(silver)}  •  🥉 ${fmt(bronze)}`;
-      breakdown.classList.remove("hidden");
-    }
-    if (empty) empty.classList.add("hidden");
-  } else {
-    if (breakdown) breakdown.classList.add("hidden");
-    if (empty) empty.classList.remove("hidden");
-  }
-}
-    
-    function inferBlitMedalsFromArray(arr){
+    async function loadDilemmaMedalsFromPlacements(uid){
       const out = { gold: 0, silver: 0, bronze: 0 };
-      if (!Array.isArray(arr)) return out;
+      if (!uid) return out;
 
-      for (const raw of arr){
-        // Object-shaped medals
-        if (raw && typeof raw === "object") {
-          const place = Number(raw.place ?? raw.rank ?? raw.position ?? raw.pos ?? raw.podium ?? NaN);
-          if (place === 1) out.gold++;
-          else if (place === 2) out.silver++;
-          else if (place === 3) out.bronze++;
-          else {
-            const medal = String(raw.medal ?? raw.type ?? raw.name ?? raw.label ?? "").toLowerCase();
-            if (medal === "gold" || medal === "goud" || medal.includes("1")) out.gold++;
-            else if (medal === "silver" || medal === "silwer" || medal.includes("2")) out.silver++;
-            else if (medal === "bronze" || medal === "brons" || medal.includes("3")) out.bronze++;
-          }
-          continue;
+      try{
+        let gamesSnap = null;
+        try{
+          gamesSnap = await getDocs(query(
+            collection(db, "games"),
+            orderBy("createdAt", "desc"),
+            limit(400)
+          ));
+        }catch{
+          gamesSnap = await getDocs(query(
+            collection(db, "games"),
+            limit(400)
+          ));
         }
 
-        // String-shaped medals
-        const s = String(raw || "").toLowerCase();
-        if (/\b1ste\b|\beerste\b|🥇/.test(s)) out.gold++;
-        else if (/\b2de\b|\btweede\b|🥈/.test(s)) out.silver++;
-        else if (/\b3de\b|\bderde\b|🥉/.test(s)) out.bronze++;
-        else if (/\bgoud\b|\bgold\b/.test(s)) out.gold++;
-        else if (/\bsilwer\b|\bsilver\b/.test(s)) out.silver++;
-        else if (/\bbrons\b|\bbronze\b/.test(s)) out.bronze++;
+        const reads = [];
+        gamesSnap.forEach(g => {
+          reads.push(getDoc(doc(db, "games", g.id, "leaderboard", uid)));
+        });
+
+        const snaps = await Promise.all(reads);
+
+        snaps.forEach(s => {
+          if (!s.exists()) return;
+          const p = Number(s.data()?.placementPlace);
+          if (p === 1) out.gold++;
+          else if (p === 2) out.silver++;
+          else if (p === 3) out.bronze++;
+        });
+
+      }catch(e){
+        console.warn("DILEMMA_MEDALS_PLACE_QUERY_FAILED", e);
       }
 
       return out;
     }
-        function renderBlitstiekMedalCounts(userDoc, derived){
+
+    function renderDilemmaMedalCounts(derived){
+      const line = $("medalsDilLine");
+      const breakdown = $("medalsDilBreakdown");
+      const empty = $("medalsDilEmpty");
+
+      const gold = toInt(derived?.gold);
+      const silver = toInt(derived?.silver);
+      const bronze = toInt(derived?.bronze);
+      const total = gold + silver + bronze;
+
+      if (line) line.textContent = `Medaljes: ${fmt(total)}`;
+
+      if (total > 0) {
+        if (breakdown) {
+          breakdown.textContent = `🥇 ${fmt(gold)}  •  🥈 ${fmt(silver)}  •  🥉 ${fmt(bronze)}`;
+          breakdown.classList.remove("hidden");
+        }
+        if (empty) empty.classList.add("hidden");
+      } else {
+        if (breakdown) breakdown.classList.add("hidden");
+        if (empty) empty.classList.remove("hidden");
+      }
+    }
+
+    function renderBlitstiekMedalCounts(userDoc, derived){
       const line = $("medalsBlitLine");
       const breakdown = $("medalsBlitBreakdown");
       const empty = $("medalsBlitEmpty");
 
-      // Accept multiple schema shapes (gold/silver/bronze OR first/second/third OR 1/2/3)
-      const m =
-        userDoc?.medals?.blitstiek ??
-        userDoc?.blitstiekMedals ??
-        userDoc?.blit_medals ??
-        userDoc?.blitMedals ??
-        null;
-
-      let gold = toInt(m?.gold ?? m?.goud ?? m?.first ?? m?.firstPlace ?? m?.place1 ?? m?.["1"]);
-      let silver = toInt(m?.silver ?? m?.silwer ?? m?.second ?? m?.secondPlace ?? m?.place2 ?? m?.["2"]);
-      let bronze = toInt(m?.bronze ?? m?.brons ?? m?.third ?? m?.thirdPlace ?? m?.place3 ?? m?.["3"]);
-
-      // Fallback: legacy arrays
-      if ((gold + silver + bronze) === 0) {
-        const legacy =
-          userDoc?.blitstiekMedaljes ||
-          userDoc?.medaljes ||
-          userDoc?.publicMedaljes ||
-          userDoc?.inlineMedaljes;
-
-        const inf = inferBlitMedalsFromArray(legacy);
-        if ((inf.gold + inf.silver + inf.bronze) > 0) {
-          gold = inf.gold; silver = inf.silver; bronze = inf.bronze;
-        }
-      }
-
-      // Fallback: cutoff results (placementPlace history)
-      if ((gold + silver + bronze) === 0 && derived && typeof derived === "object") {
-        const dg = toInt(derived.gold);
-        const ds = toInt(derived.silver);
-        const dbz = toInt(derived.bronze);
-        if ((dg + ds + dbz) > 0) { gold = dg; silver = ds; bronze = dbz; }
-      }
+      let gold = toInt(derived?.gold);
+      let silver = toInt(derived?.silver);
+      let bronze = toInt(derived?.bronze);
 
       const total = gold + silver + bronze;
 
@@ -429,7 +375,9 @@ function renderDilemmaMedalCounts(derived){
     }
 
     function renderSupporterPill(state){
-      const el=$("supporterPill"); if(!el) return;
+      const el = $("supporterPillTop");
+      if(!el) return;
+
       if(state.active){
         const extra = state.untilTs ? ` — tot ${new Date(state.untilTs).toLocaleDateString("af-ZA")}` : "";
         el.textContent = "ONDERSTEUNER: AKTIEF"+extra;
@@ -462,7 +410,6 @@ function renderDilemmaMedalCounts(derived){
       if(nameEl)  nameEl.value  = user.displayName || "";
       if(emailEl) emailEl.value = user.email || "";
 
-      // Ensure users doc exists
       const uref = doc(db, "users", user.uid);
       let userDocSnap = await getDoc(uref);
       if (!userDocSnap.exists()) {
@@ -482,33 +429,13 @@ function renderDilemmaMedalCounts(derived){
       setWbName(displayName);
       renderProfileNameLine(displayName, supporter.active);
 
-      // Derive medals from placementPlace when no aggregates/legacy exist
-      let derived = null;
+      // Blitstiek medals
+      let derivedBlit = await loadBlitstiekMedalsFromPlacements(user.uid);
+      renderBlitstiekMedalCounts(userDoc, derivedBlit);
 
-      const m =
-        userDoc?.medals?.blitstiek ??
-        userDoc?.blitstiekMedals ??
-        userDoc?.blit_medals ??
-        userDoc?.blitMedals ??
-        null;
-
-      const aggTotal =
-        toInt(m?.gold ?? m?.goud ?? m?.first ?? m?.firstPlace ?? m?.place1 ?? m?.["1"]) +
-        toInt(m?.silver ?? m?.silwer ?? m?.second ?? m?.secondPlace ?? m?.place2 ?? m?.["2"]) +
-        toInt(m?.bronze ?? m?.brons ?? m?.third ?? m?.thirdPlace ?? m?.place3 ?? m?.["3"]);
-
-      if (aggTotal === 0) {
-        derived = await loadBlitstiekMedalsFromPlacements(user.uid);
-      }
-
-      renderBlitstiekMedalCounts(userDoc, derived);
-
-      // Dilemma medals (tiers by guesses written as placementPlace on games/{gameId}/leaderboard/{uid})
-let derivedDil = { gold: 0, silver: 0, bronze: 0 };
-try {
-  derivedDil = await loadDilemmaMedalsFromPlacements(user.uid);
-} catch {}
-renderDilemmaMedalCounts(derivedDil);
+      // Dilemma medals
+      let derivedDil = await loadDilemmaMedalsFromPlacements(user.uid);
+      renderDilemmaMedalCounts(derivedDil);
 
       // Supporter banner
       const supporterBanner = document.getElementById("supporterBanner");
@@ -537,7 +464,8 @@ renderDilemmaMedalCounts(derivedDil);
 
       if (typeof gtag === 'function') gtag('event','profile_view',{ uid: user.uid });
     }
-        function wireProfileForm(user){
+
+    function wireProfileForm(user){
       const form = $("profileForm");
       const resetBtn = $("resetPwBtn");
       const delBtn = $("deleteBtn");
@@ -584,7 +512,6 @@ renderDilemmaMedalCounts(derivedDil);
       }
     }
 
-    // ---- Auth gate + bootstrap ----
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         const ret = encodeURIComponent("/profile.html");
@@ -600,7 +527,7 @@ renderDilemmaMedalCounts(derivedDil);
     });
   </script>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
+  <body class="bg-gray-100 min-h-screen flex flex-col">
   <!-- Header -->
   <header class="bg-white shadow p-4">
     <div class="logo-container">
@@ -653,6 +580,7 @@ renderDilemmaMedalCounts(derivedDil);
           </div>
         </form>
       </section>
+
       <!-- MEDALJES -->
       <section class="card p-5 md:p-6">
         <header class="flex flex-col gap-1 mb-3">
@@ -671,14 +599,12 @@ renderDilemmaMedalCounts(derivedDil);
         </a>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-
           <div class="mini">
-  <div class="text-xs uppercase tracking-wide text-slate-500 font-extrabold">Dilemma</div>
-
-  <div id="medalsDilLine" class="mt-1 text-lg font-extrabold text-slate-900">Medaljes: 0</div>
-  <div id="medalsDilBreakdown" class="hidden text-sm font-bold text-slate-700 mt-1">🥇 0  •  🥈 0  •  🥉 0</div>
-  <div id="medalsDilEmpty" class="text-sm text-slate-500 mt-1">Kom binnekort</div>
-</div>
+            <div class="text-xs uppercase tracking-wide text-slate-500 font-extrabold">Dilemma</div>
+            <div id="medalsDilLine" class="mt-1 text-lg font-extrabold text-slate-900">Medaljes: 0</div>
+            <div id="medalsDilBreakdown" class="hidden text-sm font-bold text-slate-700 mt-1">🥇 0  •  🥈 0  •  🥉 0</div>
+            <div id="medalsDilEmpty" class="text-sm text-slate-500 mt-1">Kom binnekort</div>
+          </div>
 
           <div class="mini">
             <div class="text-xs uppercase tracking-wide text-slate-500 font-extrabold">Blitstiek</div>
@@ -693,16 +619,34 @@ renderDilemmaMedalCounts(derivedDil);
             <div class="text-sm text-slate-500 mt-1">Kom binnekort</div>
           </div>
         </div>
+
+        <!-- Ondersteuner status moved here -->
+        <div class="mt-4">
+          <span id="supporterPillTop" class="pill pill-lg" style="background:#f1f5f9;color:#0f172a;border:1px solid #e2e8f0">
+            ONDERSTEUNER: —
+          </span>
+        </div>
+      </section>
+
+      <!-- HOE MEDALJES WERK -->
+      <section class="card p-5 md:p-6">
+        <header class="flex flex-col gap-1 mb-3">
+          <div class="h-1 w-full bg-slate-300 rounded-full"></div>
+          <h2 class="text-xl font-extrabold text-slate-900">HOE MEDALJES WERK</h2>
+        </header>
+
+        <div class="text-sm text-slate-700 space-y-2 leading-relaxed">
+          <p><strong>DILEMMA:</strong> Medaljes word om <strong>23:55</strong> toegeken op grond van jou <strong>aantal raaiskote</strong>:
+            <strong>🥇 1</strong>, <strong>🥈 2</strong>, <strong>🥉 3</strong>.
+          </p>
+          <p><strong>BLITSTIEK:</strong> Medaljes word om <strong>23:55</strong> toegeken op grond van die dag se <strong>beste tye</strong> op die ranglys.</p>
+          <p><strong>SLIMSTIEK:</strong> Kom binnekort.</p>
+          <p class="text-xs text-slate-500">Let wel: Die ou “telling”-stelsel word vervang. Medaljes is nou die hoof opsomming op jou profiel.</p>
+        </div>
       </section>
 
       <!-- OVERVIEW -->
       <section class="card p-5 md:p-6">
-        <div class="mb-2">
-          <span id="supporterPill" class="pill pill-lg" style="background:#f1f5f9;color:#0f172a;border:1px solid #e2e8f0">
-            ONDERSTEUNER: NIE AKTIEF NIE
-          </span>
-        </div>
-
         <div class="mb-4">
           <span id="pillOverall" class="pill pill-lg pill-blue">JOU KRIPTIEK-TELLING: BINNEKORT</span>
         </div>
@@ -718,31 +662,8 @@ renderDilemmaMedalCounts(derivedDil);
         </p>
       </section>
 
-      <!-- DILEMMA -->
-      <section class="card p-5 md:p-6" data-section="dilemma">
-        <header class="flex flex-col gap-1 mb-3">
-          <div class="h-1 w-full bg-orange-500 rounded-full"></div>
-          <h2 class="text-xl font-extrabold text-slate-900">DILEMMA</h2>
-        </header>
-
-<div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-  <div id="medalsDilLine2" class="text-sm font-semibold text-slate-800">
-    Medaljes: 0
-  </div>
-
-  <div id="medalsDilBreakdown2" class="text-xs text-slate-600 mt-1 hidden"></div>
-
-  <div id="medalsDilEmpty2" class="text-xs text-slate-500 mt-1">
-    Medaljes vir Dilemma kom binnekort.
-    <span class="block">
-      Al jou Dilemma-medaljes sal binnekort hier wys.
-    </span>
-  </div>
-</div>
-       </section> 
-
-      <!-- BLITSTIEK -->
-      <section class="card p-5 md:p-6" data-section="blitstiek">
+      <!-- BLITSTIEK INFO (kept minimal for now) -->
+      <section class="card p-5 md:p-6">
         <header class="flex flex-col gap-1 mb-3">
           <div class="h-1 w-full bg-emerald-500 rounded-full"></div>
           <h2 class="text-xl font-extrabold text-slate-900">BLITSTIEK</h2>
@@ -761,7 +682,7 @@ renderDilemmaMedalCounts(derivedDil);
           </div>
         </div>
 
-        <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 mb-3">
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
           <div class="flex items-end justify-between">
             <div>
               <div id="totalPointsBlit" class="text-4xl font-extrabold mono text-emerald-900">—</div>
@@ -770,76 +691,6 @@ renderDilemmaMedalCounts(derivedDil);
             <div class="text-right">
               <div class="text-xs text-emerald-900/70">Laas bereken</div>
               <div id="calcTimeBlit" class="text-sm mono">—</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="rounded-xl bg-gray-50 p-4 border border-gray-200 mt-3">
-          <h3 class="font-semibold text-gray-800 mb-2">Blitstiek: Telling & ranglys</h3>
-
-          <ul class="list-disc list-inside text-gray-700 space-y-1">
-            <li>Die ranglys wys <strong>die dag se 10 beste tye.</strong></li>
-            <li>Jou naam verskyn hoogstens een keer op die dag se lys, en ’n beter tyd vervang jou vorige swakker tyd.</li>
-          </ul>
-
-          <ul class="list-disc list-inside text-gray-700 space-y-1 ml-5">
-            <li><strong>200 punte</strong> vir ’n voltooiing in <strong>onder 30 sekondes</strong></li>
-            <li><strong>100 punte</strong> vir ’n voltooiing in <strong>onder 60 sekondes</strong></li>
-          </ul>
-
-          <ul class="list-disc list-inside text-gray-700 space-y-1 mt-2">
-            <li>Jy kry <strong>bonuspunte vir jou posisie op die ranglys om 23:55</strong>:</li>
-          </ul>
-
-          <ul class="list-disc list-inside text-gray-700 space-y-1 ml-5">
-            <li><strong>1ste plek</strong> – 200 punte</li>
-            <li><strong>2de plek</strong> – 175 punte</li>
-            <li><strong>3de plek</strong> – 150 punte</li>
-            <li><strong>4de plek</strong> – 125 punte</li>
-            <li><strong>5de plek</strong> – 100 punte</li>
-            <li><strong>6de plek</strong> – 75 punte</li>
-            <li><strong>7de plek</strong> – 50 punte</li>
-            <li><strong>8ste plek</strong> – 40 punte</li>
-            <li><strong>9de plek</strong> – 30 punte</li>
-            <li><strong>10de plek</strong> – 20 punte</li>
-          </ul>
-
-          <ul class="list-disc list-inside text-gray-700 space-y-1 mt-2">
-            <li>Betalende Kriptiek-ondersteuners kry ’n <strong>10%-bonus</strong> op die dag se ranglyspunte.</li>
-            <li>Jou <strong>algehele Blitstiek-telling</strong> is die som van al jou vorige dae se bevestigde tellings,
-                met ondersteunerbonusse bygereken.</li>
-          </ul>
-        </div>
-      </section>
-      <!-- SLIMSTIEK (hidden for now) -->
-      <section class="card p-5 md:p-6" data-section="slimstiek" aria-hidden="true" style="display:none">
-        <header class="flex flex-col gap-1 mb-3">
-          <div class="h-1 w-full bg-teal-500 rounded-full"></div>
-          <h2 class="text-xl font-extrabold text-slate-900">SLIMSTIEK</h2>
-        </header>
-
-        <div class="rounded-xl border border-slate-200 bg-white p-4 mb-3">
-          <div class="flex items-end justify-between">
-            <div>
-              <div id="slimOverallScore" class="text-6xl font-black mono text-slate-900 tracking-tight">0</div>
-              <div class="text-xs uppercase tracking-wide text-slate-500">Algeheel (totaal)</div>
-            </div>
-            <div class="text-right">
-              <div class="text-xs text-slate-500">Laas opgedateer</div>
-              <div id="slimOverallUpdated" class="text-sm mono">—</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="rounded-xl border border-teal-200 bg-teal-50 p-4 mb-4">
-          <div class="flex items-end justify-between">
-            <div>
-              <div id="totalPointsSlim" class="text-4xl font-extrabold mono text-teal-900">—</div>
-              <div class="text-xs uppercase tracking-wide text-teal-900/70">Vandag</div>
-            </div>
-            <div class="text-right">
-              <div class="text-xs text-teal-900/70">Laas bereken</div>
-              <div id="calcTimeSlim" class="text-sm mono">—</div>
             </div>
           </div>
         </div>
@@ -877,11 +728,9 @@ renderDilemmaMedalCounts(derivedDil);
           bg.appendChild(d);
         }
       }
-      regen();window.addEventListener('resize',regen);
+      regen(); window.addEventListener('resize', regen);
     });
   </script>
 
 </body>
 </html>
-
-      
