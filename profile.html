@@ -1,9 +1,7 @@
-<!-- PART 1/4 -->
 <!DOCTYPE html>
 <html lang="af">
 <head>
 
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9V4CMP1FP"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -12,7 +10,7 @@
     gtag('config', 'G-S9V4CMP1FP');
   </script>
 
-  <!-- AdSense verification -->
+
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8199352351586797"
           crossorigin="anonymous"></script>
 
@@ -20,14 +18,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>My Profiel – Kriptiek</title>
 
-  <!-- Favicons -->
+
   <link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=3">
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png?v=3">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=3">
   <link rel="manifest" href="/assets/site.webmanifest?v=3">
 
-  <!-- Fonts & Tailwind -->
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800;900&display=swap" rel="stylesheet">
 
@@ -86,7 +84,6 @@
     .mini { background:#f8fafc; border:1px solid #e5e7eb; border-radius:.75rem; padding:.5rem .6rem; text-align:center; }
   </style>
 
-  <!-- Firebase setup -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, sendPasswordResetEmail, deleteUser, updateProfile } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
@@ -119,7 +116,6 @@
       const el = $("wbName");
       if (el) el.textContent = (name || "Gebruiker").toUpperCase();
     }
-<!-- PART 2/4 -->
     function getSupporterState(u){
       let active = false, untilTs = null;
       if (u?.supporterActive === true) active = true;
@@ -242,7 +238,6 @@
         if (empty) empty.classList.remove("hidden");
       }
     }
-<!-- PART 3/4 -->
     async function hydrateProfile(user){
       const nameEl  = $("nameInput");
       const emailEl = $("emailInput");
@@ -383,7 +378,6 @@
   </script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
-  <!-- Header -->
   <header class="bg-white shadow p-4">
     <div class="logo-container">
       <div id="backgroundCrossword" class="background-crossword"></div>
@@ -403,11 +397,9 @@
   <div class="max-w-6xl mx-auto px-4 pt-2 text-center text-2xl font-bold text-[#1e3a8a]">
     WELKOM TERUG, <span id="wbName">GEBRUIKER</span>
   </div>
-<!-- PART 4/4 -->
   <main class="flex-grow p-4 pb-16">
     <div class="max-w-6xl mx-auto flex flex-col gap-6 items-stretch">
 
-      <!-- PROFILE CARD -->
       <section class="card p-5 md:p-6">
         <a id="supporterBanner" href="https://buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
            class="block text-center font-bold rounded-lg p-3 mb-4 bg-red-50 border border-red-200 text-red-800">
@@ -442,7 +434,6 @@
         </form>
       </section>
 
-      <!-- MEDALJES -->
       <section class="card p-5 md:p-6">
         <header class="flex flex-col gap-1 mb-3">
           <div class="h-1 w-full bg-yellow-400 rounded-full"></div>
@@ -485,11 +476,10 @@
         </div>
       </section>
 
-      <!-- HOE DIE MEDALJES WERK -->
       <section class="card p-5 md:p-6">
         <header class="flex flex-col gap-1 mb-3">
           <div class="h-1 w-full bg-slate-300 rounded-full"></div>
-          <h2 class="text-xl font-extrabold text-slate-900">HOE MEDALJES WERK</h2>
+          <h2 class="text-xl font-extrabold text-slate-900">HOE DIE MEDALJES WERK</h2>
         </header>
 
         <div class="text-sm text-slate-700 space-y-2 leading-relaxed">
