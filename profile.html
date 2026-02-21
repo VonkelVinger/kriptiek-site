@@ -503,6 +503,13 @@ function renderDilemmaMedalCounts(derived){
 
       renderBlitstiekMedalCounts(userDoc, derived);
 
+      // Dilemma medals (tiers by guesses written as placementPlace on games/{gameId}/leaderboard/{uid})
+let derivedDil = { gold: 0, silver: 0, bronze: 0 };
+try {
+  derivedDil = await loadDilemmaMedalsFromPlacements(user.uid);
+} catch {}
+renderDilemmaMedalCounts(derivedDil);
+
       // Supporter banner
       const supporterBanner = document.getElementById("supporterBanner");
       if (supporterBanner) {
