@@ -570,11 +570,10 @@
             const UID_ALLOW = new Set(["jI7f0Wk4MqfPq7p69vjl8OlJUvS2"]);
             const allowlistAdmin = UID_ALLOW.has(user.uid);
             const queryOverride  = (new URLSearchParams(location.search)).get('admin') === '1';
-            isAdminClient = claimAdmin || allowlistAdmin || queryOverride;
+isAdminClient = claimAdmin || allowlistAdmin;
           }
         } catch (e) { console.warn('Admin check failed:', e); }
-        adminPanel.style.display = isAdminClient ? '' : 'none';
-
+adminPanel.style.display = (isAdminClient && queryOverride) ? '' : 'none';
         subscribeMergedLeaderboard();
       });
     } else {
