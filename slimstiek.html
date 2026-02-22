@@ -400,6 +400,9 @@
 
     const barNR       = document.getElementById('barNR');
     const barR        = document.getElementById('barR');
+    // FIX: force a clean initial state (prevents both bars showing)
+if (barNR) barNR.classList.add('hidden');
+if (barR)  barR.classList.add('hidden');
     const nrGate      = document.getElementById('nrGate');
     const gateGuestBtn= document.getElementById('gateGuestBtn');
     const gateRegBtn  = document.getElementById('gateRegBtn');
@@ -1076,7 +1079,7 @@ adminPanel.style.display = (isAdminClient && queryOverride) ? '' : 'none';
     function rowsToMap(rows){
       const m = new Map();
       rows.forEach(r=>{
-        const id = r.id || r.uid || r.userId || r._id;
+const id = r.uid || r.userId || r.userID || r._id || r.id;
         if(!id) return;
         const prev = m.get(id) || { id };
         const score = Number(r.score||0);
@@ -1171,13 +1174,18 @@ adminPanel.style.display = (isAdminClient && queryOverride) ? '' : 'none';
       const colLegacy = collection(db,'leaderboards','slimstiek','dates', currentDate, 'entries');
       const qLegacy   = query(colLegacy, orderBy('score','desc'), orderBy('ts','asc'), limit(200));
       unsubLegacy = onSnapshot(qLegacy, (snap)=>{
-        legacyRows = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-        renderMerged();
-      }, (err)=>{
-        console.error('LEGACY LB stream failed:', err);
-        legacyRows = [];
-        renderMerged();
-      });
+  legacyRows = snap.docs.map(d => {
+    const data = d.data() || {};
+    // Ensure we carry a stable uid/userId for merge-deduping
+    const uid = data.uid || data.userId || data.userID || d.id;
+    return { id: d.id, uid, ...data };
+  });
+  renderMerged();
+}, (err)=>{
+  console.error('LEGACY LB stream failed:', err);
+  legacyRows = [];
+  renderMerged();
+});
     }
 
     async function submitToLB(scoreVal){
