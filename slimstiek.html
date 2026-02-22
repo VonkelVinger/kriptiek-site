@@ -127,7 +127,6 @@
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
-
   <header>
     <div class="logo-container" aria-label="SLIMSTIEK">
       <div class="letter-box">S</div><div class="letter-box">L</div>
@@ -229,7 +228,6 @@
                 </div>
               </div>
             </div>
-
             <div class="controls mt-3">
               <div class="arrow-row">
                 <button id="btnLeft"  class="dir-btn" aria-label="Links">◀</button>
@@ -345,7 +343,6 @@
     <a href="/about.html" class="underline">Oor Kriptiek</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
-
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import { getAuth, onAuthStateChanged, getIdTokenResult } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
@@ -401,8 +398,9 @@
     const barNR       = document.getElementById('barNR');
     const barR        = document.getElementById('barR');
     // FIX: force a clean initial state (prevents both bars showing)
-if (barNR) barNR.classList.add('hidden');
-if (barR)  barR.classList.add('hidden');
+    if (barNR) barNR.classList.add('hidden');
+    if (barR)  barR.classList.add('hidden');
+
     const nrGate      = document.getElementById('nrGate');
     const gateGuestBtn= document.getElementById('gateGuestBtn');
     const gateRegBtn  = document.getElementById('gateRegBtn');
@@ -415,6 +413,7 @@ if (barR)  barR.classList.add('hidden');
     const btnBFOne   = document.getElementById('btnBFOne');
     const btnBFRange = document.getElementById('btnBFRange');
     const bfMsg      = document.getElementById('bfMsg');
+
     const SITE_ORIGIN = location.hostname.endsWith('kriptiek.com')
       ? location.origin
       : 'https://www.kriptiek.com';
@@ -457,7 +456,6 @@ if (barR)  barR.classList.add('hidden');
     function shareTextLinkOnly(){
       return `Kyk of jy my telling op vandag se SLIMSTIEK kan klop: ${buildShareUrl(currentDate)}`;
     }
-
     function cleanForFS(obj){
       const out = {};
       for (const [k,v] of Object.entries(obj)){
@@ -566,17 +564,19 @@ if (barR)  barR.classList.add('hidden');
         if(!user) showNRGate();
 
         isAdminClient = false;
+        const queryOverride  = (new URLSearchParams(location.search)).get('admin') === '1';
+
         try{
           if (user) {
             const t = await getIdTokenResult(user, true);
             const claimAdmin = t?.claims?.admin === true;
             const UID_ALLOW = new Set(["jI7f0Wk4MqfPq7p69vjl8OlJUvS2"]);
             const allowlistAdmin = UID_ALLOW.has(user.uid);
-            const queryOverride  = (new URLSearchParams(location.search)).get('admin') === '1';
-isAdminClient = claimAdmin || allowlistAdmin;
+            isAdminClient = claimAdmin || allowlistAdmin;
           }
         } catch (e) { console.warn('Admin check failed:', e); }
-adminPanel.style.display = (isAdminClient && queryOverride) ? '' : 'none';
+
+        adminPanel.style.display = (isAdminClient && queryOverride) ? '' : 'none';
         subscribeMergedLeaderboard();
       });
     } else {
@@ -584,6 +584,7 @@ adminPanel.style.display = (isAdminClient && queryOverride) ? '' : 'none';
       showNRGate();
       adminPanel.style.display='none';
     }
+
     // Grid sizing
     function resizeGrid(){
       const wrap = gridEl.parentElement;
@@ -702,9 +703,7 @@ adminPanel.style.display = (isAdminClient && queryOverride) ? '' : 'none';
         .share-menu-local button:hover{background:#f3f4f6;}
         .action-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;justify-items:center;align-items:center;}
         .cols-3{grid-template-columns:repeat(3,1fr);}
-
-.hidden{display:none !important;}
-        
+        .hidden{display:none !important;}
         .action-grid > a,.action-grid > button{display:grid;place-items:center;width:100%;aspect-ratio:1/1;max-width:120px;padding:0;margin:0;background:transparent !important;border:0;border-radius:0;line-height:0;appearance:none;-webkit-appearance:none;box-shadow:none;cursor:pointer;}
         .btn-img{width:100%;height:100%;display:block;object-fit:contain;border-radius:0;box-shadow:0 6px 15px rgba(0,0,0,.25);}
         .btn-img:hover{transform:translateY(-1px);filter:brightness(1.02);}
@@ -713,7 +712,6 @@ adminPanel.style.display = (isAdminClient && queryOverride) ? '' : 'none';
       `;
       document.head.appendChild(s);
     }
-
     function drawGrid(){
       ensureDynamicStyles();
       gridEl.innerHTML = '';
@@ -1082,8 +1080,9 @@ adminPanel.style.display = (isAdminClient && queryOverride) ? '' : 'none';
     function rowsToMap(rows){
       const m = new Map();
       rows.forEach(r=>{
-const id = r.uid || r.userId || r.userID || r._id || r.id;
+        const id = r.uid || r.userId || r.userID || r._id || r.id;
         if(!id) return;
+
         const prev = m.get(id) || { id };
         const score = Number(r.score||0);
         const ts = r.ts?.toMillis?.()
@@ -1177,30 +1176,30 @@ const id = r.uid || r.userId || r.userID || r._id || r.id;
       const colLegacy = collection(db,'leaderboards','slimstiek','dates', currentDate, 'entries');
       const qLegacy   = query(colLegacy, orderBy('score','desc'), orderBy('ts','asc'), limit(200));
       unsubLegacy = onSnapshot(qLegacy, (snap)=>{
-  legacyRows = snap.docs.map(d => {
-    const data = d.data() || {};
+        legacyRows = snap.docs.map(d => {
+          const data = d.data() || {};
 
-    // Prefer explicit uid fields from the document data
-    let uid = data.uid || data.userId || data.userID || data.userUid || data.userUID;
+          // Prefer explicit uid fields from the document data
+          let uid = data.uid || data.userId || data.userID || data.userUid || data.userUID;
 
-    // If missing, only use doc.id if it looks like a Firebase Auth UID (avoid auto-IDs)
-    if (!uid) {
-      const looksLikeUid = /^[A-Za-z0-9]{24,40}$/.test(String(d.id || ''));
-      if (looksLikeUid) uid = d.id;
-    }
+          // If missing, only use doc.id if it looks like a Firebase Auth UID (avoid auto-IDs)
+          if (!uid) {
+            const looksLikeUid = /^[A-Za-z0-9]{24,40}$/.test(String(d.id || ''));
+            if (looksLikeUid) uid = d.id;
+          }
 
-    // If we still don't have a stable uid, we cannot safely merge -> drop it
-    if (!uid) return null;
+          // If we still don't have a stable uid, we cannot safely merge -> drop it
+          if (!uid) return null;
 
-    return { id: d.id, uid, ...data };
-  }).filter(Boolean);
+          return { id: d.id, uid, ...data };
+        }).filter(Boolean);
 
-  renderMerged();
-}, (err)=>{
-  console.error('LEGACY LB stream failed:', err);
-  legacyRows = [];
-  renderMerged();
-});
+        renderMerged();
+      }, (err)=>{
+        console.error('LEGACY LB stream failed:', err);
+        legacyRows = [];
+        renderMerged();
+      });
     }
 
     async function submitToLB(scoreVal){
@@ -1462,4 +1461,6 @@ const id = r.uid || r.userId || r.userID || r._id || r.id;
 
 </body>
 </html>
-            
+
+
+    
