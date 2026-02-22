@@ -114,7 +114,7 @@ border:1px solid rgba(255,255,255,.12);
 100%{box-shadow:0 0 0 rgba(255,221,0,0)}
 }
 .game-wrap{position:relative}
-/* Loading spinner */
+/* Loading Spinner */
 .loading-spinner{
   display:inline-block;width:20px;height:20px;
   border:3px solid rgba(255,255,255,.3);
@@ -122,15 +122,19 @@ border:1px solid rgba(255,255,255,.12);
   animation:spin 1s linear infinite;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
-/* Toast notifications */
-.toast{
+/* Toast Notifications */
+.toast-container{
   position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
-  background:#1f2937;color:#fff;padding:12px 20px;border-radius:8px;
-  box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:1000;
-  animation:toastIn .3s ease, toastOut .3s ease 2.7s forwards;
+  z-index:9999;pointer-events:none;
 }
-@keyframes toastIn{from{opacity:0;transform:translate(-50%,20px)}}
-@keyframes toastOut{to{opacity:0;transform:translate(-50%,40px)}}
+.toast{
+  background:#1f2937;color:#fff;padding:12px 20px;border-radius:8px;
+  box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:10px;
+  animation:toastIn .3s ease, toastOut .3s ease 2.7s forwards;
+  pointer-events:auto;
+}
+@keyframes toastIn{from{opacity:0;transform:translateY(20px)}}
+@keyframes toastOut{to{opacity:0;transform:translateY(40px)}}
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -185,32 +189,32 @@ class="block max-w-full md:w-[300px] h-auto">
 </div>
 <div class="max-w-xl mx-auto">
 <div class="headline">TEIKENWOORD:</div>
-<div id="targetWrap"><div id="target" role="region" aria-label="Teikenwoord"><span>—</span></div></div>
+<div id="targetWrap"><div id="target"><span>—</span></div></div>
 <div id="rowHint" class="mt-[-2px] text-center text-[0.75rem] text-gray-500">
 Vermenigvuldiger: ×<b id="rowMultVal" class="text-emerald-700">1</b>
 </div>
 <section class="card p-4">
 <div class="relative game-wrap">
-<div id="grid" role="grid" aria-label="Speelrooster"></div>
+<div id="grid"></div>
 <div id="fx" aria-hidden="true"></div>
-<div id="over" role="dialog" aria-modal="true" aria-labelledby="winMsg">
+<div id="over">
 <div class="modal">
 <p id="winMsg" class="mb-3 text-base"></p>
 <div class="actions" style="display:flex;gap:.75rem;justify-content:center;margin-top:12px;">
 <button id="modalShareBtn" type="button" class="btn">DEEL</button>
 <button id="modalCloseBtn" type="button" class="btn gray">SLUIT</button>
 </div>
-<div id="shareMenu" class="hidden share-menu-local mx-auto mt-2" role="menu">
+<div id="shareMenu" class="hidden share-menu-local mx-auto mt-2">
 <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
 <div class="space-y-1">
-<button id="mWhatsApp" type="button" role="menuitem">WhatsApp</button>
-<button id="mCopy" type="button" role="menuitem">Kopieer skakel</button>
-<button id="mSystem" type="button" role="menuitem">Stelsel-deel</button>
+<button id="mWhatsApp" type="button">WhatsApp</button>
+<button id="mCopy" type="button">Kopieer skakel</button>
+<button id="mSystem" type="button">Stelsel-deel</button>
 </div>
 </div>
 </div>
 </div>
-<div id="nrGate" role="dialog" aria-modal="true">
+<div id="nrGate">
 <div class="modal">
 <h3 class="text-lg font-extrabold mb-1">WELKOM BY SLIMSTIEK OP KRIPTIEK</h3>
 <p class="text-sm text-gray-600 mb-3">Jou opsies:</p>
@@ -252,15 +256,15 @@ sodat jy volle toegang tot alles op Kriptiek kan kry, insluitend Slimstiek.
 <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
 </a>
 <div class="relative share-tile-wrap">
-<button type="button" class="share-tile" title="Deel" aria-haspopup="true" aria-expanded="false">
+<button type="button" class="share-tile" title="Deel">
 <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
 </button>
-<div class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2" role="menu">
+<div class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
 <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
 <div class="space-y-1">
-<button class="wa" type="button" role="menuitem">WhatsApp</button>
-<button class="copy" type="button" role="menuitem">Kopieer skakel</button>
-<button class="sys" type="button" role="menuitem">Stelsel-deel</button>
+<button class="wa" type="button">WhatsApp</button>
+<button class="copy" type="button">Kopieer skakel</button>
+<button class="sys" type="button">Stelsel-deel</button>
 </div>
 </div>
 </div>
@@ -273,15 +277,15 @@ sodat jy volle toegang tot alles op Kriptiek kan kry, insluitend Slimstiek.
 <img class="btn-img" src="/assets/S_ARGIEF_12SEP.png" alt="S Argief" width="120" height="120">
 </a>
 <div class="relative share-tile-wrap">
-<button type="button" class="share-tile" title="Deel" aria-haspopup="true" aria-expanded="false">
+<button type="button" class="share-tile" title="Deel">
 <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
 </button>
-<div class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2" role="menu">
+<div class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2">
 <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
 <div class="space-y-1">
-<button class="wa" type="button" role="menuitem">WhatsApp</button>
-<button class="copy" type="button" role="menuitem">Kopieer skakel</button>
-<button class="sys" type="button" role="menuitem">Stelsel-deel</button>
+<button class="wa" type="button">WhatsApp</button>
+<button class="copy" type="button">Kopieer skakel</button>
+<button class="sys" type="button">Stelsel-deel</button>
 </div>
 </div>
 </div>
@@ -309,7 +313,7 @@ sodat jy volle toegang tot alles op Kriptiek kan kry, insluitend Slimstiek.
 <ul class="list-disc pl-6">
 <li><strong>+10 punte</strong> vir elke <em>paar</em> blokke wat verdwyn, <strong>vermenigvuldig met die boonste ry</strong> waarin daardie paar voorkom. (<em>Die heel onderste ry is ry 1; as die boonste van die twee blokke in ry 2 is, word die punte met 2 vermenigvuldig.</em>)</li>
 <li><strong>+50 punte ekstra</strong> as <em>die letter en die kleur</em> van die twee blokke dieselfde is, ook vermenigvuldig met die boonste ry.</li>
-<li><strong>+100 bonuspunte</strong> sodra jy die teikenwoord gebou kry – die spel eindig dan ook.</p>
+<li><strong>+100 bonuspunte</strong> sodra jy die teikenwoord gebou kry – die spel eindig dan ook.</li>
 </ul>
 </li>
 <li>
@@ -338,8 +342,8 @@ sodat jy volle toegang tot alles op Kriptiek kan kry, insluitend Slimstiek.
 <a href="/contact.html" class="underline">Kontak ons</a>
 </footer>
 
-<!-- Toast container -->
-<div id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+<!-- Toast Container -->
+<div id="toastContainer" class="toast-container"></div>
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
@@ -367,7 +371,7 @@ db   = getFirestore(app);
 console.warn('Firebase init failed (ok for local fallback):', e);
 }
 
-// ============ UTILITY FUNCTIONS ============
+// ============ UTILITIES ============
 function showToast(message, duration=3000){
   const container = document.getElementById('toastContainer');
   const toast = document.createElement('div');
@@ -447,7 +451,6 @@ const dateParam = qs.get('date');
 let currentDate = (/^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : todayKeySAST());
 const GAME_ID = `Game${currentDate}`;
 window.gameId = GAME_ID;
-console.log("[Slimstiek] GAME_ID:", GAME_ID);
 
 try {
 const urlObj = new URL(window.location.href);
@@ -466,10 +469,6 @@ url.searchParams.set('date', dateStr);
 return url.toString();
 }
 
-function shareTextLinkOnly(){
-return `Kyk of jy my telling op vandag se SLIMSTIEK kan klop: ${buildShareUrl(currentDate)}`;
-}
-
 function cleanForFS(obj){
 const out = {};
 for (const [k,v] of Object.entries(obj)){
@@ -478,14 +477,6 @@ if (typeof v === 'number' && !Number.isFinite(v)) continue;
 out[k] = v;
 }
 return out;
-}
-
-function logFSWrite(ref, data, label="FS write"){
-const summary = {};
-for (const [k,v] of Object.entries(data)){
-summary[k] = (v && v.__isServerTimestamp) ? 'serverTimestamp()' : (typeof v);
-}
-console.log(`[${label}]`, ref.path, summary, data);
 }
 
 import { serverTimestamp as __serverTimestampForSTS } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
@@ -598,7 +589,7 @@ showNRGate();
 adminPanel.style.display='none';
 }
 
-// ============ GRID & RENDERING ============
+// ============ GRID & RENDERING (OPTIMIZED) ============
 let cellCache = []; // Cache for grid cells to avoid re-querying DOM
 
 function resizeGrid(){
@@ -643,8 +634,8 @@ resizeGrid();
 alignDesktopAds();
 }, 150);
 
-// Single resize listener (fixed duplicate issue)
-window.addEventListener('resize', handleResize);
+// Single resize listener
+window.addEventListener('resize', handleResize, { passive: true });
 
 // ============ GAME CONSTANTS ============
 const H=10, W=8;
@@ -655,7 +646,9 @@ let TARGET='';
 let grid=Array.from({length:H},()=>Array(W).fill(null));
 let cur=null, nxt=null;
 let paused=false, ended=false, moving=false;
-let gInt=null;
+let gameLoopId = null;
+let lastDropTime = 0;
+const DROP_INTERVAL = 1000;
 let score=0, bestScore=null;
 
 // ============ DYNAMIC STYLES ============
@@ -738,10 +731,8 @@ const d = document.createElement('div');
 d.className = 'cell';
 d.dataset.x = x;
 d.dataset.y = y;
-d.setAttribute('role', 'gridcell');
-d.setAttribute('aria-label', `Ry ${y+1}, Kolom ${x+1}: leeg`);
 gridEl.appendChild(d);
-cellCache[y][x] = d;
+cellCache[y][x] = d; // Cache reference
 }
 }
 resizeGrid();
@@ -750,7 +741,7 @@ alignDesktopAds();
 
 function getCell(x, y){
 if(x<0||x>=W||y<0||y>=H) return null;
-return cellCache[y]?.[x] || gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+return cellCache[y]?.[x] || null;
 }
 
 function drawBlock(b){
@@ -760,7 +751,6 @@ if(!c) return;
 c.className = 'cell f';
 c.style.background = b.color;
 c.textContent = b.letter;
-c.setAttribute('aria-label', `Ry ${b.y+1}, Kolom ${b.x+1}: ${b.letter}`);
 }
 
 function clearBlock(b){
@@ -770,7 +760,6 @@ if(!c) return;
 c.className = 'cell';
 c.style.background = 'var(--cell-bg)';
 c.textContent = '';
-c.setAttribute('aria-label', `Ry ${b.y+1}, Kolom ${b.x+1}: leeg`);
 }
 
 const partOfTarget = L => TARGET.includes(L);
@@ -807,20 +796,14 @@ const raw = getComputedStyle(document.documentElement).getPropertyValue('--cellS
 return Number(String(raw).replace('px','').trim()) || 32;
 }
 
-// Respect prefers-reduced-motion for animations
-const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const animDelay = prefersReducedMotion ? 0 : 450;
-const floatDuration = prefersReducedMotion ? 0.3 : 0.9;
-
 function spawnFloatAt(px, py, text){
 const el = document.createElement('div');
 el.className = 'float-score';
 el.textContent = text;
 el.style.left = px + 'px';
 el.style.top  = py + 'px';
-el.style.animationDuration = `${floatDuration}s`;
 fxEl.appendChild(el);
-setTimeout(()=>{ el.remove(); }, floatDuration * 1000 + 50);
+setTimeout(()=>{ el.remove(); }, 950);
 }
 
 function spawnFloatForPair(x1,y1,x2,y2, points, mult){
@@ -830,9 +813,19 @@ const cy = ((y1 + 0.5) + (y2 + 0.5)) / 2 * s;
 spawnFloatAt(cx, cy, `+${points} ×${mult}`);
 }
 
-// Haptic feedback for mobile
-function hapticFeedback(pattern=[10]){
-if('vibrate' in navigator) navigator.vibrate(pattern);
+// ============ GAME LOOP (OPTIMIZED) ============
+function gameLoop(timestamp){
+  if(ended || paused){
+    if(!ended) requestAnimationFrame(gameLoop);
+    return;
+  }
+  
+  if(timestamp - lastDropTime >= DROP_INTERVAL){
+    move(0, 1);
+    lastDropTime = timestamp;
+  }
+  
+  requestAnimationFrame(gameLoop);
 }
 
 async function move(dx,dy){
@@ -852,7 +845,6 @@ clearBlock(cur);
 while(cur.y<H-1 && !collide({...cur,y:cur.y+1})) cur.y++;
 place();
 updateRowHint();
-hapticFeedback([20]);
 }
 
 async function place(){
@@ -864,7 +856,6 @@ await checkWin();
 cur=nxt; nxt=createBlock();
 if(cur) drawBlock(cur);
 updateRowHint();
-hapticFeedback([5]);
 }
 
 async function matchAndDrop(){
@@ -900,10 +891,10 @@ if(!toDel.size) return;
 addScore(pairScoreTotal);
 await Promise.all(Array.from(toDel).map(key=>new Promise(res=>{
 const [x,y]=key.split(',').map(Number);
-const c=getCell(x,y);
+const c=getCell(x,y); // Use cache
 if(c){
 c.classList.add('pop');
-setTimeout(()=>{ c.classList.remove('pop'); res(); }, prefersReducedMotion ? 0 : 150);
+setTimeout(()=>{ c.classList.remove('pop'); res(); },150);
 } else res();
 grid[y][x]=null;
 })));
@@ -917,12 +908,11 @@ wY--;
 }
 }
 for(let y=0;y<H;y++) for(let x=0;x<W;x++){
-const c=getCell(x,y);
+const c=getCell(x,y); // Use cache
 if(!c) continue;
 c.className='cell';
 c.style.background='var(--cell-bg)';
 c.textContent='';
-c.setAttribute('aria-label', `Ry ${y+1}, Kolom ${x+1}: leeg`);
 if(grid[y][x]) drawBlock({...grid[y][x],x,y});
 }
 }
@@ -937,13 +927,13 @@ if(!g || g.letter!==TARGET[i]){ ok=false; break; }
 }
 if(ok){
 for(let i=0;i<TARGET.length;i++){
-const c=getCell(x+i,y);
+const c=getCell(x+i,y); // Use cache
 if(c) c.style.transform='scale(1.05)';
 }
 targetEl.classList.add('goal-glow');
-setTimeout(()=>targetEl.classList.remove('goal-glow'), prefersReducedMotion ? 0 : 1400);
+setTimeout(()=>targetEl.classList.remove('goal-glow'), 1400);
 addScore(SCORING.WORD_BONUS);
-setTimeout(()=>end(true), animDelay);
+setTimeout(()=>end(true), 450);
 return;
 }
 }
@@ -959,8 +949,9 @@ grid=Array.from({length:H},()=>Array(W).fill(null));
 drawGrid();
 cur=createBlock(); nxt=createBlock(); drawBlock(cur);
 paused=false; btnPause.textContent='POUSE';
-clearInterval(gInt);
-gInt=setInterval(()=>{ if(!paused && !ended) move(0,1); },1000);
+if(gameLoopId) cancelAnimationFrame(gameLoopId);
+lastDropTime = performance.now();
+gameLoopId = requestAnimationFrame(gameLoop);
 updateRowHint();
 }
 
@@ -997,49 +988,32 @@ case 'P':          e.preventDefault(); togglePause(); break;
 }
 });
 
-// ============ SHARE MANAGER (CONSOLIDATED) ============
-class ShareManager {
-constructor(){
-this.stickyPayload = null;
-this.currentDate = currentDate;
-}
-
-buildShareUrl(dateStr=this.currentDate){
-const url = new URL('/slimstiek.html', SITE_ORIGIN);
-url.searchParams.set('date', dateStr);
-return url.toString();
-}
-
-buildWinText(payload){
+// ============ SHARE MANAGER ============
+let stickyPayload = null;
+function buildWinShareText(payload){
 const sc = Number(payload?.score ?? score) || 0;
-return `Ek het ${sc} punte gekry met SLIMSTIEK op Kriptiek vandag: ${this.buildShareUrl()}`;
+return `Ek het ${sc} punte gekry met SLIMSTIEK op Kriptiek vandag: ${buildShareUrl(currentDate)}`;
 }
+function toggleShareMenu(){ shareMenu.classList.toggle('hidden'); }
+modalShareBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleShareMenu(); });
 
-buildLinkText(){
-return `Kyk of jy my telling op vandag se SLIMSTIEK kan klop: ${this.buildShareUrl()}`;
-}
+// Debounced menu close
+const closeMenus = debounce(() => {
+shareMenu.classList.add('hidden');
+document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>m.classList.add('hidden'));
+}, 50);
 
-getText(){
-return this.stickyPayload ? this.buildWinText(this.stickyPayload) : this.buildLinkText();
-}
+document.addEventListener('click', (e)=>{
+if(shareMenu && !shareMenu.contains(e.target) && e.target!==modalShareBtn)
+shareMenu.classList.add('hidden');
+document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>{
+if(!m.contains(e.target)) m.classList.add('hidden');
+});
+});
+window.addEventListener('scroll', closeMenus, { passive: true });
+window.addEventListener('resize', closeMenus, { passive: true });
 
-enableStickyShare(payload){
-this.stickyPayload = { target: TARGET, score: Number(payload?.score ?? score) };
-try{
-localStorage.setItem(shareKey(), JSON.stringify({ ...this.stickyPayload, at: Date.now() }));
-}catch{}
-}
-
-maybeEnableFromStorage(){
-try{
-const raw = localStorage.getItem(shareKey());
-if(!raw) return;
-const saved = JSON.parse(raw);
-if(saved && Number.isFinite(saved.score)){ this.stickyPayload = saved; }
-}catch{}
-}
-
-async trySystemShare(text){
+async function trySystemShare(text){
 try{
 const res = await fetch(`${SITE_ORIGIN}/assets/S_SLIMSTIEK_12SEP.png`);
 const blob = await res.blob();
@@ -1057,103 +1031,69 @@ return true;
 }catch{}
 return false;
 }
-
-openWhatsApp(text){
+function openWhatsApp(text){
 const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
 const w = window.open(url,'_blank','noopener,noreferrer');
 if(!w && navigator.clipboard){
 navigator.clipboard.writeText(text).then(()=>showToast("Skakel gekopieer!"));
 }
 }
-
-async copyToClipboard(text){
-try{
-await navigator.clipboard.writeText(text);
-showToast('Skakel gekopieer!');
-return true;
-}catch{
-showToast('Kon nie kopieer nie');
-return false;
-}
-}
-
-toggleMenu(menuEl, triggerEl){
-menuEl.classList.toggle('hidden');
-if(triggerEl){
-const expanded = triggerEl.getAttribute('aria-expanded') === 'true';
-triggerEl.setAttribute('aria-expanded', String(!expanded));
-}
-}
-
-closeAllMenus(){
-document.querySelectorAll('.share-menu-local').forEach(m=>m.classList.add('hidden'));
-document.querySelectorAll('[aria-haspopup="true"]').forEach(btn=>btn.setAttribute('aria-expanded','false'));
-}
-}
-
-const shareMgr = new ShareManager();
-
-// Wire modal share buttons
-modalShareBtn.addEventListener('click', (e)=>{ e.stopPropagation(); shareMgr.toggleMenu(shareMenu, modalShareBtn); });
-document.addEventListener('click', (e)=>{
-if(shareMenu && !shareMenu.contains(e.target) && e.target!==modalShareBtn) shareMenu.classList.add('hidden');
-shareMgr.closeAllMenus();
-});
-window.addEventListener('scroll',  ()=> shareMgr.closeAllMenus());
-window.addEventListener('resize',  ()=> shareMgr.closeAllMenus());
-
-mWA.onclick   = () => { shareMgr.openWhatsApp(shareMgr.getText()); shareMgr.closeAllMenus(); };
-mCopy.onclick = async () => { await shareMgr.copyToClipboard(shareMgr.getText()); shareMgr.closeAllMenus(); };
-mSys.onclick  = async () => {
-const ok = await shareMgr.trySystemShare(shareMgr.getText());
-if(!ok) shareMgr.openWhatsApp(shareMgr.getText());
-shareMgr.closeAllMenus();
+const mShareText = () => buildWinShareText(stickyPayload || { score });
+mWA.onclick   = () => { openWhatsApp(mShareText()); shareMenu.classList.add('hidden'); };
+mCopy.onclick = async () => {
+try{ await navigator.clipboard.writeText(mShareText()); showToast('Skakel gekopieer!'); }catch{}
+shareMenu.classList.add('hidden');
 };
-
-// Wire action bar share tiles
+mSys.onclick  = async () => {
+const ok = await trySystemShare(mShareText());
+if(!ok) openWhatsApp(mShareText());
+shareMenu.classList.add('hidden');
+};
 function wireShareTile(wrapper){
 const btn  = wrapper.querySelector('.share-tile');
 const menu = wrapper.querySelector('.share-menu-local');
-if(!btn || !menu) return;
+const wa   = menu.querySelector('button.wa');
+const cp   = menu.querySelector('button.copy');
+const sys  = menu.querySelector('button.sys');
 btn.addEventListener('click', (e)=>{
 e.preventDefault(); e.stopPropagation();
-shareMgr.closeAllMenus();
-shareMgr.toggleMenu(menu, btn);
+document.querySelectorAll('#actionBars .share-menu-local').forEach(m=>{
+if(m!==menu) m.classList.add('hidden');
 });
-const wa = menu.querySelector('button.wa');
-const cp = menu.querySelector('button.copy');
-const sys = menu.querySelector('button.sys');
-wa?.addEventListener('click', () => { shareMgr.openWhatsApp(shareMgr.getText()); shareMgr.closeAllMenus(); });
-cp?.addEventListener('click', async () => { await shareMgr.copyToClipboard(shareMgr.getText()); shareMgr.closeAllMenus(); });
-sys?.addEventListener('click', async () => {
-const ok = await shareMgr.trySystemShare(shareMgr.getText());
-if(!ok) shareMgr.openWhatsApp(shareMgr.getText());
-shareMgr.closeAllMenus();
+menu.classList.toggle('hidden');
 });
+const txt = () => (stickyPayload ? buildWinShareText(stickyPayload) : shareTextLinkOnly());
+wa.onclick = () => { openWhatsApp(txt()); menu.classList.add('hidden'); };
+cp.onclick = async () => {
+try{ await navigator.clipboard.writeText(txt()); showToast('Skakel gekopieer!'); }catch{}
+menu.classList.add('hidden');
+};
+sys.onclick = async () => {
+const ok = await trySystemShare(txt());
+if(!ok) openWhatsApp(txt());
+menu.classList.add('hidden');
+};
 }
-
 function initTileShareDropdowns(){
 document.querySelectorAll('.share-tile-wrap').forEach(wireShareTile);
+}
+function enableStickyShare(payload){
+stickyPayload = { target: TARGET, score: Number(payload?.score ?? score) };
+try{
+localStorage.setItem(shareKey(), JSON.stringify({ ...stickyPayload, at: Date.now() }));
+}catch{}
+}
+function maybeEnableStickyShareFromStorage(){
+try{
+const raw = localStorage.getItem(shareKey());
+if(!raw) return;
+const saved = JSON.parse(raw);
+if(saved && Number.isFinite(saved.score)){ stickyPayload = saved; }
+}catch{}
 }
 
 // ============ LEADERBOARD & LOCALSTORAGE ============
 const LB_LOCAL_KEY = d => `slimstiekLocalLB:${d}`;
-
-// Cleanup old localStorage entries (>30 days)
-function cleanupOldLocalLB(){
-Object.keys(localStorage).forEach(key => {
-if (key.startsWith('slimstiekLocalLB:')) {
-const datePart = key.split(':')[1];
-const date = new Date(datePart);
-if(!isNaN(date.getTime())){
-const daysOld = (Date.now() - date.getTime()) / (1000*60*60*24);
-if (daysOld > 30) localStorage.removeItem(key);
-}
-}
-});
-}
-cleanupOldLocalLB();
-
 function getLocalLB(date){
 try{ return JSON.parse(localStorage.getItem(LB_LOCAL_KEY(date))) || []; }
 catch{ return []; }
@@ -1162,10 +1102,9 @@ function setLocalLB(date, arr){
 try{ localStorage.setItem(LB_LOCAL_KEY(date), JSON.stringify(arr)); }catch{}
 }
 
-// Leaderboard merge logic
+// Leaderboard (live + legacy merge)
 let unsubLive = null, unsubLegacy = null;
 let liveRows = [], legacyRows = [];
-
 function rowsToMap(rows){
 const m = new Map();
 rows.forEach(r=>{
@@ -1173,15 +1112,18 @@ const id = r.uid || r.userId || r.userID || r._id || r.id;
 if(!id) return;
 const prev = m.get(id) || { id };
 const score = Number(r.score||0);
-const ts = r.ts?.toMillis?.() ? r.ts.toMillis() : (r.ts?.seconds ? r.ts.seconds*1000 : 9e15);
+const ts = r.ts?.toMillis?.()
+? r.ts.toMillis()
+: (r.ts?.seconds ? r.ts.seconds*1000 : 9e15);
 const userName = (r.userName || prev.userName || 'Onbekend').toString().slice(0,24);
-const better = (!prev.score) || (score > (prev.score||0)) || (score === (prev.score||0) && ts < (prev.ts||9e15));
+const better = (!prev.score) ||
+(score > (prev.score||0)) ||
+(score === (prev.score||0) && ts < (prev.ts||9e15));
 const merged = better ? { id, score, ts, userName } : prev;
 m.set(id, merged);
 });
 return m;
 }
-
 async function renderMerged(){
 const map = rowsToMap([...liveRows, ...legacyRows]);
 const combined = Array.from(map.values())
@@ -1189,16 +1131,20 @@ const combined = Array.from(map.values())
 .slice(0, 100);
 lbList.innerHTML = '';
 if (!combined.length){
-const local = getLocalLB(currentDate).sort((a,b)=> (b.score|0)-(a.score|0)).slice(0,10);
+const local = getLocalLB(currentDate)
+.sort((a,b)=> (b.score|0)-(a.score|0))
+.slice(0,10);
 if (!local.length){
 bestText.textContent='—';
-lbList.innerHTML = `<li class="bg-green-100 font-medium">Wees eerste op die leierbord!</li>`;
+lbList.innerHTML =
+`<li class="bg-green-100 font-medium">Wees eerste op die leierbord!</li>`;
 return;
 }
 bestText.textContent = String(local[0].score);
 local.forEach(row=>{
 const li=document.createElement('li');
-li.innerHTML = `<span class="flex-1"><strong>${row.userName||'Speler'}</strong>: ${row.score|0} punte</span>`;
+li.innerHTML =
+`<span class="flex-1"><strong>${row.userName||'Speler'}</strong>: ${row.score|0} punte</span>`;
 lbList.appendChild(li);
 });
 return;
@@ -1209,28 +1155,38 @@ const topUids = combined.slice(0,10).map(v => v.id);
 await hydrateSupporterActives(topUids);
 }catch{}
 combined.slice(0,10).forEach(v=>{
-const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
+const you = user && v.id === user.uid
+? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>'
+: '';
 const isSupp = supporterCache.get(v.id) === true;
 const star = renderSupporterStar(isSupp);
 const li  = document.createElement('li');
-const left = `<span class="flex-1"><strong>${(v.userName||'Onbekend')}</strong>${star}${you}</span>`;
-const metric = `<span class="metric-right">${Number(v.score??0)} punte</span>`;
+const left =
+`<span class="flex-1"><strong>${(v.userName||'Onbekend')}</strong>${star}${you}</span>`;
+const metric =
+`<span class="metric-right">${Number(v.score??0)} punte</span>`;
 li.innerHTML = left + metric;
 lbList.appendChild(li);
 });
 }
-
 function subscribeMergedLeaderboard(){
 try{ if(typeof unsubLive==='function') unsubLive(); }catch{}
 try{ if(typeof unsubLegacy==='function') unsubLegacy(); }catch{}
 liveRows = []; legacyRows = [];
-if (!db){ renderMerged(); return; }
+if (!db){
+renderMerged();
+return;
+}
 const colLive = collection(db, 'slimstiekGames', `Game${currentDate}`, 'leaderboard');
 const qLive   = query(colLive, orderBy('score','desc'), orderBy('ts','asc'), limit(200));
 unsubLive = onSnapshot(qLive, (snap)=>{
 liveRows = snap.docs.map(d => ({ id:d.id, ...d.data() }));
 renderMerged();
-}, (err)=>{ console.error('LIVE LB stream failed:', err); liveRows = []; renderMerged(); });
+}, (err)=>{
+console.error('LIVE LB stream failed:', err);
+liveRows = [];
+renderMerged();
+});
 const colLegacy = collection(db,'leaderboards','slimstiek','dates', currentDate, 'entries');
 const qLegacy   = query(colLegacy, orderBy('score','desc'), orderBy('ts','asc'), limit(200));
 unsubLegacy = onSnapshot(qLegacy, (snap)=>{
@@ -1245,17 +1201,23 @@ if (!uid) return null;
 return { id: d.id, uid, ...data };
 }).filter(Boolean);
 renderMerged();
-}, (err)=>{ console.error('LEGACY LB stream failed:', err); legacyRows = []; renderMerged(); });
+}, (err)=>{
+console.error('LEGACY LB stream failed:', err);
+legacyRows = [];
+renderMerged();
+});
 }
-
 async function submitToLB(scoreVal){
 const safeScore = Number.isFinite(scoreVal) ? (scoreVal|0) : 0;
 const safeName  = (currentUserName || 'Speler').toString().slice(0,24);
 const row = { userName: safeName, score: safeScore };
 const arr = getLocalLB(currentDate);
 const idx = arr.findIndex(r => (r.userName||'') === (row.userName||''));
-if (idx >= 0){ if (row.score > (arr[idx].score||0)) arr[idx] = row; }
-else { arr.push(row); }
+if (idx >= 0){
+if (row.score > (arr[idx].score||0)) arr[idx] = row;
+} else {
+arr.push(row);
+}
 setLocalLB(currentDate, arr);
 if(!db || !user) return;
 try{
@@ -1263,90 +1225,87 @@ const liveRef  = doc(db, 'slimstiekGames', GAME_ID, 'leaderboard', user.uid);
 const liveSnap = await getDoc(liveRef);
 const livePrev = liveSnap.exists() ? liveSnap.data() : null;
 const betterLive = !livePrev || (safeScore > (livePrev.score|0));
-const writeObj = betterLive ? { userName: safeName, score: safeScore, ts: STS() } : { userName: safeName };
+const writeObj = betterLive
+? { userName: safeName, score: safeScore, ts: STS() }
+: { userName: safeName };
 const cleaned = cleanForFS(writeObj);
-logFSWrite(liveRef, cleaned, "submitToLB");
 await setDoc(liveRef, cleaned, { merge:true });
 } catch (e){
 console.error('FS LB write FAILED (live):', e);
 showToast('Kon nie jou telling na die leierbord skryf nie.');
 }
 }
-
-// ============ MODAL FOCUS MANAGEMENT ============
-let lastFocusedElement = null;
-
-function trapFocus(modalEl){
-lastFocusedElement = document.activeElement;
-const focusable = modalEl.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-if(focusable.length) focusable[0].focus();
-modalEl.addEventListener('keydown', function(e){
-if(e.key === 'Tab'){
-const first = focusable[0], last = focusable[focusable.length-1];
-if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
-else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
-}
-if(e.key === 'Escape'){ modalEl.style.display='none'; if(lastFocusedElement) lastFocusedElement.focus(); }
-});
-}
-
-function closeModal(modalEl){
-modalEl.style.display='none';
-if(lastFocusedElement) lastFocusedElement.focus();
-}
-
-modalCloseBtn.onclick = ()=> closeModal(over);
-
-// ============ GAME END & SHARE ============
 function end(win){
-clearInterval(gInt);
+if(gameLoopId) cancelAnimationFrame(gameLoopId);
 ended=true;
 if(!win) return;
 if(bestScore==null || score > bestScore) bestScore = score;
 submitToLB(score);
-shareMgr.enableStickyShare({ score });
-winMsg.innerHTML = `Veels geluk, <strong>${currentUserName}</strong>! Jy het <strong>${TARGET}</strong> voltooi vir <strong>${score}</strong> punte.`;
+enableStickyShare({ score });
+winMsg.innerHTML =
+`Veels geluk, <strong>${currentUserName}</strong>! Jy het <strong>${TARGET}</strong> voltooi vir <strong>${score}</strong> punte.`;
 over.style.display='flex';
-trapFocus(over);
+modalCloseBtn.onclick = ()=>{ over.style.display='none'; };
 if(!user) showNRGate();
 }
-
-// ============ TARGET WORD LOADING (WITH VALIDATION) ============
 async function resolveTargetWord(){
-const norm = (s) => (s || '').toString().toUpperCase().replace(/[^A-ZÁÂÄÈÉÊËÌÍÎÏÒÓÔÖÙÚÛÜŸ\-]/g,'').trim();
+const norm = (s) => (s || '')
+.toString()
+.toUpperCase()
+.replace(/[^A-ZÁÂÄÈÉÊËÌÍÎÏÒÓÔÖÙÚÛÜŸ\-]/g,'')
+.trim();
 const pickFromDoc = (d) => {
 if (!d || typeof d !== 'object') return '';
 const keys = Object.keys(d);
 const preferred = ['target','targetWord','word','solution','answer','slimstiek'];
 for (const want of preferred){
 const found = keys.find(k => k.toLowerCase() === want.toLowerCase());
-if (found && typeof d[found] === 'string') { const w = norm(d[found]); if (w) return w; }
+if (found && typeof d[found] === 'string') {
+const w = norm(d[found]);
+if (w) return w;
+}
 }
 for (const k of keys){
-if (typeof d[k] === 'string'){ const w = norm(d[k]); if (w && w.length >= 3 && w.length <= 12) return w; }
+if (typeof d[k] === 'string'){
+const w = norm(d[k]);
+if (w && w.length >= 3 && w.length <= 12) return w;
+}
 }
 return '';
 };
-if (!db) throw new Error('[Slimstiek] Firestore is not available (no db).');
+if (!db){
+throw new Error('[Slimstiek] Firestore is not available (no db).');
+}
 const gid = `Game${currentDate}`;
 try{
 const liveRef = doc(db, 'slimstiekGames', gid);
 const liveSnap = await getDoc(liveRef);
-if (liveSnap.exists()){ const d = liveSnap.data() || {}; const w = pickFromDoc(d); if (w) return w; }
+if (liveSnap.exists()){
+const d = liveSnap.data() || {};
+const w = pickFromDoc(d);
+if (w) return w;
+}
 }catch(e){ console.warn('slimstiekGames fetch failed:', e); }
 try{
 const dwRef = doc(db, 'daily_words', currentDate);
 const dwSnap = await getDoc(dwRef);
-if (dwSnap.exists()){ const d = dwSnap.data() || {}; const w = pickFromDoc(d); if (w) return w; }
+if (dwSnap.exists()){
+const d = dwSnap.data() || {};
+const w = pickFromDoc(d);
+if (w) return w;
+}
 }catch(e){ console.warn('daily_words fetch failed:', e); }
 try{
 const gRef = doc(db, 'games', gid);
 const gSnap = await getDoc(gRef);
-if (gSnap.exists()){ const d = gSnap.data() || {}; const w = pickFromDoc(d); if (w) return w; }
+if (gSnap.exists()){
+const d = gSnap.data() || {};
+const w = pickFromDoc(d);
+if (w) return w;
+}
 }catch(e){ console.warn('games fetch failed:', e); }
 throw new Error(`Geen teikenwoord gevind vir ${currentDate}.`);
 }
-
 async function loadGame(){
 // Show loading state
 targetEl.innerHTML = '<div class="loading-spinner"></div>';
@@ -1354,7 +1313,7 @@ try {
 TARGET = await resolveTargetWord();
 // Validate target word
 if (!TARGET || TARGET.length < 3 || TARGET.length > 12 || /[^A-Z]/.test(TARGET)) {
-console.warn('Ongeldige teikenwoord – terugval na "SPEL"');
+console.warn('Invalid target word – fallback to "SPEL"');
 TARGET = 'SPEL';
 showToast('Teikenwoord ongeldig – gebruik terugvalwoord');
 }
@@ -1371,16 +1330,14 @@ targetEl.appendChild(s);
 });
 grid = Array.from({length:H},()=>Array(W).fill(null));
 drawGrid();
-shareMgr.maybeEnableFromStorage();
+maybeEnableStickyShareFromStorage();
 subscribeMergedLeaderboard();
 updateRowHint();
 }
-
-// ============ ADMIN BACKFILL (SECURITY NOTE) ============
 function pad(n){ return String(n).padStart(2,'0'); }
-function isoDay(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
-
-// NOTE: For production, move backfill logic to Cloud Functions for security
+function isoDay(d){
+return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
 async function backfillOne(dateStr){
 if(!db){ showToast('Geen Firestore in hierdie omgewing.'); return; }
 bfMsg.textContent = `Backfill ${dateStr}…`;
@@ -1401,13 +1358,16 @@ const liveScore = Number(liveRow.score||0);
 const legScore  = Number(legRow.score||0);
 const pickLive  = liveScore >= legScore;
 const base = pickLive ? liveRow : legRow;
-const userName = (base.userName || liveRow.userName || legRow.userName || 'Onbekend').toString().slice(0,24);
+const userName = (base.userName || liveRow.userName || legRow.userName || 'Onbekend')
+.toString().slice(0,24);
 const scoreVal = Number(base.score||0)|0;
 const tsVal    = base.ts || liveRow.ts || legRow.ts || serverTimestamp();
 const writeObj = { userName, score:scoreVal, ts:tsVal };
-try { await setDoc(doc(db,'slimstiekGames', `Game${dateStr}`, 'leaderboard', uid), writeObj, { merge:true }); }
-catch(e){ console.warn('live set fail', uid, e); }
-try { await setDoc(doc(db,'leaderboards','slimstiek','dates', dateStr, 'entries', uid), writeObj, { merge:true }); }
+try {
+await setDoc(doc(db,'slimstiekGames', `Game${dateStr}`, 'leaderboard', uid), writeObj, { merge:true });
+} catch(e){ console.warn('live set fail', uid, e); }
+try {
+await setDoc(doc(db,'leaderboards','slimstiek','dates', dateStr, 'entries', uid), writeObj, { merge:true }); }
 catch(e){ console.warn('legacy set fail', uid, e); }
 }
 bfMsg.textContent = `Klaar vir ${dateStr} ✔`;
@@ -1418,7 +1378,6 @@ bfMsg.textContent = `Backfill fout – kyk Console`;
 showToast('Backfill het misluk');
 }
 }
-
 function eachDayISO(fromISO, toISO){
 const out=[];
 const s = new Date(fromISO+'T00:00:00+02:00');
@@ -1426,7 +1385,6 @@ const e = new Date(toISO+'T00:00:00+02:00');
 for(let d=new Date(s); d<=e; d.setDate(d.getDate()+1)) out.push(isoDay(d));
 return out;
 }
-
 btnBFOne?.addEventListener('click', async ()=>{
 const d = dAdmin.value || currentDate;
 await backfillOne(d);
@@ -1445,49 +1403,10 @@ if (typeof unsubLive === 'function') unsubLive();
 if (typeof unsubLegacy === 'function') unsubLegacy();
 });
 
-// ============ ENHANCED ANALYTICS ============
-function trackGA4Event(name, params){
-if(typeof gtag === 'function'){
-gtag('event', name, params);
-}
-}
-
-// Override addScore to track events
-const originalAddScore = addScore;
-addScore = function(v){
-originalAddScore(v);
-trackGA4Event('slimstiek_score_update', { points_added: v, total_score: score });
-};
-
-// Track match events
-const originalMatchAndDrop = matchAndDrop;
-matchAndDrop = async function(){
-const beforeScore = score;
-await originalMatchAndDrop();
-if(score > beforeScore){
-trackGA4Event('slimstiek_match', { 
-points_earned: score - beforeScore, 
-multiplier: H - (cur?.y || H-1),
-letter: cur?.letter 
-});
-}
-};
-
-// Track word completion
-const originalCheckWin = checkWin;
-checkWin = async function(){
-const result = await originalCheckWin();
-if(ended && score > 0){
-trackGA4Event('slimstiek_word_complete', { target: TARGET, final_score: score });
-}
-return result;
-};
-
 // ============ INIT ============
 function init(){
 initTileShareDropdowns();
 loadGame();
-trackGA4Event('slimstiek_page_view', { game_id: GAME_ID, date: currentDate });
 }
 init();
 </script>
