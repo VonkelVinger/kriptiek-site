@@ -611,9 +611,8 @@
       const ch = raw[0];
       if (ch < "A" || ch > "Z") return;
 
-      addClicks(1); // guess costs 1
-      const ok = tryGuessLetter(k, ch);
-      if (!ok) addClicks(3); // wrong guess penalty
+     const ok = tryGuessLetter(k, ch);
+if (!ok) addClicks(3); // only penalty on wrong
 
       actionPanel.classList.remove("hidden");
       guessPanel.classList.add("hidden");
