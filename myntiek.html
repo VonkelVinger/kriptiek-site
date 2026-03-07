@@ -67,7 +67,7 @@
     .cell{
       position:relative;
       padding:0;
-      overflow:hidden;           /* FIX: keep HUD inside tile */
+      overflow:hidden;
       border-radius:14px;
       border:1px solid var(--line);
       background:linear-gradient(180deg, rgba(18,61,99,.92), rgba(15,53,87,.92));
@@ -102,7 +102,7 @@
 
     /* 3x3 mini HUD inside letter tiles */
     .hud{
-      position:absolute; inset:4px;   /* tighter inset */
+      position:absolute; inset:4px;
       display:grid;
       grid-template-columns: 1fr 1fr 1fr;
       grid-template-rows: 1fr 1fr 1fr;
@@ -112,13 +112,12 @@
     .hud .mid{
       display:flex; align-items:center; justify-content:center;
       font-size:20px; font-weight:900; color:var(--text);
-        line-height: 1;
+      line-height:1;
     }
     .hud .n{
       display:flex; align-items:center; justify-content:center;
       font-size:11px; font-weight:800; color:rgba(234,242,255,.80);
-        line-height: 1;
-
+      line-height:1;
     }
     .hud .n.zero{color:rgba(234,242,255,.40)}
     .hud .n.dash{color:rgba(234,242,255,.25)}
@@ -181,11 +180,12 @@
     <div class="topbar">
       <div class="brand">
         <h1>Prototype: Mine + Woorde</h1>
-        <p>10×8 grid • Buoy = 0 (visual) • Flood reveals EMPTY only • Letters show 3×3 compass counts</p>
+        <p>Win = all words found • Buoy = 0 (visual) • Flood reveals EMPTY only • Letters show 3×3 compass counts</p>
       </div>
       <div class="stats">
         <div class="pill">⏱ <b id="timer">0.0</b>s</div>
         <div class="pill">🖱 Clicks <b id="clicks">0</b></div>
+        <div class="pill">🧩 Words <b id="words">0/0</b></div>
         <div class="pill">💣 Bombs <b id="bombCount">4</b></div>
         <button class="btn" id="resetBtn">Reset</button>
       </div>
@@ -196,8 +196,8 @@
     </div>
 
     <div class="note">
-      Click a covered tile → choose <b>Reveal</b> (+1 click), <b>Flag</b> (free), or <b>Guess letter</b> (+1, wrong = +3).
-      Flood from Buoy/0 reveals <b>EMPTY</b> tiles only (letters never auto-reveal).
+      Click a covered tile → <b>Reveal</b> (+1 click), <b>Flag</b> (free), or <b>Guess letter</b> (correct = free, wrong = +3).
+      Flood from Buoy/0 reveals <b>EMPTY</b> tiles only. Win triggers when <b>all detected words</b> are fully revealed.
     </div>
   </div>
 
@@ -221,7 +221,7 @@
 
       <div id="guessPanel" class="hidden">
         <p style="margin:10px 0 8px 0; font-size:12px; color:var(--muted);">
-          Guess a single letter for this tile. Correct = tile reveals. Wrong = +3 clicks.
+          Guess a single letter for this tile. Correct = tile reveals (free). Wrong = +3 clicks.
         </p>
         <input class="in" id="guessInput" placeholder="Type one letter (A–Z)" maxlength="1" />
         <div class="kbdRow">
@@ -318,7 +318,89 @@
     const timerEl = document.getElementById("timer");
     const clicksEl = document.getElementById("clicks");
     const bombCountEl = document.getElementById("bombCount");
+    const wordsEl = document.getElementById("words");
+
     bombCountEl.textContent = String(bombs.size);
+
+    // ----------------------------
+    // Word detection + progress
+    // Words = contiguous letter runs (H/V) of length >= 2
+    // Found = all tiles in that run revealed
+    // ----------------------------
+    let WORDS = []; // array of arrays of keys, built once on boot
+
+    function buildWordList(minLen = 2){
+      const out = [];
+      const usedV = new Set();
+
+      // Horizontal runs (no need for "usedH" because start-of-run test prevents dupes)
+      for (let r=0;r<ROWS.length;r++){
+        let c=0;
+        while (c<COLS.length){
+          const k0 = key(r,c);
+
+          if (getCellType(k0) !== "LETTER"){ c++; continue; }
+
+          // start of run if left is not letter
+          const leftK = (c-1>=0) ? key(r,c-1) : null;
+          if (leftK && getCellType(leftK)==="LETTER"){ c++; continue; }
+
+          const run = [];
+          let cc=c;
+          while (cc<COLS.length && getCellType(key(r,cc))==="LETTER"){
+            run.push(key(r,cc));
+            cc++;
+          }
+          if (run.length >= minLen) out.push(run);
+          c = cc;
+        }
+      }
+
+      // Vertical runs
+      for (let c=0;c<COLS.length;c++){
+        let r=0;
+        while (r<ROWS.length){
+          const k0 = key(r,c);
+
+          if (getCellType(k0) !== "LETTER" || usedV.has(k0)){ r++; continue; }
+
+          // start of run if up is not letter
+          const upK = (r-1>=0) ? key(r-1,c) : null;
+          if (upK && getCellType(upK)==="LETTER"){ r++; continue; }
+
+          const run = [];
+          let rr=r;
+          while (rr<ROWS.length && getCellType(key(rr,c))==="LETTER"){
+            const kk = key(rr,c);
+            run.push(kk);
+            usedV.add(kk);
+            rr++;
+          }
+          if (run.length >= minLen) out.push(run);
+          r = rr;
+        }
+      }
+
+      return out;
+    }
+
+    function countFoundWords(){
+      let found = 0;
+      for (const run of WORDS){
+        let all = true;
+        for (const k of run){
+          if (!state.revealed.has(k)){ all=false; break; }
+        }
+        if (all) found++;
+      }
+      return found;
+    }
+
+    function updateWordUI(){
+      const found = countFoundWords();
+      wordsEl.textContent = `${found}/${WORDS.length}`;
+      return {found, total: WORDS.length};
+    }
 
     // ----------------------------
     // Grid rendering
@@ -496,6 +578,19 @@
     }
 
     // ----------------------------
+    // Win check (words)
+    // ----------------------------
+    function checkWinByWords(){
+      if (state.gameOver) return;
+      const {found, total} = updateWordUI();
+      if (total > 0 && found === total){
+        state.gameOver = true;
+        stopTimer();
+        modalHint.textContent = `🏁 All words found! Clicks: ${state.clicks}`;
+      }
+    }
+
+    // ----------------------------
     // Reveal + flood (Option A)
     // Flood reveals EMPTY tiles only; letters never auto-reveal.
     // ----------------------------
@@ -521,11 +616,13 @@
         const n = adjacentBombCount(k);
         renderCell(k);
         if (n === 0) floodFromZero(k);
+        checkWinByWords();
         return;
       }
 
       // LETTER
       renderCell(k);
+      checkWinByWords();
     }
 
     function floodFromZero(startKey){
@@ -543,7 +640,7 @@
           if (seen.has(nk)) continue;
           seen.add(nk);
 
-          if (getCellType(nk) !== "EMPTY") continue; // Option A: only EMPTY
+          if (getCellType(nk) !== "EMPTY") continue;
 
           if (!state.revealed.has(nk) && !state.flagged.has(nk)){
             state.revealed.add(nk);
@@ -611,8 +708,8 @@
       const ch = raw[0];
       if (ch < "A" || ch > "Z") return;
 
-     const ok = tryGuessLetter(k, ch);
-if (!ok) addClicks(3); // only penalty on wrong
+      const ok = tryGuessLetter(k, ch);
+      if (!ok) addClicks(3);
 
       actionPanel.classList.remove("hidden");
       guessPanel.classList.add("hidden");
@@ -620,6 +717,8 @@ if (!ok) addClicks(3); // only penalty on wrong
 
       modalHint.textContent = ok ? "✅ Correct letter." : "❌ Wrong letter (+3 clicks).";
       setTimeout(() => { modalHint.textContent = ""; }, 1200);
+
+      checkWinByWords();
     });
 
     function openModal(k){
@@ -676,8 +775,6 @@ if (!ok) addClicks(3); // only penalty on wrong
       startTimerIfNeeded();
 
       const t = getCellType(k);
-
-      // Never reveal on guesses unless correct letter tile
       if (t !== "LETTER") return false;
 
       const truth = letters.get(k);
@@ -705,15 +802,16 @@ if (!ok) addClicks(3); // only penalty on wrong
       clicksEl.textContent = "0";
       closeModal();
       renderAll();
+      updateWordUI();
     }
 
     // Boot
     buildGrid();
+    WORDS = buildWordList(2);
+    updateWordUI();
   </script>
 </body>
 </html>
-
-
 
 
     
