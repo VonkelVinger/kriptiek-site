@@ -197,7 +197,7 @@
     <div class="topbar">
       <div class="brand">
         <h1>Prototype: Mine + Woorde</h1>
-        <p>Hybrid: win on words • bonus badges for bombs + full clear • score = clicks</p>
+        <p>Hybrid: win on words • end-caps reveal status • bonus badges • score = clicks</p>
       </div>
       <div class="stats">
         <div class="pill">🖱 Clicks <b id="clicks">0</b></div>
@@ -226,8 +226,11 @@
         <b>Bombs:</b> If you Reveal a bomb 💣 you lose immediately (prototype behaviour). Flags are just markers.<br/>
         <b>Buoy/0:</b> Empty tiles show adjacent bomb count (0–8). A 0 (🛟) floods and reveals connected EMPTY tiles only.<br/>
         <b>Letters:</b> When revealed, each letter shows a 3×3 “compass”: remaining contiguous letters Up/Down/Left/Right.<br/>
+        <b>New rule:</b> When a word is completed, the tile(s) immediately <b>before/after</b> the word (end-caps) are auto-revealed as <b>status</b> (Option B):<br/>
+        • If an end-cap is a bomb, it shows 💣 but does <b>not</b> kill you (it’s reward intel).<br/>
+        • If an end-cap is empty, it reveals its number/buoy (and can flood EMPTY-only if it’s 0).<br/>
         <b>Hybrid bonuses (not required to win):</b><br/>
-        • <b>Clean bombs</b> = all bombs flagged correctly (⚑ on each bomb, and no extra wrong flags).<br/>
+        • <b>Clean bombs</b> = all bombs flagged correctly (⚑ on each bomb, no wrong flags).<br/>
         • <b>Full clear</b> = all non-bomb tiles revealed (letters + empties).<br/>
       </div>
     </details>
@@ -298,6 +301,7 @@
 
       ["J2","D"],["J3","A"],["J4","R"],["J5","T"],["J6","E"],["J7","L"],
     ]);
+
     const NEI8 = [
       [-1,-1],[-1,0],[-1,1],
       [ 0,-1],       [ 0,1],
@@ -339,6 +343,9 @@
       clicks: 0,
       won: false,
     };
+
+    // Track completed words so end-caps only trigger once per word
+    const completedWordIdx = new Set();
 
     // UI refs
     const gridEl = document.getElementById("grid");
@@ -440,7 +447,6 @@
       });
 
       bombFlagsEl.textContent = `${correct}/${total}`;
-
       const cleanBombs = (correct === total) && (wrong === 0);
       return { correct, wrong, total, cleanBombs };
     }
@@ -616,7 +622,7 @@
       };
     }
     // ----------------------------
-    // Gameplay: clicks + reveal + flood + hybrid win
+    // Gameplay: clicks + reveal + flood + end-cap status + hybrid win
     // ----------------------------
     function addClicks(n){
       state.clicks += n;
@@ -648,6 +654,93 @@
       }
     }
 
+    function isWordComplete(run){
+      for (const k of run){
+        if (!state.revealed.has(k)) return false;
+      }
+      return true;
+    }
+
+    function processNewCompletedWords(){
+      if (state.gameOver) return;
+
+      let revealedAnyEndcaps = false;
+
+      for (let i=0;i<WORDS.length;i++){
+        if (completedWordIdx.has(i)) continue;
+        const run = WORDS[i];
+        if (!isWordComplete(run)) continue;
+
+        completedWordIdx.add(i);
+
+        // Reveal end-caps (status reveal: bombs shown but non-fatal)
+        const caps = getEndCapsForRun(run);
+        for (const capKey of caps){
+          if (!capKey) continue;
+          // Don't auto-reveal letters as end-caps (keeps word-hunt meaningful)
+          if (getCellType(capKey) === "LETTER") continue;
+
+          const did = revealStatus(capKey);
+          if (did) revealedAnyEndcaps = true;
+        }
+      }
+
+      if (revealedAnyEndcaps){
+        refreshTopStats();
+      }
+    }
+
+    // Determine orientation + end-caps for a word run
+    function getEndCapsForRun(run){
+      if (!run || run.length < 2) return [];
+
+      const pts = run.map(parseKey);
+      const sameRow = pts.every(p => p.r === pts[0].r);
+      const sameCol = pts.every(p => p.c === pts[0].c);
+
+      if (sameRow){
+        const r = pts[0].r;
+        const minC = Math.min(...pts.map(p => p.c));
+        const maxC = Math.max(...pts.map(p => p.c));
+        const leftCap  = (minC-1 >= 0) ? key(r, minC-1) : null;
+        const rightCap = (maxC+1 < COLS.length) ? key(r, maxC+1) : null;
+        return [leftCap, rightCap];
+      }
+
+      if (sameCol){
+        const c = pts[0].c;
+        const minR = Math.min(...pts.map(p => p.r));
+        const maxR = Math.max(...pts.map(p => p.r));
+        const upCap   = (minR-1 >= 0) ? key(minR-1, c) : null;
+        const downCap = (maxR+1 < ROWS.length) ? key(maxR+1, c) : null;
+        return [upCap, downCap];
+      }
+
+      // Shouldn't happen with our generator, but safe fallback
+      return [];
+    }
+
+    // Option B "status reveal":
+    // - Reveals EMPTY normally (including flood if 0)
+    // - Reveals BOMB as 💣 but does NOT end the game
+    // - Does nothing for LETTER (caller filters letters out)
+    // Returns true if it newly revealed something.
+    function revealStatus(k){
+      if (!k) return false;
+      if (state.revealed.has(k)) return false;
+
+      const t = getCellType(k);
+
+      state.revealed.add(k);
+      renderCell(k);
+
+      if (t === "EMPTY"){
+        const n = adjacentBombCount(k);
+        if (n === 0) floodFromZero(k);
+      }
+      return true;
+    }
+
     function reveal(k){
       if (state.gameOver) return;
       if (state.revealed.has(k)) return;
@@ -670,7 +763,9 @@
         const n = adjacentBombCount(k);
         renderCell(k);
         if (n === 0) floodFromZero(k);
+
         refreshTopStats();
+        processNewCompletedWords();
         checkPrimaryWin();
         return;
       }
@@ -678,6 +773,7 @@
       // LETTER
       renderCell(k);
       refreshTopStats();
+      processNewCompletedWords();
       checkPrimaryWin();
     }
 
@@ -776,6 +872,7 @@
       closeModal();
 
       refreshTopStats();
+      processNewCompletedWords();
       checkPrimaryWin();
     });
 
@@ -851,11 +948,13 @@
       state.won = false;
       state.lastClickKey = null;
       state.clicks = 0;
+      completedWordIdx.clear();
+
       renderAll();
       refreshTopStats();
       setStatus(
         `Click a covered tile → <b>Reveal</b> (+1 click), <b>Flag</b> (free), or <b>Guess letter</b> (correct = free, wrong = +3). ` +
-        `Buoy 🛟 = 0. Flood reveals <b>EMPTY</b> tiles only (letters never auto-reveal).`
+        `Buoy 🛟 = 0. Flood reveals <b>EMPTY</b> tiles only. Completing a word reveals its end-caps as <b>status</b>.`
       );
       closeModal();
     }
@@ -866,7 +965,7 @@
     refreshTopStats();
     setStatus(
       `Click a covered tile → <b>Reveal</b> (+1 click), <b>Flag</b> (free), or <b>Guess letter</b> (correct = free, wrong = +3). ` +
-      `Buoy 🛟 = 0. Flood reveals <b>EMPTY</b> tiles only (letters never auto-reveal).`
+      `Buoy 🛟 = 0. Flood reveals <b>EMPTY</b> tiles only. Completing a word reveals its end-caps as <b>status</b>.`
     );
   </script>
 </body>
