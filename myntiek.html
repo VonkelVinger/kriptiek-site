@@ -38,6 +38,7 @@
     }
     .btn:hover{background:rgba(255,255,255,.12)}
     .gridWrap{margin-top:14px; display:flex; justify-content:center;}
+
     /* Grid with headers: 11 rows (header + 10) x 9 cols (row header + 8) */
     .grid{
       display:grid;
@@ -51,6 +52,8 @@
       box-shadow: 0 14px 40px rgba(0,0,0,.25);
       overflow:auto;
       max-width:100%;
+      position:relative;
+      z-index:1;
     }
     .hdr{
       display:flex; align-items:center; justify-content:center;
@@ -60,8 +63,11 @@
       border-radius:10px;
       user-select:none;
     }
+
     .cell{
       position:relative;
+      padding:0;
+      overflow:hidden;           /* FIX: keep HUD inside tile */
       border-radius:14px;
       border:1px solid var(--line);
       background:linear-gradient(180deg, rgba(18,61,99,.92), rgba(15,53,87,.92));
@@ -72,6 +78,8 @@
       font-weight:800;
       color:var(--text);
       letter-spacing:.5px;
+      z-index:2;
+      pointer-events:auto;
     }
     .cell.covered{
       background:linear-gradient(180deg, rgba(18,61,99,.60), rgba(15,53,87,.60));
@@ -91,9 +99,10 @@
       color:var(--accent);
       text-shadow:0 6px 16px rgba(0,0,0,.35);
     }
+
     /* 3x3 mini HUD inside letter tiles */
     .hud{
-      position:absolute; inset:8px;
+      position:absolute; inset:6px;   /* tighter inset */
       display:grid;
       grid-template-columns: 1fr 1fr 1fr;
       grid-template-rows: 1fr 1fr 1fr;
@@ -110,13 +119,18 @@
     }
     .hud .n.zero{color:rgba(234,242,255,.40)}
     .hud .n.dash{color:rgba(234,242,255,.25)}
+
     .note{margin-top:10px; color:var(--muted); font-size:12px; line-height:1.45;}
+
     /* Modal */
     .backdrop{
       position:fixed; inset:0; background:rgba(0,0,0,.55);
       display:none; align-items:center; justify-content:center;
       padding:18px; z-index:50;
+      pointer-events:none;
     }
+    .backdrop[style*="display: flex"]{pointer-events:auto;}
+
     .modal{
       width:min(420px, 96vw);
       background:rgba(11,42,68,.95);
@@ -154,6 +168,7 @@
       padding:10px 12px;
       font-size:14px;
       outline:none;
+      text-transform:uppercase;
     }
     .hidden{display:none !important;}
   </style>
@@ -163,10 +178,11 @@
     <div class="topbar">
       <div class="brand">
         <h1>Prototype: Mine + Woorde</h1>
-        <p>10×8 grid • Buoy = 0 (visual) • Flood reveals EMPTY only • Letters reveal 3×3 compass counts</p>
+        <p>10×8 grid • Buoy = 0 (visual) • Flood reveals EMPTY only • Letters show 3×3 compass counts</p>
       </div>
       <div class="stats">
         <div class="pill">⏱ <b id="timer">0.0</b>s</div>
+        <div class="pill">🖱 Clicks <b id="clicks">0</b></div>
         <div class="pill">💣 Bombs <b id="bombCount">4</b></div>
         <button class="btn" id="resetBtn">Reset</button>
       </div>
@@ -177,8 +193,8 @@
     </div>
 
     <div class="note">
-      Click a covered tile → choose <b>Reveal</b> or <b>Flag</b> or <b>Guess word</b> (stub).
-      Right now, “Guess word” is wired as a simple modal input (we’ll refine rewards later).
+      Click a covered tile → choose <b>Reveal</b> (+1 click), <b>Flag</b> (free), or <b>Guess letter</b> (+1, wrong = +3).
+      Flood from Buoy/0 reveals <b>EMPTY</b> tiles only (letters never auto-reveal).
     </div>
   </div>
 
@@ -190,21 +206,21 @@
 
       <div class="actions" id="actionPanel">
         <button class="actionBtn" id="doReveal">
-          <span>Reveal</span><small>Open tile</small>
+          <span>Reveal</span><small>Open tile (+1)</small>
         </button>
         <button class="actionBtn" id="doFlag">
-          <span>Flag / Unflag</span><small>Mark as bomb</small>
+          <span>Flag / Unflag</span><small>Free</small>
         </button>
         <button class="actionBtn" id="doGuess">
-          <span>Guess a word</span><small>Type a full word</small>
+          <span>Guess letter</span><small>Type one letter</small>
         </button>
       </div>
 
       <div id="guessPanel" class="hidden">
         <p style="margin:10px 0 8px 0; font-size:12px; color:var(--muted);">
-          Prototype input (we’ll later bind to the word IDs). For now, a correct guess can reveal connected letters in that row/col.
+          Guess a single letter for this tile. Correct = tile reveals. Wrong = +3 clicks.
         </p>
-        <input class="in" id="guessInput" placeholder="Type word (e.g. PERFEK)"/>
+        <input class="in" id="guessInput" placeholder="Type one letter (A–Z)" maxlength="1" />
         <div class="kbdRow">
           <button class="btn" id="guessSubmit">Submit</button>
           <button class="btn" id="guessCancel">Cancel</button>
@@ -225,8 +241,6 @@
     const ROWS = ["A","B","C","D","E","F","G","H","I","J"];
     const COLS = [1,2,3,4,5,6,7,8];
 
-    // Types: "BOMB" | "LETTER" | "EMPTY"
-    // We treat all non-bomb non-letter cells as EMPTY; numbers computed at runtime.
     const bombs = new Set(["A1","A8","H1","I7"]);
 
     const letters = new Map([
@@ -251,8 +265,20 @@
       ["J2","D"],["J3","A"],["J4","R"],["J5","T"],["J6","E"],["J7","L"],
     ]);
 
+    const NEI8 = [
+      [-1,-1],[-1,0],[-1,1],
+      [ 0,-1],       [ 0,1],
+      [ 1,-1],[ 1,0],[ 1,1],
+    ];
+
     function key(rIdx, cIdx){ return ROWS[rIdx] + COLS[cIdx]; }
     function inBounds(r,c){ return r>=0 && r<ROWS.length && c>=0 && c<COLS.length; }
+
+    function parseKey(k){
+      const row = k[0];
+      const col = Number(k.slice(1));
+      return { r: ROWS.indexOf(row), c: COLS.indexOf(col) };
+    }
 
     function getCellType(k){
       if (bombs.has(k)) return "BOMB";
@@ -260,34 +286,48 @@
       return "EMPTY";
     }
 
+    function adjacentBombCount(k){
+      const {r,c} = parseKey(k);
+      let n = 0;
+      for (const [dr,dc] of NEI8){
+        const rr=r+dr, cc=c+dc;
+        if (!inBounds(rr,cc)) continue;
+        if (bombs.has(key(rr,cc))) n++;
+      }
+      return n;
+    }
+
     // Player-visible state
     const state = {
-      revealed: new Set(),   // keys
-      flagged: new Set(),    // keys
+      revealed: new Set(),
+      flagged: new Set(),
       gameOver: false,
       startedAt: null,
       timerId: null,
       lastClickKey: null,
+      clicks: 0,
     };
 
     // ----------------------------
-    // Rendering
+    // UI refs
     // ----------------------------
     const gridEl = document.getElementById("grid");
     const timerEl = document.getElementById("timer");
+    const clicksEl = document.getElementById("clicks");
     const bombCountEl = document.getElementById("bombCount");
     bombCountEl.textContent = String(bombs.size);
 
+    // ----------------------------
+    // Grid rendering
+    // ----------------------------
     function buildGrid(){
       gridEl.innerHTML = "";
 
-      // Top-left corner
       const corner = document.createElement("div");
       corner.className = "hdr";
       corner.textContent = "";
       gridEl.appendChild(corner);
 
-      // Column headers
       for (let c=0;c<COLS.length;c++){
         const h = document.createElement("div");
         h.className = "hdr";
@@ -295,7 +335,6 @@
         gridEl.appendChild(h);
       }
 
-      // Rows with row header + 8 cells
       for (let r=0;r<ROWS.length;r++){
         const rh = document.createElement("div");
         rh.className = "hdr";
@@ -333,7 +372,7 @@
       btn.classList.toggle("covered", !isRevealed);
       btn.classList.toggle("bombed", isRevealed && t==="BOMB");
 
-      btn.innerHTML = ""; // rebuild content each time
+      btn.innerHTML = "";
 
       if (!isRevealed){
         if (isFlagged){
@@ -345,7 +384,6 @@
         return;
       }
 
-      // Revealed rendering
       if (t === "BOMB"){
         btn.textContent = "💣";
         return;
@@ -364,7 +402,6 @@
       const hud = document.createElement("div");
       hud.className = "hud";
 
-      // Corners are blank placeholders for now
       const tl = document.createElement("div"); tl.className="n"; tl.textContent="";
       const tr = document.createElement("div"); tr.className="n"; tr.textContent="";
       const bl = document.createElement("div"); bl.className="n"; bl.textContent="";
@@ -385,18 +422,9 @@
       setDirCell(left, counts.left);
       setDirCell(right, counts.right);
 
-      // Assemble 3×3 grid
-      hud.appendChild(tl);
-      hud.appendChild(up);
-      hud.appendChild(tr);
-
-      hud.appendChild(left);
-      hud.appendChild(mid);
-      hud.appendChild(right);
-
-      hud.appendChild(bl);
-      hud.appendChild(down);
-      hud.appendChild(br);
+      hud.appendChild(tl);   hud.appendChild(up);   hud.appendChild(tr);
+      hud.appendChild(left); hud.appendChild(mid);  hud.appendChild(right);
+      hud.appendChild(bl);   hud.appendChild(down); hud.appendChild(br);
 
       btn.appendChild(hud);
     }
@@ -414,9 +442,41 @@
       }
       el.textContent = String(v);
     }
+
+    // Contiguous-letter counts in row/col. If isolated in that axis => show "–".
+    function directionalCounts(k){
+      const {r,c} = parseKey(k);
+
+      function isLetter(rr,cc){
+        if (!inBounds(rr,cc)) return false;
+        return getCellType(key(rr,cc)) === "LETTER";
+      }
+
+      let left = 0, right = 0;
+      for (let cc=c-1; cc>=0; cc--){ if (!isLetter(r,cc)) break; left++; }
+      for (let cc=c+1; cc<COLS.length; cc++){ if (!isLetter(r,cc)) break; right++; }
+      const hasH = (left + right) > 0;
+
+      let up = 0, down = 0;
+      for (let rr=r-1; rr>=0; rr--){ if (!isLetter(rr,c)) break; up++; }
+      for (let rr=r+1; rr<ROWS.length; rr++){ if (!isLetter(rr,c)) break; down++; }
+      const hasV = (up + down) > 0;
+
+      return {
+        left: hasH ? left : null,
+        right: hasH ? right : null,
+        up: hasV ? up : null,
+        down: hasV ? down : null
+      };
+    }
     // ----------------------------
-    // Timer
+    // Clicks + Timer
     // ----------------------------
+    function addClicks(n){
+      state.clicks += n;
+      clicksEl.textContent = String(state.clicks);
+    }
+
     function startTimerIfNeeded(){
       if (state.startedAt) return;
       state.startedAt = performance.now();
@@ -426,82 +486,10 @@
         timerEl.textContent = secs.toFixed(1);
       }, 100);
     }
+
     function stopTimer(){
       if (state.timerId) clearInterval(state.timerId);
       state.timerId = null;
-    }
-
-    // ----------------------------
-    // Minesweeper adjacency
-    // ----------------------------
-    const NEI8 = [
-      [-1,-1],[-1,0],[-1,1],
-      [ 0,-1],       [ 0,1],
-      [ 1,-1],[ 1,0],[ 1,1],
-    ];
-
-    function adjacentBombCount(k){
-      const {r,c} = parseKey(k);
-      let n = 0;
-      for (const [dr,dc] of NEI8){
-        const rr=r+dr, cc=c+dc;
-        if (!inBounds(rr,cc)) continue;
-        if (bombs.has(key(rr,cc))) n++;
-      }
-      return n;
-    }
-
-    function parseKey(k){
-      const row = k[0];
-      const col = Number(k.slice(1));
-      return { r: ROWS.indexOf(row), c: COLS.indexOf(col) };
-    }
-
-    // ----------------------------
-    // Directional counts for letters
-    // Counts contiguous LETTER tiles in row/col.
-    // If there is no letter in that direction chain (i.e., isolated), returns 0.
-    // If letter is not part of any horizontal word (no adjacent letters left/right), we show "–".
-    // Same for vertical.
-    // ----------------------------
-    function directionalCounts(k){
-      const {r,c} = parseKey(k);
-
-      function isLetter(rr,cc){
-        if (!inBounds(rr,cc)) return false;
-        return getCellType(key(rr,cc)) === "LETTER";
-      }
-
-      // horizontal
-      let left = 0, right = 0;
-      for (let cc=c-1; cc>=0; cc--){
-        if (!isLetter(r,cc)) break;
-        left++;
-      }
-      for (let cc=c+1; cc<COLS.length; cc++){
-        if (!isLetter(r,cc)) break;
-        right++;
-      }
-      const hasH = (left + right) > 0;
-
-      // vertical
-      let up = 0, down = 0;
-      for (let rr=r-1; rr>=0; rr--){
-        if (!isLetter(rr,c)) break;
-        up++;
-      }
-      for (let rr=r+1; rr<ROWS.length; rr++){
-        if (!isLetter(rr,c)) break;
-        down++;
-      }
-      const hasV = (up + down) > 0;
-
-      return {
-        left: hasH ? left : null,
-        right: hasH ? right : null,
-        up: hasV ? up : null,
-        down: hasV ? down : null
-      };
     }
 
     // ----------------------------
@@ -523,7 +511,6 @@
         stopTimer();
         revealAllBombs();
         renderCell(k);
-        setModalHint("💥 Bomb! Game over.");
         return;
       }
 
@@ -534,7 +521,7 @@
         return;
       }
 
-      // LETTER: just reveal
+      // LETTER
       renderCell(k);
     }
 
@@ -546,7 +533,6 @@
         const k = q.shift();
         const {r,c} = parseKey(k);
 
-        // For each EMPTY neighbour, reveal it; if it's also 0, enqueue.
         for (const [dr,dc] of NEI8){
           const rr=r+dr, cc=c+dc;
           if (!inBounds(rr,cc)) continue;
@@ -589,6 +575,7 @@
 
     document.getElementById("doReveal").addEventListener("click", () => {
       closeModal();
+      addClicks(1);
       reveal(state.lastClickKey);
     });
 
@@ -602,7 +589,6 @@
     });
 
     document.getElementById("doGuess").addEventListener("click", () => {
-      // Show guess panel
       actionPanel.classList.add("hidden");
       guessPanel.classList.remove("hidden");
       guessInput.value = "";
@@ -615,50 +601,55 @@
     });
 
     document.getElementById("guessSubmit").addEventListener("click", () => {
-      const word = (guessInput.value || "").trim().toUpperCase();
+      const raw = (guessInput.value || "").trim().toUpperCase();
       const k = state.lastClickKey;
-      if (!word) return;
+      if (!raw) return;
 
-      // Prototype behaviour:
-      // If the clicked tile is a LETTER, and the word matches the contiguous horizontal OR vertical
-      // word passing through that tile, then reveal that whole contiguous line of letters.
-      // (Later we’ll bind this to explicit word IDs and add time bonus + neighbour reveal.)
-      const ok = tryRevealWordFromTile(k, word);
+      const ch = raw[0];
+      if (ch < "A" || ch > "Z") return;
+
+      addClicks(1); // guess costs 1
+      const ok = tryGuessLetter(k, ch);
+      if (!ok) addClicks(3); // wrong guess penalty
 
       actionPanel.classList.remove("hidden");
       guessPanel.classList.add("hidden");
       closeModal();
 
-      setModalHint(ok ? "✅ Correct word (prototype): revealed contiguous letters." : "❌ Wrong word (prototype).");
+      modalHint.textContent = ok ? "✅ Correct letter." : "❌ Wrong letter (+3 clicks).";
+      setTimeout(() => { modalHint.textContent = ""; }, 1200);
     });
 
     function openModal(k){
       state.lastClickKey = k;
       modalTitle.textContent = `Tile ${k}`;
+
       const t = getCellType(k);
       const r = state.revealed.has(k);
       const f = state.flagged.has(k);
 
       modalDesc.textContent = r
         ? "Already revealed."
-        : (t === "LETTER" ? "Letter tile." : (t === "BOMB" ? "Danger tile (hidden)." : "Empty tile."));
+        : (t === "LETTER" ? "Hidden letter tile." : (t === "BOMB" ? "Hidden (could be bomb)." : "Hidden empty tile."));
 
-      modalHint.textContent = "";
+      modalHint.textContent = f && !r ? "⚑ Flagged" : "";
+
       actionPanel.classList.remove("hidden");
       guessPanel.classList.add("hidden");
       backdrop.style.display = "flex";
 
-      // If revealed, disable actions
       const dis = r || state.gameOver;
-      document.getElementById("doReveal").disabled = dis;
-      document.getElementById("doFlag").disabled = dis;
-      document.getElementById("doGuess").disabled = dis || (t !== "LETTER");
-      document.getElementById("doReveal").style.opacity = dis ? ".45" : "1";
-      document.getElementById("doFlag").style.opacity = dis ? ".45" : "1";
-      document.getElementById("doGuess").style.opacity = (dis || t!=="LETTER") ? ".45" : "1";
+      const revealBtn = document.getElementById("doReveal");
+      const flagBtn = document.getElementById("doFlag");
+      const guessBtn = document.getElementById("doGuess");
 
-      // If flagged, hint
-      if (f && !r) modalHint.textContent = "⚑ Flagged";
+      revealBtn.disabled = dis;
+      flagBtn.disabled = dis;
+      guessBtn.disabled = dis;
+
+      revealBtn.style.opacity = dis ? ".45" : "1";
+      flagBtn.style.opacity = dis ? ".45" : "1";
+      guessBtn.style.opacity = dis ? ".45" : "1";
     }
 
     function closeModal(){
@@ -667,58 +658,33 @@
       guessPanel.classList.add("hidden");
     }
 
-    function setModalHint(msg){
-      // Quick non-intrusive feedback in top note line
-      // (We keep it simple in prototype)
-      console.log(msg);
-    }
-
     function onCellClick(k){
       if (state.gameOver) return;
       openModal(k);
     }
 
     // ----------------------------
-    // Prototype word guess helper
+    // Guess a single letter
     // ----------------------------
-    function tryRevealWordFromTile(k, guess){
-      if (getCellType(k) !== "LETTER") return false;
+    function tryGuessLetter(k, ch){
+      if (state.gameOver) return false;
+      if (state.revealed.has(k)) return false;
+      if (state.flagged.has(k)) return false;
 
-      const {r,c} = parseKey(k);
+      startTimerIfNeeded();
 
-      // Collect contiguous horizontal letters through (r,c)
-      const hKeys = collectLineKeys(r,c,0,1);
-      const hWord = hKeys.map(kk => letters.get(kk)).join("");
+      const t = getCellType(k);
 
-      // Collect contiguous vertical letters through (r,c)
-      const vKeys = collectLineKeys(r,c,1,0);
-      const vWord = vKeys.map(kk => letters.get(kk)).join("");
+      // Never reveal on guesses unless correct letter tile
+      if (t !== "LETTER") return false;
 
-      let matched = false;
-      if (guess === hWord){
-        hKeys.forEach(kk => { state.revealed.add(kk); renderCell(kk); });
-        matched = true;
+      const truth = letters.get(k);
+      if (truth === ch){
+        state.revealed.add(k);
+        renderCell(k);
+        return true;
       }
-      if (guess === vWord){
-        vKeys.forEach(kk => { state.revealed.add(kk); renderCell(kk); });
-        matched = true;
-      }
-      return matched;
-    }
-
-    function collectLineKeys(r,c,dr,dc){
-      // Expand backward
-      let rr=r, cc=c;
-      while (inBounds(rr-dr, cc-dc) && getCellType(key(rr-dr,cc-dc))==="LETTER"){
-        rr -= dr; cc -= dc;
-      }
-      // Walk forward collecting
-      const out = [];
-      while (inBounds(rr,cc) && getCellType(key(rr,cc))==="LETTER"){
-        out.push(key(rr,cc));
-        rr += dr; cc += dc;
-      }
-      return out;
+      return false;
     }
 
     // ----------------------------
@@ -733,6 +699,8 @@
       state.gameOver = false;
       state.startedAt = null;
       timerEl.textContent = "0.0";
+      state.clicks = 0;
+      clicksEl.textContent = "0";
       closeModal();
       renderAll();
     }
@@ -742,4 +710,8 @@
   </script>
 </body>
 </html>
+
+
+
+
     
