@@ -6,7 +6,7 @@
   <title>Kriptiek Prototype — Mine+Words</title>
   <style>
     :root{
-      --bg:#071b2b; --panel:#0b2a44; --tile:#0f3557; --tile2:#123d63;
+      --bg:#071b2b; --panel:#0b2a44;
       --line:rgba(255,255,255,.12); --text:#eaf2ff; --muted:rgba(234,242,255,.75);
       --accent:#ffd54a; --danger:#ff5a6a; --ok:#55e3a1;
     }
@@ -25,7 +25,7 @@
     .brand{display:flex; flex-direction:column; gap:2px}
     .brand h1{margin:0; font-size:18px; letter-spacing:.3px}
     .brand p{margin:0; font-size:12px; color:var(--muted)}
-    .stats{display:flex; gap:10px; align-items:center}
+    .stats{display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end}
     .pill{
       border:1px solid var(--line); background:rgba(255,255,255,.06);
       padding:8px 10px; border-radius:999px; font-size:12px; color:var(--muted);
@@ -39,7 +39,6 @@
     .btn:hover{background:rgba(255,255,255,.12)}
     .gridWrap{margin-top:14px; display:flex; justify-content:center;}
 
-    /* Grid with headers: 11 rows (header + 10) x 9 cols (row header + 8) */
     .grid{
       display:grid;
       grid-template-columns: 44px repeat(8, 56px);
@@ -63,7 +62,6 @@
       border-radius:10px;
       user-select:none;
     }
-
     .cell{
       position:relative;
       padding:0;
@@ -81,13 +79,9 @@
       z-index:2;
       pointer-events:auto;
     }
-    .cell.covered{
-      background:linear-gradient(180deg, rgba(18,61,99,.60), rgba(15,53,87,.60));
-    }
+    .cell.covered{background:linear-gradient(180deg, rgba(18,61,99,.60), rgba(15,53,87,.60));}
     .cell.covered:hover{filter:brightness(1.08)}
-    .cell.revealed{
-      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
-    }
+    .cell.revealed{background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));}
     .cell.bombed{
       border-color:rgba(255,90,106,.55);
       background:linear-gradient(180deg, rgba(255,90,106,.25), rgba(255,90,106,.12));
@@ -100,7 +94,6 @@
       text-shadow:0 6px 16px rgba(0,0,0,.35);
     }
 
-    /* 3x3 mini HUD inside letter tiles */
     .hud{
       position:absolute; inset:4px;
       display:grid;
@@ -122,9 +115,37 @@
     .hud .n.zero{color:rgba(234,242,255,.40)}
     .hud .n.dash{color:rgba(234,242,255,.25)}
 
-    .note{margin-top:10px; color:var(--muted); font-size:12px; line-height:1.45;}
+    .statusLine{
+      margin-top:10px;
+      padding:10px 12px;
+      background:rgba(11,42,68,.55);
+      border:1px solid var(--line);
+      border-radius:14px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.45;
+    }
+    .statusLine b{color:var(--text)}
+    details.rules{
+      margin-top:12px;
+      background:rgba(11,42,68,.55);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px 12px;
+    }
+    details.rules summary{
+      cursor:pointer;
+      color:var(--text);
+      font-weight:800;
+      user-select:none;
+    }
+    details.rules .rbody{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.5;
+    }
 
-    /* Modal */
     .backdrop{
       position:fixed; inset:0; background:rgba(0,0,0,.55);
       display:none; align-items:center; justify-content:center;
@@ -132,7 +153,6 @@
       pointer-events:none;
     }
     .backdrop[style*="display: flex"]{pointer-events:auto;}
-
     .modal{
       width:min(420px, 96vw);
       background:rgba(11,42,68,.95);
@@ -156,10 +176,7 @@
     }
     .actionBtn:hover{background:rgba(255,255,255,.12)}
     .actionBtn small{color:var(--muted); font-weight:600}
-    .row{
-      display:flex; gap:10px; align-items:center; justify-content:space-between;
-      margin-top:12px;
-    }
+    .row{display:flex; gap:10px; align-items:center; justify-content:space-between; margin-top:12px;}
     .kbdRow{display:flex; gap:8px; margin-top:8px;}
     .in{
       width:100%;
@@ -180,12 +197,13 @@
     <div class="topbar">
       <div class="brand">
         <h1>Prototype: Mine + Woorde</h1>
-        <p>Win = all words found • Buoy = 0 (visual) • Flood reveals EMPTY only • Letters show 3×3 compass counts</p>
+        <p>Hybrid: win on words • bonus badges for bombs + full clear • score = clicks</p>
       </div>
       <div class="stats">
-        <div class="pill">⏱ <b id="timer">0.0</b>s</div>
         <div class="pill">🖱 Clicks <b id="clicks">0</b></div>
         <div class="pill">🧩 Words <b id="words">0/0</b></div>
+        <div class="pill">⚑ Bomb flags <b id="bombFlags">0/0</b></div>
+        <div class="pill">🧼 Clear <b id="clear">0/0</b></div>
         <div class="pill">💣 Bombs <b id="bombCount">4</b></div>
         <button class="btn" id="resetBtn">Reset</button>
       </div>
@@ -195,13 +213,26 @@
       <div class="grid" id="grid"></div>
     </div>
 
-    <div class="note">
+    <div class="statusLine" id="statusLine">
       Click a covered tile → <b>Reveal</b> (+1 click), <b>Flag</b> (free), or <b>Guess letter</b> (correct = free, wrong = +3).
-      Flood from Buoy/0 reveals <b>EMPTY</b> tiles only. Win triggers when <b>all detected words</b> are fully revealed.
+      Buoy 🛟 = 0. Flood reveals <b>EMPTY</b> tiles only (letters never auto-reveal).
     </div>
+
+    <details class="rules" open>
+      <summary>Rule set for testers</summary>
+      <div class="rbody">
+        <b>Goal (primary win):</b> Reveal all words (all letter-tiles that make up each detected word run).<br/>
+        <b>Score:</b> Lowest <b>Clicks</b> wins. Reveal = +1. Flag = +0. Guess letter: correct = +0, wrong = +3.<br/>
+        <b>Bombs:</b> If you Reveal a bomb 💣 you lose immediately (prototype behaviour). Flags are just markers.<br/>
+        <b>Buoy/0:</b> Empty tiles show adjacent bomb count (0–8). A 0 (🛟) floods and reveals connected EMPTY tiles only.<br/>
+        <b>Letters:</b> When revealed, each letter shows a 3×3 “compass”: remaining contiguous letters Up/Down/Left/Right.<br/>
+        <b>Hybrid bonuses (not required to win):</b><br/>
+        • <b>Clean bombs</b> = all bombs flagged correctly (⚑ on each bomb, and no extra wrong flags).<br/>
+        • <b>Full clear</b> = all non-bomb tiles revealed (letters + empties).<br/>
+      </div>
+    </details>
   </div>
 
-  <!-- Action modal -->
   <div class="backdrop" id="backdrop">
     <div class="modal" role="dialog" aria-modal="true">
       <h2 id="modalTitle">Tile</h2>
@@ -220,7 +251,7 @@
       </div>
 
       <div id="guessPanel" class="hidden">
-        <p style="margin:10px 0 8px 0; font-size:12px; color:var(--muted);">
+        <p style="margin:10px 0 8px 0; font-size:12px; color:rgba(234,242,255,.75);">
           Guess a single letter for this tile. Correct = tile reveals (free). Wrong = +3 clicks.
         </p>
         <input class="in" id="guessInput" placeholder="Type one letter (A–Z)" maxlength="1" />
@@ -232,7 +263,7 @@
 
       <div class="row">
         <button class="btn" id="closeModal">Close</button>
-        <span style="font-size:12px; color:var(--muted)" id="modalHint"></span>
+        <span style="font-size:12px; color:rgba(234,242,255,.75)" id="modalHint"></span>
       </div>
     </div>
   </div>
@@ -305,21 +336,19 @@
       revealed: new Set(),
       flagged: new Set(),
       gameOver: false,
-      startedAt: null,
-      timerId: null,
       lastClickKey: null,
       clicks: 0,
+      won: false,
     };
 
-    // ----------------------------
     // UI refs
-    // ----------------------------
     const gridEl = document.getElementById("grid");
-    const timerEl = document.getElementById("timer");
     const clicksEl = document.getElementById("clicks");
     const bombCountEl = document.getElementById("bombCount");
     const wordsEl = document.getElementById("words");
-
+    const bombFlagsEl = document.getElementById("bombFlags");
+    const clearEl = document.getElementById("clear");
+    const statusLineEl = document.getElementById("statusLine");
     bombCountEl.textContent = String(bombs.size);
 
     // ----------------------------
@@ -327,21 +356,19 @@
     // Words = contiguous letter runs (H/V) of length >= 2
     // Found = all tiles in that run revealed
     // ----------------------------
-    let WORDS = []; // array of arrays of keys, built once on boot
+    let WORDS = [];
 
     function buildWordList(minLen = 2){
       const out = [];
       const usedV = new Set();
 
-      // Horizontal runs (no need for "usedH" because start-of-run test prevents dupes)
+      // Horizontal runs
       for (let r=0;r<ROWS.length;r++){
         let c=0;
         while (c<COLS.length){
           const k0 = key(r,c);
-
           if (getCellType(k0) !== "LETTER"){ c++; continue; }
 
-          // start of run if left is not letter
           const leftK = (c-1>=0) ? key(r,c-1) : null;
           if (leftK && getCellType(leftK)==="LETTER"){ c++; continue; }
 
@@ -361,10 +388,8 @@
         let r=0;
         while (r<ROWS.length){
           const k0 = key(r,c);
-
           if (getCellType(k0) !== "LETTER" || usedV.has(k0)){ r++; continue; }
 
-          // start of run if up is not letter
           const upK = (r-1>=0) ? key(r-1,c) : null;
           if (upK && getCellType(upK)==="LETTER"){ r++; continue; }
 
@@ -403,6 +428,44 @@
     }
 
     // ----------------------------
+    // Hybrid bonus counters
+    // ----------------------------
+    function updateBombFlagUI(){
+      const total = bombs.size;
+      let correct = 0;
+      let wrong = 0;
+
+      state.flagged.forEach(k => {
+        if (bombs.has(k)) correct++;
+        else wrong++;
+      });
+
+      bombFlagsEl.textContent = `${correct}/${total}`;
+
+      const cleanBombs = (correct === total) && (wrong === 0);
+      return { correct, wrong, total, cleanBombs };
+    }
+
+    function updateClearUI(){
+      const totalSafe = (ROWS.length * COLS.length) - bombs.size;
+      let safeRevealed = 0;
+
+      state.revealed.forEach(k => {
+        if (!bombs.has(k)) safeRevealed++;
+      });
+
+      clearEl.textContent = `${safeRevealed}/${totalSafe}`;
+      const fullClear = (safeRevealed === totalSafe);
+      return { safeRevealed, totalSafe, fullClear };
+    }
+
+    function refreshTopStats(){
+      updateWordUI();
+      updateBombFlagUI();
+      updateClearUI();
+      clicksEl.textContent = String(state.clicks);
+    }
+    // ----------------------------
     // Grid rendering
     // ----------------------------
     function buildGrid(){
@@ -410,7 +473,6 @@
 
       const corner = document.createElement("div");
       corner.className = "hdr";
-      corner.textContent = "";
       gridEl.appendChild(corner);
 
       for (let c=0;c<COLS.length;c++){
@@ -555,60 +617,53 @@
       };
     }
     // ----------------------------
-    // Clicks + Timer
+    // Gameplay: clicks + reveal + flood + hybrid win
     // ----------------------------
     function addClicks(n){
       state.clicks += n;
       clicksEl.textContent = String(state.clicks);
     }
 
-    function startTimerIfNeeded(){
-      if (state.startedAt) return;
-      state.startedAt = performance.now();
-      state.timerId = setInterval(() => {
-        const now = performance.now();
-        const secs = (now - state.startedAt) / 1000;
-        timerEl.textContent = secs.toFixed(1);
-      }, 100);
+    function setStatus(msg){
+      statusLineEl.innerHTML = msg;
     }
 
-    function stopTimer(){
-      if (state.timerId) clearInterval(state.timerId);
-      state.timerId = null;
-    }
-
-    // ----------------------------
-    // Win check (words)
-    // ----------------------------
-    function checkWinByWords(){
+    function checkPrimaryWin(){
       if (state.gameOver) return;
       const {found, total} = updateWordUI();
       if (total > 0 && found === total){
+        state.won = true;
         state.gameOver = true;
-        stopTimer();
-        modalHint.textContent = `🏁 All words found! Clicks: ${state.clicks}`;
+
+        const bombStats = updateBombFlagUI();
+        const clearStats = updateClearUI();
+
+        const badges = [];
+        if (bombStats.cleanBombs) badges.push("✅ <b>Clean bombs</b>");
+        if (clearStats.fullClear) badges.push("✅ <b>Full clear</b>");
+
+        setStatus(
+          `🏁 <b>WIN:</b> All words found. <b>Clicks:</b> ${state.clicks}` +
+          (badges.length ? ` • ${badges.join(" • ")}` : ` • (No bonus badges yet)`)
+        );
       }
     }
 
-    // ----------------------------
-    // Reveal + flood (Option A)
-    // Flood reveals EMPTY tiles only; letters never auto-reveal.
-    // ----------------------------
     function reveal(k){
       if (state.gameOver) return;
       if (state.revealed.has(k)) return;
       if (state.flagged.has(k)) return;
-
-      startTimerIfNeeded();
 
       const t = getCellType(k);
       state.revealed.add(k);
 
       if (t === "BOMB"){
         state.gameOver = true;
-        stopTimer();
+        state.won = false;
         revealAllBombs();
         renderCell(k);
+        setStatus(`💥 <b>BOOM:</b> You revealed a bomb. <b>Clicks:</b> ${state.clicks}`);
+        refreshTopStats();
         return;
       }
 
@@ -616,13 +671,15 @@
         const n = adjacentBombCount(k);
         renderCell(k);
         if (n === 0) floodFromZero(k);
-        checkWinByWords();
+        refreshTopStats();
+        checkPrimaryWin();
         return;
       }
 
       // LETTER
       renderCell(k);
-      checkWinByWords();
+      refreshTopStats();
+      checkPrimaryWin();
     }
 
     function floodFromZero(startKey){
@@ -659,7 +716,7 @@
     }
 
     // ----------------------------
-    // Modal UI
+    // Modal UI (actions)
     // ----------------------------
     const backdrop = document.getElementById("backdrop");
     const modalTitle = document.getElementById("modalTitle");
@@ -685,6 +742,7 @@
       if (state.flagged.has(k)) state.flagged.delete(k);
       else state.flagged.add(k);
       renderCell(k);
+      refreshTopStats();
       closeModal();
     });
 
@@ -711,14 +769,15 @@
       const ok = tryGuessLetter(k, ch);
       if (!ok) addClicks(3);
 
+      modalHint.textContent = ok ? "✅ Correct letter." : "❌ Wrong letter (+3 clicks).";
+      setTimeout(() => { modalHint.textContent = ""; }, 1200);
+
       actionPanel.classList.remove("hidden");
       guessPanel.classList.add("hidden");
       closeModal();
 
-      modalHint.textContent = ok ? "✅ Correct letter." : "❌ Wrong letter (+3 clicks).";
-      setTimeout(() => { modalHint.textContent = ""; }, 1200);
-
-      checkWinByWords();
+      refreshTopStats();
+      checkPrimaryWin();
     });
 
     function openModal(k){
@@ -764,18 +823,13 @@
       openModal(k);
     }
 
-    // ----------------------------
-    // Guess a single letter
-    // ----------------------------
+    // Guess a single letter: correct reveals, wrong adds penalty clicks (handled by caller)
     function tryGuessLetter(k, ch){
       if (state.gameOver) return false;
       if (state.revealed.has(k)) return false;
       if (state.flagged.has(k)) return false;
 
-      startTimerIfNeeded();
-
-      const t = getCellType(k);
-      if (t !== "LETTER") return false;
+      if (getCellType(k) !== "LETTER") return false;
 
       const truth = letters.get(k);
       if (truth === ch){
@@ -787,31 +841,38 @@
     }
 
     // ----------------------------
-    // Reset
+    // Reset + boot
     // ----------------------------
     document.getElementById("resetBtn").addEventListener("click", resetGame);
 
     function resetGame(){
-      stopTimer();
       state.revealed.clear();
       state.flagged.clear();
       state.gameOver = false;
-      state.startedAt = null;
-      timerEl.textContent = "0.0";
+      state.won = false;
+      state.lastClickKey = null;
       state.clicks = 0;
-      clicksEl.textContent = "0";
-      closeModal();
       renderAll();
-      updateWordUI();
+      refreshTopStats();
+      setStatus(
+        `Click a covered tile → <b>Reveal</b> (+1 click), <b>Flag</b> (free), or <b>Guess letter</b> (correct = free, wrong = +3). ` +
+        `Buoy 🛟 = 0. Flood reveals <b>EMPTY</b> tiles only (letters never auto-reveal).`
+      );
+      closeModal();
     }
 
     // Boot
     buildGrid();
     WORDS = buildWordList(2);
-    updateWordUI();
+    refreshTopStats();
+    setStatus(
+      `Click a covered tile → <b>Reveal</b> (+1 click), <b>Flag</b> (free), or <b>Guess letter</b> (correct = free, wrong = +3). ` +
+      `Buoy 🛟 = 0. Flood reveals <b>EMPTY</b> tiles only (letters never auto-reveal).`
+    );
   </script>
 </body>
 </html>
+
 
 
     
