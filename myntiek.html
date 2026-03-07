@@ -411,7 +411,10 @@
         el.textContent = "0";
         el.classList.add("zero");
         return;
-      }    // ----------------------------
+      }
+      el.textContent = String(v);
+    }
+    // ----------------------------
     // Timer
     // ----------------------------
     function startTimerIfNeeded(){
@@ -739,7 +742,4 @@
   </script>
 </body>
 </html>
-
-
-
-  
+    
