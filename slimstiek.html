@@ -18,7 +18,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
   <title>SLIMSTIEK – Kriptiek</title>
 
-  <!-- Open Graph / Twitter -->
   <link rel="canonical" href="https://www.kriptiek.com/slimstiek.html" />
   <meta property="og:title" content="SLIMSTIEK – Kriptiek" />
   <meta property="og:description" content="Kom speel vandag se SLIMSTIEK op Kriptiek." />
@@ -31,14 +30,11 @@
   <meta name="twitter:description" content="Kom speel vandag se SLIMSTIEK op Kriptiek." />
   <meta name="twitter:image" content="https://www.kriptiek.com/assets/S_SLIMSTIEK_12SEP.png" />
 
-  <!-- Tailwind + font -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Small perf win -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
-
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
 
   <style>
@@ -91,12 +87,21 @@
     }
     .game-layout{
       width:100%;
-      max-width:720px;
+      max-width:1320px;
       margin:0 auto;
-      position:relative;
+    }
+    .desktop-shell{display:block;}
+    .desktop-ad{display:none;}
+    @media (min-width:1280px){
+      .desktop-shell{
+        display:grid;
+        grid-template-columns:300px minmax(0,1fr) 300px;
+        gap:24px;
+        align-items:start;
+      }
+      .desktop-ad{display:block;}
     }
 
-    /* Prevent first-paint “NR gate” flash before dynStyles is injected */
     #nrGate, #over { display:none; }
 
     #targetWrap{
@@ -147,6 +152,249 @@
     }
     @keyframes toastIn{from{opacity:0;transform:translate(-50%,20px)}}
     @keyframes toastOut{to{opacity:0;transform:translate(-50%,40px)}}
+
+    #grid{
+      position:relative;
+      display:grid;
+      grid-template-columns:repeat(8,1fr);
+      grid-template-rows:repeat(10,1fr);
+      gap:0;
+      background:#fff;
+      border:var(--line) solid #0c4a3e;
+      border-radius:8px;
+      overflow:hidden;
+      width:var(--gridW);
+      height:400px;
+      margin:6px auto 8px;
+    }
+    #grid::after{
+      content:'';
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      z-index:5;
+      background:
+        repeating-linear-gradient(to right,
+          transparent 0 calc(var(--cellSize) - var(--line)),
+          rgba(255,255,255,.28) 0 var(--cellSize)),
+        repeating-linear-gradient(to bottom,
+          transparent 0 calc(var(--cellSize) - var(--line)),
+          rgba(255,255,255,.28) 0 var(--cellSize));
+    }
+    .cell{
+      position:relative;
+      background:var(--cell-bg);
+      transition:transform .15s ease-out,opacity .15s ease-out;
+    }
+    .cell.f{
+      display:grid;
+      place-items:center;
+      color:#fff;
+      font-weight:800;
+      font-size:var(--cell-font);
+      text-shadow:0 1px 1px rgba(0,0,0,.35);
+    }
+    .cell.pop{transform:scale(1.15);opacity:0;}
+
+    #fx{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      overflow:hidden;
+    }
+    .float-score{
+      position:absolute;
+      transform:translate(-50%,0);
+      font-weight:800;
+      font-size:14px;
+      line-height:1;
+      color:#fff;
+      text-shadow:0 2px 6px rgba(0,0,0,.55);
+      padding:.15rem .35rem;
+      border-radius:.4rem;
+      background:rgba(0,0,0,.18);
+      animation:floatUp .9s ease-out forwards;
+      will-change:transform,opacity,filter;
+    }
+    @keyframes floatUp{
+      0%{opacity:0;transform:translate(-50%,8px);filter:blur(.2px)}
+      15%{opacity:1}
+      85%{opacity:1}
+      100%{opacity:0;transform:translate(-50%,-18px);filter:blur(1px)}
+    }
+
+    #over{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background:rgba(0,0,0,.55);
+      z-index:50;
+    }
+    .modal{
+      background:#fff;
+      border-radius:16px;
+      box-shadow:0 20px 50px rgba(0,0,0,.2);
+      width:min(92%,520px);
+      padding:18px;
+      text-align:center;
+      border:1px solid #e5e7eb;
+    }
+    .btn{
+      background:#1e3a8a;
+      color:#fff;
+      font-weight:700;
+      padding:10px 16px;
+      border-radius:10px;
+    }
+    .btn.gray{background:#6b7280}
+    .btn:disabled{opacity:.6;cursor:not-allowed;}
+
+    .controls{
+      width:100%;
+      max-width:calc(var(--gridW));
+      margin:8px auto 0;
+    }
+    .arrow-row{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:.5rem;
+    }
+    .dir-btn{
+      width:100%;
+      aspect-ratio:1/1;
+      min-width:56px;
+      min-height:56px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#053a6b;
+      color:#fff;
+      border-radius:14px;
+      font-weight:800;
+      font-size:24px;
+    }
+    @media (min-width:460px){
+      .dir-btn{min-width:64px;min-height:64px;font-size:26px}
+    }
+    @media (min-width:640px){
+      .dir-btn{min-width:72px;min-height:72px;font-size:28px}
+    }
+
+    .pill{
+      background:#0c4a3e;
+      color:#fff;
+      font-weight:700;
+      padding:6px 10px;
+      border-radius:8px;
+      text-align:center;
+    }
+    #leaderboardList li{
+      padding:.35rem .5rem;
+      border-radius:.375rem;
+      display:flex;
+      align-items:center;
+      gap:.5rem;
+      flex-wrap:wrap;
+    }
+    #leaderboardList li:nth-child(odd){background:#f3f4f6;}
+    #leaderboardList li:first-child{
+      background:#d1fae5;
+      font-weight:700;
+    }
+    .metric-right{
+      margin-left:auto;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      background:#0c4a3e;
+      color:#fff;
+      font-weight:800;
+      border-radius:8px;
+      padding:0.15rem 0.55rem;
+      font-size:0.75rem;
+      line-height:1;
+    }
+
+    .share-menu-local{
+      background:#fff;
+      border:1px solid #e5e7eb;
+      box-shadow:0 8px 24px rgba(0,0,0,.12);
+      border-radius:.5rem;
+      width:240px;
+      padding:.5rem;
+      z-index:3000;
+      line-height:1.25;
+    }
+    .share-menu-local button{
+      width:100%;
+      text-align:left;
+      padding:.5rem .75rem;
+      border-radius:.375rem;
+      font-weight:600;
+      line-height:1.25rem;
+      display:flex;
+      align-items:center;
+      gap:.5rem;
+      white-space:nowrap;
+    }
+    .share-menu-local button:hover{background:#f3f4f6;}
+
+    .action-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:.5rem;
+      justify-items:center;
+      align-items:center;
+    }
+    .cols-3{grid-template-columns:repeat(3,1fr);}
+    .hidden{display:none !important;}
+
+    .action-grid > a,
+    .action-grid > button{
+      display:grid;
+      place-items:center;
+      width:100%;
+      aspect-ratio:1/1;
+      max-width:120px;
+      padding:0;
+      margin:0;
+      background:transparent !important;
+      border:0;
+      border-radius:0;
+      line-height:0;
+      appearance:none;
+      -webkit-appearance:none;
+      box-shadow:none;
+      cursor:pointer;
+    }
+    .btn-img{
+      width:100%;
+      height:100%;
+      display:block;
+      object-fit:contain;
+      border-radius:0;
+      box-shadow:0 6px 15px rgba(0,0,0,.25);
+    }
+    .btn-img:hover{
+      transform:translateY(-1px);
+      filter:brightness(1.02);
+    }
+    .btn-img:active{
+      transform:translateY(0);
+      filter:brightness(.98);
+    }
+
+    #nrGate{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background:rgba(0,0,0,.55);
+      z-index:60;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -183,150 +431,153 @@
       </section>
 
       <div class="game-layout">
-        <div id="desktopAdLeft" class="hidden lg:block absolute -left-[340px]">
-          <div class="bg-white shadow-md rounded-lg p-2 flex flex-col items-center border border-slate-200">
-            <div class="text-[10px] tracking-[0.2em] text-slate-500 uppercase mb-1 text-center">
-              ADVERTENSIE
+        <div class="desktop-shell">
+          <aside class="desktop-ad">
+            <div class="bg-white shadow-md rounded-lg p-2 flex flex-col items-center border border-slate-200">
+              <div class="text-[10px] tracking-[0.2em] text-slate-500 uppercase mb-1 text-center">
+                ADVERTENSIE
+              </div>
+              <a href="https://www.brandkopnc.co.za/" target="_blank" rel="noopener"
+                 class="inline-block rounded overflow-hidden">
+                <img
+                  src="/assets/brandkop-300x250.png"
+                  alt="Brandkop advertensie"
+                  class="block w-[300px] max-w-full h-auto">
+              </a>
             </div>
-            <a href="https://www.brandkopnc.co.za/" target="_blank" rel="noopener"
-               class="inline-block rounded overflow-hidden">
-              <img
-                src="/assets/brandkop-300x250.png"
-                alt="Brandkop advertensie"
-                class="block w-[300px] max-w-full h-auto">
-            </a>
-          </div>
-        </div>
+          </aside>
 
-        <div id="desktopAdRight" class="hidden lg:block absolute -right-[340px]">
-          <div class="bg-white shadow-md rounded-lg p-2 flex flex-col items-center border border-slate-200">
-            <div class="text-[10px] tracking-[0.2em] text-slate-500 uppercase mb-1 text-center">
-              ADVERTENSIE
+          <div class="max-w-xl mx-auto w-full">
+            <div class="headline">TEIKENWOORD:</div>
+            <div id="targetWrap">
+              <div id="target" role="region" aria-label="Teikenwoord"><span>—</span></div>
             </div>
-            <a href="https://www.brandkopnc.co.za/" target="_blank" rel="noopener"
-               class="inline-block rounded overflow-hidden">
-              <img
-                src="/assets/brandkop-300x250.png"
-                alt="Brandkop advertensie"
-                class="block w-[300px] max-w-full h-auto">
-            </a>
-          </div>
-        </div>
+            <div id="rowHint" class="mt-[-2px] text-center text-[0.75rem] text-gray-500">
+              Vermenigvuldiger: ×<b id="rowMultVal" class="text-emerald-700">1</b>
+            </div>
 
-        <div class="max-w-xl mx-auto">
-          <div class="headline">TEIKENWOORD:</div>
-          <div id="targetWrap">
-            <div id="target" role="region" aria-label="Teikenwoord"><span>—</span></div>
-          </div>
-          <div id="rowHint" class="mt-[-2px] text-center text-[0.75rem] text-gray-500">
-            Vermenigvuldiger: ×<b id="rowMultVal" class="text-emerald-700">1</b>
-          </div>
+            <section class="card p-4">
+              <div class="relative game-wrap">
+                <div id="grid" role="grid" aria-label="Speelrooster"></div>
+                <div id="fx" aria-hidden="true"></div>
 
-          <section class="card p-4">
-            <div class="relative game-wrap">
-              <div id="grid" role="grid" aria-label="Speelrooster"></div>
-              <div id="fx" aria-hidden="true"></div>
-
-              <div id="over" role="dialog" aria-modal="true" aria-labelledby="winMsg">
-                <div class="modal">
-                  <p id="winMsg" class="mb-3 text-base"></p>
-                  <div class="actions" style="display:flex;gap:.75rem;justify-content:center;margin-top:12px;">
-                    <button id="modalShareBtn" type="button" class="btn">DEEL</button>
-                    <button id="modalCloseBtn" type="button" class="btn gray">SLUIT</button>
-                  </div>
-                  <div id="shareMenu" class="hidden share-menu-local mx-auto mt-2" role="menu">
-                    <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
-                    <div class="space-y-1">
-                      <button id="mWhatsApp" type="button" role="menuitem">WhatsApp</button>
-                      <button id="mCopy" type="button" role="menuitem">Kopieer skakel</button>
-                      <button id="mSystem" type="button" role="menuitem">Stelsel-deel</button>
+                <div id="over" role="dialog" aria-modal="true" aria-labelledby="winMsg">
+                  <div class="modal">
+                    <p id="winMsg" class="mb-3 text-base"></p>
+                    <div class="actions" style="display:flex;gap:.75rem;justify-content:center;margin-top:12px;">
+                      <button id="modalShareBtn" type="button" class="btn">DEEL</button>
+                      <button id="modalCloseBtn" type="button" class="btn gray">SLUIT</button>
+                    </div>
+                    <div id="shareMenu" class="hidden share-menu-local mx-auto mt-2" role="menu">
+                      <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
+                      <div class="space-y-1">
+                        <button id="mWhatsApp" type="button" role="menuitem">WhatsApp</button>
+                        <button id="mCopy" type="button" role="menuitem">Kopieer skakel</button>
+                        <button id="mSystem" type="button" role="menuitem">Stelsel-deel</button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div id="nrGate" role="dialog" aria-modal="true">
-                <div class="modal">
-                  <h3 class="text-lg font-extrabold mb-1">WELKOM BY SLIMSTIEK OP KRIPTIEK</h3>
-                  <p class="text-sm text-gray-600 mb-3">Jou opsies:</p>
-                  <div class="text-left space-y-2 text-gray-700">
-                    <p><strong>1)</strong> Speel Slimstiek as 'n ongeregistreerde speler met beperkte funksies.</p>
-                    <p><strong>2)</strong>
-                      <a href="/register.html" class="underline" id="gateRegLink">Registreer</a>
-                      sodat jy volle toegang tot alles op Kriptiek kan kry, insluitend Slimstiek.
-                    </p>
-                  </div>
-                  <div class="flex gap-2 justify-center mt-4">
-                    <button id="gateGuestBtn" class="btn">Speel sonder om te registreer</button>
-                    <button id="gateRegBtn" class="btn gray">Registreer</button>
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            <div class="controls mt-3">
-              <div class="arrow-row">
-                <button id="btnLeft" class="dir-btn" aria-label="Links">◀</button>
-                <button id="btnDown" class="dir-btn" aria-label="Laat val">▼</button>
-                <button id="btnRight" class="dir-btn" aria-label="Regs">▶</button>
-              </div>
-            </div>
-
-            <div class="controls mt-3 flex items-center justify-center gap-2">
-              <button id="btnStart" class="btn">BEGIN</button>
-              <button id="btnPause" class="btn gray">POUSE</button>
-            </div>
-
-            <div class="controls grid grid-cols-2 gap-2 mt-3">
-              <div id="bestBox" class="pill">Beste telling: <b>—</b></div>
-              <div id="scoreBox" class="pill">Huidige telling: <b>0</b></div>
-            </div>
-
-            <div class="controls mt-3" id="actionBars">
-              <div id="barNR" class="action-grid cols-3">
-                <a href="/register.html" title="Registreer">
-                  <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="120" height="120">
-                </a>
-                <a href="/forum.html" title="Gesels saam">
-                  <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
-                </a>
-                <div class="relative share-tile-wrap">
-                  <button type="button" class="share-tile" title="Deel" aria-haspopup="true" aria-expanded="false">
-                    <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
-                  </button>
-                  <div class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2" role="menu">
-                    <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
-                    <div class="space-y-1">
-                      <button class="wa" type="button" role="menuitem">WhatsApp</button>
-                      <button class="copy" type="button" role="menuitem">Kopieer skakel</button>
-                      <button class="sys" type="button" role="menuitem">Stelsel-deel</button>
+                <div id="nrGate" role="dialog" aria-modal="true">
+                  <div class="modal">
+                    <h3 class="text-lg font-extrabold mb-1">WELKOM BY SLIMSTIEK OP KRIPTIEK</h3>
+                    <p class="text-sm text-gray-600 mb-3">Jou opsies:</p>
+                    <div class="text-left space-y-2 text-gray-700">
+                      <p><strong>1)</strong> Speel Slimstiek as 'n ongeregistreerde speler met beperkte funksies.</p>
+                      <p><strong>2)</strong>
+                        <a href="/register.html" class="underline" id="gateRegLink">Registreer</a>
+                        sodat jy volle toegang tot alles op Kriptiek kan kry, insluitend Slimstiek.
+                      </p>
+                    </div>
+                    <div class="flex gap-2 justify-center mt-4">
+                      <button id="gateGuestBtn" class="btn">Speel sonder om te registreer</button>
+                      <button id="gateRegBtn" class="btn gray">Registreer</button>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div id="barR" class="action-grid cols-3 hidden">
-                <a href="/forum.html" title="Gesels saam">
-                  <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
-                </a>
-                <a href="/slimstiek-argief.html" title="Slimstiek-argief">
-                  <img class="btn-img" src="/assets/S_ARGIEF_12SEP.png" alt="S Argief" width="120" height="120">
-                </a>
-                <div class="relative share-tile-wrap">
-                  <button type="button" class="share-tile" title="Deel" aria-haspopup="true" aria-expanded="false">
-                    <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
-                  </button>
-                  <div class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2" role="menu">
-                    <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
-                    <div class="space-y-1">
-                      <button class="wa" type="button" role="menuitem">WhatsApp</button>
-                      <button class="copy" type="button" role="menuitem">Kopieer skakel</button>
-                      <button class="sys" type="button" role="menuitem">Stelsel-deel</button>
+              <div class="controls mt-3">
+                <div class="arrow-row">
+                  <button id="btnLeft" class="dir-btn" aria-label="Links">◀</button>
+                  <button id="btnDown" class="dir-btn" aria-label="Laat val">▼</button>
+                  <button id="btnRight" class="dir-btn" aria-label="Regs">▶</button>
+                </div>
+              </div>
+
+              <div class="controls mt-3 flex items-center justify-center gap-2">
+                <button id="btnStart" class="btn">BEGIN</button>
+                <button id="btnPause" class="btn gray">POUSE</button>
+              </div>
+
+              <div class="controls grid grid-cols-2 gap-2 mt-3">
+                <div id="bestBox" class="pill">Beste telling: <b>—</b></div>
+                <div id="scoreBox" class="pill">Huidige telling: <b>0</b></div>
+              </div>
+
+              <div class="controls mt-3" id="actionBars">
+                <div id="barNR" class="action-grid cols-3">
+                  <a href="/register.html" title="Registreer">
+                    <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="120" height="120">
+                  </a>
+                  <a href="/forum.html" title="Gesels saam">
+                    <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
+                  </a>
+                  <div class="relative share-tile-wrap">
+                    <button type="button" class="share-tile" title="Deel" aria-haspopup="true" aria-expanded="false">
+                      <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
+                    </button>
+                    <div class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2" role="menu">
+                      <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
+                      <div class="space-y-1">
+                        <button class="wa" type="button" role="menuitem">WhatsApp</button>
+                        <button class="copy" type="button" role="menuitem">Kopieer skakel</button>
+                        <button class="sys" type="button" role="menuitem">Stelsel-deel</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="barR" class="action-grid cols-3 hidden">
+                  <a href="/forum.html" title="Gesels saam">
+                    <img class="btn-img" src="/assets/K_GESELS_12SEP.png" alt="Gesels" width="120" height="120">
+                  </a>
+                  <a href="/slimstiek-argief.html" title="Slimstiek-argief">
+                    <img class="btn-img" src="/assets/S_ARGIEF_12SEP.png" alt="S Argief" width="120" height="120">
+                  </a>
+                  <div class="relative share-tile-wrap">
+                    <button type="button" class="share-tile" title="Deel" aria-haspopup="true" aria-expanded="false">
+                      <img class="btn-img" src="/assets/SHARE_12SEP.png" alt="Deel" width="120" height="120">
+                    </button>
+                    <div class="hidden share-menu-local absolute left-1/2 -translate-x-1/2 mt-2" role="menu">
+                      <div class="px-2 pb-1 text-xs uppercase tracking-wide text-gray-500">Deel via</div>
+                      <div class="space-y-1">
+                        <button class="wa" type="button" role="menuitem">WhatsApp</button>
+                        <button class="copy" type="button" role="menuitem">Kopieer skakel</button>
+                        <button class="sys" type="button" role="menuitem">Stelsel-deel</button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
+            </section>
+          </div>
+
+          <aside class="desktop-ad">
+            <div class="bg-white shadow-md rounded-lg p-2 flex flex-col items-center border border-slate-200">
+              <div class="text-[10px] tracking-[0.2em] text-slate-500 uppercase mb-1 text-center">
+                ADVERTENSIE
+              </div>
+              <a href="https://www.brandkopnc.co.za/" target="_blank" rel="noopener"
+                 class="inline-block rounded overflow-hidden">
+                <img
+                  src="/assets/brandkop-300x250.png"
+                  alt="Brandkop advertensie"
+                  class="block w-[300px] max-w-full h-auto">
+              </a>
             </div>
-          </section>
+          </aside>
         </div>
       </div>
 
@@ -340,7 +591,7 @@
             </li>
             <li>
               <p class="font-semibold">2. Reëls vir blokke</p>
-              <ul class="list-disc pl-6">
+                  <ul class="list-disc pl-6">
                 <li><strong>Blokke met dieselfde letter</strong> of <strong>kleur</strong> wat langs of op mekaar tot stilstand kom, sal verdwyn. <em>MAAR: Letters in die teikenwoord verdwyn nooit nie.</em></li>
                 <li>Jy kry punte vir elke <strong>paar blokke</strong> wat verdwyn.</li>
               </ul>
@@ -438,8 +689,7 @@
     }catch(e){
       console.warn('Firebase init failed (ok for local fallback):', e);
     }
-
-    function showToast(message, duration=3000){
+        function showToast(message, duration=3000){
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
       toast.className = 'toast';
@@ -447,6 +697,7 @@
       container.appendChild(toast);
       setTimeout(()=> toast.remove(), duration);
     }
+
     function debounce(func, wait){
       let timeout;
       return function executedFunction(...args){
@@ -456,40 +707,40 @@
       };
     }
 
-    const welcomeLine   = document.getElementById('welcomeLine');
-    const playerNameEl  = document.getElementById('playerName');
-    const targetEl      = document.getElementById('target');
-    const gridEl        = document.getElementById('grid');
-    const fxEl          = document.getElementById('fx');
-    const over          = document.getElementById('over');
-    const winMsg        = document.getElementById('winMsg');
+    const welcomeLine = document.getElementById('welcomeLine');
+    const playerNameEl = document.getElementById('playerName');
+    const targetEl = document.getElementById('target');
+    const gridEl = document.getElementById('grid');
+    const fxEl = document.getElementById('fx');
+    const over = document.getElementById('over');
+    const winMsg = document.getElementById('winMsg');
     const modalShareBtn = document.getElementById('modalShareBtn');
     const modalCloseBtn = document.getElementById('modalCloseBtn');
-    const shareMenu     = document.getElementById('shareMenu');
-    const lbList        = document.getElementById('leaderboardList');
-    const bestText      = document.querySelector('#bestBox b');
-    const scoreText     = document.querySelector('#scoreBox b');
-    const btnLeft       = document.getElementById('btnLeft');
-    const btnRight      = document.getElementById('btnRight');
-    const btnDown       = document.getElementById('btnDown');
-    const btnStart      = document.getElementById('btnStart');
-    const btnPause      = document.getElementById('btnPause');
-    const mWA           = document.getElementById('mWhatsApp');
-    const mCopy         = document.getElementById('mCopy');
-    const mSys          = document.getElementById('mSystem');
-    const barNR         = document.getElementById('barNR');
-    const barR          = document.getElementById('barR');
-    const nrGate        = document.getElementById('nrGate');
-    const gateGuestBtn  = document.getElementById('gateGuestBtn');
-    const gateRegBtn    = document.getElementById('gateRegBtn');
-    const gateRegLink   = document.getElementById('gateRegLink');
-    const rowMultLabel  = document.getElementById('rowMultVal');
-    const adminPanel    = document.getElementById('adminPanel');
-    const dAdmin        = document.getElementById('adminDate');
-    const dAdminTo      = document.getElementById('adminDateTo');
-    const btnBFOne      = document.getElementById('btnBFOne');
-    const btnBFRange    = document.getElementById('btnBFRange');
-    const bfMsg         = document.getElementById('bfMsg');
+    const shareMenu = document.getElementById('shareMenu');
+    const lbList = document.getElementById('leaderboardList');
+    const bestText = document.querySelector('#bestBox b');
+    const scoreText = document.querySelector('#scoreBox b');
+    const btnLeft = document.getElementById('btnLeft');
+    const btnRight = document.getElementById('btnRight');
+    const btnDown = document.getElementById('btnDown');
+    const btnStart = document.getElementById('btnStart');
+    const btnPause = document.getElementById('btnPause');
+    const mWA = document.getElementById('mWhatsApp');
+    const mCopy = document.getElementById('mCopy');
+    const mSys = document.getElementById('mSystem');
+    const barNR = document.getElementById('barNR');
+    const barR = document.getElementById('barR');
+    const nrGate = document.getElementById('nrGate');
+    const gateGuestBtn = document.getElementById('gateGuestBtn');
+    const gateRegBtn = document.getElementById('gateRegBtn');
+    const gateRegLink = document.getElementById('gateRegLink');
+    const rowMultLabel = document.getElementById('rowMultVal');
+    const adminPanel = document.getElementById('adminPanel');
+    const dAdmin = document.getElementById('adminDate');
+    const dAdminTo = document.getElementById('adminDateTo');
+    const btnBFOne = document.getElementById('btnBFOne');
+    const btnBFRange = document.getElementById('btnBFRange');
+    const bfMsg = document.getElementById('bfMsg');
 
     if (barNR) barNR.classList.add('hidden');
     if (barR)  barR.classList.add('hidden');
@@ -510,7 +761,7 @@
     const dateParam = qs.get('date');
     let currentDate = (/^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : todayKeySAST());
     const GAME_ID = `Game${currentDate}`;
-    window.gameId = GAME_ID;
+    const shareKey = () => `slimstiekShare:${currentDate}`;
 
     try {
       const urlObj = new URL(window.location.href);
@@ -520,8 +771,6 @@
       const current = window.location.pathname + window.location.search + window.location.hash;
       if (current !== canonical) history.replaceState(null, '', canonical);
     } catch {}
-
-    const shareKey = () => `slimstiekShare:${currentDate}`;
 
     function cleanForFS(obj){
       const out = {};
@@ -577,7 +826,24 @@
       await Promise.all(uniq.map(uid => fetchSupporterActive(uid)));
     }
 
-    let user=null, currentUserName='Speler', isAdminClient=false;
+    let user = null;
+    let currentUserName = 'Speler';
+    let isAdminClient = false;
+    let cellCache = [];
+    const H = 10, W = 8;
+    const COLORS = ['#2196f3','#f44336','#4caf50','#ffc107','#9c27b0','#003366','#009688'];
+    const CONS = 'BCDFGHJKLMNPQRSTVWXZ';
+    const VOWS = 'AEIOUY';
+    let TARGET = '';
+    let grid = Array.from({length:H},()=>Array(W).fill(null));
+    let cur = null, nxt = null;
+    let paused = false, ended = false, moving = false;
+    let gInt = null;
+    let score = 0, bestScore = null;
+    let lastFocusedElement = null;
+    let unsubLive = null, unsubLegacy = null;
+    let liveRows = [], legacyRows = [];
+    let renderScheduled = false;
 
     function setBarsForUser(u){
       if(u){
@@ -590,10 +856,10 @@
         welcomeLine.style.display='none';
       }
     }
-
     function showNRGate(){ nrGate.style.display='flex'; }
     function hideNRGate(){ nrGate.style.display='none'; }
-    let guestGateBypassOnce=false;
+
+    let guestGateBypassOnce = false;
     function chooseGuest(){ guestGateBypassOnce = true; hideNRGate(); }
     function goRegister(){
       const returnUrl = location.pathname + location.search;
@@ -619,6 +885,7 @@
       }
       return 'Speler';
     }
+
     if(auth){
       onAuthStateChanged(auth, async (u)=>{
         user = u || null;
@@ -628,7 +895,7 @@
         if(!user) showNRGate();
 
         isAdminClient = false;
-        const queryOverride  = (new URLSearchParams(location.search)).get('admin') === '1';
+        const queryOverride = (new URLSearchParams(location.search)).get('admin') === '1';
         try{
           if (user) {
             const t = await getIdTokenResult(user);
@@ -648,18 +915,6 @@
       adminPanel.style.display='none';
     }
 
-    let cellCache = [];
-    const H=10, W=8;
-    const COLORS=['#2196f3','#f44336','#4caf50','#ffc107','#9c27b0','#003366','#009688'];
-    const CONS='BCDFGHJKLMNPQRSTVWXZ';
-    const VOWS='AEIOUY';
-    let TARGET='';
-    let grid=Array.from({length:H},()=>Array(W).fill(null));
-    let cur=null, nxt=null;
-    let paused=false, ended=false, moving=false;
-    let gInt=null;
-    let score=0, bestScore=null;
-
     function resizeGrid(){
       const wrap = gridEl.parentElement;
       const availCss = Math.min(320, Math.floor(wrap.clientWidth));
@@ -674,80 +929,17 @@
       const quantH = cellCss * 10;
       document.documentElement.style.setProperty('--cellSize', `${cellCss}px`);
       document.documentElement.style.setProperty('--line', `${1 / dpr}px`);
+      document.documentElement.style.setProperty('--gridW', quantW + 'px');
       gridEl.style.width = quantW + 'px';
       gridEl.style.height = quantH + 'px';
-      document.documentElement.style.setProperty('--gridW', quantW + 'px');
       const glyph = Math.max(15, Math.min(28, Math.round(cellCss * 0.50)));
       document.documentElement.style.setProperty('--cell-font', glyph + 'px');
     }
 
-    function alignDesktopAds(){
-      const layout = document.querySelector('.game-layout');
-      const gridNode = document.getElementById('grid');
-      const leftAd = document.getElementById('desktopAdLeft');
-      const rightAd = document.getElementById('desktopAdRight');
-      if (!layout || !gridNode) return;
-      const layoutRect = layout.getBoundingClientRect();
-      const gridRect = gridNode.getBoundingClientRect();
-      const offset = gridRect.top - layoutRect.top;
-      if (offset >= 0 && offset < 2000){
-        if (leftAd) leftAd.style.top = offset + 'px';
-        if (rightAd) rightAd.style.top = offset + 'px';
-      }
-    }
-
-    const handleResize = debounce(() => {
-      resizeGrid();
-      alignDesktopAds();
-    }, 150);
-
+    const handleResize = debounce(() => { resizeGrid(); }, 150);
     window.addEventListener('resize', handleResize);
 
-    function ensureDynamicStyles(){
-      if (document.getElementById('dynStyles')) return;
-      const s = document.createElement('style');
-      s.id = 'dynStyles';
-      s.textContent = `
-#grid{position:relative;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(10,1fr);gap:0;background:#fff;border:var(--line) solid #0c4a3e;border-radius:8px;overflow:hidden;width:var(--gridW);height:400px;margin:6px auto 8px;}
-#grid::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:5;background:repeating-linear-gradient(to right,transparent 0 calc(var(--cellSize) - var(--line)),rgba(255,255,255,.28) 0 var(--cellSize)),repeating-linear-gradient(to bottom,transparent 0 calc(var(--cellSize) - var(--line)),rgba(255,255,255,.28) 0 var(--cellSize));}
-.cell{position:relative;background:var(--cell-bg);transition:transform .15s ease-out,opacity .15s ease-out;}
-.cell.f{display:grid;place-items:center;color:#fff;font-weight:800;font-size:var(--cell-font);text-shadow:0 1px 1px rgba(0,0,0,.35);}
-.cell.pop{transform:scale(1.15);opacity:0;}
-#fx{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
-.float-score{position:absolute;transform:translate(-50%,0);font-weight:800;font-size:14px;line-height:1;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.55);padding:.15rem .35rem;border-radius:.4rem;background:rgba(0,0,0,.18);animation:floatUp .9s ease-out forwards;will-change:transform,opacity,filter;}
-@keyframes floatUp{0%{opacity:0;transform:translate(-50%,8px);filter:blur(.2px)}15%{opacity:1}85%{opacity:1}100%{opacity:0;transform:translate(-50%,-18px);filter:blur(1px)}}
-#over{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:50;}
-.modal{background:#fff;border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.2);width:min(92%,520px);padding:18px;text-align:center;border:1px solid #e5e7eb;}
-.btn{background:#1e3a8a;color:#fff;font-weight:700;padding:10px 16px;border-radius:10px;}
-.btn.gray{background:#6b7280}
-.btn:disabled{opacity:.6;cursor:not-allowed;}
-.controls{width:100%;max-width:calc(var(--gridW));margin:8px auto 0;}
-.arrow-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;}
-.dir-btn{width:100%;aspect-ratio:1/1;min-width:56px;min-height:56px;display:flex;align-items:center;justify-content:center;background:#053a6b;color:#fff;border-radius:14px;font-weight:800;font-size:24px;}
-@media (min-width:460px){.dir-btn{min-width:64px;min-height:64px;font-size:26px}}
-@media (min-width:640px){.dir-btn{min-width:72px;min-height:72px;font-size:28px}}
-.pill{background:#0c4a3e;color:#fff;font-weight:700;padding:6px 10px;border-radius:8px;text-align:center;}
-#leaderboardList li{padding:.35rem .5rem;border-radius:.375rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}
-#leaderboardList li:nth-child(odd){background:#f3f4f6;}
-#leaderboardList li:first-child{background:#d1fae5;font-weight:700;}
-.metric-right{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;background:#0c4a3e;color:#fff;font-weight:800;border-radius:8px;padding:0.15rem 0.55rem;font-size:0.75rem;line-height:1;}
-.share-menu-local{background:#fff;border:1px solid #e5e7eb;box-shadow:0 8px 24px rgba(0,0,0,.12);border-radius:.5rem;width:240px;padding:.5rem;z-index:3000;line-height:1.25;}
-.share-menu-local button{width:100%;text-align:left;padding:.5rem .75rem;border-radius:.375rem;font-weight:600;line-height:1.25rem;display:flex;align-items:center;gap:.5rem;white-space:nowrap;}
-.share-menu-local button:hover{background:#f3f4f6;}
-.action-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;justify-items:center;align-items:center;}
-.cols-3{grid-template-columns:repeat(3,1fr);}
-.hidden{display:none !important;}
-.action-grid > a,.action-grid > button{display:grid;place-items:center;width:100%;aspect-ratio:1/1;max-width:120px;padding:0;margin:0;background:transparent !important;border:0;border-radius:0;line-height:0;appearance:none;-webkit-appearance:none;box-shadow:none;cursor:pointer;}
-.btn-img{width:100%;height:100%;display:block;object-fit:contain;border-radius:0;box-shadow:0 6px 15px rgba(0,0,0,.25);}
-.btn-img:hover{transform:translateY(-1px);filter:brightness(1.02);}
-.btn-img:active{transform:translateY(0);filter:brightness(.98);}
-#nrGate{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:60;}
-`;
-      document.head.appendChild(s);
-    }
-
     function drawGrid(){
-      ensureDynamicStyles();
       gridEl.innerHTML = '';
       cellCache = [];
       for (let y = 0; y < H; y++) {
@@ -764,7 +956,6 @@
         }
       }
       resizeGrid();
-      alignDesktopAds();
     }
 
     function getCell(x, y){ return (x<0||x>=W||y<0||y>=H) ? null : (cellCache[y]?.[x] || null); }
@@ -799,8 +990,14 @@
     const SCORING = Object.freeze({ PAIR_POINTS: 10, BOTH_BONUS: 50, WORD_BONUS: 100 });
     function setScore(v){ score=Math.max(0, v|0); scoreText.textContent=score; }
     function addScore(v){ setScore(score + (v|0)); }
-    function updateRowHint(){ const y = cur ? Math.max(0, Math.min(H-1, cur.y)) : H-1; rowMultLabel.textContent = String(H - y); }
-    function cellSizePx(){ const raw = getComputedStyle(document.documentElement).getPropertyValue('--cellSize') || '32px'; return Number(String(raw).replace('px','').trim()) || 32; }
+    function updateRowHint(){
+      const y = cur ? Math.max(0, Math.min(H-1, cur.y)) : H-1;
+      rowMultLabel.textContent = String(H - y);
+    }
+    function cellSizePx(){
+      const raw = getComputedStyle(document.documentElement).getPropertyValue('--cellSize') || '32px';
+      return Number(String(raw).replace('px','').trim()) || 32;
+    }
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const animDelay = prefersReducedMotion ? 0 : 450;
@@ -828,7 +1025,8 @@
 
     async function move(dx,dy){
       if(!cur||paused||ended||moving) return;
-      moving=true; clearBlock(cur);
+      moving=true;
+      clearBlock(cur);
       const test={...cur,x:cur.x+dx,y:cur.y+dy};
       if(!collide(test)){ cur=test; drawBlock(cur); }
       else if(dy>0){ drawBlock(cur); place(); }
@@ -875,10 +1073,10 @@
             if(!b || partOfTarget(b.letter)) continue;
 
             const sameLetter = a.letter===b.letter;
-            const sameColor  = a.color===b.color;
+            const sameColor = a.color===b.color;
             if(sameLetter || sameColor){
               const upperY = Math.min(y, ny);
-              const mult   = rowNumber(upperY);
+              const mult = rowNumber(upperY);
               let pairPts = SCORING.PAIR_POINTS;
               if(sameLetter && sameColor) pairPts += SCORING.BOTH_BONUS;
               const added = pairPts * mult;
@@ -955,16 +1153,28 @@
       fxEl.innerHTML='';
       grid=Array.from({length:H},()=>Array(W).fill(null));
       drawGrid();
-      cur=createBlock(); nxt=createBlock(); drawBlock(cur);
-      paused=false; btnPause.textContent='POUSE';
+      cur=createBlock();
+      nxt=createBlock();
+      drawBlock(cur);
+      paused=false;
+      btnPause.textContent='POUSE';
       clearInterval(gInt);
       gInt=setInterval(()=>{ if(!paused && !ended) move(0,1); },1000);
       updateRowHint();
     }
 
-    function togglePause(){ if(!ended){ paused=!paused; btnPause.textContent = paused ? 'HERVAT' : 'POUSE'; } }
+    function togglePause(){
+      if(!ended){
+        paused=!paused;
+        btnPause.textContent = paused ? 'HERVAT' : 'POUSE';
+      }
+    }
 
-    btnStart.addEventListener('click', ()=>{ if(!user && !guestGateBypassOnce){ showNRGate(); return; } guestGateBypassOnce=false; start(); });
+    btnStart.addEventListener('click', ()=>{
+      if(!user && !guestGateBypassOnce){ showNRGate(); return; }
+      guestGateBypassOnce=false;
+      start();
+    });
     btnPause.addEventListener('click', ()=>togglePause());
     btnLeft.addEventListener('click', ()=>move(-1,0));
     btnRight.addEventListener('click',()=>move(1,0));
@@ -988,43 +1198,106 @@
     });
 
     class ShareManager {
-      constructor(){ this.stickyPayload = null; this.currentDate = currentDate; }
-      buildShareUrl(dateStr=this.currentDate){ const url = new URL('/slimstiek.html', SITE_ORIGIN); url.searchParams.set('date', dateStr); return url.toString(); }
-      buildWinText(payload){ const sc = Number(payload?.score ?? score) || 0; return `Ek het ${sc} punte gekry met SLIMSTIEK op Kriptiek vandag: ${this.buildShareUrl()}`; }
-      buildLinkText(){ return `Kyk of jy my telling op vandag se SLIMSTIEK kan klop: ${this.buildShareUrl()}`; }
-      getText(){ return this.stickyPayload ? this.buildWinText(this.stickyPayload) : this.buildLinkText(); }
-      enableStickyShare(payload){ this.stickyPayload = { target: TARGET, score: Number(payload?.score ?? score) }; try{ localStorage.setItem(shareKey(), JSON.stringify({ ...this.stickyPayload, at: Date.now() })); }catch{} }
-      maybeEnableFromStorage(){ try{ const raw = localStorage.getItem(shareKey()); if(!raw) return; const saved = JSON.parse(raw); if(saved && Number.isFinite(saved.score)) this.stickyPayload = saved; }catch{} }
+      constructor(){
+        this.stickyPayload = null;
+        this.currentDate = currentDate;
+      }
+      buildShareUrl(dateStr=this.currentDate){
+        const url = new URL('/slimstiek.html', SITE_ORIGIN);
+        url.searchParams.set('date', dateStr);
+        return url.toString();
+      }
+      buildWinText(payload){
+        const sc = Number(payload?.score ?? score) || 0;
+        return `Ek het ${sc} punte gekry met SLIMSTIEK op Kriptiek vandag: ${this.buildShareUrl()}`;
+      }
+      buildLinkText(){
+        return `Kyk of jy my telling op vandag se SLIMSTIEK kan klop: ${this.buildShareUrl()}`;
+      }
+      getText(){
+        return this.stickyPayload ? this.buildWinText(this.stickyPayload) : this.buildLinkText();
+      }
+      enableStickyShare(payload){
+        this.stickyPayload = { target: TARGET, score: Number(payload?.score ?? score) };
+        try{
+          localStorage.setItem(shareKey(), JSON.stringify({ ...this.stickyPayload, at: Date.now() }));
+        }catch{}
+      }
+      maybeEnableFromStorage(){
+        try{
+          const raw = localStorage.getItem(shareKey());
+          if(!raw) return;
+          const saved = JSON.parse(raw);
+          if(saved && Number.isFinite(saved.score)) this.stickyPayload = saved;
+        }catch{}
+      }
       async trySystemShare(text){
         try{
           const res = await fetch(`${SITE_ORIGIN}/assets/S_SLIMSTIEK_12SEP.png`);
           const blob = await res.blob();
           const files = [new File([blob],'S_SLIMSTIEK_12SEP.png',{type:blob.type})];
-          if(navigator.canShare && navigator.canShare({files})){ await navigator.share({ title:'SLIMSTIEK – Kriptiek', text, files }); return true; }
+          if(navigator.canShare && navigator.canShare({files})){
+            await navigator.share({ title:'SLIMSTIEK – Kriptiek', text, files });
+            return true;
+          }
         }catch{}
-        try{ if(navigator.share){ await navigator.share({ text }); return true; } }catch{}
+        try{
+          if(navigator.share){
+            await navigator.share({ text });
+            return true;
+          }
+        }catch{}
         return false;
       }
       openWhatsApp(text){
         const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
         const w = window.open(url,'_blank','noopener,noreferrer');
-        if(!w && navigator.clipboard) navigator.clipboard.writeText(text).then(()=>showToast("Skakel gekopieer!"));
+        if(!w && navigator.clipboard){
+          navigator.clipboard.writeText(text).then(()=>showToast("Skakel gekopieer!"));
+        }
       }
-      async copyToClipboard(text){ try{ await navigator.clipboard.writeText(text); showToast('Skakel gekopieer!'); return true; }catch{ showToast('Kon nie kopieer nie'); return false; } }
-      toggleMenu(menuEl, triggerEl){ menuEl.classList.toggle('hidden'); if(triggerEl){ const expanded = triggerEl.getAttribute('aria-expanded') === 'true'; triggerEl.setAttribute('aria-expanded', String(!expanded)); } }
-      closeAllMenus(){ document.querySelectorAll('.share-menu-local').forEach(m=>m.classList.add('hidden')); document.querySelectorAll('[aria-haspopup="true"]').forEach(btn=>btn.setAttribute('aria-expanded','false')); }
+      async copyToClipboard(text){
+        try{
+          await navigator.clipboard.writeText(text);
+          showToast('Skakel gekopieer!');
+          return true;
+        }catch{
+          showToast('Kon nie kopieer nie');
+          return false;
+        }
+      }
+      toggleMenu(menuEl, triggerEl){
+        menuEl.classList.toggle('hidden');
+        if(triggerEl){
+          const expanded = triggerEl.getAttribute('aria-expanded') === 'true';
+          triggerEl.setAttribute('aria-expanded', String(!expanded));
+        }
+      }
+      closeAllMenus(){
+        document.querySelectorAll('.share-menu-local').forEach(m=>m.classList.add('hidden'));
+        document.querySelectorAll('[aria-haspopup="true"]').forEach(btn=>btn.setAttribute('aria-expanded','false'));
+      }
     }
 
     const shareMgr = new ShareManager();
-    modalShareBtn.addEventListener('click', (e)=>{ e.stopPropagation(); shareMgr.toggleMenu(shareMenu, modalShareBtn); });
+
+    modalShareBtn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      shareMgr.toggleMenu(shareMenu, modalShareBtn);
+    });
 
     document.addEventListener('click', (e)=>{
       const clickedInsideModalMenu = shareMenu && shareMenu.contains(e.target);
       const clickedModalButton = e.target === modalShareBtn || modalShareBtn.contains(e.target);
       const clickedInsideAnyShareMenu = e.target.closest('.share-menu-local');
       const clickedAnyShareButton = e.target.closest('.share-tile') || clickedModalButton;
-      if (!clickedInsideModalMenu && !clickedModalButton) shareMenu.classList.add('hidden');
-      if (!clickedInsideAnyShareMenu && !clickedAnyShareButton) shareMgr.closeAllMenus();
+
+      if (!clickedInsideModalMenu && !clickedModalButton) {
+        shareMenu.classList.add('hidden');
+      }
+      if (!clickedInsideAnyShareMenu && !clickedAnyShareButton) {
+        shareMgr.closeAllMenus();
+      }
     });
 
     window.addEventListener('scroll', ()=> shareMgr.closeAllMenus());
@@ -1032,14 +1305,19 @@
 
     mWA.onclick = () => { shareMgr.openWhatsApp(shareMgr.getText()); shareMgr.closeAllMenus(); };
     mCopy.onclick = async () => { await shareMgr.copyToClipboard(shareMgr.getText()); shareMgr.closeAllMenus(); };
-    mSys.onclick = async () => { const ok = await shareMgr.trySystemShare(shareMgr.getText()); if(!ok) shareMgr.openWhatsApp(shareMgr.getText()); shareMgr.closeAllMenus(); };
+    mSys.onclick = async () => {
+      const ok = await shareMgr.trySystemShare(shareMgr.getText());
+      if(!ok) shareMgr.openWhatsApp(shareMgr.getText());
+      shareMgr.closeAllMenus();
+    };
 
     function wireShareTile(wrapper){
       const btn = wrapper.querySelector('.share-tile');
       const menu = wrapper.querySelector('.share-menu-local');
       if(!btn || !menu) return;
       btn.addEventListener('click', (e)=>{
-        e.preventDefault(); e.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
         shareMgr.closeAllMenus();
         shareMgr.toggleMenu(menu, btn);
       });
@@ -1048,10 +1326,16 @@
       const sys = menu.querySelector('button.sys');
       wa?.addEventListener('click', () => { shareMgr.openWhatsApp(shareMgr.getText()); shareMgr.closeAllMenus(); });
       cp?.addEventListener('click', async () => { await shareMgr.copyToClipboard(shareMgr.getText()); shareMgr.closeAllMenus(); });
-      sys?.addEventListener('click', async () => { const ok = await shareMgr.trySystemShare(shareMgr.getText()); if(!ok) shareMgr.openWhatsApp(shareMgr.getText()); shareMgr.closeAllMenus(); });
+      sys?.addEventListener('click', async () => {
+        const ok = await shareMgr.trySystemShare(shareMgr.getText());
+        if(!ok) shareMgr.openWhatsApp(shareMgr.getText());
+        shareMgr.closeAllMenus();
+      });
     }
 
-    function initTileShareDropdowns(){ document.querySelectorAll('.share-tile-wrap').forEach(wireShareTile); }
+    function initTileShareDropdowns(){
+      document.querySelectorAll('.share-tile-wrap').forEach(wireShareTile);
+    }
 
     const LB_LOCAL_KEY = d => `slimstiekLocalLB:${d}`;
     function cleanupOldLocalLB(){
@@ -1066,17 +1350,21 @@
         }
       });
     }
-    function getLocalLB(date){ try{ return JSON.parse(localStorage.getItem(LB_LOCAL_KEY(date))) || []; } catch{ return []; } }
-    function setLocalLB(date, arr){ try{ localStorage.setItem(LB_LOCAL_KEY(date), JSON.stringify(arr)); }catch{} }
-
-    let unsubLive = null, unsubLegacy = null;
-    let liveRows = [], legacyRows = [];
-    let renderScheduled = false;
+    function getLocalLB(date){
+      try{ return JSON.parse(localStorage.getItem(LB_LOCAL_KEY(date))) || []; }
+      catch{ return []; }
+    }
+    function setLocalLB(date, arr){
+      try{ localStorage.setItem(LB_LOCAL_KEY(date), JSON.stringify(arr)); }catch{}
+    }
 
     function scheduleRenderMerged(){
       if (renderScheduled) return;
       renderScheduled = true;
-      requestAnimationFrame(() => { renderScheduled = false; renderMerged(); });
+      requestAnimationFrame(() => {
+        renderScheduled = false;
+        renderMerged();
+      });
     }
 
     function rowsToMap(rows){
@@ -1097,9 +1385,11 @@
 
     async function renderMerged(){
       const map = rowsToMap([...liveRows, ...legacyRows]);
-      const combined = Array.from(map.values()).sort((a,b)=> (b.score|0)-(a.score|0) || (a.ts||9e15)-(b.ts||9e15)).slice(0, 100);
-      lbList.innerHTML = '';
+      const combined = Array.from(map.values())
+        .sort((a,b)=> (b.score|0)-(a.score|0) || (a.ts||9e15)-(b.ts||9e15))
+        .slice(0, 100);
 
+      lbList.innerHTML = '';
       if (!combined.length){
         const local = getLocalLB(currentDate).sort((a,b)=> (b.score|0)-(a.score|0)).slice(0,10);
         if (!local.length){
@@ -1127,7 +1417,7 @@
         const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
         const isSupp = supporterCache.get(v.id) === true;
         const star = renderSupporterStar(isSupp);
-        const li  = document.createElement('li');
+        const li = document.createElement('li');
         const left = `<span class="flex-1"><strong>${(v.userName||'Onbekend')}</strong>${star}${you}</span>`;
         const metric = `<span class="metric-right">${Number(v.score??0)} punte</span>`;
         li.innerHTML = left + metric;
@@ -1192,7 +1482,6 @@
       }
     }
 
-    let lastFocusedElement = null;
     function trapFocus(modalEl){
       lastFocusedElement = document.activeElement;
       const focusable = modalEl.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
@@ -1235,10 +1524,16 @@
         const preferred = ['target','targetWord','word','solution','answer','slimstiek'];
         for (const want of preferred){
           const found = keys.find(k => k.toLowerCase() === want.toLowerCase());
-          if (found && typeof d[found] === 'string') { const w = norm(d[found]); if (w) return w; }
+          if (found && typeof d[found] === 'string') {
+            const w = norm(d[found]);
+            if (w) return w;
+          }
         }
         for (const k of keys){
-          if (typeof d[k] === 'string'){ const w = norm(d[k]); if (w && w.length >= 3 && w.length <= 12) return w; }
+          if (typeof d[k] === 'string'){
+            const w = norm(d[k]);
+            if (w && w.length >= 3 && w.length <= 12) return w;
+          }
         }
         return '';
       };
@@ -1253,12 +1548,16 @@
       ];
 
       const results = await Promise.all(lookups);
-      for (const d of results){ const w = pickFromDoc(d); if (w) return w; }
+      for (const d of results){
+        const w = pickFromDoc(d);
+        if (w) return w;
+      }
       throw new Error(`Geen teikenwoord gevind vir ${currentDate}.`);
     }
 
     async function loadGame(){
       targetEl.innerHTML = '<div class="loading-spinner"></div>';
+
       try {
         TARGET = await resolveTargetWord();
         if (!TARGET || TARGET.length < 3 || TARGET.length > 12 || /[^A-Z]/.test(TARGET)) {
@@ -1303,12 +1602,12 @@
         ]);
 
         const liveMap = new Map(liveSnap.docs.map(d=>[d.id, {id:d.id, ...d.data()}]));
-        const legMap = new Map(legacySnap.docs.map(d=>[d.id, {id:d.id, ...d.data()}]));
+        const legMap  = new Map(legacySnap.docs.map(d=>[d.id, {id:d.id, ...d.data()}]));
         const uids = new Set([...liveMap.keys(), ...legMap.keys()]);
 
         for (const uid of uids){
           const liveRow = liveMap.get(uid) || {};
-          const legRow = legMap.get(uid) || {};
+          const legRow  = legMap.get(uid) || {};
           const liveScore = Number(liveRow.score||0);
           const legScore  = Number(legRow.score||0);
           const pickLive  = liveScore >= legScore;
@@ -1342,32 +1641,53 @@
       return out;
     }
 
-    btnBFOne?.addEventListener('click', async ()=>{ const d = dAdmin.value || currentDate; await backfillOne(d); subscribeMergedLeaderboard(); });
-    btnBFRange?.addEventListener('click', async ()=>{ const a = dAdmin.value || currentDate; const b = dAdminTo.value || a; for (const day of eachDayISO(a,b)){ await backfillOne(day); } subscribeMergedLeaderboard(); });
+    btnBFOne?.addEventListener('click', async ()=>{
+      const d = dAdmin.value || currentDate;
+      await backfillOne(d);
+      subscribeMergedLeaderboard();
+    });
+
+    btnBFRange?.addEventListener('click', async ()=>{
+      const a = dAdmin.value || currentDate;
+      const b = dAdminTo.value || a;
+      for (const day of eachDayISO(a,b)){ await backfillOne(day); }
+      subscribeMergedLeaderboard();
+    });
 
     window.addEventListener('beforeunload', () => {
       if (typeof unsubLive === 'function') unsubLive();
       if (typeof unsubLegacy === 'function') unsubLegacy();
     });
 
-    function trackGA4Event(name, params){ if(typeof gtag === 'function') gtag('event', name, params); }
+    function trackGA4Event(name, params){
+      if(typeof gtag === 'function') gtag('event', name, params);
+    }
 
     const originalAddScore = addScore;
-    addScore = function(v){ originalAddScore(v); trackGA4Event('slimstiek_score_update', { points_added: v, total_score: score }); };
+    addScore = function(v){
+      originalAddScore(v);
+      trackGA4Event('slimstiek_score_update', { points_added: v, total_score: score });
+    };
 
     const originalMatchAndDrop = matchAndDrop;
     matchAndDrop = async function(){
       const beforeScore = score;
       await originalMatchAndDrop();
       if(score > beforeScore){
-        trackGA4Event('slimstiek_match', { points_earned: score - beforeScore, multiplier: H - (cur?.y || H-1), letter: cur?.letter });
+        trackGA4Event('slimstiek_match', {
+          points_earned: score - beforeScore,
+          multiplier: H - (cur?.y || H-1),
+          letter: cur?.letter
+        });
       }
     };
 
     const originalCheckWin = checkWin;
     checkWin = async function(){
       const result = await originalCheckWin();
-      if(ended && score > 0) trackGA4Event('slimstiek_word_complete', { target: TARGET, final_score: score });
+      if(ended && score > 0){
+        trackGA4Event('slimstiek_word_complete', { target: TARGET, final_score: score });
+      }
       return result;
     };
 
@@ -1382,5 +1702,3 @@
   </script>
 </body>
 </html>
-
-    
