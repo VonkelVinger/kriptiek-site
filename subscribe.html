@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Binnekort: Subskripsie</title>
+  <title>Ondersteun Kriptiek</title>
 
   <!-- Favicon and App Icons -->
   <link rel="icon" href="/assets/favicon.ico" type="image/x-icon" />
@@ -88,23 +88,46 @@
   </header>
 
   <main class="flex-grow p-6 max-w-3xl mx-auto text-center">
-    <h1 class="text-2xl font-bold mb-4">Binnekort: Subskripsie</h1>
+    <h1 class="text-2xl font-bold mb-4">Ondersteun Kriptiek</h1>
 
     <p class="mb-4">
-      Basiese toegang tot al Kriptiek se speletjies is gratis, maar bykomende voordele sal binnekort
-      aan betalende intekenare beskikbaar wees, insluitend:
+      Basiese toegang tot al Kriptiek se speletjies is gratis, maar Ondersteuners kry bykomende voordele.
     </p>
 
-    <ul class="list-disc list-inside text-left max-w-lg mx-auto mb-6">
-      <li>’n Ster (★) langs jou naam op ranglyste wat jou as 'n Ondersteuner identifiseer</li>
-      <li>'n Meer gedetailleerde speelgeskiedenis wat jy met ander kan deel.</li>
+    <ul class="list-disc list-inside text-left max-w-xl mx-auto mb-6">
+      <li>★ langs jou naam oral op Kriptiek</li>
+      <li>“Ondersteuner”-status op My Profiel</li>
+      <li>Gedetailleerde speelgeskiedenis, gevorderde persoonlike statistiek en ’n deelbare profielkaart</li>
     </ul>
 
+    <p class="mb-6">
+      Jy moet aangemeld wees om in te teken. As jy reeds via Buy Me a Coffee ondersteun het, sal ons jou saldo handmatig krediteer.
+    </p>
+
+    <div class="bg-white rounded-xl shadow p-6 max-w-xl mx-auto mb-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <button
+          id="monthlyBtn"
+          class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-lg transition"
+        >
+          Maandeliks — R40
+        </button>
+
+        <button
+          id="annualBtn"
+          class="w-full bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-bold py-3 px-4 rounded-lg transition"
+        >
+          Jaarliks — R400
+        </button>
+      </div>
+
+      <p id="subscribeStatus" class="mt-4 text-sm text-gray-600"></p>
+    </div>
+
     <p class="mb-4">
-      As jy Kriptiek reeds via Buy Me A Coffee ondersteun, sal jou saldo na die nuwe subskripsiestelsel oorgedra word.
       Hou ons
-      <a href="https://www.kriptiek.com/forum.html" class="text-blue-600 hover:text-blue-500 underline transition">geselsblad</a> dop vir nuus hieroor.
-      As jy enige voorstelle of kommentaar het, kliek op
+      <a href="https://www.kriptiek.com/forum.html" class="text-blue-600 hover:text-blue-500 underline transition">geselsblad</a>
+      dop vir nuus. As jy enige voorstelle of kommentaar het, kliek op
       <a href="/contact.html" class="text-blue-600 underline">Kontak ons</a>.
     </p>
   </main>
@@ -117,33 +140,105 @@
     <a href="/faq.html" class="underline">Gereelde vrae</a> |
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-functions.js";
 
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const backgroundCrossword = document.getElementById('backgroundCrossword');
-      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const firebaseConfig = {
+      apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
+      authDomain: "kriptiek-c9ea2.firebaseapp.com",
+      projectId: "kriptiek-c9ea2",
+      storageBucket: "kriptiek-c9ea2.firebasestorage.app",
+      messagingSenderId: "620450620939",
+      appId: "1:620450620939:web:e93a18ac23b53b33db890e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const functions = getFunctions(app, "europe-west1");
+
+    const monthlyBtn = document.getElementById("monthlyBtn");
+    const annualBtn = document.getElementById("annualBtn");
+    const statusEl = document.getElementById("subscribeStatus");
+
+    let currentUser = null;
+
+    function setBusy(isBusy) {
+      monthlyBtn.disabled = isBusy;
+      annualBtn.disabled = isBusy;
+      monthlyBtn.classList.toggle("opacity-60", isBusy);
+      annualBtn.classList.toggle("opacity-60", isBusy);
+      monthlyBtn.classList.toggle("cursor-not-allowed", isBusy);
+      annualBtn.classList.toggle("cursor-not-allowed", isBusy);
+    }
+
+    async function startCheckout(plan) {
+      if (!currentUser) {
+        statusEl.textContent = "Jy moet eers aanmeld voordat jy kan inteken.";
+        return;
+      }
+
+      try {
+        setBusy(true);
+        statusEl.textContent = "Net ’n oomblik ...";
+
+        const createCheckoutUrl = httpsCallable(functions, "createCheckoutUrl");
+        const result = await createCheckoutUrl({ plan });
+
+        const url = result?.data?.authorization_url;
+        if (!url) throw new Error("Geen checkout-skakel ontvang nie.");
+
+        window.location.href = url;
+      } catch (err) {
+        console.error("Checkout error:", err);
+        statusEl.textContent = "Kon nie die betaalblad oopmaak nie. Probeer asseblief weer.";
+        setBusy(false);
+      }
+    }
+
+    monthlyBtn.addEventListener("click", () => startCheckout("monthly"));
+    annualBtn.addEventListener("click", () => startCheckout("annual"));
+
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user || null;
+
+      if (currentUser) {
+        statusEl.textContent = "Jy is aangemeld en kan nou inteken.";
+      } else {
+        statusEl.textContent = "Jy moet aanmeld om in te teken.";
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const backgroundCrossword = document.getElementById("backgroundCrossword");
+      const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
       function getRandomLetter() {
         return letters[Math.floor(Math.random() * letters.length)];
       }
 
       function generateBackgroundGrid() {
-        backgroundCrossword.innerHTML = '';
+        backgroundCrossword.innerHTML = "";
         const numRows = Math.ceil(backgroundCrossword.offsetHeight / 30);
         const numCols = Math.ceil(backgroundCrossword.offsetWidth / 30);
         const totalCells = (numRows * numCols) || 300;
 
         for (let i = 0; i < totalCells; i++) {
-          const bgLetterBox = document.createElement('div');
-          bgLetterBox.classList.add('bg-letter-box');
+          const bgLetterBox = document.createElement("div");
+          bgLetterBox.classList.add("bg-letter-box");
           bgLetterBox.textContent = getRandomLetter();
           backgroundCrossword.appendChild(bgLetterBox);
         }
       }
 
       generateBackgroundGrid();
-      window.addEventListener('resize', generateBackgroundGrid);
+      window.addEventListener("resize", generateBackgroundGrid);
     });
   </script>
 </body>
 </html>
+
+
+
+  
