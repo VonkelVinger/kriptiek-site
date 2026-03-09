@@ -633,26 +633,39 @@
       statusLineEl.innerHTML = msg;
     }
 
-    function checkPrimaryWin(){
-      if (state.gameOver) return;
-      const {found, total} = updateWordUI();
-      if (total > 0 && found === total){
-        state.won = true;
-        state.gameOver = true;
+   function checkPrimaryWin(){
+  if (state.gameOver) return;
 
-        const bombStats = updateBombFlagUI();
-        const clearStats = updateClearUI();
+  const {found, total} = updateWordUI();
+  const bombStats = updateBombFlagUI();
+  const clearStats = updateClearUI();
 
-        const badges = [];
-        if (bombStats.cleanBombs) badges.push("✅ <b>Clean bombs</b>");
-        if (clearStats.fullClear) badges.push("✅ <b>Full clear</b>");
+  const wordsDone = (total > 0 && found === total);
 
-        setStatus(
-          `🏁 <b>WIN:</b> All words found. <b>Clicks:</b> ${state.clicks}` +
-          (badges.length ? ` • ${badges.join(" • ")}` : ` • (No bonus badges yet)`)
-        );
-      }
-    }
+  // If words are done but bombs not yet clean, keep playing and prompt the player.
+  if (wordsDone && !bombStats.cleanBombs){
+    setStatus(
+      `✅ <b>Words complete.</b> Now finish by flagging all bombs correctly. ` +
+      `(<b>Bomb flags:</b> ${bombStats.correct}/${bombStats.total}` +
+      (bombStats.wrong ? `, <b>wrong flags:</b> ${bombStats.wrong}` : ``) +
+      `) • <b>Clicks:</b> ${state.clicks}`
+    );
+    return;
+  }
+
+  // Final win = words + clean bombs
+  if (wordsDone && bombStats.cleanBombs){
+    state.won = true;
+    state.gameOver = true;
+
+    const badges = ["✅ <b>Clean bombs</b>"];
+    if (clearStats.fullClear) badges.push("✅ <b>Full clear</b>");
+
+    setStatus(
+      `🏁 <b>WIN:</b> Words + bombs complete. <b>Clicks:</b> ${state.clicks} • ${badges.join(" • ")}`
+    );
+  }
+}
 
     function isWordComplete(run){
       for (const k of run){
@@ -687,6 +700,7 @@
 
       if (revealedAnyEndcaps){
         refreshTopStats();
+        checkPrimaryWin();
       }
     }
 
