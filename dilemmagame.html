@@ -383,9 +383,11 @@
     let currentRow = 0, currentCol = 0;
     let board = [], targetWord = "", gameOver = false;
 
-    let currentUid = null;
-    let displayName = localStorage.getItem("userName") || "Speler";
+let currentUid = null;
+let viewerIsSupporter = false;
 
+let displayName = localStorage.getItem("userName") || "Speler";
+    
     /* ---- IDs/keys (use GAME_ID) ---- */
     const doneKey = `dilemma-${GAME_ID}-done`;
     const progressKey = `dilemma-${GAME_ID}-progress`;
@@ -1091,6 +1093,21 @@
       }, gridCols * 350 + 20);
     }
 
+async function refreshViewerSupporterStatus(uid) {
+  viewerIsSupporter = false;
+
+  if (!uid) return;
+
+  try {
+    const supporterSnap = await getDoc(doc(db, "supportersPublic", uid));
+    viewerIsSupporter = !!(supporterSnap.exists() && supporterSnap.data()?.active === true);
+  } catch (err) {
+    console.warn("Could not load viewer supporter status:", err);
+    viewerIsSupporter = false;
+  }
+}
+
+    
     /* ---- Auth gate + init ---- */
     onAuthStateChanged(auth, async (user) => {
       if (RESET_REQUESTED) return;
