@@ -826,7 +826,8 @@
       await Promise.all(uniq.map(uid => fetchSupporterActive(uid)));
     }
 
-    let user = null;
+let user=null;
+let viewerIsSupporter=false;
     let currentUserName = 'Speler';
     let isAdminClient = false;
     let cellCache = [];
@@ -885,11 +886,24 @@
       }
       return 'Speler';
     }
+async function refreshViewerSupporterStatus(uid){
+  viewerIsSupporter = false;
 
+  if (!uid) return;
+
+  try {
+    const snap = await getDoc(doc(db, "supportersPublic", uid));
+    viewerIsSupporter = !!(snap.exists() && snap.data()?.active === true);
+  } catch (err) {
+    console.warn("Supporter status check failed:", err);
+    viewerIsSupporter = false;
+  }
+}
     if(auth){
       onAuthStateChanged(auth, async (u)=>{
-        user = u || null;
-        currentUserName = user ? await resolveUserName(user) : 'Speler';
+  user = u || null;
+  await refreshViewerSupporterStatus(user?.uid);
+  currentUserName = user ? await resolveUserName(user) : 'Speler';
         playerNameEl.textContent = currentUserName;
         setBarsForUser(user);
         if(!user) showNRGate();
@@ -1400,7 +1414,8 @@
         bestText.textContent = String(local[0].score);
         local.forEach(row=>{
           const li=document.createElement('li');
-          li.innerHTML = `<span class="flex-1"><strong>${row.userName||'Speler'}</strong>: ${row.score|0} punte</span>`;
+const safeName = viewerIsSupporter ? (row.userName || 'Speler') : '🔒';
+li.innerHTML = `<span class="flex-1"><strong>${safeName}</strong>: ${row.score|0} punte</span>`;
           lbList.appendChild(li);
         });
         return;
@@ -1414,12 +1429,15 @@
       }catch{}
 
       combined.slice(0,10).forEach(v=>{
-        const you = user && v.id === user.uid ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>' : '';
-        const isSupp = supporterCache.get(v.id) === true;
-        const star = renderSupporterStar(isSupp);
-        const li = document.createElement('li');
-        const left = `<span class="flex-1"><strong>${(v.userName||'Onbekend')}</strong>${star}${you}</span>`;
-        const metric = `<span class="metric-right">${Number(v.score??0)} punte</span>`;
+        const you = user && v.id === user.uid && viewerIsSupporter
+  ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>'
+  : '';
+const isSupp = supporterCache.get(v.id) === true;
+const star = viewerIsSupporter ? renderSupporterStar(isSupp) : '';
+const li = document.createElement('li');
+const safeName = viewerIsSupporter ? (v.userName || 'Onbekend') : '🔒';
+const left = `<span class="flex-1"><strong>${safeName}</strong>${star}${you}</span>`;
+const metric = `<span class="metric-right">${Number(v.score??0)} punte</span>`;
         li.innerHTML = left + metric;
         lbList.appendChild(li);
       });
