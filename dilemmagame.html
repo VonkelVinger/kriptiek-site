@@ -1116,16 +1116,19 @@ async function refreshViewerSupporterStatus(uid) {
       statusLine.textContent = "";
       statusLine.style.display = "none";
 
-      if (!user) {
-        renderAuthRequired();
-        await loadLeaderboard();
-        return;
-      }
+if (!user) {
+  currentUid = null;
+  viewerIsSupporter = false;
+  renderAuthRequired();
+  await loadLeaderboard();
+  return;
+}
 
       currentUid = user.uid;
+await refreshViewerSupporterStatus(currentUid);
 
-      try {
-        const uDoc = await getDoc(doc(db, "users", currentUid));
+try {
+  const uDoc = await getDoc(doc(db, "users", currentUid));
         const nm = uDoc.exists() ? uDoc.data()?.userName : null;
         if (typeof nm === "string" && nm.trim()) {
           displayName = nm.trim();
