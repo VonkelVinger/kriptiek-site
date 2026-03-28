@@ -466,43 +466,46 @@
     }
 
     async function loadGameData() {
-      const { gameRef, game } = await loadTodayGame(db);
-      loadedGameId = gameRef.id;
+  const { gameRef, game } = await loadTodayGame(db);
+  loadedGameId = gameRef.id;
 
-      gameClue = game.clue || "Geen leidraad beskikbaar nie.";
-      gameStatus = game.status || "inactive";
-      gridCols = Number(game.length || 0);
+  gameClue = game.clue || "Geen leidraad beskikbaar nie.";
+  gameStatus = game.status || "inactive";
 
-      const todayId = "Game" + getZAISODate();
-      const todayPlainId = getZAISODate();
-      isArchiveMode = loadedGameId !== todayId && loadedGameId !== todayPlainId;
+  const todayId = "Game" + getZAISODate();
+  const todayPlainId = getZAISODate();
+  isArchiveMode = loadedGameId !== todayId && loadedGameId !== todayPlainId;
 
-      if (isArchiveMode) {
-        try {
-          const snap = await getDoc(doc(db, "games", loadedGameId));
-          const data = snap.exists() ? (snap.data() || {}) : {};
-          archiveWord = String(data.archiveWord || data.word || "").toUpperCase();
-        } catch {}
+  if (isArchiveMode) {
+    try {
+      const snap = await getDoc(doc(db, "games", loadedGameId));
+      const data = snap.exists() ? (snap.data() || {}) : {};
+      archiveWord = String(data.archiveWord || data.word || "").toUpperCase();
+    } catch {}
 
-        if (!archiveWord) {
-          statusLine.textContent = "Hierdie argief-Dilemma se antwoord is nog nie beskikbaar nie.";
-          statusLine.style.display = "block";
-          disableGame();
-          throw new Error("[Dilemma] Archive word missing on public game doc for " + loadedGameId);
-        }
-      } else {
-        archiveWord = "";
-      }
-
-      document.getElementById("clue").textContent = gameClue;
-
-      if (!Number.isFinite(gridCols) || gridCols < 1) {
-        statusLine.textContent = "Hierdie Dilemma is nie reg opgestel nie.";
-        statusLine.style.display = "block";
-        disableGame();
-        throw new Error("[Dilemma] Missing or invalid length on public game doc for " + GAME_ID);
-      }
+    if (!archiveWord) {
+      statusLine.textContent = "Hierdie argief-Dilemma se antwoord is nog nie beskikbaar nie.";
+      statusLine.style.display = "block";
+      disableGame();
+      throw new Error("[Dilemma] Archive word missing on public game doc for " + loadedGameId);
     }
+
+    // For archive games, fall back to answer length if public length is missing
+    gridCols = Number(game.length || archiveWord.length || 0);
+  } else {
+    archiveWord = "";
+    gridCols = Number(game.length || 0);
+  }
+
+  document.getElementById("clue").textContent = gameClue;
+
+  if (!Number.isFinite(gridCols) || gridCols < 1) {
+    statusLine.textContent = "Hierdie Dilemma is nie reg opgestel nie.";
+    statusLine.style.display = "block";
+    disableGame();
+    throw new Error("[Dilemma] Missing or invalid length on public game doc for " + loadedGameId);
+  }
+}
 
     function createGrid() {
       gameGrid.innerHTML = "";
