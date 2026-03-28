@@ -455,7 +455,7 @@
       let gameSnap = await getDoc(gameRef);
 
       if (!gameSnap.exists()) {
-        const plainId = GAME_ID.replace(/^Game/, '');
+        const plainId = GAME_ID.replace(/^Game/, "");
         const legacyRef = doc(db, "games", plainId);
         const legacySnap = await getDoc(legacyRef);
         if (legacySnap.exists()) {
@@ -465,30 +465,32 @@
       }
 
       if (!gameSnap.exists()) {
-        const msg = 'Geen spel vir vandag gelaai nie. Probeer later weer.';
+        const msg = "Geen spel vir vandag gelaai nie. Probeer later weer.";
         statusLine.textContent = msg;
-        statusLine.style.display = 'block';
+        statusLine.style.display = "block";
         disableGame();
-        throw new Error('[Dilemma] Game doc missing for ' + GAME_ID);
+        throw new Error("[Dilemma] Game doc missing for " + GAME_ID);
       }
 
       const raw = gameSnap.data() || {};
       return {
         gameRef,
         game: {
-          clue: String(raw.clue || ""),
+          clue: String(raw.clue || raw.leidraad || ""),
           length: Number(raw.length || 0),
           status: String(raw.status || "inactive")
         }
       };
     }
-
-    async function loadGameData() {
+    
+       async function loadGameData() {
       const { game } = await loadTodayGame(db);
 
       gameClue = game.clue || "Geen leidraad beskikbaar nie.";
       gameStatus = game.status || "inactive";
       gridCols = Number(game.length || 0);
+
+      document.getElementById("clue").textContent = gameClue;
 
       if (!Number.isFinite(gridCols) || gridCols < 1) {
         statusLine.textContent = "Hierdie Dilemma is nie reg opgestel nie.";
@@ -496,8 +498,6 @@
         disableGame();
         throw new Error("[Dilemma] Missing or invalid length on public game doc for " + GAME_ID);
       }
-
-      document.getElementById("clue").textContent = gameClue;
     }
 
     function createGrid() {
