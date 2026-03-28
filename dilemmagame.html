@@ -13,7 +13,7 @@
   <!-- AdSense verification -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8199352351586797"
           crossorigin="anonymous"></script>
-  
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DILEMMA – Kriptiek</title>
@@ -119,7 +119,6 @@
   <main class="flex-grow">
     <div class="max-w-6xl mx-auto px-4 py-4">
       <div class="flex flex-col lg:flex-row lg:items-start lg:justify-center gap-4">
-
         <!-- Desktop: left Brandkop ad -->
         <div class="hidden lg:block w-[300px] flex-shrink-0">
           <div class="mb-2 text-center text-xs font-semibold tracking-wide uppercase text-gray-500">
@@ -136,6 +135,7 @@
             />
           </a>
         </div>
+
         <!-- Centre column -->
         <div class="flex-1 flex flex-col items-stretch">
           <div class="game-container">
@@ -192,7 +192,7 @@
               </ul>
             </div>
 
-            <!-- HELP ONS CTA (aligned with Slimstiek/Blitstiek) -->
+            <!-- HELP ONS CTA -->
             <div class="mt-4 mb-4 flex justify-center">
               <div class="w-full rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800">
                 <a href="https://www.kriptiek.com/subscribe.html" target="_blank" rel="noopener"
@@ -208,7 +208,7 @@
               </div>
             </div>
 
-            <!-- Mobile: Brandkop ad directly below HELP ONS bar -->
+            <!-- Mobile: Brandkop ad -->
             <div class="mt-2 mb-4 flex flex-col items-center lg:hidden">
               <div class="mb-1 text-center text-xs font-semibold tracking-wide uppercase text-gray-500">
                 ADVERTENSIE
@@ -232,8 +232,8 @@
               </div>
               <ul id="leaderboardList" class="text-gray-700 text-left"><li>Laai...</li></ul>
             </div>
-          </div> <!-- end .game-container -->
-        </div> <!-- end centre column -->
+          </div>
+        </div>
 
         <!-- Desktop: right Brandkop ad -->
         <div class="hidden lg:block w-[300px] flex-shrink-0">
@@ -252,9 +252,10 @@
           </a>
         </div>
 
-      </div> <!-- end flex row -->
-    </div>   <!-- end max-w-6xl -->
+      </div>
+    </div>
   </main>
+
   <footer class="bg-white shadow p-4 text-center text-sm text-gray-500">
     &copy; 2025 Kriptiek. Alle regte voorbehou. |
     <a href="/index.html" class="underline">Tuis</a> |
@@ -296,11 +297,13 @@
       ));
       return za.toISOString().slice(0, 10);
     }
+
     function resolveGameId() {
       const qp = new URLSearchParams(location.search);
       const override = qp.get('gameId') || qp.get('game') || qp.get('date');
       return override ? (override.startsWith('Game') ? override : ('Game' + override)) : ('Game' + getZAISODate());
     }
+
     window.GAME_ID = resolveGameId();
   </script>
 
@@ -309,6 +312,7 @@
     import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import { getFirestore, doc, getDoc, collection, setDoc, getDocs, serverTimestamp, query, orderBy, limit, deleteDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-functions.js";
 
     /* ---- Firebase config ---- */
     const firebaseConfig = {
@@ -320,23 +324,78 @@
       appId: "1:620450620939:web:e93a18ac23b53b33db890e"
     };
 
-    const app  = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-    const db   = getFirestore(app);
+    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+    const db = getFirestore(app);
     const auth = getAuth(app);
+    const functions = getFunctions(app, "europe-west1");
+    const checkDilemmaGuess = httpsCallable(functions, "checkDilemmaGuess");
 
-    /* ✅ Define GAME_ID up-front so all functions can safely use it */
     const GAME_ID = window.GAME_ID;
-
-    /* ✅ Query params & reset flag */
     const __QP = new URLSearchParams(location.search);
     const RESET_REQUESTED = __QP.get('reset') === '1';
 
-    /* --- TEMP: self-reset via ?reset=1 (safe to use GAME_ID) --- */
+    /* ---- UI refs ---- */
+    const gameGrid = document.getElementById("game-grid");
+    const keyboard = document.getElementById("keyboard");
+    const modal = document.getElementById("resultModal");
+    const resultMsg = document.getElementById("resultMessage");
+    const leaderboardList = document.getElementById("leaderboardList");
+    const playerNameEl = document.getElementById("playerName");
+    const statusLine = document.getElementById("statusLine");
+
+    const pMenu = document.getElementById("shareMenuPersistent");
+    const mMenu = document.getElementById("shareMenuModal");
+    const tileShareBtn = document.getElementById("tileShareBtn");
+    const pWA = document.getElementById("pWhatsApp");
+    const pCopy = document.getElementById("pCopy");
+    const pSys = document.getElementById("pSystem");
+    const mWA = document.getElementById("mWhatsApp");
+    const mCopy = document.getElementById("mCopy");
+    const mSys = document.getElementById("mSystem");
+
+    /* ---- State ---- */
+    let gridRows = 6;
+    let gridCols = 5;
+    let currentRow = 0;
+    let currentCol = 0;
+    let board = [];
+    let gameOver = false;
+    let isSubmitting = false;
+
+    let currentUid = null;
+    let viewerIsSupporter = false;
+    let displayName = localStorage.getItem("userName") || "Speler";
+
+    let gameClue = "";
+    let gameStatus = "inactive";
+
+    const doneKey = `dilemma-${GAME_ID}-done`;
+    const progressKey = `dilemma-${GAME_ID}-progress`;
+
+    const SHARE_URL = "https://www.kriptiek.com/dilemmagame.html";
+    const SHARE_TEXT_URL = (() => {
+      const u = new URL(SHARE_URL);
+      u.searchParams.set('gameId', GAME_ID);
+      u.searchParams.set('wa', 'v6');
+      return u.toString();
+    })();
+
+    playerNameEl.textContent = displayName;
+
+    function disableGame() {
+      gameOver = true;
+      document.querySelectorAll(".key").forEach(k => k.disabled = true);
+    }
+
+    function setKeyboardDisabled(disabled) {
+      document.querySelectorAll(".key").forEach(k => k.disabled = !!disabled);
+    }
+
     async function selfResetIfRequested() {
       if (!RESET_REQUESTED) return;
 
-      const todayId = GAME_ID;                         // "GameYYYY-MM-DD"
-      const plainId = todayId.replace(/^Game/, "");    // "YYYY-MM-DD"
+      const todayId = GAME_ID;
+      const plainId = todayId.replace(/^Game/, "");
       for (const k of Object.keys(localStorage)) {
         if (
           k.startsWith(`dilemma-${todayId}-`) ||
@@ -354,75 +413,12 @@
       }
 
       alert("Herstel klaar. Die blad sal herlaai.");
-      const clean = new URL(location.href); clean.searchParams.delete('reset');
+      const clean = new URL(location.href);
+      clean.searchParams.delete('reset');
       location.replace(clean.toString());
     }
+
     selfResetIfRequested();
-
-    /* ---- UI refs ---- */
-    const gameGrid = document.getElementById("game-grid");
-    const keyboard = document.getElementById("keyboard");
-    const modal = document.getElementById("resultModal");
-    const resultMsg = document.getElementById("resultMessage");
-    const leaderboardList = document.getElementById("leaderboardList");
-    const playerNameEl = document.getElementById("playerName");
-    const statusLine = document.getElementById("statusLine");
-    /* persistent (yellow tile) share menu + controls */
-    const pMenu = document.getElementById("shareMenuPersistent");
-    const mMenu = document.getElementById("shareMenuModal");
-    const tileShareBtn = document.getElementById("tileShareBtn");
-    const pWA = document.getElementById("pWhatsApp");
-    const pCopy = document.getElementById("pCopy");
-    const pSys = document.getElementById("pSystem");
-    const mWA = document.getElementById("mWhatsApp");
-    const mCopy = document.getElementById("mCopy");
-    const mSys = document.getElementById("mSystem");
-
-    /* ---- State ---- */
-    let gridRows = 6, gridCols = 5;
-    let currentRow = 0, currentCol = 0;
-    let board = [], targetWord = "", gameOver = false;
-
-let currentUid = null;
-let viewerIsSupporter = false;
-
-let displayName = localStorage.getItem("userName") || "Speler";
-    
-    /* ---- IDs/keys (use GAME_ID) ---- */
-    const doneKey = `dilemma-${GAME_ID}-done`;
-    const progressKey = `dilemma-${GAME_ID}-progress`;
-
-    /* URLs for sharing */
-    const SHARE_URL = "https://www.kriptiek.com/dilemmagame.html";
-    const SHARE_TEXT_URL = (() => {
-      const u = new URL(SHARE_URL);
-      u.searchParams.set('gameId', GAME_ID);
-      u.searchParams.set('wa', 'v6');
-      return u.toString();
-    })();
-
-    playerNameEl.textContent = displayName;
-
-    /* ---- If not signed in ---- */
-    function renderAuthRequired() {
-      const clue = document.getElementById("clue");
-      clue.textContent = "Jy moet aangemeld wees om te speel.";
-      keyboard.innerHTML = `
-        <div class="action-grid two mt-2">
-          <a href="/login.html" title="Meld aan">
-            <img class="btn-img" src="/assets/K_MELD_AAN_12SEP.png" alt="Meld aan" width="120" height="120">
-          </a>
-          <a href="/register.html" title="Registreer">
-            <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="120" height="120">
-          </a>
-        </div>`;
-      const barR = document.getElementById('barR');
-      if (barR) barR.classList.add('hidden');
-    }
-
-    /* ---- Helpers ---- */
-    function disableGame(){ gameOver = true; document.querySelectorAll(".key").forEach(k => k.disabled = true); }
-
     /* ---- Local result helpers ---- */
     function readLocalResult() {
       const v = localStorage.getItem(`${doneKey}-result`);
@@ -434,6 +430,7 @@ let displayName = localStorage.getItem("userName") || "Speler";
       if (v === 'loss') return { didWin: false, guesses: null };
       return null;
     }
+
     function deriveLocalSummaryFromProgress() {
       try {
         const saved = JSON.parse(localStorage.getItem(progressKey) || '{}');
@@ -442,47 +439,71 @@ let displayName = localStorage.getItem("userName") || "Speler";
         const winIndex = rows.findIndex(r =>
           Array.isArray(r.states) && r.states.length && r.states.every(s => s === 'correct')
         );
-        return (winIndex >= 0) ? { didWin:true, guesses: winIndex+1 } : null; // never infer a loss
-      } catch { return null; }
+        return (winIndex >= 0) ? { didWin: true, guesses: winIndex + 1 } : null;
+      } catch {
+        return null;
+      }
     }
 
-    /* ---- Strict “today” helpers ---- */
-    function todayPlain(){ return (window.GAME_ID || '').replace(/^Game/, ''); }
-    function isTodayGameId(id){ return String(id||'').replace(/^Game/,'') === todayPlain(); }
-    function localLossForToday(){ return localStorage.getItem(`${doneKey}-result`) === 'loss'; }
+    function todayPlain() { return (window.GAME_ID || '').replace(/^Game/, ''); }
+    function isTodayGameId(id) { return String(id || '').replace(/^Game/, '') === todayPlain(); }
+    function localLossForToday() { return localStorage.getItem(`${doneKey}-result`) === 'loss'; }
 
-    /* ---- Safe game loader ---- */
+    /* ---- Safe game loader: no answer field ---- */
     async function loadTodayGame(db) {
-      let gameRef  = doc(db, "games", GAME_ID);
+      let gameRef = doc(db, "games", GAME_ID);
       let gameSnap = await getDoc(gameRef);
 
       if (!gameSnap.exists()) {
-        const plainId   = GAME_ID.replace(/^Game/, '');
+        const plainId = GAME_ID.replace(/^Game/, '');
         const legacyRef = doc(db, "games", plainId);
-        const legacySnap= await getDoc(legacyRef);
-        if (legacySnap.exists()) { gameRef = legacyRef; gameSnap = legacySnap; }
+        const legacySnap = await getDoc(legacyRef);
+        if (legacySnap.exists()) {
+          gameRef = legacyRef;
+          gameSnap = legacySnap;
+        }
       }
 
       if (!gameSnap.exists()) {
         const msg = 'Geen spel vir vandag gelaai nie. Probeer later weer.';
-        try { statusLine.textContent = msg; statusLine.style.display = 'block'; } catch(e){}
+        statusLine.textContent = msg;
+        statusLine.style.display = 'block';
         disableGame();
         throw new Error('[Dilemma] Game doc missing for ' + GAME_ID);
       }
-      return { gameRef, game: gameSnap.data() };
+
+      const raw = gameSnap.data() || {};
+      return {
+        gameRef,
+        game: {
+          clue: String(raw.clue || ""),
+          length: Number(raw.length || 0),
+          status: String(raw.status || "inactive")
+        }
+      };
     }
 
-    /* ---- Game data ---- */
     async function loadGameData() {
       const { game } = await loadTodayGame(db);
-      targetWord = (game.word || "").toUpperCase();
-      gridCols = targetWord.length || 5;
-      document.getElementById("clue").textContent = game.clue || "Geen leidraad beskikbaar nie.";
+
+      gameClue = game.clue || "Geen leidraad beskikbaar nie.";
+      gameStatus = game.status || "inactive";
+      gridCols = Number(game.length || 0);
+
+      if (!Number.isFinite(gridCols) || gridCols < 1) {
+        statusLine.textContent = "Hierdie Dilemma is nie reg opgestel nie.";
+        statusLine.style.display = "block";
+        disableGame();
+        throw new Error("[Dilemma] Missing or invalid length on public game doc for " + GAME_ID);
+      }
+
+      document.getElementById("clue").textContent = gameClue;
     }
+
     function createGrid() {
       gameGrid.innerHTML = "";
       board = [];
-      for (let r = 0; r < 6; r++) {
+      for (let r = 0; r < gridRows; r++) {
         const row = document.createElement("div");
         row.className = "tile-row";
         const rowTiles = [];
@@ -530,79 +551,74 @@ let displayName = localStorage.getItem("userName") || "Speler";
     function updateKeyboard(letter, state) {
       const keyBtn = [...document.querySelectorAll(".key")].find(k => k.textContent === letter);
       if (!keyBtn) return;
+
       if (state === "correct" || (state === "present" && !keyBtn.classList.contains("correct"))) {
         keyBtn.classList.remove("present", "absent");
         keyBtn.classList.add(state);
-      } else if (state === "absent" && !keyBtn.classList.contains("correct") && !keyBtn.classList.contains("present")) {
+      } else if (
+        state === "absent" &&
+        !keyBtn.classList.contains("correct") &&
+        !keyBtn.classList.contains("present")
+      ) {
         keyBtn.classList.add("absent");
       }
     }
 
-    /* ---- Input handling ---- */
     function handleKey(letter) {
-      if (gameOver) return;
-      if (currentCol < gridCols && currentRow < 6) {
+      if (gameOver || isSubmitting) return;
+      if (currentCol < gridCols && currentRow < gridRows) {
         board[currentRow][currentCol].textContent = letter;
         currentCol++;
       }
     }
+
     function handleBackspace() {
-      if (gameOver || currentCol === 0) return;
+      if (gameOver || isSubmitting || currentCol === 0) return;
       currentCol--;
       board[currentRow][currentCol].textContent = "";
     }
-    function handleEnter() {
-      if (gameOver) return;
-      if (currentCol < gridCols) return alert("Vul al die letters in!");
-      const guess = board[currentRow].map(t => t.textContent).join("");
-      checkGuessWithFlip(guess);
-    }
-    function computeStates(guess) {
-      const states = new Array(gridCols).fill("absent");
-      const letterCounts = {};
-      for (let ch of targetWord) letterCounts[ch] = (letterCounts[ch] || 0) + 1;
 
-      for (let i = 0; i < gridCols; i++) {
-        if (guess[i] === targetWord[i]) {
-          states[i] = "correct";
-          letterCounts[guess[i]]--;
-        }
-      }
-      for (let i = 0; i < gridCols; i++) {
-        if (states[i] === "correct") continue;
-        if (letterCounts[guess[i]] > 0) {
-          states[i] = "present";
-          letterCounts[guess[i]]--;
-        }
-      }
-      return states;
+    function getCurrentGuess() {
+      return board[currentRow].map(t => t.textContent).join("");
+    }
+
+    function handleEnter() {
+      if (gameOver || isSubmitting) return;
+      if (currentCol < gridCols) return alert("Vul al die letters in!");
+      const guess = getCurrentGuess();
+      checkGuessWithFlip(guess);
     }
 
     function applyStatesWithFlip(rowIndex, guess, states) {
       states.forEach((s, i) => {
         const tile = board[rowIndex][i];
         setTimeout(() => {
-          tile.classList.remove("correct","present","absent");
+          tile.classList.remove("correct", "present", "absent");
           tile.classList.add("flip", s);
           updateKeyboard(guess[i], s);
         }, i * 350);
       });
     }
 
-    /* ---- Save/restore progress ---- */
-    function saveLocalProgress(done=false) {
+    function saveLocalProgress(done = false) {
       const rows = [];
-      for (let r = 0; r < 6; r++) {
+      for (let r = 0; r < gridRows; r++) {
         const guess = board[r].map(t => t.textContent).join("");
         if (!guess.trim()) break;
+
         const states = board[r].map(t =>
           t.classList.contains("correct") ? "correct" :
-          t.classList.contains("present") ? "present" : "absent"
+          t.classList.contains("present") ? "present" :
+          t.classList.contains("absent") ? "absent" : null
         );
-        if (states.every(s=>["correct","present","absent"].includes(s))) {
+
+        if (states.every(s => ["correct", "present", "absent"].includes(s))) {
           rows.push({ guess, states });
-        } else { break; }
+        } else {
+          break;
+        }
       }
+
       localStorage.setItem(progressKey, JSON.stringify({ rows }));
       if (done) localStorage.setItem(doneKey, "true");
     }
@@ -610,16 +626,18 @@ let displayName = localStorage.getItem("userName") || "Speler";
     function restoreLocalProgress() {
       const saved = localStorage.getItem(progressKey);
       if (!saved) return;
+
       try {
         const data = JSON.parse(saved);
         if (!data?.rows) return;
+
         data.rows.forEach(({ guess, states }) => {
           const letters = guess.split("");
           for (let i = 0; i < letters.length; i++) {
             const tile = board[currentRow][i];
             tile.textContent = letters[i];
-            tile.classList.remove("correct","present","absent");
-            tile.classList.add(states[i], "flip");
+            tile.classList.remove("correct", "present", "absent");
+            if (states[i]) tile.classList.add(states[i], "flip");
             updateKeyboard(letters[i], states[i]);
           }
           currentRow++;
@@ -628,7 +646,11 @@ let displayName = localStorage.getItem("userName") || "Speler";
       } catch {}
     }
 
-    /* ---- Dilemma total (for snapshotting to leaderboard) ---- */
+    async function validateGuessOnServer(guess) {
+      const res = await checkDilemmaGuess({ gameId: GAME_ID, guess });
+      return res.data || {};
+    }
+    /* ---- Dilemma total ---- */
     const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
     const STREAK_THRESHOLD = 5;
     const STREAK_MULTIPLIER = 1.10;
@@ -647,15 +669,15 @@ let displayName = localStorage.getItem("userName") || "Speler";
       const snap = await getDocs(qy);
 
       const byDate = new Map();
-      snap.forEach(ds=>{
+      snap.forEach(ds => {
         const d = ds.data();
         const date = ds.id.replace(/^Game/,"");
         byDate.set(date, { win: d?.result === "win" || d?.finished === true, guesses: Number(d?.guesses || 0) });
       });
 
       const dates = Array.from(byDate.keys()).sort();
-      let cur=0, prev=null;
-      for(const d of dates){
+      let cur = 0, prev = null;
+      for (const d of dates) {
         const consec = prev && (new Date(d) - new Date(prev) === 24*60*60*1000);
         if (!consec) cur = 0;
         const p = byDate.get(d);
@@ -664,9 +686,13 @@ let displayName = localStorage.getItem("userName") || "Speler";
       }
 
       const dist = {1:0,2:0,3:0,4:0,5:0,6:0,fail:0};
-      for (const p of byDate.values()){
-        if (p.win){ const g = Math.min(Math.max(1, p.guesses || 6), 6); dist[g]++; }
-        else { dist.fail++; }
+      for (const p of byDate.values()) {
+        if (p.win) {
+          const g = Math.min(Math.max(1, p.guesses || 6), 6);
+          dist[g]++;
+        } else {
+          dist.fail++;
+        }
       }
 
       const subtotal =
@@ -681,7 +707,6 @@ let displayName = localStorage.getItem("userName") || "Speler";
       return subtotal + streakBonus + supporterBonus;
     }
 
-    /* ---- Leaderboard: submit, ensure, load ---- */
     async function submitScore(guessCount, didWin) {
       if (!currentUid) return;
 
@@ -702,10 +727,10 @@ let displayName = localStorage.getItem("userName") || "Speler";
         let payload;
         if (before.exists()) {
           const u = before.data() || {};
-          const newGames  = (u.gamesPlayed || 0) + 1;
-          const newWins   = (u.wins || 0) + (didWin ? 1 : 0);
+          const newGames = (u.gamesPlayed || 0) + 1;
+          const newWins = (u.wins || 0) + (didWin ? 1 : 0);
           const newStreak = didWin ? (u.streak || 0) + 1 : 0;
-          const newBest   = Math.max(u.bestStreak || 0, newStreak);
+          const newBest = Math.max(u.bestStreak || 0, newStreak);
           const dist = { "1":0,"2":0,"3":0,"4":0,"5":0,"6":0, ...(u.guessDist || {}) };
           if (didWin && guessCount >= 1 && guessCount <= 6) dist[String(guessCount)] = (dist[String(guessCount)] || 0) + 1;
           payload = { userName: displayName, gamesPlayed: newGames, wins: newWins, streak: newStreak, bestStreak: newBest, guessDist: dist, updatedAt: serverTimestamp() };
@@ -721,7 +746,7 @@ let displayName = localStorage.getItem("userName") || "Speler";
         const after = await getDoc(uref);
         const nd = after.data() || {};
         const games = Number(nd.gamesPlayed || 0);
-        const wins  = Number(nd.wins || 0);
+        const wins = Number(nd.wins || 0);
         successRate = games > 0 ? Math.round((wins / games) * 100) : 0;
       } catch (e) {
         console.warn("User stats update failed (non-fatal):", e);
@@ -776,7 +801,7 @@ let displayName = localStorage.getItem("userName") || "Speler";
           if (uSnap.exists()) {
             const u = uSnap.data() || {};
             const gp = Number(u.gamesPlayed || 0);
-            const w  = Number(u.wins || 0);
+            const w = Number(u.wins || 0);
             sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
           }
         } catch {}
@@ -809,25 +834,24 @@ let displayName = localStorage.getItem("userName") || "Speler";
       }
     }
 
-    /* ---- Supporter star (source: supportersPublic/{uid}.active) ---- */
-    const supporterCache = new Map(); // uid -> boolean
+    const supporterCache = new Map();
 
     async function fetchSupporterActive(uid){
       if (!uid) return false;
       if (supporterCache.has(uid)) return supporterCache.get(uid);
-      try{
+      try {
         const s = await getDoc(doc(db, "supportersPublic", uid));
         const active = !!(s.exists() && s.data() && s.data().active === true);
         supporterCache.set(uid, active);
         return active;
-      }catch{
+      } catch {
         supporterCache.set(uid, false);
         return false;
       }
     }
 
     async function hydrateSupporterActives(uids){
-      try{
+      try {
         const uniq = Array.from(new Set((uids || []).filter(Boolean)));
         const todo = uniq.filter(uid => !supporterCache.has(uid));
         if (!todo.length) return;
@@ -843,9 +867,7 @@ let displayName = localStorage.getItem("userName") || "Speler";
           const active = !!(snap.exists() && snap.data() && snap.data().active === true);
           supporterCache.set(uid, active);
         });
-      }catch{
-        // non-fatal
-      }
+      } catch {}
     }
 
     function renderSupporterStar(isSupporter){
@@ -853,7 +875,6 @@ let displayName = localStorage.getItem("userName") || "Speler";
       return `<span class="inline-flex items-center leading-none text-yellow-500 text-[18px]" title="Ondersteuner">★</span>`;
     }
 
-    /* ---- loadLeaderboard(): right-aligned mini-pill + backfill ---- */
     async function loadLeaderboard() {
       try {
         const snap = await getDocs(collection(db, "games", GAME_ID, "leaderboard"));
@@ -868,8 +889,7 @@ let displayName = localStorage.getItem("userName") || "Speler";
 
           const name = (typeof v.userName === "string" && v.userName.trim()) ? v.userName.trim() : "Onbekend";
           const ts = v.date?.seconds ? v.date.seconds * 1000 : (typeof v.createdAtMs === "number" ? v.createdAtMs : 0);
-
-          const srVal    = Number.isFinite(Number(v.successRate)) ? Math.trunc(Number(v.successRate)) : null;
+          const srVal = Number.isFinite(Number(v.successRate)) ? Math.trunc(Number(v.successRate)) : null;
           const scoreVal = Number.isFinite(Number(v.dilemmaScoreAtPlay)) ? Number(v.dilemmaScoreAtPlay) : null;
 
           entries.push({ uid: d.id, name, guesses: guessesNum, when: ts, sr: srVal, score: scoreVal });
@@ -885,7 +905,7 @@ let displayName = localStorage.getItem("userName") || "Speler";
             if (!s.exists()) return;
             const u = s.data() || {};
             const gp = Number(u.gamesPlayed || 0);
-            const w  = Number(u.wins || 0);
+            const w = Number(u.wins || 0);
             const sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
             const ent = entries.find(e => e.uid === needSR[i]);
             if (ent) ent.sr = sr;
@@ -923,13 +943,13 @@ let displayName = localStorage.getItem("userName") || "Speler";
               .filter(e => Number.isFinite(e.score))
               .map(e =>
                 setDoc(doc(db, "games", GAME_ID, "leaderboard", e.uid),
-                      { dilemmaScoreAtPlay: Number(e.score) },
-                      { merge: true })
+                  { dilemmaScoreAtPlay: Number(e.score) },
+                  { merge: true })
               )
           );
         }
 
-        const fmt = (n)=> typeof n === 'number' ? n.toLocaleString('af-ZA') : n;
+        const fmt = (n) => typeof n === 'number' ? n.toLocaleString('af-ZA') : n;
 
         leaderboardList.innerHTML = "";
         if (!entries.length) {
@@ -937,9 +957,7 @@ let displayName = localStorage.getItem("userName") || "Speler";
           return;
         }
 
-        /* hydrate supporter actives before first render (no “pop-in”) */
         await hydrateSupporterActives(entries.map(e => e.uid));
-
         entries.sort((a, b) => (a.guesses - b.guesses) || (a.when - b.when));
 
         entries.forEach((e, idx) => {
@@ -947,8 +965,8 @@ let displayName = localStorage.getItem("userName") || "Speler";
           li.className = "flex items-center justify-between gap-2";
           if (idx === 0) li.classList.add("font-bold","bg-green-100");
 
-const rawRateText = Number.isFinite(e.sr) ? `${e.sr}%` : '';
-const rateText = rawRateText ? ` (${viewerIsSupporter ? rawRateText : '🔒%'})` : '';
+          const rawRateText = Number.isFinite(e.sr) ? `${e.sr}%` : '';
+          const rateText = rawRateText ? ` (${viewerIsSupporter ? rawRateText : '🔒%'})` : '';
           const isSupporter = supporterCache.get(e.uid) === true;
 
           const left = document.createElement("span");
@@ -973,7 +991,6 @@ const rateText = rawRateText ? ` (${viewerIsSupporter ? rawRateText : '🔒%'})`
       }
     }
 
-    /* ---- Share: bottom + modal ---- */
     let lastSummary = null;
 
     function shareTextFromSummary(summary) {
@@ -985,6 +1002,7 @@ const rateText = rawRateText ? ` (${viewerIsSupporter ? rawRateText : '🔒%'})`
       }
       return `Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${link}`;
     }
+
     function openWhatsApp(text){
       const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
       const w = window.open(url, '_blank', 'noopener,noreferrer');
@@ -996,7 +1014,7 @@ const rateText = rawRateText ? ` (${viewerIsSupporter ? rawRateText : '🔒%'})`
       triggerBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        document.querySelectorAll('.share-menu-local').forEach(m => { if(m!==menuEl) m.classList.add('hidden'); });
+        document.querySelectorAll('.share-menu-local').forEach(m => { if (m !== menuEl) m.classList.add('hidden'); });
         menuEl.classList.toggle('hidden');
       });
       document.addEventListener('click', (e) => {
@@ -1005,22 +1023,20 @@ const rateText = rawRateText ? ` (${viewerIsSupporter ? rawRateText : '🔒%'})`
       window.addEventListener('scroll', () => menuEl.classList.add('hidden'));
       window.addEventListener('resize', () => menuEl.classList.add('hidden'));
     }
+
     function bindMenuActions(menuEl, {waBtn, copyBtn, sysBtn}){
       const text = () => shareTextFromSummary(lastSummary);
       waBtn.onclick = () => { openWhatsApp(text()); menuEl.classList.add('hidden'); };
       copyBtn.onclick = async () => {
-        try { await navigator.clipboard.writeText(text()); alert("Skakel gekopieer!"); }
-        catch(_) {}
+        try { await navigator.clipboard.writeText(text()); alert("Skakel gekopieer!"); } catch(_) {}
         menuEl.classList.add('hidden');
       };
       sysBtn.onclick = async () => {
-        try { if (navigator.share) await navigator.share({ text: text() }); else openWhatsApp(text()); }
-        catch {}
+        try { if (navigator.share) await navigator.share({ text: text() }); else openWhatsApp(text()); } catch {}
         menuEl.classList.add('hidden');
       };
     }
 
-    /* ---- Game end flows ---- */
     async function gameCompleted(guessCount) {
       gameOver = true;
       const woord = guessCount === 1 ? 'raaiskoot' : 'raaiskote';
@@ -1031,16 +1047,18 @@ const rateText = rawRateText ? ` (${viewerIsSupporter ? rawRateText : '🔒%'})`
       resultMsg.textContent = `Veels geluk, ${displayName}, jy het die woord in ${guessCount} ${woord} gekry!`;
       modal.style.display = "flex";
 
-      lastSummary = { didWin:true, guesses:guessCount };
+      lastSummary = { didWin: true, guesses: guessCount };
 
       saveLocalProgress(true);
       localStorage.setItem(`${doneKey}-result`, `win:${guessCount}`);
-      await setDoc(doc(db, "userGames", currentUid, "plays", GAME_ID),
-        { finished:true, result:"win", guesses:Math.trunc(Number(guessCount)), finishedAt: serverTimestamp() },
-        { merge:true });
+      await setDoc(
+        doc(db, "userGames", currentUid, "plays", GAME_ID),
+        { finished: true, result: "win", guesses: Math.trunc(Number(guessCount)), finishedAt: serverTimestamp() },
+        { merge: true }
+      );
       await submitScore(guessCount, true);
       await loadLeaderboard();
-      document.querySelectorAll(".key").forEach(k => k.disabled = true);
+      setKeyboardDisabled(true);
     }
 
     async function gameFailed() {
@@ -1049,93 +1067,131 @@ const rateText = rawRateText ? ` (${viewerIsSupporter ? rawRateText : '🔒%'})`
       statusLine.textContent = `Jy kon nie hierdie Dilemma oplos nie`;
       statusLine.style.display = "block";
 
-      resultMsg.textContent = `Jammer, ${displayName}! Vandag se oplossing is ${targetWord}.`;
+      resultMsg.textContent = `Jammer, ${displayName}! Jy kon nie hierdie Dilemma oplos nie.`;
       modal.style.display = "flex";
 
-      lastSummary = { didWin:false, guesses:null };
+      lastSummary = { didWin: false, guesses: null };
 
       saveLocalProgress(true);
       localStorage.setItem(`${doneKey}-result`, `loss`);
-      await setDoc(doc(db, "userGames", currentUid, "plays", GAME_ID),
-        { finished:true, result:"loss", guesses:6, finishedAt: serverTimestamp() },
-        { merge:true });
+      await setDoc(
+        doc(db, "userGames", currentUid, "plays", GAME_ID),
+        { finished: true, result: "loss", guesses: 6, finishedAt: serverTimestamp() },
+        { merge: true }
+      );
       await submitScore(6, false);
       await loadLeaderboard();
-      document.querySelectorAll(".key").forEach(k => k.disabled = true);
+      setKeyboardDisabled(true);
     }
 
-    /* ---- Modal + keyboard ---- */
     const closeBtn = document.getElementById("closeModalBtn");
     closeBtn.onclick = () => { modal.style.display = "none"; };
+
     document.addEventListener("keydown", e => {
       if (e.key === "Enter") handleEnter();
       else if (e.key === "Backspace") handleBackspace();
       else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
     });
 
-    /* ---- Guess orchestration ---- */
-    function checkGuessWithFlip(guess) {
-      const states = computeStates(guess);
-      applyStatesWithFlip(currentRow, guess, states);
+    async function checkGuessWithFlip(guess) {
+      if (gameOver || isSubmitting) return;
 
-      setTimeout(async () => {
-        saveLocalProgress(false);
-        if (guess === targetWord) {
-          await gameCompleted(currentRow + 1);
-        } else {
-          currentRow++;
-          currentCol = 0;
-          if (currentRow >= 6) {
-            await gameFailed();
-          } else {
-            saveLocalProgress(false);
-          }
+      try {
+        isSubmitting = true;
+        setKeyboardDisabled(true);
+
+        const result = await validateGuessOnServer(guess);
+        const safeGuess = String(result.guess || guess).toUpperCase();
+        const states = Array.isArray(result.states) ? result.states : [];
+        const isCorrect = result.isCorrect === true;
+
+        if (states.length !== gridCols) {
+          throw new Error("Invalid states returned from callable");
         }
-      }, gridCols * 350 + 20);
+
+        applyStatesWithFlip(currentRow, safeGuess, states);
+
+        setTimeout(async () => {
+          saveLocalProgress(false);
+
+          if (isCorrect) {
+            await gameCompleted(currentRow + 1);
+          } else {
+            currentRow++;
+            currentCol = 0;
+
+            if (currentRow >= gridRows) {
+              await gameFailed();
+            } else {
+              saveLocalProgress(false);
+              isSubmitting = false;
+              setKeyboardDisabled(false);
+            }
+          }
+        }, gridCols * 350 + 20);
+      } catch (err) {
+        console.error("Guess validation failed:", err);
+        isSubmitting = false;
+        setKeyboardDisabled(false);
+        alert("Kon nie jou raaiskoot verwerk nie. Probeer weer.");
+      }
     }
 
-async function refreshViewerSupporterStatus(uid) {
-  viewerIsSupporter = false;
+    async function refreshViewerSupporterStatus(uid) {
+      viewerIsSupporter = false;
+      if (!uid) return;
 
-  if (!uid) return;
+      try {
+        const supporterSnap = await getDoc(doc(db, "supportersPublic", uid));
+        viewerIsSupporter = !!(supporterSnap.exists() && supporterSnap.data()?.active === true);
+      } catch (err) {
+        console.warn("Could not load viewer supporter status:", err);
+        viewerIsSupporter = false;
+      }
+    }
 
-  try {
-    const supporterSnap = await getDoc(doc(db, "supportersPublic", uid));
-    viewerIsSupporter = !!(supporterSnap.exists() && supporterSnap.data()?.active === true);
-  } catch (err) {
-    console.warn("Could not load viewer supporter status:", err);
-    viewerIsSupporter = false;
-  }
-}
+    function renderAuthRequired() {
+      const clue = document.getElementById("clue");
+      clue.textContent = "Jy moet aangemeld wees om te speel.";
+      keyboard.innerHTML = `
+        <div class="action-grid two mt-2">
+          <a href="/login.html" title="Meld aan">
+            <img class="btn-img" src="/assets/K_MELD_AAN_12SEP.png" alt="Meld aan" width="120" height="120">
+          </a>
+          <a href="/register.html" title="Registreer">
+            <img class="btn-img" src="/assets/K_REGISTREER_12SEP.png" alt="Registreer" width="120" height="120">
+          </a>
+        </div>`;
+      const barR = document.getElementById('barR');
+      if (barR) barR.classList.add('hidden');
+    }
 
-    
-    /* ---- Auth gate + init ---- */
     onAuthStateChanged(auth, async (user) => {
       if (RESET_REQUESTED) return;
 
-      // Default: hide status & keep game enabled until we *know*
       statusLine.textContent = "";
       statusLine.style.display = "none";
 
-if (!user) {
-  currentUid = null;
-  viewerIsSupporter = false;
-  renderAuthRequired();
-  await loadLeaderboard();
-  return;
-}
+      if (!user) {
+        currentUid = null;
+        viewerIsSupporter = false;
+        renderAuthRequired();
+        await loadLeaderboard();
+        return;
+      }
 
       currentUid = user.uid;
-await refreshViewerSupporterStatus(currentUid);
+      await refreshViewerSupporterStatus(currentUid);
 
-try {
-  const uDoc = await getDoc(doc(db, "users", currentUid));
+      try {
+        const uDoc = await getDoc(doc(db, "users", currentUid));
         const nm = uDoc.exists() ? uDoc.data()?.userName : null;
         if (typeof nm === "string" && nm.trim()) {
           displayName = nm.trim();
           localStorage.setItem("userName", displayName);
         }
       } catch {}
+
       playerNameEl.textContent = displayName;
 
       try {
@@ -1157,10 +1213,14 @@ try {
       wireShareDropdown(tileShareBtn, pMenu);
       bindMenuActions(pMenu, { waBtn: pWA, copyBtn: pCopy, sysBtn: pSys });
 
-      // Decide whether the game is already finished for *today*
+      if (gameStatus !== "active") {
+        statusLine.textContent = "Hierdie Dilemma is nie tans oop nie.";
+        statusLine.style.display = "block";
+        disableGame();
+      }
+
       let summary = null;
 
-      // 1) Firestore doc for today takes precedence
       try {
         const fsSnap = await getDoc(doc(db, "userGames", currentUid, "plays", GAME_ID));
         if (fsSnap?.exists() && isTodayGameId(fsSnap.id)) {
@@ -1171,13 +1231,11 @@ try {
         }
       } catch {}
 
-      // 2) Otherwise, only accept a local loss/win explicitly for today
       if (!summary) {
         const local = readLocalResult();
         if (local && (local.didWin || localLossForToday())) {
           summary = local;
         } else {
-          // safe win-only inference from saved rows (never infers a loss)
           summary = deriveLocalSummaryFromProgress();
         }
       }
@@ -1198,5 +1256,6 @@ try {
 
 </body>
 </html>
+
 
         
