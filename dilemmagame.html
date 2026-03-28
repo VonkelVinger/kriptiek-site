@@ -1254,11 +1254,11 @@
       wireShareDropdown(tileShareBtn, pMenu);
       bindMenuActions(pMenu, { waBtn: pWA, copyBtn: pCopy, sysBtn: pSys });
 
-      if (gameStatus !== "active" && gameStatus !== "published") {
-        statusLine.textContent = "Hierdie Dilemma is nie tans oop nie.";
-        statusLine.style.display = "block";
-        disableGame();
-      }
+if (!isArchiveMode && gameStatus !== "active" && gameStatus !== "published") {
+  statusLine.textContent = "Hierdie Dilemma is nie tans oop nie.";
+  statusLine.style.display = "block";
+  disableGame();
+}
 
       let summary = null;
 
