@@ -59,10 +59,21 @@
     const validWordUpper = s => /^[A-ZÁÉÍÓÚÄËÏÖÜÂÊÎÔÛŸ\-]+$/.test(s);
 
     async function wordUsedAlready(wordUpper) {
-      const qy = query(collection(db, 'games'), where('word', '==', wordUpper));
-      const snap = await getDocs(qy);
-      return !snap.empty;
-    }
+  const snap = await getDocs(collection(db, 'games'));
+  if (snap.empty) return false;
+
+  for (const gameDoc of snap.docs) {
+    try {
+      const privateSnap = await getDoc(doc(db, 'games', gameDoc.id, 'private', 'data'));
+      const privateData = privateSnap.exists() ? (privateSnap.data() || {}) : {};
+      if (String(privateData.word || '').toUpperCase() === wordUpper) {
+        return true;
+      }
+    } catch {}
+  }
+
+  return false;
+}
 
     // Admin check: refresh token -> claim -> admins/{uid} fallback
     async function isAdmin(user) {
@@ -269,7 +280,7 @@
         <hr class="my-4">
         <div class="text-xs text-gray-500 space-y-2">
           <p>Dokument-ID: <code>GameYYYY-MM-DD</code> (bv. <code>Game2025-08-17</code>).</p>
-          <p>Velde: <code>clue</code>, <code>leidraad</code>, <code>word</code>, <code>status:"published"</code>, <code>createdAt</code>, <code>updatedAt</code>, <code>createdBy</code>.</p>
+<p>Velde: <code>clue</code>,
         </div>
       </div>
     </div>
