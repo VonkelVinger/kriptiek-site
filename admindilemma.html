@@ -150,22 +150,32 @@
         // ✅ Always prepend/append around the clue that you type
         // Count only letters (ignore hyphens etc.)
         const wordLen = wordUpper.replace(/[^A-ZÁÉÍÓÚÄËÏÖÜÂÊÎÔÛŸ]/g, '').length;
+        const length = wordLen;
         const fullClue = `VANDAG SE MISLEIDRAAD: ${clueRaw} (${wordLen} letters)`;
 
         const payload = {
-          clue: fullClue,
-          leidraad: fullClue,          // back-compat
-          word: wordUpper,             // UPPERCASE
-          status: 'published',
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-          createdBy: ADMIN_UID
-        };
+  clue: fullClue,
+  leidraad: fullClue,
+  length: length,
+  status: 'published',
+  createdAt: serverTimestamp(),
+  updatedAt: serverTimestamp(),
+  createdBy: ADMIN_UID
+};
 
-        try {
-          await setDoc(doc(db, 'games', idPreferred), payload, { merge: true });
-          showOk(`Gestoor as ${idPreferred}.`, idPreferred);
-        } catch (e) {
+      try {
+  // 1. Public doc (NO word)
+  await setDoc(doc(db, 'games', idPreferred), payload, { merge: true });
+
+  // 2. Private answer doc
+  await setDoc(
+    doc(db, 'games', idPreferred, 'private', 'data'),
+    { word: wordUpper },
+    { merge: true }
+  );
+
+  showOk(`Gestoor as ${idPreferred}.`, idPreferred);
+} catch (e) {
           console.error(e);
           showErr(`Kon nie stoor nie: ${e?.message || e}`);
         }
