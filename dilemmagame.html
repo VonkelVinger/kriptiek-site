@@ -58,14 +58,12 @@
     .key.bg-green-600{ background:#16a34a!important; }
     .key.bg-red-600{ background:#1e3a8a!important; }
 
-    /* Result modal */
     #resultModal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); align-items:center; justify-content:center; z-index:2000; }
     #resultModal .modal-content{ background:#fff; padding:1.5rem; border-radius:8px; text-align:center; max-width:320px; width:100%; }
     #resultModal button{ margin:5px; padding:8px 16px; border-radius:4px; font-weight:700; }
     .btn-share{ background:#1e3a8a; color:#fff; }
     .btn-close{ background:#6b7280; color:#fff; }
 
-    /* Local share dropdowns */
     .share-menu-local{
       background:#fff; border:1px solid #e5e7eb; box-shadow:0 8px 24px rgba(0,0,0,.12);
       border-radius:.5rem; width:240px; padding:.5rem; z-index:3000;
@@ -95,7 +93,6 @@
     .btn-img:hover{ transform:translateY(-1px); filter:brightness(1.02); }
     .btn-img:active{ transform:translateY(0); filter:brightness(.98); }
 
-    /* Leaderboard styles */
     #leaderboardList{ margin:0; padding:0; list-style:none; }
     #leaderboardList li{
       display:flex; align-items:center; justify-content:space-between;
@@ -115,11 +112,9 @@
     </div>
     <p class="text-sm text-gray-500">Welkom terug, <span id="playerName" class="font-semibold text-green-700"></span>!</p>
   </header>
-
   <main class="flex-grow">
     <div class="max-w-6xl mx-auto px-4 py-4">
       <div class="flex flex-col lg:flex-row lg:items-start lg:justify-center gap-4">
-        <!-- Desktop: left Brandkop ad -->
         <div class="hidden lg:block w-[300px] flex-shrink-0">
           <div class="mb-2 text-center text-xs font-semibold tracking-wide uppercase text-gray-500">
             ADVERTENSIE
@@ -136,7 +131,6 @@
           </a>
         </div>
 
-        <!-- Centre column -->
         <div class="flex-1 flex flex-col items-stretch">
           <div class="game-container">
             <div id="clue" class="text-center text-lg mb-4 text-gray-700 font-semibold">Laai die leidraad...</div>
@@ -168,7 +162,6 @@
               </div>
             </div>
 
-            <!-- HOW TO PLAY -->
             <div class="mt-6 bg-white rounded shadow p-4">
               <h2 class="text-xl font-bold mb-2">HOE OM DILEMMA TE SPEEL</h2>
               <p class="text-gray-700 leading-relaxed mb-2">
@@ -192,7 +185,6 @@
               </ul>
             </div>
 
-            <!-- HELP ONS CTA -->
             <div class="mt-4 mb-4 flex justify-center">
               <div class="w-full rounded-xl border border-slate-200 bg-white/90 shadow p-4 text-slate-800">
                 <a href="https://www.kriptiek.com/subscribe.html" target="_blank" rel="noopener"
@@ -208,7 +200,6 @@
               </div>
             </div>
 
-            <!-- Mobile: Brandkop ad -->
             <div class="mt-2 mb-4 flex flex-col items-center lg:hidden">
               <div class="mb-1 text-center text-xs font-semibold tracking-wide uppercase text-gray-500">
                 ADVERTENSIE
@@ -225,7 +216,6 @@
               </a>
             </div>
 
-            <!-- LEADERBOARD -->
             <div id="leaderboard" class="mt-6 bg-white rounded shadow p-4">
               <div class="flex items-center justify-between mb-2">
                 <h2 class="text-xl font-bold">VANDAG SE BESTES</h2>
@@ -235,7 +225,6 @@
           </div>
         </div>
 
-        <!-- Desktop: right Brandkop ad -->
         <div class="hidden lg:block w-[300px] flex-shrink-0">
           <div class="mb-2 text-center text-xs font-semibold tracking-wide uppercase text-gray-500">
             ADVERTENSIE
@@ -251,7 +240,6 @@
             />
           </a>
         </div>
-
       </div>
     </div>
   </main>
@@ -268,7 +256,6 @@
     <a href="/contact.html" class="underline">Kontak ons</a>
   </footer>
 
-  <!-- RESULT MODAL -->
   <div id="resultModal">
     <div class="modal-content">
       <p id="resultMessage" class="mb-4 font-bold"></p>
@@ -286,8 +273,6 @@
       </div>
     </div>
   </div>
-
-  <!-- ZA-safe resolver -->
   <script>
     function getZAISODate() {
       const now = new Date();
@@ -307,14 +292,12 @@
     window.GAME_ID = resolveGameId();
   </script>
 
-  <!-- MAIN GAME MODULE -->
   <script type="module">
     import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import { getFirestore, doc, getDoc, collection, setDoc, getDocs, serverTimestamp, query, orderBy, limit, deleteDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
     import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-functions.js";
 
-    /* ---- Firebase config ---- */
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
       authDomain: "kriptiek-c9ea2.firebaseapp.com",
@@ -334,7 +317,6 @@
     const __QP = new URLSearchParams(location.search);
     const RESET_REQUESTED = __QP.get('reset') === '1';
 
-    /* ---- UI refs ---- */
     const gameGrid = document.getElementById("game-grid");
     const keyboard = document.getElementById("keyboard");
     const modal = document.getElementById("resultModal");
@@ -353,7 +335,6 @@
     const mCopy = document.getElementById("mCopy");
     const mSys = document.getElementById("mSystem");
 
-    /* ---- State ---- */
     let gridRows = 6;
     let gridCols = 5;
     let currentRow = 0;
@@ -368,6 +349,9 @@
 
     let gameClue = "";
     let gameStatus = "inactive";
+    let archiveWord = "";
+    let isArchiveMode = false;
+    let loadedGameId = GAME_ID;
 
     const doneKey = `dilemma-${GAME_ID}-done`;
     const progressKey = `dilemma-${GAME_ID}-progress`;
@@ -419,7 +403,7 @@
     }
 
     selfResetIfRequested();
-    /* ---- Local result helpers ---- */
+
     function readLocalResult() {
       const v = localStorage.getItem(`${doneKey}-result`);
       if (!v) return null;
@@ -448,8 +432,6 @@
     function todayPlain() { return (window.GAME_ID || '').replace(/^Game/, ''); }
     function isTodayGameId(id) { return String(id || '').replace(/^Game/, '') === todayPlain(); }
     function localLossForToday() { return localStorage.getItem(`${doneKey}-result`) === 'loss'; }
-
-    /* ---- Safe game loader: no answer field ---- */
     async function loadTodayGame(db) {
       let gameRef = doc(db, "games", GAME_ID);
       let gameSnap = await getDoc(gameRef);
@@ -482,13 +464,35 @@
         }
       };
     }
-    
-       async function loadGameData() {
-      const { game } = await loadTodayGame(db);
+
+    async function loadGameData() {
+      const { gameRef, game } = await loadTodayGame(db);
+      loadedGameId = gameRef.id;
 
       gameClue = game.clue || "Geen leidraad beskikbaar nie.";
       gameStatus = game.status || "inactive";
       gridCols = Number(game.length || 0);
+
+      const todayId = "Game" + getZAISODate();
+      const todayPlainId = getZAISODate();
+      isArchiveMode = loadedGameId !== todayId && loadedGameId !== todayPlainId;
+
+      if (isArchiveMode) {
+        try {
+          const snap = await getDoc(doc(db, "games", loadedGameId));
+          const data = snap.exists() ? (snap.data() || {}) : {};
+          archiveWord = String(data.archiveWord || data.word || "").toUpperCase();
+        } catch {}
+
+        if (!archiveWord) {
+          statusLine.textContent = "Hierdie argief-Dilemma se antwoord is nog nie beskikbaar nie.";
+          statusLine.style.display = "block";
+          disableGame();
+          throw new Error("[Dilemma] Archive word missing on public game doc for " + loadedGameId);
+        }
+      } else {
+        archiveWord = "";
+      }
 
       document.getElementById("clue").textContent = gameClue;
 
@@ -622,7 +626,6 @@
       localStorage.setItem(progressKey, JSON.stringify({ rows }));
       if (done) localStorage.setItem(doneKey, "true");
     }
-
     function restoreLocalProgress() {
       const saved = localStorage.getItem(progressKey);
       if (!saved) return;
@@ -646,11 +649,46 @@
       } catch {}
     }
 
-    async function validateGuessOnServer(guess) {
-      const res = await checkDilemmaGuess({ gameId: GAME_ID, guess });
+    function scoreGuessLocally(guess, target) {
+      const safeGuess = String(guess || "").toUpperCase();
+      const safeTarget = String(target || "").toUpperCase();
+
+      const guessArr = safeGuess.split("");
+      const targetArr = safeTarget.split("");
+      const states = Array(guessArr.length).fill("absent");
+      const remaining = [...targetArr];
+
+      for (let i = 0; i < guessArr.length; i++) {
+        if (guessArr[i] === targetArr[i]) {
+          states[i] = "correct";
+          remaining[i] = null;
+        }
+      }
+
+      for (let i = 0; i < guessArr.length; i++) {
+        if (states[i] === "correct") continue;
+        const idx = remaining.indexOf(guessArr[i]);
+        if (idx !== -1) {
+          states[i] = "present";
+          remaining[idx] = null;
+        }
+      }
+
+      return {
+        guess: safeGuess,
+        states,
+        isCorrect: safeGuess === safeTarget
+      };
+    }
+
+    async function validateGuess(guess) {
+      if (isArchiveMode) {
+        return scoreGuessLocally(guess, archiveWord);
+      }
+      const res = await checkDilemmaGuess({ gameId: loadedGameId, guess });
       return res.data || {};
     }
-    /* ---- Dilemma total ---- */
+
     const BASE_POINTS = { 1:150, 2:135, 3:120, 4:110, 5:105, 6:100, fail:-50 };
     const STREAK_THRESHOLD = 5;
     const STREAK_MULTIPLIER = 1.10;
@@ -761,7 +799,7 @@
 
       try {
         await setDoc(
-          doc(db, "games", GAME_ID, "leaderboard", currentUid),
+          doc(db, "games", loadedGameId, "leaderboard", currentUid),
           {
             userName: displayName,
             guesses: Math.trunc(Number(guessCount)),
@@ -789,7 +827,7 @@
       try {
         if (!currentUid || !summary) return;
 
-        const rowRef = doc(db, "games", GAME_ID, "leaderboard", currentUid);
+        const rowRef = doc(db, "games", loadedGameId, "leaderboard", currentUid);
         const existing = await getDoc(rowRef);
         if (existing.exists()) return;
 
@@ -877,7 +915,7 @@
 
     async function loadLeaderboard() {
       try {
-        const snap = await getDocs(collection(db, "games", GAME_ID, "leaderboard"));
+        const snap = await getDocs(collection(db, "games", loadedGameId, "leaderboard"));
         const entries = [];
         const needSR = [];
         const needScore = [];
@@ -942,7 +980,7 @@
             entries
               .filter(e => Number.isFinite(e.score))
               .map(e =>
-                setDoc(doc(db, "games", GAME_ID, "leaderboard", e.uid),
+                setDoc(doc(db, "games", loadedGameId, "leaderboard", e.uid),
                   { dilemmaScoreAtPlay: Number(e.score) },
                   { merge: true })
               )
@@ -1052,7 +1090,7 @@
       saveLocalProgress(true);
       localStorage.setItem(`${doneKey}-result`, `win:${guessCount}`);
       await setDoc(
-        doc(db, "userGames", currentUid, "plays", GAME_ID),
+        doc(db, "userGames", currentUid, "plays", loadedGameId),
         { finished: true, result: "win", guesses: Math.trunc(Number(guessCount)), finishedAt: serverTimestamp() },
         { merge: true }
       );
@@ -1075,7 +1113,7 @@
       saveLocalProgress(true);
       localStorage.setItem(`${doneKey}-result`, `loss`);
       await setDoc(
-        doc(db, "userGames", currentUid, "plays", GAME_ID),
+        doc(db, "userGames", currentUid, "plays", loadedGameId),
         { finished: true, result: "loss", guesses: 6, finishedAt: serverTimestamp() },
         { merge: true }
       );
@@ -1100,13 +1138,13 @@
         isSubmitting = true;
         setKeyboardDisabled(true);
 
-        const result = await validateGuessOnServer(guess);
+        const result = await validateGuess(guess);
         const safeGuess = String(result.guess || guess).toUpperCase();
         const states = Array.isArray(result.states) ? result.states : [];
         const isCorrect = result.isCorrect === true;
 
         if (states.length !== gridCols) {
-          throw new Error("Invalid states returned from callable");
+          throw new Error("Invalid states returned from validator");
         }
 
         applyStatesWithFlip(currentRow, safeGuess, states);
@@ -1213,17 +1251,17 @@
       wireShareDropdown(tileShareBtn, pMenu);
       bindMenuActions(pMenu, { waBtn: pWA, copyBtn: pCopy, sysBtn: pSys });
 
-  if (gameStatus !== "active" && gameStatus !== "published") {
-  statusLine.textContent = "Hierdie Dilemma is nie tans oop nie.";
-  statusLine.style.display = "block";
-  disableGame();
-}
+      if (gameStatus !== "active" && gameStatus !== "published") {
+        statusLine.textContent = "Hierdie Dilemma is nie tans oop nie.";
+        statusLine.style.display = "block";
+        disableGame();
+      }
 
       let summary = null;
 
       try {
-        const fsSnap = await getDoc(doc(db, "userGames", currentUid, "plays", GAME_ID));
-        if (fsSnap?.exists() && isTodayGameId(fsSnap.id)) {
+        const fsSnap = await getDoc(doc(db, "userGames", currentUid, "plays", loadedGameId));
+        if (fsSnap?.exists()) {
           const d = fsSnap.data() || {};
           if (d.finished === true && (d.result === "win" || d.result === "loss")) {
             summary = { didWin: d.result === "win", guesses: Number(d.guesses) || null };
@@ -1256,6 +1294,4 @@
 
 </body>
 </html>
-
-
-        
+  
