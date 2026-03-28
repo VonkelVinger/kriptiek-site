@@ -63,6 +63,14 @@
   if (snap.empty) return false;
 
   for (const gameDoc of snap.docs) {
+    const publicData = gameDoc.data() || {};
+
+    // 1. Check legacy public word first
+    if (String(publicData.word || '').toUpperCase() === wordUpper) {
+      return true;
+    }
+
+    // 2. Check new private word
     try {
       const privateSnap = await getDoc(doc(db, 'games', gameDoc.id, 'private', 'data'));
       const privateData = privateSnap.exists() ? (privateSnap.data() || {}) : {};
