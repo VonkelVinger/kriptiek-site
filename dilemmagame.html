@@ -474,8 +474,21 @@
 
   const todayId = "Game" + getZAISODate();
   const todayPlainId = getZAISODate();
-  isArchiveMode = loadedGameId !== todayId && loadedGameId !== todayPlainId;
+const loadedPlain = loadedGameId.replace(/^Game/, "");
+const todayPlain = getZAISODate();
 
+const isPastGame = loadedPlain < todayPlain;
+const isFutureGame = loadedPlain > todayPlain;
+
+isArchiveMode = isPastGame;
+
+if (isFutureGame) {
+  document.getElementById("clue").textContent = gameClue;
+  statusLine.textContent = "Hierdie Dilemma is nog nie oop nie.";
+  statusLine.style.display = "block";
+  disableGame();
+  return;
+}
   if (isArchiveMode) {
     try {
       const snap = await getDoc(doc(db, "games", loadedGameId));
