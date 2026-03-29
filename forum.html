@@ -182,11 +182,21 @@
       return days === 1 ? "1 dag gelede" : `${days} dae gelede`;
     }
 
-    function applyFormatting(text) {
-      return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                 .replace(/_(.*?)_/g, '<em>$1</em>')
-                 .replace(/\n/g, "<br>");
-    }
+function escapeHtml(text) {
+  return String(text || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function applyFormatting(text) {
+  return escapeHtml(text)
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/_(.*?)_/g, '<em>$1</em>')
+    .replace(/\n/g, "<br>");
+}
 
     async function submitPost() {
       const title = document.getElementById('postTitle').value.trim();
@@ -228,7 +238,7 @@
       repliesBox.innerHTML = `<div class="text-gray-400 text-xs">Laai antwoorde…</div>`;
       try {
         const repliesRef = collection(db, "forumPosts", postId, "replies");
-        const rs = await getDocs(query(repliesRef, orderBy("createdAt", "asc")));
+const rs = await getDocs(query(repliesRef, orderBy("createdAt", "desc")));
         if (rs.empty) {
           repliesBox.innerHTML = "";
           return;
