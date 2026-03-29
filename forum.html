@@ -238,7 +238,7 @@ function applyFormatting(text) {
       repliesBox.innerHTML = `<div class="text-gray-400 text-xs">Laai antwoorde…</div>`;
       try {
         const repliesRef = collection(db, "forumPosts", postId, "replies");
-const rs = await getDocs(query(repliesRef, orderBy("createdAt", "desc")));
+const rs = await getDocs(query(repliesRef, orderBy("createdAt", "asc")));
         if (rs.empty) {
           repliesBox.innerHTML = "";
           return;
