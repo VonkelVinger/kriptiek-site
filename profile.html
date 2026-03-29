@@ -10,7 +10,6 @@
     gtag('config', 'G-S9V4CMP1FP');
   </script>
 
-
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8199352351586797"
           crossorigin="anonymous"></script>
 
@@ -18,13 +17,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>My Profiel – Kriptiek</title>
 
-
   <link rel="icon" href="/assets/favicon.ico?v=2" type="image/x-icon" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=3">
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png?v=3">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=3">
   <link rel="manifest" href="/assets/site.webmanifest?v=3">
-
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800;900&display=swap" rel="stylesheet">
@@ -32,7 +29,6 @@
   <style>
     body { font-family: 'Montserrat', sans-serif; background-color: #f3f4f6; }
 
-    /* --- Header/logo styles --- */
     .logo-container {
       position: relative; display: flex; justify-content: center; align-items: center;
       width: fit-content; margin: 1rem auto; padding: 1rem; border-radius: 1rem;
@@ -76,11 +72,9 @@
       background-color: transparent; user-select: none;
     }
 
-    /* --- Card + pill styling --- */
     .card { background:#fff; border:1px solid #e5e7eb; border-radius:0.75rem; box-shadow:0 2px 6px rgba(2,6,23,.04); }
     .pill { display:inline-flex; align-items:center; border-radius:999px; padding:.3rem .75rem; font-weight:800; font-size:.85rem; }
     .pill-lg { padding:.45rem .95rem; font-size:1rem; }
-    .mono { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1, 'lnum' 1; }
     .mini { background:#f8fafc; border:1px solid #e5e7eb; border-radius:.75rem; padding:.5rem .6rem; text-align:center; }
   </style>
 
@@ -107,30 +101,56 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db   = getFirestore(app);
-
-    // Debug breadcrumb so you can confirm the module ran.
-    console.log("[profile] module loaded");
+    const db = getFirestore(app);
 
     function setWbName(name){
       const el = $("wbName");
       if (el) el.textContent = (name || "Gebruiker").toUpperCase();
     }
-    function getSupporterState(u){
-      let active = false, untilTs = null;
+
+    function escapeHtml(text) {
+      return String(text || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+    }
+    function fallbackSupporterStateFromUserDoc(u){
+      let active = false;
+      let untilTs = null;
+
       if (u?.supporterActive === true) active = true;
       if (u?.isPaid === true) active = true;
       if (u?.isSupporter === true) active = true;
 
       const until =
         (u?.supporterUntil?.toMillis && u.supporterUntil.toMillis()) ||
-        (typeof u?.supporterUntil === 'number' ? u.supporterUntil :
+        (typeof u?.supporterUntil === "number" ? u.supporterUntil :
           (u?.supporterUntil ? Date.parse(u.supporterUntil) : null)) ||
-        (typeof u?.paidUntil === 'number' ? u.paidUntil :
+        (typeof u?.paidUntil === "number" ? u.paidUntil :
           (u?.paidUntil ? Date.parse(u.paidUntil) : null));
 
-      if (Number.isFinite(until) && until > Date.now()) { active = true; untilTs = until; }
+      if (Number.isFinite(until) && until > Date.now()) {
+        active = true;
+        untilTs = until;
+      }
+
       return { active, untilTs };
+    }
+
+    async function loadSupporterState(uid, userDoc){
+      try {
+        const supporterSnap = await getDoc(doc(db, "supportersPublic", uid));
+        if (supporterSnap.exists()) {
+          const d = supporterSnap.data() || {};
+          const untilMs = Number(d.untilMs || 0);
+          const active = d.active === true && (!untilMs || untilMs > Date.now());
+          return { active, untilTs: Number.isFinite(untilMs) && untilMs > 0 ? untilMs : null };
+        }
+      } catch (err) {
+        console.warn("Could not load supportersPublic state:", err);
+      }
+
+      return fallbackSupporterStateFromUserDoc(userDoc || {});
     }
 
     function renderSupporterStarIcon(isSupporter){
@@ -143,11 +163,7 @@
       const target = $("profileNameLine");
       if (!target) return;
 
-      const safeName = String(name || "Gebruiker")
-        .replaceAll('&','&amp;')
-        .replaceAll('<','&lt;')
-        .replaceAll('>','&gt;');
-
+      const safeName = escapeHtml(name || "Gebruiker");
       target.innerHTML =
         `<span class="font-black text-slate-900">${safeName}</span>` +
         renderSupporterStarIcon(!!supporterActive);
@@ -155,16 +171,16 @@
 
     function renderSupporterPill(state){
       const el = $("supporterPillTop");
-      if(!el) return;
+      if (!el) return;
 
-      if(state.active){
+      if (state.active) {
         const extra = state.untilTs ? ` — tot ${new Date(state.untilTs).toLocaleDateString("af-ZA")}` : "";
         el.textContent = "ONDERSTEUNER: JA" + extra;
         el.style.background = "#dcfce7";
         el.style.color = "#065f46";
         el.style.border = "1px solid #bbf7d0";
         el.classList.add("font-extrabold");
-      }else{
+      } else {
         el.textContent = "ONDERSTEUNER: NOG NIE";
         el.style.background = "#fef2f2";
         el.style.color = "#991b1b";
@@ -173,20 +189,20 @@
       }
     }
 
-    /* === Medaljes (profile summary) === */
     async function loadMedalsFromPlacements({ uid, gameCollection, leaderboardSub }) {
       const out = { gold: 0, silver: 0, bronze: 0 };
       if (!uid) return out;
 
-      try{
+      try {
         let gamesSnap = null;
-        try{
+
+        try {
           gamesSnap = await getDocs(query(
             collection(db, gameCollection),
             orderBy("createdAt", "desc"),
             limit(400)
           ));
-        }catch{
+        } catch {
           gamesSnap = await getDocs(query(
             collection(db, gameCollection),
             limit(400)
@@ -207,8 +223,7 @@
           else if (p === 2) out.silver++;
           else if (p === 3) out.bronze++;
         });
-
-      }catch(e){
+      } catch (e) {
         console.warn("MEDALS_PLACE_QUERY_FAILED", gameCollection, e);
       }
 
@@ -239,14 +254,14 @@
       }
     }
     async function hydrateProfile(user){
-      const nameEl  = $("nameInput");
+      const nameEl = $("nameInput");
       const emailEl = $("emailInput");
-      if(nameEl)  nameEl.value  = user.displayName || "";
-      if(emailEl) emailEl.value = user.email || "";
+      if (nameEl) nameEl.value = user.displayName || "";
+      if (emailEl) emailEl.value = user.email || "";
 
-      // Ensure users doc exists
       const uref = doc(db, "users", user.uid);
       let userDocSnap = await getDoc(uref);
+
       if (!userDocSnap.exists()) {
         await setDoc(
           uref,
@@ -255,12 +270,12 @@
         );
         userDocSnap = await getDoc(uref);
       }
-      const userDoc = userDocSnap.data() || {};
 
-      const supporter = getSupporterState(userDoc);
+      const userDoc = userDocSnap.data() || {};
+      const supporter = await loadSupporterState(user.uid, userDoc);
+
       renderSupporterPill(supporter);
 
-      // Hide "Word ’n Ondersteuner" if already active
       const cta = $("supporterCtaWrap");
       if (cta) cta.style.display = supporter.active ? "none" : "";
 
@@ -268,7 +283,6 @@
       setWbName(displayName);
       renderProfileNameLine(displayName, supporter.active);
 
-      // Medals
       const blit = await loadMedalsFromPlacements({
         uid: user.uid,
         gameCollection: "blitstiekGames",
@@ -299,20 +313,21 @@
         slim
       );
 
-      // Supporter banner
       const supporterBanner = $("supporterBanner");
       if (supporterBanner) {
+        supporterBanner.href = "/subscribe.html";
+        supporterBanner.target = "";
+        supporterBanner.rel = "";
         if (supporter.active) {
           supporterBanner.className = "block text-center font-bold rounded-lg p-3 mb-4 bg-green-50 border border-green-200 text-green-800";
-          supporterBanner.textContent = "Jy is 'n betalende ondersteuner — dankie!";
+          supporterBanner.textContent = "Jy is ’n betalende Ondersteuner — dankie!";
         } else {
           supporterBanner.className = "block text-center font-bold rounded-lg p-3 mb-4 bg-red-50 border border-red-200 text-red-800";
-          supporterBanner.textContent = "Kliek hier om 'n betalende ondersteuner te word";
+          supporterBanner.textContent = "Kliek hier om ’n betalende Ondersteuner te word";
         }
       }
 
-      console.log("[profile] hydrated", { uid: user.uid });
-      if (typeof gtag === 'function') gtag('event','profile_view',{ uid: user.uid });
+      if (typeof gtag === "function") gtag("event", "profile_view", { uid: user.uid });
     }
 
     function wireProfileForm(user){
@@ -320,41 +335,47 @@
       const resetBtn = $("resetPwBtn");
       const delBtn = $("deleteBtn");
 
-      if(form){
-        form.addEventListener("submit", async (e)=>{
+      if (form) {
+        form.addEventListener("submit", async (e) => {
           e.preventDefault();
-          try{
-            const newName = ($("nameInput").value||"").trim().slice(0,40);
-            if(newName && newName !== (user.displayName||"")){
+          try {
+            const newName = ($("nameInput").value || "").trim().slice(0, 40);
+            if (newName && newName !== (user.displayName || "")) {
               await updateProfile(user, { displayName: newName });
-              await updateDoc(doc(db,"users",user.uid), { userName: newName, updatedAt: serverTimestamp() });
+              await updateDoc(doc(db, "users", user.uid), { userName: newName, updatedAt: serverTimestamp() });
               alert("Profiel gestoor.");
             } else {
               alert("Geen veranderinge om te stoor nie.");
             }
-          }catch(err){ console.error(err); alert("Kon nie jou profiel opdateer nie."); }
+          } catch (err) {
+            console.error(err);
+            alert("Kon nie jou profiel opdateer nie.");
+          }
         });
       }
 
-      if(resetBtn){
-        resetBtn.addEventListener("click", async ()=>{
-          try{
+      if (resetBtn) {
+        resetBtn.addEventListener("click", async () => {
+          try {
             await sendPasswordResetEmail(auth, auth.currentUser.email);
             alert("’n Wagwoordherstel-skakel is per e-pos gestuur.");
-          }catch(err){ console.error(err); alert("Kon nie wagwoordherstel stuur nie."); }
+          } catch (err) {
+            console.error(err);
+            alert("Kon nie wagwoordherstel stuur nie.");
+          }
         });
       }
 
-      if(delBtn){
-        delBtn.addEventListener("click", async ()=>{
-          if(!confirm("Is jy seker? Jou rekening sal verwyder word.")) return;
-          try{
+      if (delBtn) {
+        delBtn.addEventListener("click", async () => {
+          if (!confirm("Is jy seker? Jou rekening sal verwyder word.")) return;
+          try {
             await deleteUser(auth.currentUser);
             alert("Rekening verwyder.");
             window.location.href = "/";
-          }catch(err){
+          } catch (err) {
             console.error(err);
-            alert(String(err.code||"").includes("requires-recent-login")
+            alert(String(err.code || "").includes("requires-recent-login")
               ? "Meld asseblief weer aan en probeer dan weer."
               : "Kon nie jou rekening verwyder nie.");
           }
@@ -368,10 +389,11 @@
         window.location.href = `/login.html?return=${ret}`;
         return;
       }
-      try{
+
+      try {
         await hydrateProfile(user);
         wireProfileForm(user);
-      }catch(e){
+      } catch (e) {
         console.error(e);
       }
     });
@@ -393,17 +415,17 @@
       </div>
     </div>
   </header>
-
   <div class="max-w-6xl mx-auto px-4 pt-2 text-center text-2xl font-bold text-[#1e3a8a]">
     WELKOM TERUG, <span id="wbName">GEBRUIKER</span>
   </div>
+
   <main class="flex-grow p-4 pb-16">
     <div class="max-w-6xl mx-auto flex flex-col gap-6 items-stretch">
 
       <section class="card p-5 md:p-6">
-        <a id="supporterBanner" href="https://buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
+        <a id="supporterBanner" href="/subscribe.html"
            class="block text-center font-bold rounded-lg p-3 mb-4 bg-red-50 border border-red-200 text-red-800">
-          Kliek hier om 'n betalende ondersteuner te word
+          Kliek hier om ’n betalende Ondersteuner te word
         </a>
 
         <h2 class="text-lg font-bold mb-1">Profiel</h2>
@@ -442,11 +464,11 @@
 
         <p class="text-sm text-slate-700 mb-3">
           ’n Ondersteuner-ster (★) wys langs jou naam as jy ’n betalende Ondersteuner is.
-          Die syfers onder wys jou getal en soort medaljes per speletjie.
+          Hieronder sien jy jou medaljes per speletjie.
         </p>
 
         <div id="supporterCtaWrap">
-          <a href="https://buymeacoffee.com/kriptiek" target="_blank" rel="noopener"
+          <a href="/subscribe.html"
              class="inline-flex items-center px-4 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-600 text-white font-bold mb-4">
             WORD ’N ONDERSTEUNER
           </a>
@@ -457,7 +479,7 @@
             <div class="text-xs uppercase tracking-wide text-slate-500 font-extrabold">Dilemma</div>
             <div id="medalsDilLine" class="mt-1 text-lg font-extrabold text-slate-900">Medaljes: 0</div>
             <div id="medalsDilBreakdown" class="hidden text-sm font-bold text-slate-700 mt-1">🥇 0  •  🥈 0  •  🥉 0</div>
-            <div id="medalsDilEmpty" class="text-sm text-slate-500 mt-1">Kom binnekort</div>
+            <div id="medalsDilEmpty" class="text-sm text-slate-500 mt-1">Nog geen medaljes in Dilemma nie</div>
           </div>
 
           <div class="mini">
@@ -483,9 +505,7 @@
         </header>
 
         <div class="text-sm text-slate-700 space-y-2 leading-relaxed">
-          <p><strong>DILEMMA:</strong> Medaljes word om <strong>23:55</strong> elke dag toegeken op grond van jou <strong>aantal raaiskote</strong>:
-            <strong>🥇 vir 1</strong>, <strong>🥈 vir 2</strong>, <strong>🥉 vir 3</strong>.
-          </p>
+          <p><strong>DILEMMA:</strong> Medaljes word om <strong>23:55</strong> elke dag toegeken aan spelers wat die woord reg raai: <strong>🥇 vir 1 raaiskoot</strong>, <strong>🥈 vir 2</strong>, <strong>🥉 vir 3</strong>.</p>
           <p><strong>BLITSTIEK:</strong> Medaljes word om <strong>23:55</strong> toegeken op grond van die dag se <strong>beste tye</strong> op die ranglys.</p>
           <p><strong>SLIMSTIEK:</strong> Medaljes word om <strong>23:55</strong> toegeken op grond van die dag se <strong>beste tellings</strong> op die ranglys.</p>
         </div>
@@ -507,26 +527,33 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function(){
-      const bg = document.getElementById('backgroundCrossword'); if(!bg)return;
-      const letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      const rand=()=>letters[Math.floor(Math.random()*letters.length)];
+      const bg = document.getElementById('backgroundCrossword');
+      if (!bg) return;
+
+      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const rand = () => letters[Math.floor(Math.random() * letters.length)];
+
       function regen(){
-        bg.innerHTML='';
-        const rows=Math.ceil(bg.offsetHeight/30);
-        const cols=Math.ceil(bg.offsetWidth/30);
-        const total=(rows*cols)||300;
-        for(let i=0;i<total;i++){
-          const d=document.createElement('div');
-          d.className='bg-letter-box';
-          d.textContent=rand();
+        bg.innerHTML = '';
+        const rows = Math.ceil(bg.offsetHeight / 30);
+        const cols = Math.ceil(bg.offsetWidth / 30);
+        const total = (rows * cols) || 300;
+
+        for (let i = 0; i < total; i++) {
+          const d = document.createElement('div');
+          d.className = 'bg-letter-box';
+          d.textContent = rand();
           bg.appendChild(d);
         }
       }
-      regen(); window.addEventListener('resize', regen);
+
+      regen();
+      window.addEventListener('resize', regen);
     });
   </script>
 
 </body>
 </html>
+
 
     
