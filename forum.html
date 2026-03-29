@@ -246,11 +246,18 @@ const rs = await getDocs(query(repliesRef, orderBy("createdAt", "desc")));
         const items = [];
         rs.forEach(r => {
           const rr = r.data();
-          items.push(
-            `<div class="border-l-4 border-blue-300 pl-2">
-               <span class="font-semibold">${(rr.userName || "Anoniem")}</span>: ${applyFormatting(rr.content || "")}
-             </div>`
-          );
+const rTime =
+  rr.createdAt?.toDate ? relativeTime(rr.createdAt.toDate()) :
+  (typeof rr.createdAt === "string" ? relativeTime(new Date(rr.createdAt)) : "");
+
+items.push(
+  `<div class="border-l-4 border-blue-300 pl-2">
+     <div class="text-xs text-gray-500 mb-1">
+       <span class="font-semibold text-gray-700">${(rr.userName || "Anoniem")}</span>${rTime ? ` • ${rTime}` : ""}
+     </div>
+     <div>${applyFormatting(rr.content || "")}</div>
+   </div>`
+);
         });
         repliesBox.innerHTML = items.join("");
       } catch (e) {
