@@ -1019,16 +1019,17 @@ if (isFutureGame) {
           li.className = "flex items-center justify-between gap-2";
           if (idx === 0) li.classList.add("font-bold","bg-green-100");
 
-          const rawRateText = Number.isFinite(e.sr) ? `${e.sr}%` : '';
-          const rateText = rawRateText ? ` (${viewerIsSupporter ? rawRateText : '🔒%'})` : '';
-          const isSupporter = supporterCache.get(e.uid) === true;
+const rawRateText = Number.isFinite(e.sr) ? `${e.sr}%` : '';
+const rateText = rawRateText ? ` (${viewerIsSupporter ? rawRateText : '🔒%'})` : '';
+const isSupporter = supporterCache.get(e.uid) === true;
+const displayLabel = viewerIsSupporter ? e.name : `Speler ${idx + 1}`;
 
-          const left = document.createElement("span");
-          left.className = "min-w-0 flex items-center gap-2";
-          left.innerHTML = `
-            <span class="truncate font-bold">${e.name}${rateText}</span>
-            ${renderSupporterStar(isSupporter)}
-          `;
+const left = document.createElement("span");
+left.className = "min-w-0 flex items-center gap-2";
+left.innerHTML = `
+  <span class="truncate font-bold">${displayLabel}${rateText}</span>
+  ${renderSupporterStar(isSupporter)}
+`;
 
           const right = document.createElement("span");
           right.className = "shrink-0 text-right font-extrabold text-slate-900";
