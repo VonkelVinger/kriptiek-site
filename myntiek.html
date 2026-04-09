@@ -104,6 +104,18 @@
       background:rgba(255,255,255,.12);
     }
 
+.btn.active{
+  background:rgba(255,213,74,.22);
+  border-color:rgba(255,213,74,.55);
+  color:#fff4bf;
+}
+
+.btn.used{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+    
     .gridWrap{
       margin-top:14px;
       display:flex;
@@ -274,10 +286,12 @@
         <p>Vind al die woorde. Vermy die bomme.</p>
       </div>
 
-      <div class="stats">
-        <div class="pill">🧩 Woorde <b id="words">0/0</b></div>
-        <button class="btn" id="resetBtn">Reset</button>
-      </div>
+<div class="stats">
+  <div class="pill">🧩 Woorde <b id="words">0/0</b></div>
+  <button class="btn" id="redMyBtn">RED MY</button>
+  <button class="btn" id="resetBtn">Reset</button>
+</div>
+      
     </div>
 
     <div class="gridWrap">
@@ -298,6 +312,7 @@
         <b>Letters:</b> Letters wys sonder dat enige verdere inligting verskaf word.<br/>
         <b>Woorde:</b> Woorde is horisontale of vertikale letterlope van lengte 2 of meer.<br/>
         <b>Eindpunte:</b> Wanneer ’n woord voltooi is, word die blokkie net voor en/of net ná daardie woord outomaties as status gewys.<br/>
+        <b>RED MY:</b> Jy het een RED MY per spel. Klik dit, en klik dan op enige blokkie om dit veilig te onthul, selfs al is dit ’n bom.<br/>
         • As so ’n eindpunt ’n bom is, wys dit veilig as 💣 en maak jou nie dood nie.<br/>
         • As dit leeg is, wys dit sy syfer of 🛟 en kan dit uitkring na aangrensende leë blokkies.<br/>
       </div>
@@ -358,11 +373,13 @@
     }
 
     const state = {
-      revealed: new Set(),
-      flagged: new Set(),
-      gameOver: false,
-      won: false
-    };
+  revealed: new Set(),
+  flagged: new Set(),
+  gameOver: false,
+  won: false,
+  redMyAvailable: true,
+  redMyArmed: false
+};
 
     const completedWordIdx = new Set();
     const completedWordCells = new Set();
@@ -370,7 +387,7 @@
     const gridEl = document.getElementById("grid");
     const wordsEl = document.getElementById("words");
     const statusLineEl = document.getElementById("statusLine");
-
+    const redMyBtn = document.getElementById("redMyBtn");
     let WORDS = [];
 
     function setStatus(msg){
@@ -397,6 +414,24 @@
       updateWordUI();
     }
 
+function updateRedMyUI(){
+  if (!redMyBtn) return;
+
+  redMyBtn.classList.remove("active", "used");
+
+  if (!state.redMyAvailable){
+    redMyBtn.classList.add("used");
+    redMyBtn.textContent = "RED MY GEBRUIK";
+    return;
+  }
+
+  redMyBtn.textContent = state.redMyArmed ? "RED MY AKTIEF" : "RED MY";
+
+  if (state.redMyArmed){
+    redMyBtn.classList.add("active");
+  }
+}
+    
     function buildWordList(minLen = 2){
       const out = [];
       const usedV = new Set();
@@ -666,6 +701,43 @@ btn.appendChild(mid);
       renderAll();
     }
 
+function redMyReveal(k){
+  if (state.gameOver) return;
+  if (!state.redMyAvailable) return;
+  if (state.revealed.has(k)) return;
+  if (state.flagged.has(k)) return;
+
+  const t = getCellType(k);
+
+  state.redMyAvailable = false;
+  state.redMyArmed = false;
+  state.revealed.add(k);
+
+  if (t === "BOMB"){
+    renderCell(k);
+    updateRedMyUI();
+    setStatus("🛟 RED MY gebruik: ’n bom is veilig onthul.");
+    return;
+  }
+
+  renderCell(k);
+
+  if (t === "EMPTY" && adjacentBombCount(k) === 0){
+    floodFromZero(k);
+  }
+
+  processNewCompletedWords();
+  renderAll();
+  refreshTopStats();
+  updateRedMyUI();
+  checkWin();
+
+  if (!state.gameOver){
+    setStatus("🛟 RED MY gebruik: blokkie veilig onthul.");
+  }
+}
+
+    
     function reveal(k){
       if (state.gameOver) return;
       if (state.revealed.has(k)) return;
@@ -694,17 +766,25 @@ btn.appendChild(mid);
       checkWin();
     }
 
-    function onCellClick(k){
-      if (state.gameOver) return;
-      if (state.flagged.has(k)) return;
-      reveal(k);
-    }
+function onCellClick(k){
+  if (state.gameOver) return;
+  if (state.flagged.has(k)) return;
+
+  if (state.redMyArmed){
+    redMyReveal(k);
+    return;
+  }
+
+  reveal(k);
+}
 
     function resetGame(){
       state.revealed.clear();
       state.flagged.clear();
       state.gameOver = false;
       state.won = false;
+      state.redMyAvailable = true;
+      state.redMyArmed = false;
       completedWordIdx.clear();
       completedWordCells.clear();
 
@@ -713,13 +793,29 @@ btn.appendChild(mid);
       setStatus("Klik op ’n blokkie om te begin. Regsklik plaas ’n vlag.");
     }
 
+redMyBtn.addEventListener("click", () => {
+  if (state.gameOver) return;
+  if (!state.redMyAvailable) return;
+
+  state.redMyArmed = !state.redMyArmed;
+  updateRedMyUI();
+
+  if (state.redMyArmed){
+    setStatus("🛟 RED MY is aktief. Klik nou op ’n blokkie vir ’n veilige onthulling.");
+  } else {
+    setStatus("Klik op ’n blokkie om te begin. Regsklik plaas ’n vlag.");
+  }
+});
+    
     // ===== MYNTIEK PART 7: BOOT =====
     document.getElementById("resetBtn").addEventListener("click", resetGame);
 
-    buildGrid();
-    WORDS = buildWordList(2);
-    refreshTopStats();
-    setStatus("Klik op ’n blokkie om te begin. Regsklik plaas ’n vlag.");
+buildGrid();
+WORDS = buildWordList(2);
+refreshTopStats();
+updateRedMyUI();
+setStatus("Klik op ’n blokkie om te begin. Regsklik plaas ’n vlag.");
+    
   </script>
 </body>
 </html>
