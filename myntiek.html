@@ -445,21 +445,6 @@
       return out;
     }
 
-    function directionalPresence(k){
-      const {r,c} = parseKey(k);
-
-      function isLetter(rr,cc){
-        return inBounds(rr,cc) && getCellType(key(rr,cc)) === "LETTER";
-      }
-
-      return {
-        up: isLetter(r - 1, c),
-        down: isLetter(r + 1, c),
-        left: isLetter(r, c - 1),
-        right: isLetter(r, c + 1)
-      };
-    }
-
     // ===== MYNTIEK PART 5: GRID BUILD + RENDER =====
     function buildGrid(){
       gridEl.innerHTML = "";
@@ -547,46 +532,14 @@
         return;
       }
 
-      const ch = letters.get(k);
-      const dirs = directionalPresence(k);
-      const hud = document.createElement("div");
-      hud.className = "hud";
+const ch = letters.get(k);
 
-      const tl = document.createElement("div");
-      const tr = document.createElement("div");
-      const bl = document.createElement("div");
-      const br = document.createElement("div");
+const mid = document.createElement("div");
+mid.className = "mid";
+mid.textContent = ch;
 
-      const up = document.createElement("div");
-      up.className = `dir ${dirs.up ? "on" : "off"}`;
-      up.textContent = "↑";
-      const left = document.createElement("div");
-      left.className = `dir ${dirs.left ? "on" : "off"}`;
-      left.textContent = "←";
-
-      const right = document.createElement("div");
-      right.className = `dir ${dirs.right ? "on" : "off"}`;
-      right.textContent = "→";
-
-      const down = document.createElement("div");
-      down.className = `dir ${dirs.down ? "on" : "off"}`;
-      down.textContent = "↓";
-
-      const mid = document.createElement("div");
-      mid.className = "mid";
-      mid.textContent = ch;
-
-      hud.appendChild(tl);
-      hud.appendChild(up);
-      hud.appendChild(tr);
-      hud.appendChild(left);
-      hud.appendChild(mid);
-      hud.appendChild(right);
-      hud.appendChild(bl);
-      hud.appendChild(down);
-      hud.appendChild(br);
-
-      btn.appendChild(hud);
+btn.appendChild(mid);
+      
     }
 
     // ===== MYNTIEK PART 6: GAMEPLAY LOGIC =====
