@@ -340,6 +340,10 @@
     const auth = getAuth(app);
     const functions = getFunctions(app, "europe-west1");
     const checkDilemmaGuess = httpsCallable(functions, "checkDilemmaGuess");
+    const processDilemmaJourneyAchievementsCallable = httpsCallable(
+      functions,
+      "processDilemmaJourneyAchievements"
+    );
 
     const GAME_ID = window.GAME_ID;
     const __QP = new URLSearchParams(location.search);
@@ -380,6 +384,26 @@
     let archiveWord = "";
     let isArchiveMode = false;
     let loadedGameId = GAME_ID;
+    let earnedAchievementIds = [];
+    let newlyAwardedAchievementIds = [];
+
+    async function processDilemmaJourneyAchievements() {
+      try {
+        const response = await processDilemmaJourneyAchievementsCallable({
+          gameId: loadedGameId
+        });
+        const data = response?.data || {};
+        earnedAchievementIds = Array.isArray(data.earnedAchievementIds) ?
+          data.earnedAchievementIds : [];
+        newlyAwardedAchievementIds = Array.isArray(data.newlyAwardedAchievementIds) ?
+          data.newlyAwardedAchievementIds : [];
+      } catch (error) {
+        console.warn(
+          "[Dilemma Journey] Achievement processing failed (non-fatal):",
+          error
+        );
+      }
+    }
 
     const doneKey = `dilemma-${GAME_ID}-done`;
     const progressKey = `dilemma-${GAME_ID}-progress`;
@@ -1157,6 +1181,7 @@ left.innerHTML = `
         { finished: true, result: "win", guesses: Math.trunc(Number(guessCount)), finishedAt: serverTimestamp() },
         { merge: true }
       );
+      await processDilemmaJourneyAchievements();
       await submitScore(guessCount, true);
       await loadLeaderboard();
       setKeyboardDisabled(true);
@@ -1180,6 +1205,7 @@ left.innerHTML = `
         { finished: true, result: "loss", guesses: 6, finishedAt: serverTimestamp() },
         { merge: true }
       );
+      await processDilemmaJourneyAchievements();
       await submitScore(6, false);
       await loadLeaderboard();
       setKeyboardDisabled(true);
@@ -1321,6 +1347,7 @@ if (!isArchiveMode && gameStatus !== "active" && gameStatus !== "published") {
 }
 
       let summary = null;
+      let restoredFromExplicitResult = false;
 
       try {
         const fsSnap = await getDoc(doc(db, "userGames", currentUid, "plays", loadedGameId));
@@ -1328,6 +1355,7 @@ if (!isArchiveMode && gameStatus !== "active" && gameStatus !== "published") {
           const d = fsSnap.data() || {};
           if (d.finished === true && (d.result === "win" || d.result === "loss")) {
             summary = { didWin: d.result === "win", guesses: Number(d.guesses) || null };
+            restoredFromExplicitResult = true;
           }
         }
       } catch {}
@@ -1343,6 +1371,9 @@ if (!isArchiveMode && gameStatus !== "active" && gameStatus !== "published") {
 
       if (summary) {
         lastSummary = summary;
+        if (restoredFromExplicitResult) {
+          await processDilemmaJourneyAchievements();
+        }
         statusLine.textContent = summary.didWin
           ? `Jy het hierdie Dilemma in ${summary.guesses} ${(summary.guesses===1?'raaiskoot':'raaiskote')} opgelos`
           : `Jy kon nie hierdie Dilemma oplos nie`;
