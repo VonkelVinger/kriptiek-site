@@ -217,11 +217,12 @@ function setWbName(name){
       const plays = [];
       snap.forEach(docSnap => {
         const d = docSnap.data();
+        if (d?.result !== "win" && d?.result !== "loss") return;
         const gameId = docSnap.id; // "GameYYYY-MM-DD"
         const theDate = gameId.replace(/^Game/, "");
         plays.push({
           date: theDate,
-          win: d?.result === "win" || d?.finished === true,
+          win: d.result === "win",
           guesses: Number(d?.guesses || 0),
         });
       });

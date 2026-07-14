@@ -753,8 +753,9 @@ if (isFutureGame) {
       const byDate = new Map();
       snap.forEach(ds => {
         const d = ds.data();
+        if (d?.result !== "win" && d?.result !== "loss") return;
         const date = ds.id.replace(/^Game/,"");
-        byDate.set(date, { win: d?.result === "win" || d?.finished === true, guesses: Number(d?.guesses || 0) });
+        byDate.set(date, { win: d.result === "win", guesses: Number(d?.guesses || 0) });
       });
 
       const dates = Array.from(byDate.keys()).sort();
@@ -847,6 +848,7 @@ if (isFutureGame) {
           {
             userName: displayName,
             guesses: Math.trunc(Number(guessCount)),
+            result: didWin ? "win" : "loss",
             ...(successRate == null ? {} : { successRate }),
             date: serverTimestamp(),
             createdAtMs: Date.now(),
@@ -894,6 +896,7 @@ if (isFutureGame) {
         const payload = {
           userName: displayName,
           guesses: Math.trunc(Number(guessCount)),
+          result: summary.didWin ? "win" : "loss",
           date: serverTimestamp(),
           createdAtMs: Date.now(),
           ...(sr == null ? {} : { successRate: sr }),
@@ -964,8 +967,23 @@ if (isFutureGame) {
         const needSR = [];
         const needScore = [];
 
-        snap.forEach(d => {
+        const verifiedRows = await Promise.all(snap.docs.map(async d => {
           const v = d.data() || {};
+          if (v.result === "win") return { d, v };
+          if (v.result === "loss") return null;
+          if (Object.prototype.hasOwnProperty.call(v, "result")) return null;
+
+          try {
+            const playSnap = await getDoc(doc(db, "userGames", d.id, "plays", loadedGameId));
+            if (playSnap.exists() && playSnap.data()?.result === "win") return { d, v };
+          } catch {}
+
+          return null;
+        }));
+
+        verifiedRows.forEach(row => {
+          if (!row) return;
+          const { d, v } = row;
           const guessesNum = Number(v.guesses);
           if (!Number.isFinite(guessesNum) || guessesNum < 1 || guessesNum > 6) return;
 
