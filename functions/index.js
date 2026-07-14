@@ -823,5 +823,155 @@ exports.checkDilemmaGuess = onCall(
     };
   }
 );
-	  
-	  
+
+// ----------------------
+// DILEMMA JOURNEY ACHIEVEMENTS — V1
+// ----------------------
+
+const DILEMMA_JOURNEY_RULE_VERSION = "journey-v1";
+const DILEMMA_JOURNEY_ACHIEVEMENTS = [
+  { id: "dilemma-first", completed: 1 },
+  { id: "dilemma-streak-5", streak: 5 },
+  { id: "dilemma-streak-10", streak: 10 },
+  { id: "dilemma-played-25", completed: 25 },
+  { id: "dilemma-played-50", completed: 50 },
+  { id: "dilemma-played-100", completed: 100 },
+];
+
+function dilemmaJourneyChronologyMs(playSnap, playData) {
+  const finishedAt = playData?.finishedAt;
+  if (finishedAt?.toMillis) {
+    const finishedAtMs = finishedAt.toMillis();
+    if (Number.isFinite(finishedAtMs)) return finishedAtMs;
+  }
+
+  if (finishedAt != null && Number.isFinite(Number(finishedAt))) {
+    return Number(finishedAt);
+  }
+
+  const dateKey = String(playSnap.id || "").replace(/^Game/, "");
+  const gameDateMs = Date.parse(`${dateKey}T00:00:00Z`);
+  return Number.isFinite(gameDateMs) ? gameDateMs : 0;
+}
+
+exports.processDilemmaJourneyAchievements = onCall(
+  { region: REGION },
+  async (req) => {
+    const context = req.auth;
+    const data = req.data;
+
+    if (!context) {
+      throw new HttpsError("unauthenticated", "User must be logged in.");
+    }
+
+    const uid = String(context.uid);
+    const gameId = String(data?.gameId || "").trim();
+
+    if (!gameId || gameId.includes("/")) {
+      throw new HttpsError("invalid-argument", "A valid gameId is required.");
+    }
+
+    const playsRef = db
+      .collection("userGames")
+      .doc(uid)
+      .collection("plays");
+    const sourcePlayRef = playsRef.doc(gameId);
+    const sourcePlaySnap = await sourcePlayRef.get();
+
+    if (!sourcePlaySnap.exists) {
+      throw new HttpsError("not-found", "Dilemma play not found.");
+    }
+
+    const sourcePlay = sourcePlaySnap.data() || {};
+    if (sourcePlay.result !== "win" && sourcePlay.result !== "loss") {
+      throw new HttpsError(
+        "failed-precondition",
+        "Dilemma play does not have an explicit result."
+      );
+    }
+
+    const historySnap = await playsRef.get();
+    const plays = [];
+
+    historySnap.forEach((playSnap) => {
+      const play = playSnap.data() || {};
+      if (play.result !== "win" && play.result !== "loss") return;
+
+      plays.push({
+        gameId: playSnap.id,
+        result: play.result,
+        chronologyMs: dilemmaJourneyChronologyMs(playSnap, play),
+      });
+    });
+
+    plays.sort((a, b) =>
+      (a.chronologyMs - b.chronologyMs) || a.gameId.localeCompare(b.gameId)
+    );
+
+    const totalCompleted = plays.length;
+    const totalWins = plays.filter((play) => play.result === "win").length;
+    let currentWinStreak = 0;
+    let bestWinStreak = 0;
+
+    for (const play of plays) {
+      currentWinStreak = play.result === "win" ? currentWinStreak + 1 : 0;
+      bestWinStreak = Math.max(bestWinStreak, currentWinStreak);
+    }
+
+    const qualifiedIds = new Set(
+      DILEMMA_JOURNEY_ACHIEVEMENTS
+        .filter((achievement) =>
+          (achievement.completed && totalCompleted >= achievement.completed) ||
+          (achievement.streak && bestWinStreak >= achievement.streak)
+        )
+        .map((achievement) => achievement.id)
+    );
+
+    const sourceGuessesValue = sourcePlay.guesses == null ?
+      null : Number(sourcePlay.guesses);
+    const sourceGuesses = Number.isFinite(sourceGuessesValue) ?
+      Math.trunc(sourceGuessesValue) : null;
+    const achievementRefs = DILEMMA_JOURNEY_ACHIEVEMENTS.map((achievement) =>
+      db.doc(`users/${uid}/achievements/${achievement.id}`)
+    );
+
+    const result = await db.runTransaction(async (tx) => {
+      const achievementSnaps = await Promise.all(
+        achievementRefs.map((achievementRef) => tx.get(achievementRef))
+      );
+      const earnedAchievementIds = [];
+      const newlyAwardedAchievementIds = [];
+
+      DILEMMA_JOURNEY_ACHIEVEMENTS.forEach((achievement, index) => {
+        if (achievementSnaps[index].exists) {
+          earnedAchievementIds.push(achievement.id);
+          return;
+        }
+
+        if (!qualifiedIds.has(achievement.id)) return;
+
+        tx.create(achievementRefs[index], {
+          achievementId: achievement.id,
+          awardedAt: admin.firestore.FieldValue.serverTimestamp(),
+          ruleVersion: DILEMMA_JOURNEY_RULE_VERSION,
+          sourceGameId: gameId,
+          sourceResult: sourcePlay.result,
+          sourceGuesses,
+          evidence: {
+            totalCompleted,
+            totalWins,
+            currentWinStreak,
+            bestWinStreak,
+          },
+        });
+
+        earnedAchievementIds.push(achievement.id);
+        newlyAwardedAchievementIds.push(achievement.id);
+      });
+
+      return { earnedAchievementIds, newlyAwardedAchievementIds };
+    });
+
+    return result;
+  }
+);
