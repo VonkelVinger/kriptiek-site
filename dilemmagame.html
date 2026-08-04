@@ -58,11 +58,18 @@
     .key.bg-green-600{ background:#16a34a!important; }
     .key.bg-red-600{ background:#1e3a8a!important; }
 
-    #resultModal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); align-items:center; justify-content:center; z-index:2000; }
-    #resultModal .modal-content{ background:#fff; padding:1.5rem; border-radius:8px; text-align:center; max-width:320px; width:100%; }
+    #resultModal{ display:none; position:fixed; inset:0; padding:1rem; background:rgba(0,0,0,.5); align-items:center; justify-content:center; z-index:2000; overflow-y:auto; }
+    #resultModal .modal-content{ background:#fff; padding:1.5rem; border-radius:12px; text-align:center; max-width:480px; width:100%; max-height:calc(100vh - 2rem); overflow-y:auto; box-shadow:0 20px 50px rgba(0,0,0,.25); }
     #resultModal button{ margin:5px; padding:8px 16px; border-radius:4px; font-weight:700; }
     .btn-share{ background:#1e3a8a; color:#fff; }
     .btn-close{ background:#6b7280; color:#fff; }
+    .journey-stats{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.75rem; margin:1.25rem 0; text-align:left; }
+    .journey-stat{ padding:.75rem; background:#f3f4f6; border-radius:.5rem; }
+    .journey-stat-label{ display:block; color:#4b5563; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.025em; }
+    .journey-stat-value{ display:block; margin-top:.2rem; color:#111827; font-size:1.25rem; font-weight:800; }
+    #journeyMedals{ margin:0 0 1.25rem; padding:1rem; background:#fffbeb; border-radius:.5rem; text-align:left; }
+    #journeyMedals ul{ margin:.5rem 0 0; padding-left:1.25rem; }
+    @media (max-width:380px){ #resultModal .modal-content{ padding:1.25rem 1rem; } .journey-stats{ gap:.5rem; } .journey-stat{ padding:.6rem; } }
 
     .share-menu-local{
       background:#fff; border:1px solid #e5e7eb; box-shadow:0 8px 24px rgba(0,0,0,.12);
@@ -286,7 +293,19 @@
 
   <div id="resultModal">
     <div class="modal-content">
-      <p id="resultMessage" class="mb-4 font-bold"></p>
+      <p class="text-sm font-bold uppercase tracking-wide text-blue-900">Kriptiek Journey</p>
+      <h2 id="resultMessage" class="mt-1 text-2xl font-extrabold text-gray-900"></h2>
+      <p id="resultAttempts" class="mt-2 text-gray-700"></p>
+      <div class="journey-stats" aria-label="Jou Dilemma-statistiek">
+        <div class="journey-stat"><span class="journey-stat-label">Gespeel</span><span id="journeyGamesPlayed" class="journey-stat-value">—</span></div>
+        <div class="journey-stat"><span class="journey-stat-label">Sukseskoers</span><span id="journeySuccessRate" class="journey-stat-value">—</span></div>
+        <div class="journey-stat"><span class="journey-stat-label">Huidige wenlopie</span><span id="journeyStreak" class="journey-stat-value">—</span></div>
+        <div class="journey-stat"><span class="journey-stat-label">Beste wenlopie</span><span id="journeyBestStreak" class="journey-stat-value">—</span></div>
+      </div>
+      <section id="journeyMedals" class="hidden" aria-labelledby="journeyMedalsTitle">
+        <h3 id="journeyMedalsTitle" class="font-bold text-amber-900">Nuwe Journey-medaljes</h3>
+        <ul id="journeyMedalsList" class="text-amber-950"></ul>
+      </section>
       <div class="relative flex items-center justify-center gap-2">
         <button id="modalShareBtn" type="button" class="btn-share">DEEL</button>
         <button id="closeModalBtn" type="button" class="btn-close">SLUIT</button>
@@ -353,6 +372,13 @@
     const keyboard = document.getElementById("keyboard");
     const modal = document.getElementById("resultModal");
     const resultMsg = document.getElementById("resultMessage");
+    const resultAttempts = document.getElementById("resultAttempts");
+    const journeyGamesPlayed = document.getElementById("journeyGamesPlayed");
+    const journeySuccessRate = document.getElementById("journeySuccessRate");
+    const journeyStreak = document.getElementById("journeyStreak");
+    const journeyBestStreak = document.getElementById("journeyBestStreak");
+    const journeyMedals = document.getElementById("journeyMedals");
+    const journeyMedalsList = document.getElementById("journeyMedalsList");
     const leaderboardList = document.getElementById("leaderboardList");
     const playerNameEl = document.getElementById("playerName");
     const statusLine = document.getElementById("statusLine");
@@ -386,8 +412,21 @@
     let loadedGameId = GAME_ID;
     let earnedAchievementIds = [];
     let newlyAwardedAchievementIds = [];
+    let journeyStatistics = null;
+    const JOURNEY_MEDAL_LABELS = {
+      "dilemma-first": "Eerste Dilemma",
+      "dilemma-streak-5": "Vyf in ’n ry",
+      "dilemma-streak-10": "Tien in ’n ry",
+      "dilemma-played-25": "25 Dilemmas",
+      "dilemma-played-50": "50 Dilemmas",
+      "dilemma-played-100": "100 Dilemmas"
+    };
 
     async function processDilemmaJourneyAchievements() {
+      earnedAchievementIds = [];
+      newlyAwardedAchievementIds = [];
+      journeyStatistics = null;
+
       try {
         const response = await processDilemmaJourneyAchievementsCallable({
           gameId: loadedGameId
@@ -397,6 +436,9 @@
           data.earnedAchievementIds : [];
         newlyAwardedAchievementIds = Array.isArray(data.newlyAwardedAchievementIds) ?
           data.newlyAwardedAchievementIds : [];
+        journeyStatistics = data.journeyStatistics &&
+          typeof data.journeyStatistics === "object" ?
+          data.journeyStatistics : null;
       } catch (error) {
         console.warn(
           "[Dilemma Journey] Achievement processing failed (non-fatal):",
@@ -814,7 +856,7 @@ if (isFutureGame) {
       return subtotal + streakBonus + supporterBonus;
     }
 
-    async function submitScore(guessCount, didWin) {
+    async function submitScore(guessCount, didWin, authoritativeJourneyStats = null) {
       if (!currentUid) return;
 
       try {
@@ -826,38 +868,9 @@ if (isFutureGame) {
         }
       } catch (e) { console.warn("Could not read users doc:", e); }
 
-      let successRate = null;
-      try {
-        const uref = doc(db, "users", currentUid);
-        const before = await getDoc(uref);
-
-        let payload;
-        if (before.exists()) {
-          const u = before.data() || {};
-          const newGames = (u.gamesPlayed || 0) + 1;
-          const newWins = (u.wins || 0) + (didWin ? 1 : 0);
-          const newStreak = didWin ? (u.streak || 0) + 1 : 0;
-          const newBest = Math.max(u.bestStreak || 0, newStreak);
-          const dist = { "1":0,"2":0,"3":0,"4":0,"5":0,"6":0, ...(u.guessDist || {}) };
-          if (didWin && guessCount >= 1 && guessCount <= 6) dist[String(guessCount)] = (dist[String(guessCount)] || 0) + 1;
-          payload = { userName: displayName, gamesPlayed: newGames, wins: newWins, streak: newStreak, bestStreak: newBest, guessDist: dist, updatedAt: serverTimestamp() };
-        } else {
-          payload = {
-            userName: displayName, gamesPlayed: 1, wins: didWin ? 1 : 0, streak: didWin ? 1 : 0, bestStreak: didWin ? 1 : 0,
-            guessDist: { "1":0,"2":0,"3":0,"4":0,"5":0,"6":0, ...(didWin && guessCount>=1 && guessCount<=6 ? { [String(guessCount)]: 1 } : {}) },
-            createdAt: serverTimestamp(), updatedAt: serverTimestamp()
-          };
-        }
-        await setDoc(uref, payload, { merge: true });
-
-        const after = await getDoc(uref);
-        const nd = after.data() || {};
-        const games = Number(nd.gamesPlayed || 0);
-        const wins = Number(nd.wins || 0);
-        successRate = games > 0 ? Math.round((wins / games) * 100) : 0;
-      } catch (e) {
-        console.warn("User stats update failed (non-fatal):", e);
-      }
+      const returnedSuccessRate = Number(authoritativeJourneyStats?.successRate);
+      const successRate = Number.isFinite(returnedSuccessRate) ?
+        returnedSuccessRate : null;
 
       let totalScore = 0;
       try {
@@ -908,9 +921,14 @@ if (isFutureGame) {
           const uSnap = await getDoc(doc(db, "users", currentUid));
           if (uSnap.exists()) {
             const u = uSnap.data() || {};
-            const gp = Number(u.gamesPlayed || 0);
-            const w = Number(u.wins || 0);
-            sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
+            const authoritativeSr = Number(u.journeyDilemmaSuccessRate);
+            if (Number.isFinite(authoritativeSr)) {
+              sr = authoritativeSr;
+            } else {
+              const gp = Number(u.gamesPlayed || 0);
+              const w = Number(u.wins || 0);
+              sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
+            }
           }
         } catch {}
 
@@ -1028,9 +1046,11 @@ if (isFutureGame) {
             const s = res.value;
             if (!s.exists()) return;
             const u = s.data() || {};
+            const authoritativeSr = Number(u.journeyDilemmaSuccessRate);
             const gp = Number(u.gamesPlayed || 0);
             const w = Number(u.wins || 0);
-            const sr = gp > 0 ? Math.round((w / gp) * 100) : 0;
+            const sr = Number.isFinite(authoritativeSr) ?
+              authoritativeSr : (gp > 0 ? Math.round((w / gp) * 100) : 0);
             const ent = entries.find(e => e.uid === needSR[i]);
             if (ent) ent.sr = sr;
           });
@@ -1118,11 +1138,47 @@ left.innerHTML = `
 
     let lastSummary = null;
 
+    function journeyStatNumber(stats, key) {
+      const value = Number(stats?.[key]);
+      return Number.isFinite(value) && value >= 0 ? value : null;
+    }
+
+    async function showJourneyCompletion(summary) {
+      const pogingWoord = summary.guesses === 1 ? "poging" : "pogings";
+      resultMsg.textContent = summary.didWin ? "Dilemma opgelos!" : "Dilemma nie opgelos nie";
+      resultAttempts.textContent = `${summary.guesses} ${pogingWoord}`;
+
+      const totalCompleted = journeyStatNumber(journeyStatistics, "totalCompleted");
+      const successRate = journeyStatNumber(journeyStatistics, "successRate");
+      const currentWinStreak = journeyStatNumber(
+        journeyStatistics, "currentWinStreak"
+      );
+      const bestWinStreak = journeyStatNumber(
+        journeyStatistics, "bestWinStreak"
+      );
+
+      journeyGamesPlayed.textContent = totalCompleted == null ? "—" : String(totalCompleted);
+      journeySuccessRate.textContent = successRate == null ? "—" : `${successRate}%`;
+      journeyStreak.textContent = currentWinStreak == null ? "—" : String(currentWinStreak);
+      journeyBestStreak.textContent = bestWinStreak == null ? "—" : String(bestWinStreak);
+
+      const medalLabels = newlyAwardedAchievementIds
+        .map(id => JOURNEY_MEDAL_LABELS[id])
+        .filter(Boolean);
+      journeyMedalsList.replaceChildren(...medalLabels.map(label => {
+        const item = document.createElement("li");
+        item.textContent = label;
+        return item;
+      }));
+      journeyMedals.classList.toggle("hidden", medalLabels.length === 0);
+      modal.style.display = "flex";
+    }
+
     function shareTextFromSummary(summary) {
       const link = SHARE_TEXT_URL;
       if (!summary) return `Kom speel vandag se DILEMMA op Kriptiek: ${link}`;
       if (summary.didWin) {
-        const woord = summary.guesses === 1 ? 'raaiskoot' : 'raaiskote';
+        const woord = summary.guesses === 1 ? 'poging' : 'pogings';
         return `Ek het hierdie DILEMMA in ${summary.guesses} ${woord} opgelos. Probeer self by ${link}`;
       }
       return `Ek kon nie hierdie DILEMMA oplos nie. Probeer self by ${link}`;
@@ -1164,13 +1220,10 @@ left.innerHTML = `
 
     async function gameCompleted(guessCount) {
       gameOver = true;
-      const woord = guessCount === 1 ? 'raaiskoot' : 'raaiskote';
+      const woord = guessCount === 1 ? 'poging' : 'pogings';
 
       statusLine.textContent = `Jy het hierdie Dilemma in ${guessCount} ${woord} opgelos`;
       statusLine.style.display = "block";
-
-      resultMsg.textContent = `Veels geluk, ${displayName}, jy het die woord in ${guessCount} ${woord} gekry!`;
-      modal.style.display = "flex";
 
       lastSummary = { didWin: true, guesses: guessCount };
 
@@ -1182,7 +1235,8 @@ left.innerHTML = `
         { merge: true }
       );
       await processDilemmaJourneyAchievements();
-      await submitScore(guessCount, true);
+      await submitScore(guessCount, true, journeyStatistics);
+      await showJourneyCompletion(lastSummary);
       await loadLeaderboard();
       setKeyboardDisabled(true);
     }
@@ -1193,10 +1247,7 @@ left.innerHTML = `
       statusLine.textContent = `Jy kon nie hierdie Dilemma oplos nie`;
       statusLine.style.display = "block";
 
-      resultMsg.textContent = `Jammer, ${displayName}! Jy kon nie hierdie Dilemma oplos nie.`;
-      modal.style.display = "flex";
-
-      lastSummary = { didWin: false, guesses: null };
+      lastSummary = { didWin: false, guesses: 6 };
 
       saveLocalProgress(true);
       localStorage.setItem(`${doneKey}-result`, `loss`);
@@ -1206,7 +1257,8 @@ left.innerHTML = `
         { merge: true }
       );
       await processDilemmaJourneyAchievements();
-      await submitScore(6, false);
+      await submitScore(6, false, journeyStatistics);
+      await showJourneyCompletion(lastSummary);
       await loadLeaderboard();
       setKeyboardDisabled(true);
     }

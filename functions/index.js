@@ -871,71 +871,78 @@ exports.processDilemmaJourneyAchievements = onCall(
       throw new HttpsError("invalid-argument", "A valid gameId is required.");
     }
 
-    const playsRef = db
-      .collection("userGames")
-      .doc(uid)
-      .collection("plays");
+    const userRef = db.collection("users").doc(uid);
+    const playsRef = db.collection("userGames").doc(uid).collection("plays");
     const sourcePlayRef = playsRef.doc(gameId);
-    const sourcePlaySnap = await sourcePlayRef.get();
-
-    if (!sourcePlaySnap.exists) {
-      throw new HttpsError("not-found", "Dilemma play not found.");
-    }
-
-    const sourcePlay = sourcePlaySnap.data() || {};
-    if (sourcePlay.result !== "win" && sourcePlay.result !== "loss") {
-      throw new HttpsError(
-        "failed-precondition",
-        "Dilemma play does not have an explicit result."
-      );
-    }
-
-    const historySnap = await playsRef.get();
-    const plays = [];
-
-    historySnap.forEach((playSnap) => {
-      const play = playSnap.data() || {};
-      if (play.result !== "win" && play.result !== "loss") return;
-
-      plays.push({
-        gameId: playSnap.id,
-        result: play.result,
-        chronologyMs: dilemmaJourneyChronologyMs(playSnap, play),
-      });
-    });
-
-    plays.sort((a, b) =>
-      (a.chronologyMs - b.chronologyMs) || a.gameId.localeCompare(b.gameId)
-    );
-
-    const totalCompleted = plays.length;
-    const totalWins = plays.filter((play) => play.result === "win").length;
-    let currentWinStreak = 0;
-    let bestWinStreak = 0;
-
-    for (const play of plays) {
-      currentWinStreak = play.result === "win" ? currentWinStreak + 1 : 0;
-      bestWinStreak = Math.max(bestWinStreak, currentWinStreak);
-    }
-
-    const qualifiedIds = new Set(
-      DILEMMA_JOURNEY_ACHIEVEMENTS
-        .filter((achievement) =>
-          (achievement.completed && totalCompleted >= achievement.completed) ||
-          (achievement.streak && bestWinStreak >= achievement.streak)
-        )
-        .map((achievement) => achievement.id)
-    );
-
-    const sourceGuessesValue = sourcePlay.guesses == null ?
-      null : Number(sourcePlay.guesses);
-    const sourceGuesses = Number.isFinite(sourceGuessesValue) ?
-      Math.trunc(sourceGuessesValue) : null;
     const achievementRefs = DILEMMA_JOURNEY_ACHIEVEMENTS.map((achievement) =>
       db.doc(`users/${uid}/achievements/${achievement.id}`)
     );
 
     const result = await db.runTransaction(async (tx) => {
+      const [sourcePlaySnap, historySnap] = await Promise.all([
+        tx.get(sourcePlayRef),
+        tx.get(playsRef),
+      ]);
+
+      if (!sourcePlaySnap.exists) {
+        throw new HttpsError("not-found", "Dilemma play not found.");
+      }
+
+      const sourcePlay = sourcePlaySnap.data() || {};
+      if (sourcePlay.result !== "win" && sourcePlay.result !== "loss") {
+        throw new HttpsError(
+          "failed-precondition",
+          "Dilemma play does not have an explicit result."
+        );
+      }
+
+      const plays = [];
+      historySnap.forEach((playSnap) => {
+        const play = playSnap.data() || {};
+        if (play.result !== "win" && play.result !== "loss") return;
+
+        plays.push({
+          gameId: playSnap.id,
+          result: play.result,
+          chronologyMs: dilemmaJourneyChronologyMs(playSnap, play),
+        });
+      });
+
+      plays.sort((a, b) =>
+        (a.chronologyMs - b.chronologyMs) || a.gameId.localeCompare(b.gameId)
+      );
+
+      const totalCompleted = plays.length;
+      const totalWins = plays.filter((play) => play.result === "win").length;
+      let currentWinStreak = 0;
+      let bestWinStreak = 0;
+
+      for (const play of plays) {
+        currentWinStreak = play.result === "win" ? currentWinStreak + 1 : 0;
+        bestWinStreak = Math.max(bestWinStreak, currentWinStreak);
+      }
+
+      const successRate = totalCompleted > 0 ?
+        Math.round((totalWins / totalCompleted) * 100) : 0;
+      const journeyStatistics = {
+        totalCompleted,
+        totalWins,
+        successRate,
+        currentWinStreak,
+        bestWinStreak,
+      };
+      const qualifiedIds = new Set(
+        DILEMMA_JOURNEY_ACHIEVEMENTS
+          .filter((achievement) =>
+            (achievement.completed && totalCompleted >= achievement.completed) ||
+            (achievement.streak && bestWinStreak >= achievement.streak)
+          )
+          .map((achievement) => achievement.id)
+      );
+      const sourceGuessesValue = sourcePlay.guesses == null ?
+        null : Number(sourcePlay.guesses);
+      const sourceGuesses = Number.isFinite(sourceGuessesValue) ?
+        Math.trunc(sourceGuessesValue) : null;
       const achievementSnaps = await Promise.all(
         achievementRefs.map((achievementRef) => tx.get(achievementRef))
       );
@@ -969,7 +976,20 @@ exports.processDilemmaJourneyAchievements = onCall(
         newlyAwardedAchievementIds.push(achievement.id);
       });
 
-      return { earnedAchievementIds, newlyAwardedAchievementIds };
+      tx.set(userRef, {
+        journeyDilemmaTotalCompleted: totalCompleted,
+        journeyDilemmaTotalWins: totalWins,
+        journeyDilemmaSuccessRate: successRate,
+        journeyDilemmaCurrentWinStreak: currentWinStreak,
+        journeyDilemmaBestWinStreak: bestWinStreak,
+        journeyDilemmaStatsUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      return {
+        journeyStatistics,
+        earnedAchievementIds,
+        newlyAwardedAchievementIds,
+      };
     });
 
     return result;
