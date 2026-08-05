@@ -1192,9 +1192,13 @@ left.innerHTML = `
 
     function wireShareDropdown(triggerBtn, menuEl){
       if (!triggerBtn) return;
-      triggerBtn.addEventListener('click', (e) => {
+      triggerBtn.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
+        if (typeof navigator.share === 'function') {
+          try { await navigator.share({ text: shareTextFromSummary(lastSummary), url: SHARE_TEXT_URL }); } catch (_) {}
+          return;
+        }
         document.querySelectorAll('.share-menu-local').forEach(m => { if (m !== menuEl) m.classList.add('hidden'); });
         menuEl.classList.toggle('hidden');
       });
