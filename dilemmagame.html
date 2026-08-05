@@ -453,8 +453,7 @@
     const SHARE_URL = "https://www.kriptiek.com/dilemmagame.html";
     const SHARE_TEXT_URL = (() => {
       const u = new URL(SHARE_URL);
-      u.searchParams.set('gameId', GAME_ID);
-      u.searchParams.set('wa', 'v6');
+      u.searchParams.set('date', GAME_ID.replace(/^Game/, ''));
       return u.toString();
     })();
 
