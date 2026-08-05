@@ -12,6 +12,9 @@
     /* Dim + block the panel when not admin */
     #panel.disabled { opacity:.6; pointer-events:none; user-select:none; }
     code { background:#f3f4f6; padding:.1rem .3rem; border-radius:.25rem; }
+    .calendar-day { min-height:4.5rem; }
+    .calendar-day.is-populated { background:#dcfce7; border-color:#22c55e; }
+    .calendar-day.is-selected { outline:2px solid #2563eb; outline-offset:1px; }
   </style>
 
   <script type="module">
@@ -108,6 +111,17 @@
       const checkBtn  = document.getElementById('checkBtn');
       const resultEl  = document.getElementById('result');
       const linkEl    = document.getElementById('gameLink');
+      const calendarEl = document.getElementById('gameCalendar');
+      const calendarMonthEl = document.getElementById('calendarMonth');
+      const previousMonthBtn = document.getElementById('previousMonth');
+      const nextMonthBtn = document.getElementById('nextMonth');
+      const readyThroughEl = document.getElementById('readyThrough');
+      const nextOpenEl = document.getElementById('nextOpen');
+      const lastScheduledEl = document.getElementById('lastScheduled');
+      const calendarGames = new Map();
+      let calendarMonth;
+      let loadRequest = 0;
+      let calendarRequest = 0;
 
       const clearResult = () => {
         resultEl.textContent = '';
@@ -130,6 +144,146 @@
 
       function setPanelEnabled(enabled) {
         panelEl.classList.toggle('disabled', !enabled);
+      }
+
+      function setCalendarMonth(dateStr) {
+        const [year, month] = dateStr.split('-').map(Number);
+        calendarMonth = new Date(year, month - 1, 1);
+      }
+
+      function renderCalendar() {
+        if (!calendarMonth) return;
+        const year = calendarMonth.getFullYear();
+        const month = calendarMonth.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const startsOn = new Date(year, month, 1).getDay();
+        calendarMonthEl.textContent = new Intl.DateTimeFormat('af-ZA', {
+          month: 'long', year: 'numeric'
+        }).format(calendarMonth);
+        calendarEl.replaceChildren();
+
+        ['So', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Sa'].forEach(day => {
+          const label = document.createElement('div');
+          label.className = 'text-center text-xs font-semibold text-gray-500';
+          label.textContent = day;
+          calendarEl.appendChild(label);
+        });
+        for (let i = 0; i < startsOn; i++) calendarEl.appendChild(document.createElement('div'));
+
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const game = calendarGames.get(dateStr);
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = `calendar-day rounded border p-1 text-left text-sm transition hover:border-blue-500 ${game ? 'is-populated' : 'bg-white border-gray-200'} ${dateStr === dateInput.value ? 'is-selected' : ''}`;
+          button.title = game ? `${dateStr}: ${game.word}` : dateStr;
+          button.addEventListener('click', () => selectDate(dateStr));
+
+          const number = document.createElement('span');
+          number.className = 'block font-semibold';
+          number.textContent = String(day);
+          button.appendChild(number);
+          if (game) {
+            const word = document.createElement('span');
+            word.className = 'block truncate text-xs font-bold text-green-800';
+            word.textContent = game.word;
+            button.appendChild(word);
+          }
+          calendarEl.appendChild(button);
+        }
+      }
+
+      const formatDate = date => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+
+      const datesFrom = (startDate, count) => Array.from({ length: count }, (_, offset) => {
+        const date = new Date(startDate);
+        date.setDate(date.getDate() + offset);
+        return formatDate(date);
+      });
+
+      async function gameWithPrivateWord(dateStr) {
+        const [preferredSnap, legacySnap] = await Promise.all([
+          getDoc(doc(db, 'games', `Game${dateStr}`)),
+          getDoc(doc(db, 'games', dateStr))
+        ]);
+        const gameSnap = preferredSnap.exists() ? preferredSnap : legacySnap;
+        if (!gameSnap.exists()) return null;
+        try {
+          const privateSnap = await getDoc(doc(db, 'games', gameSnap.id, 'private', 'data'));
+          const word = String(privateSnap.exists() ? privateSnap.data()?.word || '' : '').toUpperCase();
+          return word ? { id: gameSnap.id, word } : null;
+        } catch { return null; }
+      }
+
+      async function refreshCalendar() {
+        const request = ++calendarRequest;
+        const year = calendarMonth.getFullYear();
+        const month = calendarMonth.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const dates = datesFrom(new Date(year, month, 1), daysInMonth);
+        const games = await Promise.all(dates.map(async dateStr => [dateStr, await gameWithPrivateWord(dateStr)]));
+        if (request !== calendarRequest) return;
+        calendarGames.clear();
+        games.forEach(([dateStr, game]) => { if (game) calendarGames.set(dateStr, game); });
+        renderCalendar();
+      }
+
+      async function refreshPlanningSummary() {
+        const today = new Date(`${todayZAISO()}T00:00:00`);
+        const dates = datesFrom(today, 366);
+        const games = await Promise.all(dates.map(async dateStr => [dateStr, await gameWithPrivateWord(dateStr)]));
+        const populated = new Map(games.filter(([, game]) => game));
+        const firstOpenIndex = dates.findIndex(dateStr => !populated.has(dateStr));
+        const readyThrough = firstOpenIndex <= 0 ? null : dates[firstOpenIndex - 1];
+        const lastScheduled = [...populated.keys()].at(-1) || null;
+
+        readyThroughEl.textContent = readyThrough || 'Nog nie vandag gereed nie';
+        nextOpenEl.textContent = firstOpenIndex === -1 ? 'Geen binne 12 maande' : dates[firstOpenIndex];
+        lastScheduledEl.textContent = lastScheduled || 'Geen binne 12 maande';
+      }
+
+      async function refreshCalendarData() {
+        await Promise.all([refreshCalendar(), refreshPlanningSummary()]);
+      }
+
+      async function loadGameForDate(dateStr) {
+        const request = ++loadRequest;
+        wordInput.value = '';
+        clueInput.value = '';
+        clearResult();
+
+        const preferred = `Game${dateStr}`;
+        const [preferredSnap, legacySnap] = await Promise.all([
+          getDoc(doc(db, 'games', preferred)),
+          getDoc(doc(db, 'games', dateStr))
+        ]);
+        const gameSnap = preferredSnap.exists() ? preferredSnap : legacySnap;
+        if (request !== loadRequest || !gameSnap.exists()) return;
+
+        try {
+          const privateSnap = await getDoc(doc(db, 'games', gameSnap.id, 'private', 'data'));
+          const word = String(privateSnap.exists() ? privateSnap.data()?.word || '' : '').toUpperCase();
+          if (request !== loadRequest || !word) return;
+          const game = gameSnap.data() || {};
+          wordInput.value = word;
+          clueInput.value = game.clue || game.leidraad || '';
+        } catch (e) {
+          console.error(e);
+          if (request === loadRequest) showErr('Kon nie die bestaande spel laai nie.');
+        }
+      }
+
+      function selectDate(dateStr) {
+        dateInput.value = dateStr;
+        setCalendarMonth(dateStr);
+        renderCalendar();
+        refreshCalendar();
+        loadGameForDate(dateStr);
       }
 
       async function saveGame() {
@@ -194,6 +348,7 @@
   );
 
   showOk(`Gestoor as ${idPreferred}.`, idPreferred);
+  await refreshCalendarData();
 } catch (e) {
           console.error(e);
           showErr(`Kon nie stoor nie: ${e?.message || e}`);
@@ -217,7 +372,17 @@
 
       // Init form defaults + handlers
       dateInput.value = todayZAISO();
+      setCalendarMonth(dateInput.value);
       wordInput.addEventListener('input', () => { wordInput.value = wordInput.value.toUpperCase(); });
+      dateInput.addEventListener('change', () => selectDate(dateInput.value));
+      previousMonthBtn.addEventListener('click', () => {
+        calendarMonth.setMonth(calendarMonth.getMonth() - 1);
+        refreshCalendar();
+      });
+      nextMonthBtn.addEventListener('click', () => {
+        calendarMonth.setMonth(calendarMonth.getMonth() + 1);
+        refreshCalendar();
+      });
       saveBtn.addEventListener('click', saveGame);
       checkBtn.addEventListener('click', checkWord);
       logoutBtn.addEventListener('click', kriptiekLogout);
@@ -238,6 +403,8 @@
           statusEl.innerHTML = `Aangemeld as <strong>${user.email || user.uid}</strong> (admin).`;
           setPanelEnabled(true);                    // ✅ enable form
           logoutBtn.classList.remove('hidden');
+          await refreshCalendarData();
+          loadGameForDate(dateInput.value);
         } else {
           alert("Net administrateurs kan 'n nuwe DILEMMA skep.");
           window.location.replace("/index.html");
@@ -261,6 +428,21 @@
           <span class="font-semibold">Datum (YYYY-MM-DD)</span>
           <input id="gameDate" type="date" class="mt-1 w-full border rounded px-3 py-2" />
         </label>
+
+        <section aria-labelledby="calendarTitle" class="border rounded p-3 bg-gray-50">
+          <div class="mb-3 rounded border border-blue-100 bg-white p-3 text-sm">
+            <p><span class="font-semibold">Aaneenlopend gereed tot:</span> <span id="readyThrough">Laai…</span></p>
+            <p><span class="font-semibold">Volgende oop datum:</span> <span id="nextOpen">Laai…</span></p>
+            <p><span class="font-semibold">Laaste vasgestelde datum:</span> <span id="lastScheduled">Laai…</span></p>
+          </div>
+          <div class="flex items-center justify-between gap-3 mb-3">
+            <button id="previousMonth" type="button" class="px-3 py-1 border rounded hover:bg-gray-100" aria-label="Vorige maand">&larr;</button>
+            <h2 id="calendarTitle" class="font-semibold text-center"><span id="calendarMonth"></span></h2>
+            <button id="nextMonth" type="button" class="px-3 py-1 border rounded hover:bg-gray-100" aria-label="Volgende maand">&rarr;</button>
+          </div>
+          <div id="gameCalendar" class="grid grid-cols-7 gap-1" aria-label="DILEMMA-kalender"></div>
+          <p class="mt-2 text-xs text-gray-500">Groen: gestoorde teikenwoord. Blou rand: gekose datum.</p>
+        </section>
 
         <label class="block">
           <span class="font-semibold">Teikenwoord</span>
