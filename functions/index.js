@@ -1084,6 +1084,7 @@ exports.processDilemmaJourneyAchievements = onCall(
       tx.set(userRef, {
         journeyDilemmaTotalCompleted: totalCompleted,
         journeyDilemmaTotalWins: totalWins,
+        journeyDilemmaTotalFirstGuessWins: totalFirstGuessWins,
         journeyDilemmaSuccessRate: successRate,
         journeyDilemmaCurrentWinStreak: currentWinStreak,
         journeyDilemmaBestWinStreak: bestWinStreak,

@@ -25,6 +25,7 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/dilemma-medals.css" />
 
   <style>
     body { font-family: 'Montserrat', sans-serif; background-color: #f3f4f6; }
@@ -76,6 +77,23 @@
     .pill { display:inline-flex; align-items:center; border-radius:999px; padding:.3rem .75rem; font-weight:800; font-size:.85rem; }
     .pill-lg { padding:.45rem .95rem; font-size:1rem; }
     .mini { background:#f8fafc; border:1px solid #e5e7eb; border-radius:.75rem; padding:.5rem .6rem; text-align:center; }
+    .journey-stats { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.75rem; margin:.25rem 0 1rem; }
+    .journey-stat { padding:.75rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:.6rem; }
+    .journey-stat-label { display:block; color:#475569; font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.03em; }
+    .journey-stat-value { display:block; margin-top:.2rem; color:#0f172a; font-size:1.2rem; font-weight:900; }
+    .journey-next-target .dilemma-medal-card {
+      background: #f8fafc;
+      border: 1px solid #dbeafe;
+      border-radius: .75rem;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, .08);
+      padding: .35rem .25rem .45rem;
+    }
+    .journey-next-target .dilemma-medal-progress {
+      color: #1e3a8a;
+    }
+    @media (max-width: 420px) {
+      .journey-stats { grid-template-columns:1fr; }
+    }
   </style>
 
   <script type="module">
@@ -85,6 +103,12 @@
       getFirestore, doc, getDoc, setDoc, updateDoc,
       collection, query, orderBy, limit, getDocs, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import {
+      DILEMMA_ACHIEVEMENT_CATALOG,
+      buildMedalSpecFromAchievementId,
+      normalizeDilemmaAchievementId,
+      renderMedalCollection
+    } from "/assets/js/dilemma-medals.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -253,6 +277,92 @@
         if (empty) empty.classList.remove("hidden");
       }
     }
+
+    const JOURNEY_FAMILIES = [
+      { key: "completed", title: "Dilemmas voltooi", containerId: "journeyCompletedMedals", counterKey: "journeyDilemmaTotalCompleted" },
+      { key: "solved", title: "Dilemmas opgelos", containerId: "journeySolvedMedals", counterKey: "journeyDilemmaTotalWins" },
+      { key: "streak", title: "Suksesse in ’n ry", containerId: "journeyStreakMedals", counterKey: "journeyDilemmaBestWinStreak" },
+      { key: "firstGuess", title: "Met een raaiskoot", containerId: "journeyFirstGuessMedals", counterKey: "journeyDilemmaTotalFirstGuessWins" }
+    ];
+
+    function journeyCounter(userDoc, key) {
+      const value = Number(userDoc?.[key]);
+      return Number.isFinite(value) && value >= 0 ? Math.trunc(value) : 0;
+    }
+
+    function renderJourneyStats(userDoc) {
+      const totalCompleted = journeyCounter(userDoc, "journeyDilemmaTotalCompleted");
+      const totalWins = journeyCounter(userDoc, "journeyDilemmaTotalWins");
+      const storedRate = Number(userDoc?.journeyDilemmaSuccessRate);
+      const successRate = Number.isFinite(storedRate) ? Math.trunc(storedRate) :
+        (totalCompleted > 0 ? Math.round((totalWins / totalCompleted) * 100) : 0);
+      const currentStreak = journeyCounter(userDoc, "journeyDilemmaCurrentWinStreak");
+      const bestStreak = journeyCounter(userDoc, "journeyDilemmaBestWinStreak");
+
+      $("journeyStatusCompleted").textContent = fmt(totalCompleted);
+      $("journeyStatusSuccessRate").textContent = `${fmt(successRate)}%`;
+      $("journeyStatusCurrentStreak").textContent = fmt(currentStreak);
+      $("journeyStatusBestStreak").textContent = fmt(bestStreak);
+    }
+
+    async function loadJourneyEarnedSet(uid) {
+      const earned = new Set();
+      const snap = await getDocs(collection(db, "users", uid, "achievements"));
+
+      snap.forEach((achievementSnap) => {
+        const achievement = achievementSnap.data() || {};
+        const rawId = String(achievement.achievementId || achievementSnap.id || "").trim();
+        const canonicalId = normalizeDilemmaAchievementId(rawId);
+        if (canonicalId) earned.add(canonicalId);
+      });
+
+      return earned;
+    }
+
+    function addProgressToLockedMedals(container, medalSpecs, currentValue) {
+      const safeCurrent = Number.isFinite(currentValue) && currentValue >= 0 ? currentValue : 0;
+      const nextLockedIndex = medalSpecs.findIndex((spec) => !spec.earned);
+      if (nextLockedIndex < 0) return;
+
+      const nextSpec = medalSpecs[nextLockedIndex];
+      const slot = container.children[nextLockedIndex];
+      const card = slot?.firstElementChild;
+      if (!card) return;
+
+      slot.classList.add("journey-next-target");
+      const progress = document.createElement("div");
+      progress.className = "dilemma-medal-progress";
+      const target = Number(nextSpec.threshold);
+      progress.textContent = Number.isFinite(target) && target > 0 ? `${fmt(Math.min(safeCurrent, target))} / ${fmt(target)}` : `${fmt(safeCurrent)} / 1`;
+      card.appendChild(progress);
+    }
+
+    function renderJourneyMedalFamilies(userDoc, earnedSet) {
+      JOURNEY_FAMILIES.forEach((familyMeta) => {
+        const container = $(familyMeta.containerId);
+        if (!container) return;
+
+        const counterValue = journeyCounter(userDoc, familyMeta.counterKey);
+        const specs = DILEMMA_ACHIEVEMENT_CATALOG
+          .filter((achievement) => achievement.family === familyMeta.key)
+          .map((achievement) => buildMedalSpecFromAchievementId(achievement.id, {
+            size: 78,
+            earned: earnedSet.has(achievement.id),
+            locked: !earnedSet.has(achievement.id)
+          }))
+          .filter(Boolean);
+
+        renderMedalCollection(container, specs);
+        addProgressToLockedMedals(container, specs, counterValue);
+      });
+    }
+
+    async function renderJourneyStatus(uid, userDoc) {
+      renderJourneyStats(userDoc || {});
+      const earnedSet = await loadJourneyEarnedSet(uid);
+      renderJourneyMedalFamilies(userDoc || {}, earnedSet);
+    }
+
     async function hydrateProfile(user){
       const nameEl = $("nameInput");
       const emailEl = $("emailInput");
@@ -326,6 +436,8 @@
           supporterBanner.textContent = "Kliek hier om ’n betalende Ondersteuner te word";
         }
       }
+
+      await renderJourneyStatus(user.uid, userDoc);
 
       if (typeof gtag === "function") gtag("event", "profile_view", { uid: user.uid });
     }
@@ -495,6 +607,42 @@
             <div id="medalsSlimBreakdown" class="hidden text-sm font-bold text-slate-700 mt-1">🥇 0  •  🥈 0  •  🥉 0</div>
             <div id="medalsSlimEmpty" class="text-sm text-slate-500 mt-1">Nog geen medaljes in Slimstiek nie</div>
           </div>
+        </div>
+      </section>
+
+      <section class="card p-5 md:p-6" aria-labelledby="journeyStatusTitle">
+        <header class="flex flex-col gap-1 mb-3">
+          <div class="h-1 w-full bg-indigo-500 rounded-full"></div>
+          <h2 id="journeyStatusTitle" class="text-xl font-extrabold text-slate-900">JOU KRIPTIEK-STATUS</h2>
+        </header>
+
+        <div class="journey-stats" aria-label="Jou Dilemma-statistiek">
+          <div class="journey-stat"><span class="journey-stat-label">Dilemmas voltooi</span><span id="journeyStatusCompleted" class="journey-stat-value">0</span></div>
+          <div class="journey-stat"><span class="journey-stat-label">Sukseskoers</span><span id="journeyStatusSuccessRate" class="journey-stat-value">0%</span></div>
+          <div class="journey-stat"><span class="journey-stat-label">Huidige wenlopie</span><span id="journeyStatusCurrentStreak" class="journey-stat-value">0</span></div>
+          <div class="journey-stat"><span class="journey-stat-label">Beste wenlopie</span><span id="journeyStatusBestStreak" class="journey-stat-value">0</span></div>
+        </div>
+
+        <div class="space-y-5">
+          <section>
+            <h3 class="font-bold text-slate-900 mb-2">Dilemmas voltooi</h3>
+            <ul id="journeyCompletedMedals" class="dilemma-medal-gallery"></ul>
+          </section>
+
+          <section>
+            <h3 class="font-bold text-slate-900 mb-2">Dilemmas opgelos</h3>
+            <ul id="journeySolvedMedals" class="dilemma-medal-gallery"></ul>
+          </section>
+
+          <section>
+            <h3 class="font-bold text-slate-900 mb-2">Suksesse in ’n ry</h3>
+            <ul id="journeyStreakMedals" class="dilemma-medal-gallery"></ul>
+          </section>
+
+          <section>
+            <h3 class="font-bold text-slate-900 mb-2">Een raaiskoot</h3>
+            <ul id="journeyFirstGuessMedals" class="dilemma-medal-gallery"></ul>
+          </section>
         </div>
       </section>
 

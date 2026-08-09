@@ -1,0 +1,68 @@
+.dilemma-medal-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+  gap: 1rem .75rem;
+  justify-items: center;
+}
+
+.dilemma-medal-slot {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.dilemma-medal-card {
+  --medal-size: 76px;
+  width: min(100%, calc(var(--medal-size) + 8px));
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .45rem;
+  text-align: center;
+  color: #111827;
+}
+
+.dilemma-medal-visual {
+  width: var(--medal-size);
+  max-width: 100%;
+  filter: drop-shadow(0 6px 12px rgba(15, 23, 42, .18));
+  line-height: 0;
+}
+
+.dilemma-medal-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.dilemma-medal-label {
+  font-size: .68rem;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #78350f;
+  text-wrap: balance;
+}
+
+.dilemma-medal-card[data-locked="true"] .dilemma-medal-label {
+  color: #4b5563;
+}
+
+.dilemma-medal-progress {
+  font-size: .66rem;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #6b7280;
+}
+
+@media (max-width: 380px) {
+  .dilemma-medal-gallery {
+    grid-template-columns: repeat(auto-fit, minmax(76px, 1fr));
+    gap: .85rem .55rem;
+  }
+
+  .dilemma-medal-card {
+    --medal-size: 68px;
+  }
+}
