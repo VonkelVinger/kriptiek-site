@@ -293,17 +293,17 @@
 
   <div id="resultModal">
     <div class="modal-content">
-      <p class="text-sm font-bold uppercase tracking-wide text-blue-900">Jou Kriptiek-status</p>
+      <p class="text-sm font-bold uppercase tracking-wide text-blue-900">JOU KRIPTIEK-STATUS</p>
       <h2 id="resultMessage" class="mt-1 text-2xl font-extrabold text-gray-900"></h2>
       <p id="resultAttempts" class="mt-2 text-gray-700"></p>
       <div class="journey-stats" aria-label="Jou Dilemma-statistiek">
-        <div class="journey-stat"><span class="journey-stat-label">Gespeel</span><span id="journeyGamesPlayed" class="journey-stat-value">—</span></div>
+        <div class="journey-stat"><span class="journey-stat-label">Dilemmas voltooi</span><span id="journeyGamesPlayed" class="journey-stat-value">—</span></div>
         <div class="journey-stat"><span class="journey-stat-label">Sukseskoers</span><span id="journeySuccessRate" class="journey-stat-value">—</span></div>
         <div class="journey-stat"><span class="journey-stat-label">Huidige wenlopie</span><span id="journeyStreak" class="journey-stat-value">—</span></div>
         <div class="journey-stat"><span class="journey-stat-label">Beste wenlopie</span><span id="journeyBestStreak" class="journey-stat-value">—</span></div>
       </div>
       <section id="journeyMedals" class="hidden" aria-labelledby="journeyMedalsTitle">
-        <h3 id="journeyMedalsTitle" class="font-bold text-amber-900">Nuwe medaljes</h3>
+        <h3 id="journeyMedalsTitle" class="font-bold text-amber-900">NUWE MEDALJES</h3>
         <ul id="journeyMedalsList" class="text-amber-950"></ul>
       </section>
       <div class="relative flex items-center justify-center gap-2">
@@ -415,11 +415,11 @@
     let journeyStatistics = null;
     const JOURNEY_MEDAL_LABELS = {
       "dilemma-first": "Eerste Dilemma",
-      "dilemma-streak-5": "Vyf in ’n ry",
-      "dilemma-streak-10": "Tien in ’n ry",
-      "dilemma-played-25": "25 Dilemmas",
-      "dilemma-played-50": "50 Dilemmas",
-      "dilemma-played-100": "100 Dilemmas"
+      "dilemma-streak-5": "Vyf suksesse in ’n ry",
+      "dilemma-streak-10": "Tien suksesse in ’n ry",
+      "dilemma-played-25": "25 Dilemmas voltooi",
+      "dilemma-played-50": "50 Dilemmas voltooi",
+      "dilemma-played-100": "100 Dilemmas voltooi"
     };
 
     async function processDilemmaJourneyAchievements() {
@@ -1143,9 +1143,11 @@ left.innerHTML = `
     }
 
     async function showJourneyCompletion(summary) {
-      const pogingWoord = summary.guesses === 1 ? "poging" : "pogings";
-      resultMsg.textContent = summary.didWin ? "Dilemma opgelos!" : "Dilemma nie opgelos nie";
-      resultAttempts.textContent = `${summary.guesses} ${pogingWoord}`;
+      const raaiskootWoord = summary.guesses === 1 ? "raaiskoot" : "raaiskote";
+      resultMsg.textContent = summary.didWin ? "Knap gedaan!" : "Jammer, probeer weer!";
+      resultAttempts.textContent = summary.didWin
+        ? `Jy het vandag se Dilemma in ${summary.guesses} ${raaiskootWoord} opgelos.`
+        : "Jy kon nie vandag se Dilemma oplos nie.";
 
       const totalCompleted = journeyStatNumber(journeyStatistics, "totalCompleted");
       const successRate = journeyStatNumber(journeyStatistics, "successRate");
