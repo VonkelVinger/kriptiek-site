@@ -825,18 +825,60 @@ exports.checkDilemmaGuess = onCall(
 );
 
 // ----------------------
-// DILEMMA JOURNEY ACHIEVEMENTS — V1
+// DILEMMA JOURNEY ACHIEVEMENTS — V2
 // ----------------------
 
-const DILEMMA_JOURNEY_RULE_VERSION = "journey-v1";
+const DILEMMA_JOURNEY_RULE_VERSION = "journey-v2";
 const DILEMMA_JOURNEY_ACHIEVEMENTS = [
-  { id: "dilemma-first", completed: 1 },
-  { id: "dilemma-streak-5", streak: 5 },
-  { id: "dilemma-streak-10", streak: 10 },
-  { id: "dilemma-played-25", completed: 25 },
-  { id: "dilemma-played-50", completed: 50 },
-  { id: "dilemma-played-100", completed: 100 },
+  { id: "dilemma_completed_1", metric: "completed", threshold: 1 },
+  { id: "dilemma_completed_10", metric: "completed", threshold: 10 },
+  { id: "dilemma_completed_25", metric: "completed", threshold: 25 },
+  { id: "dilemma_completed_50", metric: "completed", threshold: 50 },
+  { id: "dilemma_completed_100", metric: "completed", threshold: 100 },
+  { id: "dilemma_completed_250", metric: "completed", threshold: 250 },
+  { id: "dilemma_completed_500", metric: "completed", threshold: 500 },
+  { id: "dilemma_completed_1000", metric: "completed", threshold: 1000 },
+  { id: "dilemma_solved_10", metric: "solved", threshold: 10 },
+  { id: "dilemma_solved_25", metric: "solved", threshold: 25 },
+  { id: "dilemma_solved_50", metric: "solved", threshold: 50 },
+  { id: "dilemma_solved_100", metric: "solved", threshold: 100 },
+  { id: "dilemma_solved_250", metric: "solved", threshold: 250 },
+  { id: "dilemma_solved_500", metric: "solved", threshold: 500 },
+  { id: "dilemma_streak_5", metric: "streak", threshold: 5 },
+  { id: "dilemma_streak_10", metric: "streak", threshold: 10 },
+  { id: "dilemma_streak_25", metric: "streak", threshold: 25 },
+  { id: "dilemma_streak_50", metric: "streak", threshold: 50 },
+  { id: "dilemma_streak_100", metric: "streak", threshold: 100 },
+  { id: "dilemma_first_guess_1", metric: "firstGuess", threshold: 1 },
+  { id: "dilemma_first_guess_5", metric: "firstGuess", threshold: 5 },
+  { id: "dilemma_first_guess_10", metric: "firstGuess", threshold: 10 },
+  { id: "dilemma_first_guess_25", metric: "firstGuess", threshold: 25 },
 ];
+
+const DILEMMA_JOURNEY_ACHIEVEMENT_ALIASES = {
+  dilemma_completed_1: ["dilemma-first"],
+  dilemma_completed_25: ["dilemma-played-25"],
+  dilemma_completed_50: ["dilemma-played-50"],
+  dilemma_completed_100: ["dilemma-played-100"],
+  dilemma_streak_5: ["dilemma-streak-5"],
+  dilemma_streak_10: ["dilemma-streak-10"],
+};
+
+function dilemmaJourneyAchievementIsQualified(achievement, counts) {
+  if (achievement.metric === "completed") {
+    return counts.totalCompleted >= achievement.threshold;
+  }
+  if (achievement.metric === "solved") {
+    return counts.totalWins >= achievement.threshold;
+  }
+  if (achievement.metric === "streak") {
+    return counts.bestWinStreak >= achievement.threshold;
+  }
+  if (achievement.metric === "firstGuess") {
+    return counts.totalFirstGuessWins >= achievement.threshold;
+  }
+  return false;
+}
 
 function dilemmaJourneyChronologyMs(playSnap, playData) {
   const finishedAt = playData?.finishedAt;
@@ -874,9 +916,14 @@ exports.processDilemmaJourneyAchievements = onCall(
     const userRef = db.collection("users").doc(uid);
     const playsRef = db.collection("userGames").doc(uid).collection("plays");
     const sourcePlayRef = playsRef.doc(gameId);
-    const achievementRefs = DILEMMA_JOURNEY_ACHIEVEMENTS.map((achievement) =>
-      db.doc(`users/${uid}/achievements/${achievement.id}`)
-    );
+    const achievementPlans = DILEMMA_JOURNEY_ACHIEVEMENTS.map((achievement) => ({
+      achievement,
+      canonicalRef: db.doc(`users/${uid}/achievements/${achievement.id}`),
+      aliasRefs: (DILEMMA_JOURNEY_ACHIEVEMENT_ALIASES[achievement.id] || []).map((legacyId) => ({
+        legacyId,
+        ref: db.doc(`users/${uid}/achievements/${legacyId}`),
+      })),
+    }));
 
     const result = await db.runTransaction(async (tx) => {
       const [sourcePlaySnap, historySnap] = await Promise.all([
@@ -901,9 +948,14 @@ exports.processDilemmaJourneyAchievements = onCall(
         const play = playSnap.data() || {};
         if (play.result !== "win" && play.result !== "loss") return;
 
+        const guessesValue = play.guesses == null ? null : Number(play.guesses);
+        const guesses = Number.isFinite(guessesValue) ?
+          Math.trunc(guessesValue) : null;
+
         plays.push({
           gameId: playSnap.id,
           result: play.result,
+          guesses,
           chronologyMs: dilemmaJourneyChronologyMs(playSnap, play),
         });
       });
@@ -914,6 +966,9 @@ exports.processDilemmaJourneyAchievements = onCall(
 
       const totalCompleted = plays.length;
       const totalWins = plays.filter((play) => play.result === "win").length;
+      const totalFirstGuessWins = plays.filter(
+        (play) => play.result === "win" && play.guesses === 1
+      ).length;
       let currentWinStreak = 0;
       let bestWinStreak = 0;
 
@@ -931,33 +986,82 @@ exports.processDilemmaJourneyAchievements = onCall(
         currentWinStreak,
         bestWinStreak,
       };
+      const achievementCounts = {
+        totalCompleted,
+        totalWins,
+        totalFirstGuessWins,
+        currentWinStreak,
+        bestWinStreak,
+      };
       const qualifiedIds = new Set(
         DILEMMA_JOURNEY_ACHIEVEMENTS
-          .filter((achievement) =>
-            (achievement.completed && totalCompleted >= achievement.completed) ||
-            (achievement.streak && bestWinStreak >= achievement.streak)
-          )
+          .filter((achievement) => dilemmaJourneyAchievementIsQualified(
+            achievement,
+            achievementCounts
+          ))
           .map((achievement) => achievement.id)
       );
       const sourceGuessesValue = sourcePlay.guesses == null ?
         null : Number(sourcePlay.guesses);
       const sourceGuesses = Number.isFinite(sourceGuessesValue) ?
         Math.trunc(sourceGuessesValue) : null;
-      const achievementSnaps = await Promise.all(
-        achievementRefs.map((achievementRef) => tx.get(achievementRef))
+      const achievementStates = await Promise.all(
+        achievementPlans.map(async (plan) => {
+          const canonicalSnap = await tx.get(plan.canonicalRef);
+          const aliasSnaps = await Promise.all(
+            plan.aliasRefs.map(async (aliasPlan) => ({
+              legacyId: aliasPlan.legacyId,
+              snap: await tx.get(aliasPlan.ref),
+            }))
+          );
+          const existingAlias = aliasSnaps.find((aliasSnap) => aliasSnap.snap.exists) || null;
+          return {
+            ...plan,
+            canonicalSnap,
+            existingAlias,
+          };
+        })
       );
       const earnedAchievementIds = [];
       const newlyAwardedAchievementIds = [];
 
-      DILEMMA_JOURNEY_ACHIEVEMENTS.forEach((achievement, index) => {
-        if (achievementSnaps[index].exists) {
+      achievementStates.forEach((state) => {
+        const { achievement, canonicalRef, canonicalSnap, existingAlias } = state;
+        if (canonicalSnap.exists) {
+          earnedAchievementIds.push(achievement.id);
+          return;
+        }
+
+        if (existingAlias) {
+          const legacyData = existingAlias.snap.data() || {};
+          const legacyEvidence = legacyData.evidence &&
+            typeof legacyData.evidence === "object" ?
+            legacyData.evidence : {};
+          tx.create(canonicalRef, {
+            achievementId: achievement.id,
+            awardedAt: legacyData.awardedAt || admin.firestore.FieldValue.serverTimestamp(),
+            ruleVersion: DILEMMA_JOURNEY_RULE_VERSION,
+            sourceGameId: legacyData.sourceGameId || gameId,
+            sourceResult: legacyData.sourceResult || sourcePlay.result,
+            sourceGuesses: legacyData.sourceGuesses == null ? sourceGuesses : legacyData.sourceGuesses,
+            evidence: {
+              ...legacyEvidence,
+              totalCompleted,
+              totalWins,
+              totalFirstGuessWins,
+              currentWinStreak,
+              bestWinStreak,
+            },
+            migratedFromAchievementId: existingAlias.legacyId,
+          });
+
           earnedAchievementIds.push(achievement.id);
           return;
         }
 
         if (!qualifiedIds.has(achievement.id)) return;
 
-        tx.create(achievementRefs[index], {
+        tx.create(canonicalRef, {
           achievementId: achievement.id,
           awardedAt: admin.firestore.FieldValue.serverTimestamp(),
           ruleVersion: DILEMMA_JOURNEY_RULE_VERSION,
@@ -967,6 +1071,7 @@ exports.processDilemmaJourneyAchievements = onCall(
           evidence: {
             totalCompleted,
             totalWins,
+            totalFirstGuessWins,
             currentWinStreak,
             bestWinStreak,
           },
