@@ -110,6 +110,20 @@
     }
     #leaderboardList li:nth-child(odd){ background:#f3f4f6; }
     #leaderboardList li:first-child{ background:#d1fae5; font-weight:700; }
+    #leaderboardList li.leaderboard-own-row-nudge{
+      background:#fff9e6;
+      border:1px solid #fde68a;
+      box-shadow: inset 0 0 0 1px rgba(245, 158, 11, .14);
+    }
+    .leaderboard-own-row-link{
+      color:#92400e;
+      text-decoration:none;
+    }
+    .leaderboard-own-row-link:hover,
+    .leaderboard-own-row-link:focus-visible{
+      text-decoration:underline;
+      text-underline-offset:2px;
+    }
     .leaderboard-identity{
       min-width:0; flex:1 1 auto; display:flex; align-items:center; gap:.35rem; overflow:hidden;
     }
@@ -1108,6 +1122,7 @@ if (isFutureGame) {
 
     function renderLeaderboardEntries(entries) {
       const fmt = (n) => typeof n === 'number' ? n.toLocaleString('af-ZA') : n;
+      const ownRowSupporterCtaHref = "https://www.kriptiek.com/subscribe.html";
 
       leaderboardList.innerHTML = "";
       if (!entries.length) {
@@ -1123,14 +1138,27 @@ if (isFutureGame) {
         const rawRateText = Number.isFinite(e.sr) ? `${e.sr}%` : "";
         const rateText = rawRateText ? ` (${viewerIsSupporter ? rawRateText : '🔒%'})` : "";
         const isSupporter = supporterCache.get(e.uid) === true;
+        const isOwnRowForNonSupporter = !!currentUid && !viewerIsSupporter && e.uid === currentUid;
         const displayLabel = viewerIsSupporter ? e.name : `Speler ${idx + 1}`;
+
+        if (isOwnRowForNonSupporter) li.classList.add("leaderboard-own-row-nudge");
 
         const left = document.createElement("span");
         left.className = "leaderboard-identity";
 
         const label = document.createElement("span");
         label.className = "leaderboard-player-label font-bold";
-        label.textContent = `${displayLabel}${rateText}`;
+        if (isOwnRowForNonSupporter) {
+          const ownRowLink = document.createElement("a");
+          ownRowLink.className = "leaderboard-own-row-link";
+          ownRowLink.href = ownRowSupporterCtaHref;
+          ownRowLink.target = "_blank";
+          ownRowLink.rel = "noopener";
+          ownRowLink.textContent = "Klik hier om jou naam te sien";
+          label.appendChild(ownRowLink);
+        } else {
+          label.textContent = `${displayLabel}${rateText}`;
+        }
         left.appendChild(label);
 
         const star = createSupporterStarElement(isSupporter);
