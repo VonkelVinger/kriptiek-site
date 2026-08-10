@@ -106,7 +106,6 @@
     import {
       DILEMMA_ACHIEVEMENT_CATALOG,
       buildMedalSpecFromAchievementId,
-      normalizeDilemmaAchievementId,
       renderMedalCollection
     } from "/assets/js/dilemma-medals.js";
 
@@ -302,15 +301,20 @@
       $("journeyStatusBestStreak").textContent = fmt(bestStreak);
     }
 
-    async function loadJourneyEarnedSet(uid) {
+    function inferJourneyEarnedSetFromCounters(userDoc) {
       const earned = new Set();
-      const snap = await getDocs(collection(db, "users", uid, "achievements"));
+      const counters = {
+        completed: journeyCounter(userDoc, "journeyDilemmaTotalCompleted"),
+        solved: journeyCounter(userDoc, "journeyDilemmaTotalWins"),
+        streak: journeyCounter(userDoc, "journeyDilemmaBestWinStreak"),
+        firstGuess: journeyCounter(userDoc, "journeyDilemmaTotalFirstGuessWins")
+      };
 
-      snap.forEach((achievementSnap) => {
-        const achievement = achievementSnap.data() || {};
-        const rawId = String(achievement.achievementId || achievementSnap.id || "").trim();
-        const canonicalId = normalizeDilemmaAchievementId(rawId);
-        if (canonicalId) earned.add(canonicalId);
+      DILEMMA_ACHIEVEMENT_CATALOG.forEach((achievement) => {
+        const value = counters[achievement.family] || 0;
+        const threshold = Number(achievement.threshold);
+        const isEarned = Number.isFinite(threshold) ? value >= threshold : value > 0;
+        if (isEarned) earned.add(achievement.id);
       });
 
       return earned;
@@ -354,10 +358,13 @@
       });
     }
 
-    async function renderJourneyStatus(uid, userDoc) {
-      renderJourneyStats(userDoc || {});
-      const earnedSet = await loadJourneyEarnedSet(uid);
-      renderJourneyMedalFamilies(userDoc || {}, earnedSet);
+    async function renderJourneyStatus(userDoc) {
+      const safeUserDoc = userDoc || {};
+      renderJourneyStats(safeUserDoc);
+
+      const earnedSet = inferJourneyEarnedSetFromCounters(safeUserDoc);
+
+      renderJourneyMedalFamilies(safeUserDoc, earnedSet);
     }
 
     async function hydrateProfile(user){
@@ -434,7 +441,7 @@
         }
       }
 
-      await renderJourneyStatus(user.uid, userDoc);
+      await renderJourneyStatus(userDoc);
 
       if (typeof gtag === "function") gtag("event", "profile_view", { uid: user.uid });
     }
