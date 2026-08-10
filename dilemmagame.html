@@ -110,6 +110,40 @@
     }
     #leaderboardList li:nth-child(odd){ background:#f3f4f6; }
     #leaderboardList li:first-child{ background:#d1fae5; font-weight:700; }
+    .leaderboard-identity{
+      min-width:0; flex:1 1 auto; display:flex; align-items:center; gap:.35rem; overflow:hidden;
+    }
+    .leaderboard-player-label{
+      min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    .leaderboard-supporter-star{
+      display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto;
+      color:#eab308; font-size:18px; line-height:1;
+    }
+    .leaderboard-medal-strip{
+      display:inline-flex; align-items:center; gap:.2rem; flex:0 1 auto; min-width:0;
+    }
+    .leaderboard-medal-strip .dilemma-medal-card{
+      --medal-size:20px;
+      width:auto;
+      gap:0;
+      flex:0 0 auto;
+    }
+    .leaderboard-medal-strip .dilemma-medal-visual{
+      width:var(--medal-size);
+      filter:drop-shadow(0 2px 4px rgba(15, 23, 42, .16));
+    }
+    .leaderboard-medal-strip .dilemma-medal-label{
+      display:none;
+    }
+    @media (max-width: 480px) {
+      #leaderboardList li{ gap:.4rem; }
+      .leaderboard-identity{ gap:.25rem; }
+      .leaderboard-supporter-star{ font-size:17px; }
+      .leaderboard-medal-strip{ gap:.15rem; }
+      .leaderboard-medal-strip .dilemma-medal-card{ --medal-size:18px; }
+      .leaderboard-player-label{ font-size:.95rem; }
+    }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -361,7 +395,9 @@
     import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-functions.js";
     import {
       buildMedalSpecFromAchievementId,
-      renderMedalCollection
+      createDilemmaMedalElement,
+      renderMedalCollection,
+      selectDilemmaShowcaseMedals
     } from "/assets/js/dilemma-medals.js";
 
     const firebaseConfig = {
@@ -434,6 +470,7 @@
     let loadedGameId = GAME_ID;
     let earnedAchievementIds = [];
     let newlyAwardedAchievementIds = [];
+    let selectedStatusMedalIds = [];
     let journeyStatistics = null;
     function renderMedalPreviewIfRequested() {
       if (!MEDAL_PREVIEW_ENABLED || !medalPreviewPanel || !medalPreviewGrid) return;
@@ -453,6 +490,7 @@
     async function processDilemmaJourneyAchievements() {
       earnedAchievementIds = [];
       newlyAwardedAchievementIds = [];
+      selectedStatusMedalIds = [];
       journeyStatistics = null;
 
       try {
@@ -464,6 +502,7 @@
           data.earnedAchievementIds : [];
         newlyAwardedAchievementIds = Array.isArray(data.newlyAwardedAchievementIds) ?
           data.newlyAwardedAchievementIds : [];
+        selectedStatusMedalIds = selectDilemmaShowcaseMedals(earnedAchievementIds);
         journeyStatistics = data.journeyStatistics &&
           typeof data.journeyStatistics === "object" ?
           data.journeyStatistics : null;
@@ -914,6 +953,7 @@ if (isFutureGame) {
             guesses: Math.trunc(Number(guessCount)),
             result: didWin ? "win" : "loss",
             ...(successRate == null ? {} : { successRate }),
+            statusMedalIds: Array.isArray(selectedStatusMedalIds) ? selectedStatusMedalIds.slice(0, 3) : [],
             date: serverTimestamp(),
             createdAtMs: Date.now(),
             dilemmaScoreAtPlay: Number(totalScore) || 0
@@ -969,6 +1009,7 @@ if (isFutureGame) {
           date: serverTimestamp(),
           createdAtMs: Date.now(),
           ...(sr == null ? {} : { successRate: sr }),
+          statusMedalIds: Array.isArray(selectedStatusMedalIds) ? selectedStatusMedalIds.slice(0, 3) : [],
           dilemmaScoreAtPlay: Number(totalScore) || 0
         };
 
@@ -1024,9 +1065,88 @@ if (isFutureGame) {
       } catch {}
     }
 
-    function renderSupporterStar(isSupporter){
-      if (!isSupporter) return "";
-      return `<span class="inline-flex items-center leading-none text-yellow-500 text-[18px]" title="Ondersteuner">★</span>`;
+    function createSupporterStarElement(isSupporter){
+      if (!isSupporter) return null;
+      const star = document.createElement("span");
+      star.className = "leaderboard-supporter-star";
+      star.title = "Ondersteuner";
+      star.setAttribute("aria-label", "Ondersteuner");
+      star.textContent = "★";
+      return star;
+    }
+
+    function createLeaderboardMedalStrip(medalIds) {
+      if (!Array.isArray(medalIds) || medalIds.length === 0) return null;
+
+      const strip = document.createElement("span");
+      strip.className = "leaderboard-medal-strip";
+
+      medalIds.slice(0, 3).forEach((medalId) => {
+        const spec = buildMedalSpecFromAchievementId(medalId, {
+          size: 20,
+          earned: true,
+          locked: false
+        });
+        if (!spec) return;
+
+        const medal = createDilemmaMedalElement({
+          ...spec,
+          size: 20,
+          earned: true,
+          locked: false,
+          label: spec.label || "Kriptiek-status"
+        });
+        const medalLabel = spec.label || "Kriptiek-status";
+        medal.title = medalLabel;
+        medal.setAttribute("role", "img");
+        medal.setAttribute("aria-label", medalLabel);
+        strip.appendChild(medal);
+      });
+
+      return strip;
+    }
+
+    function renderLeaderboardEntries(entries) {
+      const fmt = (n) => typeof n === 'number' ? n.toLocaleString('af-ZA') : n;
+
+      leaderboardList.innerHTML = "";
+      if (!entries.length) {
+        leaderboardList.innerHTML = `<li class="bg-green-100 font-medium px-2 py-1 rounded">Jy kan eerste op die leierbord wees!</li>`;
+        return;
+      }
+
+      entries.forEach((e, idx) => {
+        const li = document.createElement("li");
+        li.className = "flex items-center justify-between gap-2";
+        if (idx === 0) li.classList.add("font-bold","bg-green-100");
+
+        const rawRateText = Number.isFinite(e.sr) ? `${e.sr}%` : "";
+        const rateText = rawRateText ? ` (${viewerIsSupporter ? rawRateText : '🔒%'})` : "";
+        const isSupporter = supporterCache.get(e.uid) === true;
+        const displayLabel = viewerIsSupporter ? e.name : `Speler ${idx + 1}`;
+
+        const left = document.createElement("span");
+        left.className = "leaderboard-identity";
+
+        const label = document.createElement("span");
+        label.className = "leaderboard-player-label font-bold";
+        label.textContent = `${displayLabel}${rateText}`;
+        left.appendChild(label);
+
+        const star = createSupporterStarElement(isSupporter);
+        if (star) left.appendChild(star);
+
+        const medals = createLeaderboardMedalStrip(e.statusMedalIds);
+        if (medals) left.appendChild(medals);
+
+        const right = document.createElement("span");
+        right.className = "shrink-0 text-right font-extrabold text-slate-900";
+        const guessLabel = e.guesses === 1 ? "raai" : "raaie";
+        right.textContent = `${fmt(e.guesses)} ${guessLabel}`;
+
+        li.append(left, right);
+        leaderboardList.appendChild(li);
+      });
     }
 
     async function loadLeaderboard() {
@@ -1061,7 +1181,18 @@ if (isFutureGame) {
           const srVal = Number.isFinite(Number(v.successRate)) ? Math.trunc(Number(v.successRate)) : null;
           const scoreVal = Number.isFinite(Number(v.dilemmaScoreAtPlay)) ? Number(v.dilemmaScoreAtPlay) : null;
 
-          entries.push({ uid: d.id, name, guesses: guessesNum, when: ts, sr: srVal, score: scoreVal });
+          const statusMedalIds = Array.isArray(v.statusMedalIds) ?
+            v.statusMedalIds.filter((id) => typeof id === "string" && id.trim()).slice(0, 3) : [];
+
+          entries.push({
+            uid: d.id,
+            name,
+            guesses: guessesNum,
+            when: ts,
+            sr: srVal,
+            score: scoreVal,
+            statusMedalIds
+          });
           if (srVal == null) needSR.push(d.id);
           if (scoreVal == null) needScore.push(d.id);
         });
@@ -1119,44 +1250,9 @@ if (isFutureGame) {
               )
           );
         }
-
-        const fmt = (n) => typeof n === 'number' ? n.toLocaleString('af-ZA') : n;
-
-        leaderboardList.innerHTML = "";
-        if (!entries.length) {
-          leaderboardList.innerHTML = `<li class="bg-green-100 font-medium px-2 py-1 rounded">Jy kan eerste op die leierbord wees!</li>`;
-          return;
-        }
-
         await hydrateSupporterActives(entries.map(e => e.uid));
         entries.sort((a, b) => (a.guesses - b.guesses) || (a.when - b.when));
-
-        entries.forEach((e, idx) => {
-          const li = document.createElement("li");
-          li.className = "flex items-center justify-between gap-2";
-          if (idx === 0) li.classList.add("font-bold","bg-green-100");
-
-const rawRateText = Number.isFinite(e.sr) ? `${e.sr}%` : '';
-const rateText = rawRateText ? ` (${viewerIsSupporter ? rawRateText : '🔒%'})` : '';
-const isSupporter = supporterCache.get(e.uid) === true;
-const displayLabel = viewerIsSupporter ? e.name : `Speler ${idx + 1}`;
-
-const left = document.createElement("span");
-left.className = "min-w-0 flex items-center gap-2";
-left.innerHTML = `
-  <span class="truncate font-bold">${displayLabel}${rateText}</span>
-  ${renderSupporterStar(isSupporter)}
-`;
-
-          const right = document.createElement("span");
-          right.className = "shrink-0 text-right font-extrabold text-slate-900";
-          const guessLabel = e.guesses === 1 ? "raai" : "raaie";
-          right.textContent = `${fmt(e.guesses)} ${guessLabel}`;
-
-          li.appendChild(left);
-          li.appendChild(right);
-          leaderboardList.appendChild(li);
-        });
+        renderLeaderboardEntries(entries);
       } catch (err) {
         console.error("Kon nie leierbord laai nie:", err);
         leaderboardList.innerHTML = `<li class="text-red-600">Kon nie leierbord laai nie.</li>`;

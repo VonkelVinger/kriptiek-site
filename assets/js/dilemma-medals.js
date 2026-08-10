@@ -1,27 +1,27 @@
 export const DILEMMA_ACHIEVEMENT_CATALOG = [
-  { id: "dilemma_completed_1", family: "completed", threshold: null, label: "Eerste Dilemma" },
-  { id: "dilemma_completed_10", family: "completed", threshold: 10, label: "10 Dilemmas voltooi" },
-  { id: "dilemma_completed_25", family: "completed", threshold: 25, label: "25 Dilemmas voltooi" },
-  { id: "dilemma_completed_50", family: "completed", threshold: 50, label: "50 Dilemmas voltooi" },
-  { id: "dilemma_completed_100", family: "completed", threshold: 100, label: "100 Dilemmas voltooi" },
-  { id: "dilemma_completed_250", family: "completed", threshold: 250, label: "250 Dilemmas voltooi" },
-  { id: "dilemma_completed_500", family: "completed", threshold: 500, label: "500 Dilemmas voltooi" },
-  { id: "dilemma_completed_1000", family: "completed", threshold: 1000, label: "1 000 Dilemmas voltooi" },
-  { id: "dilemma_solved_10", family: "solved", threshold: 10, label: "10 Dilemmas opgelos" },
-  { id: "dilemma_solved_25", family: "solved", threshold: 25, label: "25 Dilemmas opgelos" },
-  { id: "dilemma_solved_50", family: "solved", threshold: 50, label: "50 Dilemmas opgelos" },
-  { id: "dilemma_solved_100", family: "solved", threshold: 100, label: "100 Dilemmas opgelos" },
-  { id: "dilemma_solved_250", family: "solved", threshold: 250, label: "250 Dilemmas opgelos" },
-  { id: "dilemma_solved_500", family: "solved", threshold: 500, label: "500 Dilemmas opgelos" },
-  { id: "dilemma_streak_5", family: "streak", threshold: 5, label: "Vyf suksesse in ’n ry" },
-  { id: "dilemma_streak_10", family: "streak", threshold: 10, label: "Tien suksesse in ’n ry" },
-  { id: "dilemma_streak_25", family: "streak", threshold: 25, label: "25 suksesse in ’n ry" },
-  { id: "dilemma_streak_50", family: "streak", threshold: 50, label: "50 suksesse in ’n ry" },
-  { id: "dilemma_streak_100", family: "streak", threshold: 100, label: "100 suksesse in ’n ry" },
-  { id: "dilemma_first_guess_1", family: "firstGuess", threshold: 1, label: "Eerste keer met een raaiskoot opgelos" },
-  { id: "dilemma_first_guess_5", family: "firstGuess", threshold: 5, label: "5 keer met een raaiskoot opgelos" },
-  { id: "dilemma_first_guess_10", family: "firstGuess", threshold: 10, label: "10 keer met een raaiskoot opgelos" },
-  { id: "dilemma_first_guess_25", family: "firstGuess", threshold: 25, label: "25 keer met een raaiskoot opgelos" }
+  { id: "dilemma_completed_1", family: "completed", threshold: null, prestige: 10, label: "Eerste Dilemma" },
+  { id: "dilemma_completed_10", family: "completed", threshold: 10, prestige: 20, label: "10 Dilemmas voltooi" },
+  { id: "dilemma_completed_25", family: "completed", threshold: 25, prestige: 30, label: "25 Dilemmas voltooi" },
+  { id: "dilemma_completed_50", family: "completed", threshold: 50, prestige: 40, label: "50 Dilemmas voltooi" },
+  { id: "dilemma_completed_100", family: "completed", threshold: 100, prestige: 50, label: "100 Dilemmas voltooi" },
+  { id: "dilemma_completed_250", family: "completed", threshold: 250, prestige: 60, label: "250 Dilemmas voltooi" },
+  { id: "dilemma_completed_500", family: "completed", threshold: 500, prestige: 70, label: "500 Dilemmas voltooi" },
+  { id: "dilemma_completed_1000", family: "completed", threshold: 1000, prestige: 80, label: "1 000 Dilemmas voltooi" },
+  { id: "dilemma_solved_10", family: "solved", threshold: 10, prestige: 25, label: "10 Dilemmas opgelos" },
+  { id: "dilemma_solved_25", family: "solved", threshold: 25, prestige: 35, label: "25 Dilemmas opgelos" },
+  { id: "dilemma_solved_50", family: "solved", threshold: 50, prestige: 45, label: "50 Dilemmas opgelos" },
+  { id: "dilemma_solved_100", family: "solved", threshold: 100, prestige: 55, label: "100 Dilemmas opgelos" },
+  { id: "dilemma_solved_250", family: "solved", threshold: 250, prestige: 65, label: "250 Dilemmas opgelos" },
+  { id: "dilemma_solved_500", family: "solved", threshold: 500, prestige: 75, label: "500 Dilemmas opgelos" },
+  { id: "dilemma_streak_5", family: "streak", threshold: 5, prestige: 28, label: "Vyf suksesse in ’n ry" },
+  { id: "dilemma_streak_10", family: "streak", threshold: 10, prestige: 38, label: "Tien suksesse in ’n ry" },
+  { id: "dilemma_streak_25", family: "streak", threshold: 25, prestige: 58, label: "25 suksesse in ’n ry" },
+  { id: "dilemma_streak_50", family: "streak", threshold: 50, prestige: 78, label: "50 suksesse in ’n ry" },
+  { id: "dilemma_streak_100", family: "streak", threshold: 100, prestige: 98, label: "100 suksesse in ’n ry" },
+  { id: "dilemma_first_guess_1", family: "firstGuess", threshold: 1, prestige: 22, label: "Eerste keer met een raaiskoot opgelos" },
+  { id: "dilemma_first_guess_5", family: "firstGuess", threshold: 5, prestige: 42, label: "5 keer met een raaiskoot opgelos" },
+  { id: "dilemma_first_guess_10", family: "firstGuess", threshold: 10, prestige: 62, label: "10 keer met een raaiskoot opgelos" },
+  { id: "dilemma_first_guess_25", family: "firstGuess", threshold: 25, prestige: 82, label: "25 keer met een raaiskoot opgelos" }
 ];
 
 export const DILEMMA_ACHIEVEMENT_LABELS = DILEMMA_ACHIEVEMENT_CATALOG.reduce((acc, item) => {
@@ -41,6 +41,32 @@ export const DILEMMA_ACHIEVEMENT_LEGACY_ALIASES = {
 const CATALOG_BY_ID = new Map(
   DILEMMA_ACHIEVEMENT_CATALOG.map((entry) => [entry.id, entry])
 );
+
+const FAMILY_PRESTIGE_TIEBREAK = {
+  firstGuess: 0,
+  streak: 1,
+  solved: 2,
+  completed: 3
+};
+
+function familyTiebreakRank(family) {
+  return FAMILY_PRESTIGE_TIEBREAK[family] ?? Number.MAX_SAFE_INTEGER;
+}
+
+function compareAchievementPrestige(left, right) {
+  const leftPrestige = Number(left?.prestige || 0);
+  const rightPrestige = Number(right?.prestige || 0);
+  if (leftPrestige !== rightPrestige) return rightPrestige - leftPrestige;
+
+  const familyRankDiff = familyTiebreakRank(left?.family) - familyTiebreakRank(right?.family);
+  if (familyRankDiff !== 0) return familyRankDiff;
+
+  const leftThreshold = Number.isFinite(Number(left?.threshold)) ? Number(left.threshold) : -1;
+  const rightThreshold = Number.isFinite(Number(right?.threshold)) ? Number(right.threshold) : -1;
+  if (leftThreshold !== rightThreshold) return rightThreshold - leftThreshold;
+
+  return String(left?.id || "").localeCompare(String(right?.id || ""));
+}
 
 let medalRenderCounter = 0;
 
@@ -305,8 +331,41 @@ export function buildMedalSpecFromAchievementId(id, options = {}) {
     earned,
     locked,
     size: options.size || 76,
+    prestige: entry.prestige,
     achievementId: canonicalId
   };
+}
+
+export function selectDilemmaShowcaseMedals(rawAchievementIds) {
+  const familyBest = new Map();
+
+  Array.from(new Set(rawAchievementIds || []))
+    .map((id) => normalizeDilemmaAchievementId(id))
+    .filter(Boolean)
+    .forEach((id) => {
+      const entry = CATALOG_BY_ID.get(id);
+      if (!entry) return;
+
+      const currentBest = familyBest.get(entry.family);
+      if (!currentBest || compareAchievementPrestige(entry, currentBest) < 0) {
+        familyBest.set(entry.family, entry);
+      }
+    });
+
+  return Array.from(familyBest.values())
+    .sort(compareAchievementPrestige)
+    .slice(0, 3)
+    .map((entry) => entry.id);
+}
+
+export function selectTopDilemmaLeaderboardMedals(rawAchievementIds, options = {}) {
+  return selectDilemmaShowcaseMedals(rawAchievementIds)
+    .map((id) => buildMedalSpecFromAchievementId(id, {
+      ...options,
+      earned: true,
+      locked: false
+    }))
+    .filter(Boolean);
 }
 
 export function createDilemmaMedalElement(options) {
