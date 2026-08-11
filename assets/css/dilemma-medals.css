@@ -26,8 +26,11 @@
 .dilemma-medal-visual {
   width: var(--medal-size);
   max-width: 100%;
-  filter: drop-shadow(0 6px 12px rgba(15, 23, 42, .18));
   line-height: 0;
+}
+
+.dilemma-medal-visual[data-render-mode="full"] {
+  filter: drop-shadow(0 6px 12px rgba(15, 23, 42, .18));
 }
 
 .dilemma-medal-svg {

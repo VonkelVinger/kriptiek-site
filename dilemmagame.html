@@ -145,7 +145,7 @@
     }
     .leaderboard-medal-strip .dilemma-medal-visual{
       width:var(--medal-size);
-      filter:drop-shadow(0 2px 4px rgba(15, 23, 42, .16));
+      filter:none;
     }
     .leaderboard-medal-strip .dilemma-medal-label{
       display:none;
@@ -154,7 +154,7 @@
       #leaderboardList li{ gap:.4rem; }
       .leaderboard-identity{ gap:.25rem; }
       .leaderboard-supporter-star{ font-size:17px; }
-      .leaderboard-medal-strip{ display:none; }
+      .leaderboard-medal-strip{ gap:.15rem; }
       .leaderboard-medal-strip .dilemma-medal-card{ --medal-size:18px; }
       .leaderboard-player-label{ font-size:.95rem; }
     }
@@ -1098,6 +1098,7 @@ if (isFutureGame) {
       medalIds.slice(0, 3).forEach((medalId) => {
         const spec = buildMedalSpecFromAchievementId(medalId, {
           size: 20,
+          renderMode: "compact",
           earned: true,
           locked: false
         });
@@ -1106,6 +1107,7 @@ if (isFutureGame) {
         const medal = createDilemmaMedalElement({
           ...spec,
           size: 20,
+          renderMode: "compact",
           earned: true,
           locked: false,
           label: spec.label || "Kriptiek-status"

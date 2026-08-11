@@ -219,9 +219,10 @@ function renderThresholdPlaque(threshold, locked, palette, compact, prefix) {
   const shieldPath = compact
     ? "M40 88 L80 88 L84 94 L81 111 Q80 115 75 117 L45 117 Q40 115 39 111 L36 94 Z"
     : "M39 87 L81 87 L85 93 L82 112 Q81 117 75 119 L45 119 Q39 117 38 112 L35 93 Z";
+  const plaqueFill = compact ? palette.plaqueLight : `url(#${prefix}-plaque-fill)`;
   return `
     <g>
-      <path d="${shieldPath}" fill="url(#${prefix}-plaque-fill)" stroke="${palette.rimDark}" stroke-width="2.2"/>
+      <path d="${shieldPath}" fill="${plaqueFill}" stroke="${palette.rimDark}" stroke-width="2.2"/>
       <path d="M 44 92 C 53 89, 67 89, 77 92" fill="none" stroke="${hexToRgba("#fff7d8", 0.52)}" stroke-width="2" stroke-linecap="round"/>
       <text x="60" y="108" text-anchor="middle" font-size="${fontSize}" font-weight="900" font-family="Montserrat, Arial, sans-serif" fill="${lockedTextFill(locked)}">${threshold}</text>
     </g>
@@ -234,16 +235,35 @@ function renderDilemmaMedalSvg(options) {
     threshold = null,
     earned = true,
     locked = !earned,
-    size = 76
+    size = 76,
+    renderMode = "full"
   } = options || {};
 
-  const compact = Number(size) <= 72;
+  const compactMode = renderMode === "compact";
+  const compact = compactMode || Number(size) <= 72;
   const palette = getMedalPalette(family, locked);
   const prefix = `dilemma-medal-${family}-${medalRenderCounter++}`;
   const symbolMarkup = renderMedalSymbol(family, palette);
   const plaqueMarkup = renderThresholdPlaque(threshold, locked, palette, compact, prefix);
   const upperDots = compact ? [34, 60, 86] : [27, 41, 60, 79, 93];
   const dotMarkup = upperDots.map((x) => `<circle cx="${x}" cy="23" r="${compact ? 1.7 : 2.1}" fill="${palette.dot}" opacity="0.9"/>`).join("");
+
+  if (compactMode) {
+    return `
+    <svg class="dilemma-medal-svg" viewBox="0 0 120 124" role="img" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+      <g>
+        <circle cx="60" cy="55" r="44" fill="${palette.base}" stroke="${palette.rimDark}" stroke-width="2.4"/>
+        <circle cx="60" cy="55" r="34" fill="${palette.mid}" stroke="${hexToRgba(palette.rimLight, 0.95)}" stroke-width="1.8"/>
+        <circle cx="60" cy="55" r="28" fill="${palette.dark}" opacity="0.97"/>
+        <circle cx="60" cy="55" r="24" fill="${palette.light}" opacity="0.85"/>
+        ${dotMarkup}
+        <path d="M 35 94 C 44 84 54 80 60 80 C 66 80 76 84 85 94" fill="none" stroke="${hexToRgba(palette.rimDark, 0.75)}" stroke-width="2.2" stroke-linecap="round"/>
+        ${symbolMarkup}
+        ${plaqueMarkup}
+      </g>
+    </svg>
+  `;
+  }
 
   return `
     <svg class="dilemma-medal-svg" viewBox="0 0 120 124" role="img" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
@@ -377,6 +397,7 @@ export function createDilemmaMedalElement(options) {
 
   const visual = document.createElement("div");
   visual.className = "dilemma-medal-visual";
+  visual.dataset.renderMode = options.renderMode === "compact" ? "compact" : "full";
   visual.innerHTML = renderDilemmaMedalSvg(options);
 
   const caption = document.createElement("figcaption");
