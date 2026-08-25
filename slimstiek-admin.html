@@ -44,50 +44,14 @@
   <main class="max-w-xl mx-auto p-6">
     <div id="fatal" class="hidden mb-4 p-3 rounded-xl bg-red-100 text-red-800 text-sm font-semibold"></div>
 
-    <p class="mb-4 text-sm text-slate-600">Stel hier die volgende dag se teikenwoord vir Slimstiek en/of Blitstiek.</p>
+    <div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+      <p class="font-semibold">Hierdie ou adminblad is nou leesalleen.</p>
+      <p class="mt-1">Nuwe BLITSTIEK- en SLIMSTIEK-speletjies word outomaties vanaf die vorige dag se DILEMMA geskep.</p>
+      <a href="/admindilemma.html" class="mt-3 inline-block rounded-lg bg-slate-900 px-3 py-2 font-semibold text-white hover:bg-slate-700">Open DILEMMA admin</a>
+    </div>
 
     <div class="grid gap-4">
-      <div>
-        <label class="block mb-2 font-semibold text-slate-700">Datum (YYYY-MM-DD):</label>
-        <input id="dateInput" type="date" class="w-full border border-slate-300 rounded-xl px-3 py-2">
-      </div>
-
-      <div>
-        <label class="block mb-2 font-semibold text-slate-700">Nuwe teikenwoord:</label>
-        <input id="targetInput" type="text" maxlength="12" class="w-full border border-slate-300 rounded-xl px-3 py-2 uppercase" placeholder="bv. WOORD">
-      </div>
-
-      <label class="inline-flex items-center gap-2 text-sm text-slate-700">
-        <input id="mirrorDaily" type="checkbox" class="w-4 h-4" checked>
-        Spiegel ook na <code>daily_words/{datum}</code> (vir erfenislesers)
-      </label>
-
-      <div class="flex gap-2">
-        <button id="saveSlimstiek" class="flex-1 bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 rounded-xl">Stel vir Slimstiek</button>
-        <button id="saveBlitstiek" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2 rounded-xl">Stel vir Blitstiek</button>
-      </div>
-
-      <button id="saveBoth" class="w-full bg-green-700 hover:bg-green-800 text-white font-semibold py-2 rounded-xl">Stel vir Beide</button>
-
       <p id="status" class="text-sm mt-2"></p>
-
-      <div id="verifyBox" class="hidden border border-slate-200 rounded-xl p-4 bg-white">
-        <h2 class="font-semibold text-slate-800 mb-2">Geskrewe waardes (verifikasie)</h2>
-        <div class="grid gap-3 text-sm leading-relaxed">
-          <div>
-            <div class="font-semibold text-slate-700">Slimstiek doc</div>
-            <div id="vSlim" class="font-mono text-slate-700 break-words"></div>
-          </div>
-          <div>
-            <div class="font-semibold text-slate-700">Blitstiek doc</div>
-            <div id="vBlit" class="font-mono text-slate-700 break-words"></div>
-          </div>
-          <div>
-            <div class="font-semibold text-slate-700">daily_words doc</div>
-            <div id="vDaily" class="font-mono text-slate-700 break-words"></div>
-          </div>
-        </div>
-      </div>
     </div>
   </main>
 
@@ -95,7 +59,6 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const fatalEl  = document.getElementById('fatal');
     function fatal(msg){
@@ -110,15 +73,19 @@
     }
 
     // Initialize
-    let app, auth, db;
+    let app, auth;
     try {
       app = initializeApp(window.firebaseConfig);
       auth = getAuth(app);
-      db   = getFirestore(app);
     } catch (e) {
       fatal("Kon nie Firebase initialiseer nie: " + (e.message || e));
     }
 
+    const statusEl = document.getElementById('status');
+
+    /* Legacy word-publishing controls removed. The old implementation is
+       intentionally retained here only as a non-executable migration note. */
+    /*
     // -- UI refs --
     const statusEl     = document.getElementById('status');
     const dateInput    = document.getElementById('dateInput');
@@ -230,6 +197,7 @@
     document.getElementById('saveSlimstiek').onclick = ()=>saveWord({ toSlim:true, toBlit:false });
     document.getElementById('saveBlitstiek').onclick = ()=>saveWord({ toSlim:false, toBlit:true });
     document.getElementById('saveBoth').onclick      = ()=>saveWord({ toSlim:true, toBlit:true });
+    */
 
     // Sign-in hint
     onAuthStateChanged(auth, user=>{
