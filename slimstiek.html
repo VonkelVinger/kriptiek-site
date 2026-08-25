@@ -698,6 +698,7 @@
       collection, query, orderBy, limit, onSnapshot, getDocs
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
     import { serverTimestamp as __serverTimestampForSTS } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
+    import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-functions.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -708,11 +709,13 @@
       appId: "1:620450620939:web:e93a18ac23b53b33db890e"
     };
 
-    let app, auth, db;
+    let app, auth, db, resolveDerivedBsTargetWord;
     try{
       app = initializeApp(firebaseConfig);
       auth = getAuth(app);
       db   = getFirestore(app);
+      const functions = getFunctions(app, 'europe-west1');
+      resolveDerivedBsTargetWord = httpsCallable(functions, 'resolveDerivedBsTargetWord');
     }catch(e){
       console.warn('Firebase init failed (ok for local fallback):', e);
     }
@@ -1570,42 +1573,15 @@ local.forEach((row, idx) => {
     }
 
     async function resolveTargetWord(){
-      const norm = (s) => (s || '').toString().toUpperCase().replace(/[^A-ZÁÂÄÈÉÊËÌÍÎÏÒÓÔÖÙÚÛÜŸ\-]/g,'').trim();
-      const pickFromDoc = (d) => {
-        if (!d || typeof d !== 'object') return '';
-        const keys = Object.keys(d);
-        const preferred = ['target','targetWord','word','solution','answer','slimstiek'];
-        for (const want of preferred){
-          const found = keys.find(k => k.toLowerCase() === want.toLowerCase());
-          if (found && typeof d[found] === 'string') {
-            const w = norm(d[found]);
-            if (w) return w;
-          }
-        }
-        for (const k of keys){
-          if (typeof d[k] === 'string'){
-            const w = norm(d[k]);
-            if (w && w.length >= 3 && w.length <= 12) return w;
-          }
-        }
-        return '';
-      };
-
-      if (!db) throw new Error('[Slimstiek] Firestore is not available (no db).');
-
-      const gid = `Game${currentDate}`;
-      const lookups = [
-        getDoc(doc(db, 'slimstiekGames', gid)).then(s=>s.exists()? (s.data()||null) : null).catch(()=>null),
-        getDoc(doc(db, 'daily_words', currentDate)).then(s=>s.exists()? (s.data()||null) : null).catch(()=>null),
-        getDoc(doc(db, 'games', gid)).then(s=>s.exists()? (s.data()||null) : null).catch(()=>null),
-      ];
-
-      const results = await Promise.all(lookups);
-      for (const d of results){
-        const w = pickFromDoc(d);
-        if (w) return w;
+      if (!resolveDerivedBsTargetWord) {
+        throw new Error('[Slimstiek] Target resolver is not available.');
       }
-      throw new Error(`Geen teikenwoord gevind vir ${currentDate}.`);
+
+      const result = await resolveDerivedBsTargetWord({
+        gameType: 'SLIMSTIEK',
+        gameDate: currentDate
+      });
+      return String(result?.data?.word || '').trim().toUpperCase();
     }
 
     async function loadGame(){
@@ -1614,14 +1590,18 @@ local.forEach((row, idx) => {
       try {
         TARGET = await resolveTargetWord();
         if (!TARGET || TARGET.length < 3 || TARGET.length > 12 || /[^A-Z]/.test(TARGET)) {
-          console.warn('Ongeldige teikenwoord – terugval na "SPEL"');
-          TARGET = 'SPEL';
-          showToast('Teikenwoord ongeldig – gebruik terugvalwoord');
+          throw new Error('Resolver returned an invalid target word.');
         }
       } catch (e) {
         console.error(e);
-        showToast("Kon nie vandag se teikenwoord laai nie.");
-        TARGET = 'SPEL';
+        TARGET = '';
+        targetEl.innerHTML = '<span>—</span>';
+        btnStart.disabled = true;
+        const unavailable = currentDate > todayKeySAST()
+          ? 'Hierdie spel is nog nie beskikbaar nie.'
+          : 'Kon nie vandag se teikenwoord laai nie.';
+        showToast(unavailable);
+        return;
       }
 
       targetEl.innerHTML='';
