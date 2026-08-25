@@ -20,7 +20,7 @@
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import {
-      getFirestore, doc, getDoc, setDoc, serverTimestamp,
+      getFirestore, doc, getDoc, serverTimestamp, writeBatch, deleteField,
       collection, query, where, getDocs
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
     import {
@@ -60,6 +60,23 @@
       return `${p.year}-${p.month}-${p.day}`; // YYYY-MM-DD
     };
     const validWordUpper = s => /^[A-ZÁÉÍÓÚÄËÏÖÜÂÊÎÔÛŸ\-]+$/.test(s);
+
+    function nextCalendarDate(dateStr) {
+      const match = String(dateStr || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!match) return null;
+      const [, yearText, monthText, dayText] = match;
+      const year = Number(yearText);
+      const month = Number(monthText);
+      const day = Number(dayText);
+      const date = new Date(Date.UTC(year, month - 1, day));
+      if (
+        date.getUTCFullYear() !== year ||
+        date.getUTCMonth() !== month - 1 ||
+        date.getUTCDate() !== day
+      ) return null;
+      date.setUTCDate(date.getUTCDate() + 1);
+      return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
+    }
 
     async function wordUsedAlready(wordUpper) {
   const snap = await getDocs(collection(db, 'games'));
@@ -294,6 +311,10 @@
         const clueRaw = (clueInput.value || '').trim();
 
         if (!dateStr) return showErr('Kies ’n datum (YYYY-MM-DD).');
+        const bsDate = nextCalendarDate(dateStr);
+        if (!bsDate) return showErr('Ongeldige datum.');
+        const adminUser = auth.currentUser;
+        if (!adminUser) return showErr('Meld asseblief weer as admin aan.');
         if (!wordRaw) return showErr('Voer die teikenwoord in.');
         if (!clueRaw) return showErr('Voer die leidraad in.');
 
@@ -324,6 +345,44 @@
         // Count only letters (ignore hyphens etc.)
         const wordLen = wordUpper.replace(/[^A-ZÁÉÍÓÚÄËÏÖÜÂÊÎÔÛŸ]/g, '').length;
         const length = wordLen;
+        const blitPreferredRef = doc(db, 'blitstiekGames', `Game${bsDate}`);
+        const blitLegacyRef = doc(db, 'blitstiekGames', bsDate);
+        const slimPreferredRef = doc(db, 'slimstiekGames', `Game${bsDate}`);
+        const slimLegacyRef = doc(db, 'slimstiekGames', bsDate);
+        const [blitPreferredSnap, blitLegacySnap, slimPreferredSnap, slimLegacySnap] = await Promise.all([
+          getDoc(blitPreferredRef),
+          getDoc(blitLegacyRef),
+          getDoc(slimPreferredRef),
+          getDoc(slimLegacyRef)
+        ]);
+
+        const existingScheduleRefs = (preferredSnap, legacySnap, preferredRef) => {
+          const refs = [];
+          if (preferredSnap.exists()) refs.push(preferredSnap.ref);
+          if (legacySnap.exists()) refs.push(legacySnap.ref);
+          return refs.length ? refs : [preferredRef];
+        };
+        const blitScheduleRefs = existingScheduleRefs(blitPreferredSnap, blitLegacySnap, blitPreferredRef);
+        const slimScheduleRefs = existingScheduleRefs(slimPreferredSnap, slimLegacySnap, slimPreferredRef);
+        const targetAliases = ['word', 'target', 'targetWord', 'answer', 'solution', 'slimstiek'];
+        const schedulePayload = (isNew, gameType) => {
+          const schedule = {
+            date: bsDate,
+            status: 'scheduled',
+            enabled: true,
+            targetSource: 'dilemma-private-v1',
+            sourceDilemmaDate: dateStr,
+            sourceDilemmaGameId: idPreferred,
+            schemaVersion: 2,
+            updatedAt: serverTimestamp(),
+            createdBy: adminUser.uid
+          };
+          if (isNew) schedule.createdAt = serverTimestamp();
+          if (gameType === 'BLITSTIEK') schedule.activeDate = bsDate;
+          if (gameType === 'SLIMSTIEK') schedule.adminCreated = true;
+          targetAliases.forEach(field => { schedule[field] = deleteField(); });
+          return schedule;
+        };
         const fullClue = `VANDAG SE MISLEIDRAAD: ${clueRaw} (${wordLen} letters)`;
 
         const payload = {
@@ -333,21 +392,32 @@
   status: 'published',
   createdAt: serverTimestamp(),
   updatedAt: serverTimestamp(),
-  createdBy: ADMIN_UID
+  createdBy: adminUser.uid
 };
 
       try {
-  // 1. Public doc (NO word)
-  await setDoc(doc(db, 'games', idPreferred), payload, { merge: true });
-
-  // 2. Private answer doc
-  await setDoc(
+  const batch = writeBatch(db);
+  batch.set(doc(db, 'games', idPreferred), payload, { merge: true });
+  batch.set(
     doc(db, 'games', idPreferred, 'private', 'data'),
     { word: wordUpper },
     { merge: true }
   );
 
-  showOk(`Gestoor as ${idPreferred}.`, idPreferred);
+  const existingSchedulePaths = new Set(
+    [blitPreferredSnap, blitLegacySnap, slimPreferredSnap, slimLegacySnap]
+      .filter(snap => snap.exists())
+      .map(snap => snap.ref.path)
+  );
+  blitScheduleRefs.forEach(ref => {
+    batch.set(ref, schedulePayload(!existingSchedulePaths.has(ref.path), 'BLITSTIEK'), { merge: true });
+  });
+  slimScheduleRefs.forEach(ref => {
+    batch.set(ref, schedulePayload(!existingSchedulePaths.has(ref.path), 'SLIMSTIEK'), { merge: true });
+  });
+  await batch.commit();
+
+  showOk(`Gestoor as ${idPreferred}. BLITSTIEK en SLIMSTIEK vir ${bsDate} is vanaf DILEMMA ${dateStr} geskeduleer.`, idPreferred);
   await refreshCalendarData();
 } catch (e) {
           console.error(e);
