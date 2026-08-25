@@ -226,6 +226,30 @@
       return null;
     }
 
+    function isValidDateKey(dateKey) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(dateKey || ''))) return false;
+      const [year, month, day] = dateKey.split('-').map(Number);
+      const date = new Date(Date.UTC(year, month - 1, day));
+      return date.getUTCFullYear() === year &&
+        date.getUTCMonth() === month - 1 &&
+        date.getUTCDate() === day;
+    }
+
+    function hasV2SourceLinkMetadata(data) {
+      return data?.schemaVersion === 2 ||
+        Object.prototype.hasOwnProperty.call(data || {}, 'targetSource') ||
+        Object.prototype.hasOwnProperty.call(data || {}, 'sourceDilemmaDate');
+    }
+
+    function isPlayableV2DerivedRecord(data, dateKey) {
+      const status = String(data?.status || '').trim().toLowerCase();
+      return data?.schemaVersion === 2 &&
+        data?.targetSource === 'dilemma-private-v1' &&
+        data?.enabled !== false &&
+        isValidDateKey(dateKey) &&
+        ['scheduled', 'active', 'published'].includes(status);
+    }
+
     async function loadAdminSlimstiekDates() {
       const set = new Set();
       if (!db) return set;
@@ -238,9 +262,17 @@
       for (const snap of snaps) {
         snap.forEach(docSnap => {
           const data = docSnap.data();
-          if ((data?.target || data?.word || "").toUpperCase() === "TUTS") return;
           const dateKey = extractDateKey(docSnap);
-          if (dateKey && dateKey <= TODAY) set.add(dateKey);
+          if (!dateKey || dateKey > TODAY) return;
+
+          if (isPlayableV2DerivedRecord(data, dateKey)) {
+            set.add(dateKey);
+            return;
+          }
+          if (hasV2SourceLinkMetadata(data)) return;
+
+          if ((data?.target || data?.word || "").toUpperCase() === "TUTS") return;
+          set.add(dateKey);
         });
       }
 
