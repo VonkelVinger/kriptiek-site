@@ -769,6 +769,157 @@ function computeStatesForGuess(guess, target) {
   return result;
 }
 
+const ZA_TIME_ZONE = "Africa/Johannesburg";
+const DERIVED_BS_PLAYABLE_STATUSES = new Set([
+  "scheduled",
+  "active",
+  "published",
+]);
+
+function parseZaGameDate(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    throw new HttpsError("invalid-argument", "gameDate must use YYYY-MM-DD.");
+  }
+
+  const date = DateTime.fromFormat(value, "yyyy-LL-dd", {
+    zone: ZA_TIME_ZONE,
+    locale: "en-US",
+  });
+
+  if (!date.isValid || date.toFormat("yyyy-LL-dd") !== value) {
+    throw new HttpsError("invalid-argument", "gameDate is not a valid calendar date.");
+  }
+
+  return date.startOf("day");
+}
+
+function legacyBsWord(data, gameType) {
+  if (!data || typeof data !== "object") return "";
+
+  const fields = gameType === "SLIMSTIEK"
+    ? ["target", "targetWord", "word", "solution", "answer", "slimstiek"]
+    : ["word", "target", "targetWord", "solution", "answer"];
+
+  for (const field of fields) {
+    if (typeof data[field] !== "string") continue;
+    const word = data[field].trim().toUpperCase();
+    if (word) return word;
+  }
+  return "";
+}
+
+async function readBsScheduleRecord(collectionName, gameDate) {
+  const preferredRef = db.doc(`${collectionName}/Game${gameDate}`);
+  const preferredSnap = await preferredRef.get();
+  if (preferredSnap.exists) return preferredSnap;
+
+  // Older B&S records may have used YYYY-MM-DD rather than GameYYYY-MM-DD.
+  return db.doc(`${collectionName}/${gameDate}`).get();
+}
+
+async function readDilemmaPrivateWord(sourceDilemmaDate) {
+  const preferredRef = db.doc(
+    `games/Game${sourceDilemmaDate}/private/data`
+  );
+  const preferredSnap = await preferredRef.get();
+  const privateSnap = preferredSnap.exists ? preferredSnap : await db.doc(
+    `games/${sourceDilemmaDate}/private/data`
+  ).get();
+
+  const word = String(privateSnap.exists ? privateSnap.data()?.word || "" : "")
+    .trim()
+    .toUpperCase();
+  if (!word) {
+    throw new HttpsError(
+      "failed-precondition",
+      "The source DILEMMA word is unavailable."
+    );
+  }
+  return word;
+}
+
+exports.resolveDerivedBsTargetWord = onCall(
+  { region: REGION },
+  async (req) => {
+    const gameType = String(req.data?.gameType || "").trim().toUpperCase();
+    if (gameType !== "BLITSTIEK" && gameType !== "SLIMSTIEK") {
+      throw new HttpsError("invalid-argument", "Invalid B&S game type.");
+    }
+
+    const gameDate = parseZaGameDate(req.data?.gameDate);
+    const today = DateTime.now().setZone(ZA_TIME_ZONE).startOf("day");
+    if (gameDate > today) {
+      throw new HttpsError(
+        "failed-precondition",
+        "A future B&S game is not playable yet."
+      );
+    }
+
+    const gameDateKey = gameDate.toFormat("yyyy-LL-dd");
+    const sourceDilemmaDate = gameDate.minus({ days: 1 }).toFormat("yyyy-LL-dd");
+    const collectionName = gameType === "BLITSTIEK"
+      ? "blitstiekGames"
+      : "slimstiekGames";
+    const scheduleSnap = await readBsScheduleRecord(collectionName, gameDateKey);
+
+    if (!scheduleSnap.exists) {
+      throw new HttpsError("not-found", "B&S game not found for this date.");
+    }
+
+    const schedule = scheduleSnap.data() || {};
+    const hasV2SourceLinkMetadata =
+      schedule.schemaVersion === 2 ||
+      Object.prototype.hasOwnProperty.call(schedule, "targetSource") ||
+      Object.prototype.hasOwnProperty.call(schedule, "sourceDilemmaDate");
+
+    if (hasV2SourceLinkMetadata) {
+      if (schedule.enabled === false) {
+        throw new HttpsError("failed-precondition", "This B&S game is disabled.");
+      }
+
+      const status = String(schedule.status || "").trim().toLowerCase();
+      if (!DERIVED_BS_PLAYABLE_STATUSES.has(status)) {
+        throw new HttpsError("failed-precondition", "This B&S game is not playable.");
+      }
+
+      if (
+        schedule.targetSource !== "dilemma-private-v1" ||
+        schedule.sourceDilemmaDate !== sourceDilemmaDate
+      ) {
+        throw new HttpsError("failed-precondition", "Invalid DILEMMA source linkage.");
+      }
+
+      return {
+        word: await readDilemmaPrivateWord(sourceDilemmaDate),
+        gameDate: gameDateKey,
+        sourceDilemmaDate,
+        source: "dilemma-private-v1",
+      };
+    }
+
+    // A record was required above: never use legacy data to invent a B&S game.
+    let word = legacyBsWord(schedule, gameType);
+    if (!word && gameType === "SLIMSTIEK") {
+      const dailySnap = await db.doc(`daily_words/${gameDateKey}`).get();
+      word = dailySnap.exists ? legacyBsWord(dailySnap.data() || {}, gameType) : "";
+    }
+
+    if (!word) {
+      throw new HttpsError(
+        "failed-precondition",
+        "No legacy B&S target word is available for this date."
+      );
+    }
+
+    return {
+      word,
+      gameDate: gameDateKey,
+      sourceDilemmaDate,
+      source: "legacy",
+    };
+  }
+);
+
 exports.checkDilemmaGuess = onCall(
   { region: REGION },
   async (req) => {
