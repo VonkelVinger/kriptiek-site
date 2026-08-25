@@ -711,6 +711,7 @@
       initializeFirestore, serverTimestamp, doc, getDoc, setDoc, deleteDoc,
       collection, query, orderBy, limit, getDocs, onSnapshot, where
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
+    import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-functions.js';
 
     /* ---- Firebase ---- */
     const firebaseConfig = {
@@ -730,6 +731,8 @@
       experimentalForceLongPolling: true,
       useFetchStreams: false
     });
+    const functions = getFunctions(app, 'europe-west1');
+    const resolveDerivedBsTargetWord = httpsCallable(functions, 'resolveDerivedBsTargetWord');
 
     /* ---- DOM ---- */
     const welcomeLine = document.getElementById('welcomeLine');
@@ -1443,28 +1446,19 @@ const medaljesHtml = viewerIsSupporter ? renderMedaljePillsInline(medaljeArr, is
 }
 
     /* ---- Dynamic resolver ---- */
-    async function resolveGameId(){
-      if (explicitId) return explicitId;
-      const todayId = `Game${todayISO()}`;
-      try {
-        const todaySnap = await getDoc(doc(db,'blitstiekGames',todayId));
-        if (todaySnap.exists()) return todayId;
-      } catch {}
-      try {
-        const gamesRef = collection(db,'blitstiekGames');
-        let q1 = query(gamesRef, where('status','==','active'), orderBy('createdAt','desc'), limit(1));
-        let qs1 = await getDocs(q1);
-        if (!qs1.empty) return qs1.docs[0].id;
-        let q2 = query(gamesRef, orderBy('createdAt','desc'), limit(1));
-        let qs2 = await getDocs(q2);
-        if (!qs2.empty) return qs2.docs[0].id;
-      } catch {}
-      return null;
+    function gameDateFromGameId(gameId){
+      const match = String(gameId || '').match(/^(?:Game)?(\d{4}-\d{2}-\d{2})$/);
+      return match ? match[1] : null;
+    }
+
+    function resolveGameId(){
+      return explicitId || `Game${todayISO()}`;
     }
 
     /* ---- Load game ---- */
     async function loadGame(){
-      GAME_ID = await resolveGameId();
+      GAME_ID = resolveGameId();
+      const selectedDate = gameDateFromGameId(GAME_ID);
 
       try {
         if (GAME_ID) {
@@ -1479,25 +1473,37 @@ const medaljesHtml = viewerIsSupporter ? renderMedaljePillsInline(medaljeArr, is
       } catch {}
 
       TODAY_ID = `Game${todayISO()}`;
-      IS_ARCHIVE = !!(GAME_ID && GAME_ID !== TODAY_ID);
+      IS_ARCHIVE = !!(selectedDate && selectedDate < todayISO());
 
-      if(!GAME_ID){
+      if(!selectedDate){
         targetEl.innerHTML = `<span>—</span>`;
         drawGrid();
         lbList.innerHTML = `<li class="text-red-600">Geen spel beskikbaar nie.</li>`;
         return;
       }
 
-      const snap = await getDoc(doc(db,'blitstiekGames',GAME_ID));
-      if(!snap.exists()){
-        targetEl.innerHTML = `<span>—</span>`;
-        drawGrid();
-        lbList.innerHTML = `<li class="text-red-600">Kon nie spel laai nie.</li>`;
-        return;
+      let resolverError = null;
+      try {
+        const result = await resolveDerivedBsTargetWord({
+          gameType: 'BLITSTIEK',
+          gameDate: selectedDate
+        });
+        TARGET = String(result?.data?.word || '').trim().toUpperCase();
+        if (!TARGET) throw new Error('Resolver returned no target word.');
+      } catch (e) {
+        console.error('Could not resolve Blitstiek target:', e);
+        resolverError = e;
       }
 
-      const data=snap.data();
-      TARGET=(data.word||'').toUpperCase();
+      if(resolverError){
+        targetEl.innerHTML = `<span>—</span>`;
+        drawGrid();
+        const unavailable = selectedDate > todayISO()
+          ? 'Hierdie spel is nog nie beskikbaar nie.'
+          : 'Kon nie spel laai nie.';
+        lbList.innerHTML = `<li class="text-red-600">${unavailable}</li>`;
+        return;
+      }
 
       targetEl.innerHTML='';
       (TARGET || '—').split('').forEach(ch=>{ const s=document.createElement('span'); s.textContent=ch; targetEl.appendChild(s); });
