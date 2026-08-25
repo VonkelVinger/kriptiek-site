@@ -50,7 +50,13 @@
       <div id="msgOk"  class="hidden border border-green-200 bg-green-50 text-green-800 p-4 rounded-lg mb-4"></div>
       <div id="msgErr" class="hidden border border-red-200 bg-red-50 text-red-800 p-4 rounded-lg mb-4"></div>
 
-      <!-- Create card -->
+      <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-900">
+        <h2 class="text-lg font-semibold">Leesalleen ou adminblad</h2>
+        <p class="mt-1 text-sm">Hierdie ou BLITSTIEK-adminblad is nou leesalleen. Nuwe BLITSTIEK-speletjies word outomaties vanaf die vorige dag se DILEMMA geskep.</p>
+        <a href="/admindilemma.html" class="mt-3 inline-block rounded-xl bg-[var(--brand-dark)] px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">Open DILEMMA admin</a>
+      </div>
+
+      <!-- Retired creation controls
       <div class="bg-white rounded-2xl shadow-sm border border-gray-100">
         <div class="px-5 py-4 border-b">
           <h2 class="text-lg font-semibold text-[var(--brand-dark)]">Skep nuwe BLITSTIEK speletjie</h2>
@@ -95,6 +101,8 @@
         </div>
       </div>
 
+      -->
+
       <!-- Recent list -->
       <div class="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100">
         <div class="px-5 py-4 border-b">
@@ -114,8 +122,8 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
     import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
     import {
-      getFirestore, serverTimestamp, doc, setDoc, getDoc,
-      collection, query, where, orderBy, limit, getDocs
+      getFirestore, doc, getDoc,
+      collection, query, orderBy, limit, getDocs
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
     // ---- CONFIG (from admindilemma) ----
@@ -134,6 +142,26 @@
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
+    const adminAlert = document.getElementById('adminAlert');
+    const btnSignOut = document.getElementById('btnSignOut');
+    const listGames = document.getElementById('listGames');
+    const show = el => el.classList.remove('hidden');
+    const hide = el => el.classList.add('hidden');
+
+    async function isAdmin(user) {
+      try {
+        const tok = await user.getIdTokenResult(true);
+        if (tok?.claims?.admin === true) return true;
+      } catch {}
+      if (user.uid === ADMIN_UID) return true;
+      try {
+        const snap = await getDoc(doc(db, "admins", user.uid));
+        return snap.exists();
+      } catch { return false; }
+    }
+
+    /* Retired BLITSTIEK creation and duplicate-check controls. */
+    /*
     // DOM refs
     const adminAlert = document.getElementById('adminAlert');
     const btnSignOut = document.getElementById('btnSignOut');
@@ -193,7 +221,6 @@
       }
       hide(adminAlert);
 
-      if (!inpDate.value) { inpDate.value = todayISO(); updatePreview(); }
       await loadRecent();
     });
 
@@ -276,6 +303,32 @@
       }
     }
 
+    */
+
+    // Auth gate
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        show(adminAlert);
+        btnSignOut.classList.add('hidden');
+        return;
+      }
+      btnSignOut.classList.remove('hidden');
+
+      const ok = await isAdmin(user);
+      if (!ok) {
+        show(adminAlert);
+        return;
+      }
+      hide(adminAlert);
+      await loadRecent();
+    });
+
+    btnSignOut.addEventListener('click', async () => {
+      await signOut(auth);
+      try { localStorage.clear(); sessionStorage.clear(); } catch {}
+      location.href = "/index.html";
+    });
+
     // List recent
     async function loadRecent(){
       const res = await getDocs(query(collection(db,'blitstiekGames'), orderBy('activeDate','desc'), limit(10)));
@@ -284,13 +337,12 @@
         <div class="overflow-x-auto">
           <table class="min-w-full text-left text-sm">
             <thead><tr class="text-gray-500">
-              <th class="py-2 pr-4">GameID</th><th class="py-2 pr-4">Woord</th><th class="py-2 pr-4">Datum</th><th class="py-2">Status</th>
+              <th class="py-2 pr-4">GameID</th><th class="py-2 pr-4">Datum</th><th class="py-2">Status</th>
             </tr></thead><tbody>`;
       res.forEach(d => {
         const v=d.data();
         html += `<tr class="border-t">
           <td class="py-2 pr-4 font-mono">${d.id}</td>
-          <td class="py-2 pr-4 font-semibold">${v.word}</td>
           <td class="py-2 pr-4">${v.activeDate || ''}</td>
           <td class="py-2">${v.status || ''}</td>
         </tr>`;
@@ -299,6 +351,7 @@
       listGames.innerHTML = html;
     }
 
+    /* Retired creation event handlers.
     // Wire up
     btnCreate.addEventListener('click', createGame);
     btnCheck.addEventListener('click', async () => {
@@ -329,6 +382,7 @@
     // Init
     if (!inpDate.value) { inpDate.value = todayISO(); }
     updatePreview();
+    */
   </script>
 </body>
 </html>
