@@ -58,7 +58,7 @@
       </div>
     </a>
     <h1 class="text-2xl font-bold text-gray-800 mt-2">GESELS SAAM, <span id="userDisplayName">BESOEKER</span></h1>
-    <p class="text-sm text-gray-600">Spog, skinder of kla, maar gedra jou of jy word verwyder. Jy moet geregistreer wees om kommentaar te kan plaas.</p>
+    <p class="text-sm text-gray-600">Spog, skinder of kla, maar gedra jou of jy word verwyder. Lees saam; Ondersteuners kan deelneem.</p>
   </header>
 
   <!-- 🔔 Live new-post banner (hidden by default) -->
@@ -85,7 +85,9 @@
   <main class="max-w-xl mx-auto p-6 relative z-10">
     <!-- (Overall Dilemma leaderboard was here — removed) -->
 
-    <div id="new-post" class="mb-6">
+    <div id="participationNotice" class="hidden mb-6 rounded-xl border px-4 py-4 text-sm" aria-live="polite"></div>
+
+    <div id="new-post" class="hidden mb-6">
       <h2 class="text-lg font-semibold mb-2">Jou nuwe plasing</h2>
       <input type="text" id="postTitle" maxlength="80" placeholder="Titel" class="w-full p-2 border rounded mb-2">
       <textarea id="postContent" maxlength="500" rows="4" placeholder="Tik jou boodskap (maks. 500 karakters)" class="w-full p-2 border rounded mb-1"></textarea>
@@ -124,6 +126,7 @@
       onSnapshot
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { resolveSupporterEntitlement } from "/assets/js/supporter-entitlement.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -139,13 +142,61 @@
     const auth = getAuth(app);
 
     let currentUser = null;
-    onAuthStateChanged(auth, (u) => {
-      const wasNull = currentUser === null;
-      currentUser = u;
-      if (wasNull) loadPosts(true); // refresh when auth resolves
-      document.getElementById("new-post").style.display =
-        (localStorage.getItem("userRegistered") === "true" && !!currentUser) ? "block" : "none";
-    });
+    let participationState = "checking";
+    let participationRequest = 0;
+
+    function canParticipate() {
+      return !!currentUser && participationState === "supporter";
+    }
+
+    function renderParticipationState() {
+      const composer = document.getElementById("new-post");
+      const notice = document.getElementById("participationNotice");
+      const showComposer = canParticipate();
+      composer.classList.toggle("hidden", !showComposer);
+
+      if (showComposer) {
+        notice.classList.add("hidden");
+        notice.innerHTML = "";
+        return;
+      }
+
+      notice.classList.remove("hidden");
+      if (participationState === "checking") {
+        notice.className = "mb-6 rounded-xl border border-slate-200 bg-white px-4 py-4 text-sm text-slate-600";
+        notice.textContent = "Kontroleer deelname-toegang…";
+      } else if (participationState === "signed-out") {
+        notice.className = "mb-6 rounded-xl border border-slate-200 bg-white px-4 py-4 text-sm text-slate-700";
+        notice.innerHTML = `Meld aan of registreer om aan gesprekke deel te neem. <a class="font-bold text-blue-700 underline" href="/login.html?return=/forum.html">Meld aan</a> of <a class="font-bold text-blue-700 underline" href="/register.html">registreer</a>.`;
+      } else {
+        notice.className = "mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-slate-800";
+        notice.innerHTML = `<p class="font-bold">Gesels saam en deel jou uitslae as Ondersteuner.</p><a href="/subscribe.html" class="mt-3 inline-block rounded-lg bg-yellow-500 px-4 py-2 font-bold text-white shadow-sm transition hover:bg-yellow-600">WORD ’N ONDERSTEUNER</a>`;
+      }
+    }
+
+    async function resolveParticipation(user) {
+      const requestId = ++participationRequest;
+      if (!user) {
+        participationState = "signed-out";
+        renderParticipationState();
+        return;
+      }
+
+      participationState = "checking";
+      renderParticipationState();
+      let publicSupporter = null;
+      try {
+        const supporterSnap = await getDoc(doc(db, "supportersPublic", user.uid));
+        if (supporterSnap.exists()) publicSupporter = supporterSnap.data() || {};
+      } catch (err) {
+        console.warn("Could not load supporter participation state:", err);
+      }
+
+      if (requestId !== participationRequest || currentUser?.uid !== user.uid) return;
+      participationState = resolveSupporterEntitlement({ publicSupporter }) ? "supporter" : "non-supporter";
+      renderParticipationState();
+      loadPosts(true);
+    }
 
     const postsRef = collection(db, "forumPosts");
     const userName = localStorage.getItem("userName") || "Anoniem";
@@ -164,6 +215,12 @@
     // 🔔 Live watcher state
     let latestDocId = null;
     let liveUnsub = null;
+
+    onAuthStateChanged(auth, (u) => {
+      currentUser = u;
+      resolveParticipation(u);
+      loadPosts(true);
+    });
 
     function relativeTime(date) {
       const now = new Date();
@@ -206,6 +263,7 @@ function applyFormatting(text) {
 
       if (!title || !content) { msg.textContent = 'Titel en boodskap is verpligtend.'; return; }
       if (!currentUser) { msg.textContent = 'Jy moet aangemeld wees om te plaas.'; return; }
+      if (!canParticipate()) { msg.textContent = 'Net aktiewe Ondersteuners kan hier deelneem.'; return; }
 
       msg.textContent = '';
       btn.disabled = true;
@@ -268,6 +326,7 @@ items.push(
     async function refreshLikeUI(postId) {
       const countEl = document.getElementById(`like-count-${postId}`);
       const btn = document.querySelector(`.like-btn[data-id="${postId}"]`);
+      if (!countEl || !btn) return;
 
       try {
         const likesRef = collection(db, "forumPosts", postId, "likes");
@@ -381,6 +440,7 @@ items.push(
           </div>
           <h3 class="text-lg font-bold text-gray-800 mb-1">${post.title || ''}</h3>
           <p class="text-gray-700 whitespace-pre-line mb-2">${applyFormatting(post.content || '')}</p>
+          ${canParticipate() ? `
           <div class="flex items-center gap-4 text-sm text-gray-600 mb-2">
             <button class="like-btn flex items-center gap-1" data-id="${docSnap.id}">
               👍 <span class="like-count" id="like-count-${docSnap.id}">0</span>
@@ -390,7 +450,7 @@ items.push(
           <div class="reply-box hidden mt-2" id="reply-${docSnap.id}">
             <textarea class="w-full p-2 border rounded mb-1 reply-input" rows="2" maxlength="500" placeholder="Jou antwoord..."></textarea>
             <button class="send-reply bg-blue-600 text-white px-2 py-1 rounded text-sm" data-id="${docSnap.id}">Stuur</button>
-          </div>
+          </div>` : ""}
 <div class="replies mt-3 space-y-2" id="replies-${docSnap.id}"></div>
         `;
         document.getElementById("forumPosts").appendChild(div);
@@ -420,6 +480,10 @@ items.push(
             alert("Jy moet aangemeld wees om te antwoord.");
             return;
           }
+          if (!canParticipate()) {
+            alert("Net aktiewe Ondersteuners kan hier antwoord.");
+            return;
+          }
 
           // 1) Create reply in subcollection
           await addDoc(collection(db, "forumPosts", id, "replies"), {
@@ -444,6 +508,10 @@ items.push(
           const id = btn.dataset.id;
           if (!currentUser) {
             alert("Meld asseblief aan om te stem.");
+            return;
+          }
+          if (!canParticipate()) {
+            alert("Net aktiewe Ondersteuners kan hier reageer.");
             return;
           }
           try {
@@ -508,8 +576,7 @@ items.push(
     document.getElementById("searchInput").addEventListener("input", () => loadPosts(true));
     document.getElementById("searchInput").value = "";
 
-    // Initial load + start the live watcher
-    loadPosts(true);
+    // Authentication starts the first load; the watcher remains public/read-only.
     startLiveWatcher();
   </script>
   <script>

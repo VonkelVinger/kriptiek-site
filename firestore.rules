@@ -1,0 +1,313 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /* ---------- Helpers ---------- */
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
+    function isFixedAdmin() {
+      return isSignedIn() && request.auth.uid == "jI7f0Wk4MqfPq7p69vjl8OlJUvS2";
+    }
+    function isAdmin() {
+      return isFixedAdmin() ||
+             (isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+
+    // Canonical supporter entitlement from supportersPublic/{uid}.
+    // Every optional field is checked for presence before it is accessed.
+    function hasManualEntitlement(supporter) {
+      return supporter.keys().hasAll(['manualActive']) &&
+             supporter.manualActive == true &&
+             (!supporter.keys().hasAll(['manualUntilMs']) ||
+              supporter.manualUntilMs == null ||
+              (supporter.manualUntilMs is number &&
+               supporter.manualUntilMs > request.time.toMillis()));
+    }
+    function hasPaidEntitlement(supporter) {
+      return supporter.keys().hasAll(['untilMs']) &&
+             supporter.untilMs is number &&
+             supporter.untilMs > request.time.toMillis();
+    }
+    function hasLegacyPublicEntitlement(supporter) {
+      return supporter.keys().hasAll(['active']) &&
+             supporter.active == true &&
+             !supporter.keys().hasAny(['untilMs', 'manualActive', 'manualUntilMs']);
+    }
+    function hasActiveSupporterEntitlement(supporter) {
+      return hasManualEntitlement(supporter) ||
+             hasPaidEntitlement(supporter) ||
+             hasLegacyPublicEntitlement(supporter);
+    }
+    function isActiveSupporter() {
+      return isSignedIn() &&
+             exists(/databases/$(database)/documents/supportersPublic/$(request.auth.uid)) &&
+             hasActiveSupporterEntitlement(get(/databases/$(database)/documents/supportersPublic/$(request.auth.uid)).data);
+    }
+
+    /* =========================================================
+       PUBLIC GAME FAMILIES (READ-ONLY, ADMIN WRITES)
+       ========================================================= */
+
+    /* ---------- DILEMMA ---------- */
+    match /games/{gameId} {
+      allow read: if true;
+      allow write: if isAdmin();
+
+      match /leaderboard/{uid} {
+        allow read: if true;
+        allow write: if isOwner(uid) || isAdmin();
+
+        match /{sub=**} {
+          allow read: if true;
+          allow write: if isOwner(uid) || isAdmin();
+        }
+      }
+
+      match /private/{docId} {
+        allow read: if isAdmin();
+        allow write: if isAdmin();
+
+        match /{sub=**} {
+          allow read: if isAdmin();
+          allow write: if isAdmin();
+        }
+      }
+    }
+
+    /* ---------- BLITSTIEK ---------- */
+    match /blitstiekGames/{gameId} {
+      allow read: if true;
+      allow write: if isAdmin();
+
+      match /leaderboard/{uid} {
+        allow read: if true;
+        allow write: if isOwner(uid) || isAdmin();
+
+        match /{sub=**} {
+          allow read: if true;
+          allow write: if isOwner(uid) || isAdmin();
+        }
+      }
+    }
+
+    /* ---------- SLIMSTIEK ---------- */
+    match /slimstiekGames/{gameId} {
+      allow read: if true;
+      allow write: if isAdmin();
+
+      match /leaderboard/{uid} {
+        allow read: if true;
+        allow write: if isOwner(uid) || isAdmin();
+
+        match /{sub=**} {
+          allow read: if true;
+          allow write: if isOwner(uid) || isAdmin();
+        }
+      }
+    }
+
+    /* =========================================================
+       FORUM (PUBLIC READ; SUPPORTER PARTICIPATION; ADMIN MODERATION)
+       ========================================================= */
+
+    function canCreateForumContent() {
+      return isAdmin() ||
+             (isActiveSupporter() && request.resource.data.authorId == request.auth.uid);
+    }
+    function canUpdateOwnForumContent() {
+      return isAdmin() || (isActiveSupporter() && isOwner(resource.data.authorId));
+    }
+    function canWriteForumLike(uid) {
+      return isAdmin() || (isActiveSupporter() && isOwner(uid));
+    }
+    // The client increments replyCount after a reply. Keep that narrow: only
+    // one numeric replyCount increment (or its initial value of 1) is allowed.
+    function isReplyCountIncrement() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['replyCount']) &&
+             request.resource.data.keys().hasAll(['replyCount']) &&
+             request.resource.data.replyCount is number &&
+             ((!resource.data.keys().hasAll(['replyCount']) && request.resource.data.replyCount == 1) ||
+              (resource.data.keys().hasAll(['replyCount']) &&
+               resource.data.replyCount is number &&
+               request.resource.data.replyCount == resource.data.replyCount + 1));
+    }
+    function canUpdateForumPost() {
+      return isAdmin() ||
+             (isActiveSupporter() &&
+              (isOwner(resource.data.authorId) || isReplyCountIncrement()));
+    }
+    // Historical content remains deletable by its author, even after expiry.
+    function canDeleteForumContent() {
+      return isOwner(resource.data.authorId) || isAdmin();
+    }
+
+    match /forum/{postId} {
+      allow read: if true;
+      allow create: if canCreateForumContent();
+      allow update: if canUpdateForumPost();
+      allow delete: if canDeleteForumContent();
+
+      match /replies/{replyId} {
+        allow read: if true;
+        allow create: if canCreateForumContent();
+        allow update: if canUpdateOwnForumContent();
+        allow delete: if canDeleteForumContent();
+
+        match /likes/{uid} {
+          allow read: if true;
+          allow write: if canWriteForumLike(uid);
+        }
+      }
+
+      match /likes/{uid} {
+        allow read: if true;
+        allow write: if canWriteForumLike(uid);
+      }
+    }
+
+    match /forums/{postId} {
+      allow read: if true;
+      allow create: if canCreateForumContent();
+      allow update: if canUpdateForumPost();
+      allow delete: if canDeleteForumContent();
+
+      match /replies/{replyId} {
+        allow read: if true;
+        allow create: if canCreateForumContent();
+        allow update: if canUpdateOwnForumContent();
+        allow delete: if canDeleteForumContent();
+
+        match /likes/{uid} {
+          allow read: if true;
+          allow write: if canWriteForumLike(uid);
+        }
+      }
+
+      match /likes/{uid} {
+        allow read: if true;
+        allow write: if canWriteForumLike(uid);
+      }
+    }
+
+    match /forumPosts/{postId} {
+      allow read: if true;
+      allow create: if canCreateForumContent();
+      allow update: if canUpdateForumPost();
+      allow delete: if canDeleteForumContent();
+
+      match /replies/{replyId} {
+        allow read: if true;
+        allow create: if canCreateForumContent();
+        allow update: if canUpdateOwnForumContent();
+        allow delete: if canDeleteForumContent();
+
+        match /likes/{uid} {
+          allow read: if true;
+          allow write: if canWriteForumLike(uid);
+        }
+      }
+
+      match /likes/{uid} {
+        allow read: if true;
+        allow write: if canWriteForumLike(uid);
+      }
+    }
+
+    match /gesels/{postId} {
+      allow read: if true;
+      allow create: if canCreateForumContent();
+      allow update: if canUpdateForumPost();
+      allow delete: if canDeleteForumContent();
+
+      match /replies/{replyId} {
+        allow read: if true;
+        allow create: if canCreateForumContent();
+        allow update: if canUpdateOwnForumContent();
+        allow delete: if canDeleteForumContent();
+
+        match /likes/{uid} {
+          allow read: if true;
+          allow write: if canWriteForumLike(uid);
+        }
+      }
+
+      match /likes/{uid} {
+        allow read: if true;
+        allow write: if canWriteForumLike(uid);
+      }
+    }
+
+    /* =========================================================
+       LEGACY / COMPAT PATHS (admin-write only)
+       ========================================================= */
+
+    match /leaderboards/{game}/{gameId}/{uid} {
+      allow read: if true;
+      allow write: if isAdmin();
+      match /{sub=**} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+    }
+
+    match /slimstiek/leaderboard/{gameId}/{uid} {
+      allow read: if true;
+      allow write: if isAdmin();
+      match /{sub=**} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+    }
+
+    match /blitstiek/leaderboard/{gameId}/{uid} {
+      allow read: if true;
+      allow write: if isAdmin();
+      match /{sub=**} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+    }
+
+    /* =========================================================
+       DAILY WORDS (LEGACY)
+       ========================================================= */
+    match /daily_words/{dateId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    /* =========================================================
+       PRIVATE USER AREAS
+       ========================================================= */
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isOwner(uid) || isAdmin();
+    }
+
+    match /userGames/{uid}/plays/{gameId} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isOwner(uid) || isAdmin();
+    }
+
+    match /supportersPublic/{uid} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    /* =========================================================
+      ADMIN REGISTRY
+      ========================================================= */
+    match /admins/{uid} {
+      allow read: if isAdmin();
+      allow write: if isAdmin() || isFixedAdmin();
+    }
+
+    /* =========================================================
+       CATCH-ALL (ADMIN ONLY)
+       ========================================================= */
+    match /{document=**} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+  }
+}
