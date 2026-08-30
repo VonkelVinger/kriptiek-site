@@ -390,13 +390,18 @@
 
       renderSupporterPill(supporter);
 
-      const cta = $("supporterCtaWrap");
-      if (cta) cta.style.display = supporter.active ? "none" : "";
+      const supporterGameStats = $("supporterGameStats");
+      const supporterGameStatsTeaser = $("supporterGameStatsTeaser");
+      const supporterGameStatsTeaserCopy = $("supporterGameStatsTeaserCopy");
+      if (supporterGameStats) supporterGameStats.classList.toggle("hidden", !supporter.active);
+      if (supporterGameStatsTeaser) supporterGameStatsTeaser.classList.toggle("hidden", supporter.active);
+      if (supporterGameStatsTeaserCopy) supporterGameStatsTeaserCopy.classList.toggle("hidden", supporter.active);
 
       const displayName = user.displayName || userDoc.userName || "Gebruiker";
       setWbName(displayName);
       renderProfileNameLine(displayName, supporter.active);
 
+      if (supporter.active) {
       const blit = await loadMedalsFromPlacements({
         uid: user.uid,
         gameCollection: "blitstiekGames",
@@ -426,6 +431,7 @@
         { breakdownId:"medalsSlimBreakdown", emptyId:"medalsSlimEmpty" },
         slim
       );
+      }
 
       const supporterBanner = $("supporterBanner");
       if (supporterBanner) {
@@ -572,45 +578,7 @@
         </form>
       </section>
 
-      <section class="card p-5 md:p-6">
-        <header class="flex flex-col gap-1 mb-3">
-          <div class="h-1 w-full bg-yellow-400 rounded-full"></div>
-          <h2 class="text-xl font-extrabold text-slate-900">JOU PODIUMPLEKKE</h2>
-        </header>
-
-        <p class="text-sm text-slate-700 mb-3">
-          Hier is jou medaljes vir eerste, tweede en derde plekke in die daaglikse ranglyste.
-        </p>
-
-        <div id="supporterCtaWrap">
-          <a href="/subscribe.html"
-             class="inline-flex items-center px-4 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-600 text-white font-bold mb-4">
-            WORD ’N ONDERSTEUNER
-          </a>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div class="mini">
-            <div class="text-xs uppercase tracking-wide text-slate-500 font-extrabold">Dilemma</div>
-            <div id="medalsDilBreakdown" class="hidden text-sm font-bold text-slate-700 mt-1">🥇 0  •  🥈 0  •  🥉 0</div>
-            <div id="medalsDilEmpty" class="text-sm text-slate-500 mt-1">Nog geen podiumplekke in Dilemma nie</div>
-          </div>
-
-          <div class="mini">
-            <div class="text-xs uppercase tracking-wide text-slate-500 font-extrabold">Blitstiek</div>
-            <div id="medalsBlitBreakdown" class="hidden text-sm font-bold text-slate-700 mt-1">🥇 0  •  🥈 0  •  🥉 0</div>
-            <div id="medalsBlitEmpty" class="text-sm text-slate-500 mt-1">Nog geen podiumplekke in Blitstiek nie</div>
-          </div>
-
-          <div class="mini">
-            <div class="text-xs uppercase tracking-wide text-slate-500 font-extrabold">Slimstiek</div>
-            <div id="medalsSlimBreakdown" class="hidden text-sm font-bold text-slate-700 mt-1">🥇 0  •  🥈 0  •  🥉 0</div>
-            <div id="medalsSlimEmpty" class="text-sm text-slate-500 mt-1">Nog geen podiumplekke in Slimstiek nie</div>
-          </div>
-        </div>
-      </section>
-
-      <section class="card p-5 md:p-6" aria-labelledby="journeyStatusTitle">
+      <section class="card p-5 md:p-6 order-1" aria-labelledby="journeyStatusTitle">
         <header class="flex flex-col gap-1 mb-3">
           <div class="h-1 w-full bg-indigo-500 rounded-full"></div>
           <h2 id="journeyStatusTitle" class="text-xl font-extrabold text-slate-900">JOU KRIPTIEK-STATUS</h2>
@@ -646,16 +614,44 @@
         </div>
       </section>
 
-      <section class="card p-5 md:p-6">
+      <section class="card p-5 md:p-6 order-2" aria-labelledby="moreAboutPlayTitle">
         <header class="flex flex-col gap-1 mb-3">
-          <div class="h-1 w-full bg-slate-300 rounded-full"></div>
-          <h2 class="text-xl font-extrabold text-slate-900">HOE PODIUMPLEKKE WERK</h2>
+          <div class="h-1 w-full bg-yellow-400 rounded-full"></div>
+          <h2 id="moreAboutPlayTitle" class="text-xl font-extrabold text-slate-900">MEER OOR JOU SPEL</h2>
         </header>
 
-        <div class="text-sm text-slate-700 space-y-2 leading-relaxed">
-          <p><strong>DILEMMA:</strong> Podiumplekke word om <strong>23:55</strong> elke dag toegeken aan spelers wat die woord reg raai: <strong>🥇 vir 1 raaiskoot</strong>, <strong>🥈 vir 2</strong>, <strong>🥉 vir 3</strong>.</p>
-          <p><strong>BLITSTIEK:</strong> Podiumplekke word om <strong>23:55</strong> toegeken op grond van die dag se <strong>beste tye</strong> op die ranglys.</p>
-          <p><strong>SLIMSTIEK:</strong> Podiumplekke word om <strong>23:55</strong> toegeken op grond van die dag se <strong>beste tellings</strong> op die ranglys.</p>
+        <p id="supporterGameStatsTeaserCopy" class="text-sm text-slate-700 mb-3">
+          Bykomende spelstatistiek, soos podiumplekke, is vir Ondersteuners beskikbaar.
+        </p>
+
+        <div id="supporterGameStatsTeaser" class="rounded-xl border border-yellow-200 bg-yellow-50 p-4">
+          <a href="/subscribe.html"
+             class="inline-flex items-center px-4 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-600 text-white font-bold mb-4">
+            WORD ’N ONDERSTEUNER
+          </a>
+        </div>
+
+        <div id="supporterGameStats" class="hidden">
+          <p class="text-sm text-slate-700 mb-3">Jou bykomende spelstatistiek as Ondersteuner. Podiumplekke is nie Kriptiek-status-prestasies nie.</p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="mini">
+            <div class="text-xs uppercase tracking-wide text-slate-500 font-extrabold">Dilemma</div>
+            <div id="medalsDilBreakdown" class="hidden text-sm font-bold text-slate-700 mt-1">🥇 0  •  🥈 0  •  🥉 0</div>
+            <div id="medalsDilEmpty" class="text-sm text-slate-500 mt-1">Nog geen podiumplekke in Dilemma nie</div>
+          </div>
+
+          <div class="mini">
+            <div class="text-xs uppercase tracking-wide text-slate-500 font-extrabold">Blitstiek</div>
+            <div id="medalsBlitBreakdown" class="hidden text-sm font-bold text-slate-700 mt-1">🥇 0  •  🥈 0  •  🥉 0</div>
+            <div id="medalsBlitEmpty" class="text-sm text-slate-500 mt-1">Nog geen podiumplekke in Blitstiek nie</div>
+          </div>
+
+          <div class="mini">
+            <div class="text-xs uppercase tracking-wide text-slate-500 font-extrabold">Slimstiek</div>
+            <div id="medalsSlimBreakdown" class="hidden text-sm font-bold text-slate-700 mt-1">🥇 0  •  🥈 0  •  🥉 0</div>
+            <div id="medalsSlimEmpty" class="text-sm text-slate-500 mt-1">Nog geen podiumplekke in Slimstiek nie</div>
+          </div>
+          </div>
         </div>
       </section>
 
