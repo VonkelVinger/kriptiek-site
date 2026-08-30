@@ -411,6 +411,7 @@
       renderMedalCollection,
       selectDilemmaShowcaseMedals
     } from "/assets/js/dilemma-medals.js";
+    import { resolveSupporterEntitlement } from "/assets/js/supporter-entitlement.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -884,12 +885,13 @@ if (isFutureGame) {
 
     async function computeDilemmaTotal(uid){
       const usnap = await getDoc(doc(db, "users", uid));
-      let supporterActive = false;
-      if (usnap.exists()) {
-        const d = usnap.data();
-        if (d?.supporterActive === true) supporterActive = true;
-        if (d?.supporterUntil?.toMillis && d.supporterUntil.toMillis() > Date.now()) supporterActive = true;
-      }
+      const legacyUser = usnap.exists() ? (usnap.data() || {}) : null;
+      let publicSupporter = null;
+      try {
+        const supporterSnap = await getDoc(doc(db, "supportersPublic", uid));
+        publicSupporter = supporterSnap.exists() ? (supporterSnap.data() || {}) : null;
+      } catch {}
+      const supporterActive = resolveSupporterEntitlement({ publicSupporter, legacyUser });
 
       const qy = query(collection(db, "userGames", uid, "plays"), orderBy("finishedAt","desc"), limit(200));
       const snap = await getDocs(qy);
@@ -1048,7 +1050,9 @@ if (isFutureGame) {
       if (supporterCache.has(uid)) return supporterCache.get(uid);
       try {
         const s = await getDoc(doc(db, "supportersPublic", uid));
-        const active = !!(s.exists() && s.data() && s.data().active === true);
+        const active = resolveSupporterEntitlement({
+          publicSupporter: s.exists() ? (s.data() || {}) : null
+        });
         supporterCache.set(uid, active);
         return active;
       } catch {
@@ -1071,7 +1075,9 @@ if (isFutureGame) {
           const uid = todo[i];
           if (res.status !== "fulfilled") { supporterCache.set(uid, false); return; }
           const snap = res.value;
-          const active = !!(snap.exists() && snap.data() && snap.data().active === true);
+          const active = resolveSupporterEntitlement({
+            publicSupporter: snap.exists() ? (snap.data() || {}) : null
+          });
           supporterCache.set(uid, active);
         });
       } catch {}
@@ -1475,7 +1481,15 @@ if (isFutureGame) {
 
       try {
         const supporterSnap = await getDoc(doc(db, "supportersPublic", uid));
-        viewerIsSupporter = !!(supporterSnap.exists() && supporterSnap.data()?.active === true);
+        let legacyUser = null;
+        if (!supporterSnap.exists()) {
+          const legacySnap = await getDoc(doc(db, "users", uid));
+          legacyUser = legacySnap.exists() ? (legacySnap.data() || {}) : null;
+        }
+        viewerIsSupporter = resolveSupporterEntitlement({
+          publicSupporter: supporterSnap.exists() ? (supporterSnap.data() || {}) : null,
+          legacyUser
+        });
       } catch (err) {
         console.warn("Could not load viewer supporter status:", err);
         viewerIsSupporter = false;

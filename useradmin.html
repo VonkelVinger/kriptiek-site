@@ -124,7 +124,7 @@
 </div>
 
 <p class="text-xs text-slate-500 mt-2">
-  <span class="font-semibold">Ster-status</span> kom uit <code>supportersPublic/&lt;uid&gt;.active</code>. Druk <strong>Stoor veranderinge</strong> om dit te sinkroniseer.
+  Handmatige toegang word in <code>supportersPublic/&lt;uid&gt;</code> gestoor en bly apart van Paystack se betaalde toegang.
 </p>
 
     
@@ -153,13 +153,13 @@
           <div class="col-span-2">
             <label class="flex items-center gap-2">
               <input id="supporterActive" type="checkbox" class="h-4 w-4">
-              <span class="text-sm font-semibold">Ondersteuner aktief</span>
+              <span class="text-sm font-semibold">Handmatige Ondersteuner-toegang</span>
             </label>
             <p class="text-xs text-slate-500 mt-1">As hierdie aan is, kry die gebruiker die 10%-bonus (selfs sonder 'n datum hieronder).</p>
           </div>
 
           <label class="block">
-            <span class="text-sm font-semibold">Ondersteuner tot en met</span>
+            <span class="text-sm font-semibold">Handmatige toegang tot en met</span>
             <input id="supporterUntil" type="date" class="mt-1 w-full border border-gray-300 rounded p-2" />
             <div class="flex gap-2 mt-2">
               <button type="button" data-add-days="30" class="kbtn-ghost px-3 py-1.5 rounded-lg text-sm">+30 dae</button>
@@ -183,6 +183,7 @@
           <div class="md:col-span-2 flex items-center gap-2 mt-2">
             <button id="saveBtn" type="submit" class="kbtn rounded-lg">Stoor veranderinge</button>
             <button id="resetBtn" type="button" class="kbtn-ghost rounded-lg">Laai oorspronklik</button>
+            <button id="migrateLegacySupporterBtn" type="button" class="kbtn-ghost rounded-lg">Migreer ou ondersteunerstatus</button>
           </div>
           <p id="saveMsg" class="text-sm mt-2 hidden" aria-live="polite"></p>
         </form>
@@ -208,8 +209,13 @@
       getAuth, onAuthStateChanged, signOut
     } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
     import {
-      getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, query, where, getDocs, limit
+      getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, query, where, getDocs, limit, runTransaction
     } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import {
+      hasMeaningfulSupporterEntitlement,
+      resolveSupporterEntitlement,
+      supporterValueToMillis
+    } from "/assets/js/supporter-entitlement.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -306,7 +312,8 @@
     })();
 
     // --- Search + Edit state ---
-    let loaded = null; // { uid, email, name, lastLogin, profile:{...}, ref, supporterPublicActive }
+    let loaded = null;
+    let manualGrantTouched = false;
     async function findInUsersBy(field, value) {
       const usersCol = collection(db, "users");
       const q1 = query(usersCol, where(field, "==", value), limit(5));
@@ -397,12 +404,12 @@
         || (searchTerm.includes("@") ? searchTerm.toLowerCase() : "");
 
       // Canonical supporter truth used by games
-      let supporterPublicActive = null; // null = no doc yet
+      let supporterPublic = null;
       try{
         const ssnap = await getDoc(doc(db, "supportersPublic", uid));
-        if (ssnap.exists()) supporterPublicActive = (ssnap.data()?.active === true);
+        if (ssnap.exists()) supporterPublic = ssnap.data() || {};
       }catch{
-        supporterPublicActive = null;
+        supporterPublic = null;
       }
 
       loaded = {
@@ -412,7 +419,7 @@
         lastLogin: profile.lastLogin || null,
         profile,
         ref: doc(db, "users", uid),
-        supporterPublicActive
+        supporterPublic
       };
 
       renderLoaded();
@@ -470,22 +477,24 @@
         ? lastLogin.toDate().toLocaleString('af-ZA')
         : (lastLogin || "—");
 
-      const supporterActiveOld = !!profile?.supporterActive;
-      const supporterUntilStr = profile?.supporterUntil ? toYMD(profile.supporterUntil) : "";
+      const publicSupporter = loaded.supporterPublic;
+      const hasManualPublicData = publicSupporter && (
+        Object.prototype.hasOwnProperty.call(publicSupporter, "manualActive") ||
+        Object.prototype.hasOwnProperty.call(publicSupporter, "manualUntilMs")
+      );
+      const manualUntilStr = hasManualPublicData
+        ? toYMD(supporterValueToMillis(publicSupporter?.manualUntilMs))
+        : "";
       const manualBonus = Number(profile?.manualBonus || 0);
       const manualBonusNote = profile?.manualBonusNote || "";
 
-      const now = new Date();
-      const activeByDate = supporterUntilStr ? (new Date(supporterUntilStr+"T12:00:00") > now) : false;
-      const derivedActive = supporterActiveOld || activeByDate;
+      const effectiveActive = resolveSupporterEntitlement({ publicSupporter, legacyUser: profile });
 
-      const effectiveActive =
-        (loaded.supporterPublicActive === true) ? true :
-        (loaded.supporterPublicActive === false) ? false :
-        derivedActive;
-
-      $("supporterActive").checked = effectiveActive;
-      $("supporterUntil").value = supporterUntilStr;
+      $("supporterActive").checked = hasManualPublicData
+        ? publicSupporter?.manualActive === true
+        : false;
+      $("supporterUntil").value = manualUntilStr;
+      manualGrantTouched = false;
       $("manualBonus").value = (manualBonus || 0);
       $("manualBonusNote").value = manualBonusNote;
 
@@ -499,15 +508,12 @@ pill.textContent = effectiveActive ? "Ondersteuner: aktief" : "Ondersteuner: nie
 const sp = $("supporterPublicPill");
 sp.classList.remove("hidden");
 
-if (loaded.supporterPublicActive === true) {
+if (hasMeaningfulSupporterEntitlement(publicSupporter)) {
   sp.className = "pill pill-green";
-  sp.textContent = "Ster: aktief";
-} else if (loaded.supporterPublicActive === false) {
-  sp.className = "pill pill-red";
-  sp.textContent = "Ster: af";
+  sp.textContent = resolveSupporterEntitlement({ publicSupporter }) ? "Publieke status: aktief" : "Publieke status: nie aktief";
 } else {
   sp.className = "pill pill-amber";
-  sp.textContent = "Ster: geen rekord";
+  sp.textContent = "Publieke status: migreer ou rekord";
 }
 
     }
@@ -532,12 +538,18 @@ if (loaded.supporterPublicActive === true) {
       const base = el.value ? new Date(el.value+"T12:00:00") : new Date();
       base.setDate(base.getDate()+days);
       el.value = base.toISOString().slice(0,10);
+      manualGrantTouched = true;
     }
 
     document.querySelectorAll('[data-add-days]').forEach(btn=>{
       btn.addEventListener('click', ()=> addDaysToInput(Number(btn.dataset.addDays||0)));
     });
-    $("clearUntil").addEventListener('click', ()=> $("supporterUntil").value="");
+    $("supporterActive").addEventListener("change", ()=> { manualGrantTouched = true; });
+    $("supporterUntil").addEventListener("change", ()=> { manualGrantTouched = true; });
+    $("clearUntil").addEventListener('click', ()=> {
+      $("supporterUntil").value="";
+      manualGrantTouched = true;
+    });
     $("editForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
       if (!loaded) return;
@@ -546,19 +558,9 @@ if (loaded.supporterPublicActive === true) {
       btn.disabled = true;
 
       try{
-        const ymd = $("supporterUntil").value.trim();
-        const now = new Date();
-        const activeByDate = ymd ? (new Date(ymd+"T12:00:00") > now) : false;
-
-        // Checkbox is manual override
-        const manualActive = $("supporterActive").checked;
-
-        // Canonical truth boolean used by games
-        const activeNow = manualActive || activeByDate;
+        const existingPublic = loaded.supporterPublic || {};
 
         const patch = {
-          supporterActive: manualActive,
-          supporterUntil: ymd ? ymd : null,
           manualBonus: (() => {
             const manual = Number($("manualBonus").value || 0);
             return (isFinite(manual) ? Math.round(manual) : 0);
@@ -578,15 +580,35 @@ if (loaded.supporterPublicActive === true) {
         // users/{uid} (private; admin allowed)
         await setDoc(loaded.ref, userWrite, { merge:true });
 
-        // supportersPublic/{uid} (public read; admin write)
-        await setDoc(doc(db, "supportersPublic", loaded.uid), {
-          active: activeNow,
-          updatedAt: serverTimestamp(),
-          updatedAtMs: Date.now()
-        }, { merge:true });
+        if (manualGrantTouched) {
+          const ymd = $("supporterUntil").value.trim();
+          const manualUntilMs = ymd ? new Date(ymd + "T23:59:59.999").getTime() : null;
+          const manualActive = $("supporterActive").checked;
+          const paidUntilMs = supporterValueToMillis(existingPublic.untilMs);
+          const paidActive = paidUntilMs != null && paidUntilMs > Date.now();
+          const manualEntitlement = manualActive && (manualUntilMs == null || manualUntilMs > Date.now());
+          const activeNow = manualEntitlement || paidActive;
+
+          // supportersPublic/{uid}: manual entitlement is independent from Paystack's untilMs.
+          await setDoc(doc(db, "supportersPublic", loaded.uid), {
+            active: activeNow,
+            untilMs: paidUntilMs,
+            manualActive,
+            manualUntilMs,
+            updatedAt: serverTimestamp(),
+            updatedAtMs: Date.now()
+          }, { merge:true });
+
+          loaded.supporterPublic = {
+            ...existingPublic,
+            active: activeNow,
+            untilMs: paidUntilMs,
+            manualActive,
+            manualUntilMs
+          };
+        }
 
         loaded.profile = { ...(loaded.profile||{}), ...patch };
-        loaded.supporterPublicActive = activeNow;
         renderLoaded();
 
         const msg = $("saveMsg");
@@ -604,6 +626,81 @@ if (loaded.supporterPublicActive === true) {
     });
 
     $("resetBtn").addEventListener("click", ()=> renderLoaded());
+
+    $("migrateLegacySupporterBtn").addEventListener("click", async ()=>{
+      if (!loaded) return;
+
+      const legacyUser = loaded.profile || {};
+      const loadedPublic = loaded.supporterPublic || null;
+      const loadedPublicHasCanonicalSource = loadedPublic && (
+        Object.prototype.hasOwnProperty.call(loadedPublic, "untilMs") ||
+        Object.prototype.hasOwnProperty.call(loadedPublic, "manualActive") ||
+        Object.prototype.hasOwnProperty.call(loadedPublic, "manualUntilMs")
+      );
+      const loadedActiveOnlyPublic = loadedPublic?.active === true && !loadedPublicHasCanonicalSource;
+      if (!resolveSupporterEntitlement({ legacyUser }) && !loadedActiveOnlyPublic) {
+        showAlert("Geen aktiewe ou ondersteunerstatus om te migreer nie.", "info");
+        return;
+      }
+
+      const legacyUntilMs = [
+        legacyUser.supporterUntil,
+        legacyUser.paidUntil,
+        legacyUser.support?.paidUntil
+      ].map(supporterValueToMillis)
+        .filter((value) => value != null && value > Date.now())
+        .reduce((latest, value) => Math.max(latest, value), 0) || null;
+      const publicRef = doc(db, "supportersPublic", loaded.uid);
+
+      try {
+        const outcome = await runTransaction(db, async (tx) => {
+          const publicSnap = await tx.get(publicRef);
+          const currentPublic = publicSnap.exists() ? (publicSnap.data() || {}) : null;
+          const hasCanonicalSource = currentPublic && (
+            Object.prototype.hasOwnProperty.call(currentPublic, "untilMs") ||
+            Object.prototype.hasOwnProperty.call(currentPublic, "manualActive") ||
+            Object.prototype.hasOwnProperty.call(currentPublic, "manualUntilMs")
+          );
+          const activeOnlyPublic = currentPublic?.active === true && !hasCanonicalSource;
+          const legacyIsActive = resolveSupporterEntitlement({ legacyUser });
+          if (hasCanonicalSource) return "canonical-exists";
+          if (!legacyIsActive && !activeOnlyPublic) return "nothing-to-migrate";
+
+          tx.set(publicRef, {
+            active: true,
+            untilMs: null,
+            manualActive: true,
+            manualUntilMs: legacyUntilMs,
+            migrationSource: "legacy-user-fields",
+            updatedAt: serverTimestamp(),
+            updatedAtMs: Date.now()
+          }, { merge: true });
+          return "migrated";
+        });
+
+        if (outcome === "canonical-exists") {
+          showAlert("Geen migrasie gedoen nie: 'n betekenisvolle publieke rekord bestaan reeds.", "info");
+          return;
+        }
+        if (outcome === "nothing-to-migrate") {
+          showAlert("Geen aktiewe ou ondersteunerstatus om te migreer nie.", "info");
+          return;
+        }
+
+        loaded.supporterPublic = {
+          ...(loaded.supporterPublic || {}),
+          active: true,
+          untilMs: null,
+          manualActive: true,
+          manualUntilMs: legacyUntilMs
+        };
+        renderLoaded();
+        showAlert("Ou ondersteunerstatus is veilig na die publieke rekord gemigreer.", "ok");
+      } catch (err) {
+        console.error(err);
+        showAlert("Kon nie die ou status migreer nie.", "error");
+      }
+    });
   </script>
 </body>
 </html>

@@ -703,6 +703,7 @@
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
     import { serverTimestamp as __serverTimestampForSTS } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
     import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-functions.js';
+    import { resolveSupporterEntitlement } from '/assets/js/supporter-entitlement.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyDH-nVvGkdaheH7pvRHH0M9TbW2f98lMGQ",
@@ -844,7 +845,9 @@ function medalEmojiForRank(idx){
       const p = (async ()=>{
         try{
           const snap = await getDoc(doc(db, 'supportersPublic', String(uid)));
-          const active = !!(snap.exists() && snap.data() && snap.data().active === true);
+          const active = resolveSupporterEntitlement({
+            publicSupporter: snap.exists() ? (snap.data() || {}) : null
+          });
           supporterCache.set(uid, active);
           return active;
         }catch{
@@ -931,7 +934,15 @@ async function refreshViewerSupporterStatus(uid){
 
   try {
     const snap = await getDoc(doc(db, "supportersPublic", uid));
-    viewerIsSupporter = !!(snap.exists() && snap.data()?.active === true);
+    let legacyUser = null;
+    if (!snap.exists()) {
+      const legacySnap = await getDoc(doc(db, "users", uid));
+      legacyUser = legacySnap.exists() ? (legacySnap.data() || {}) : null;
+    }
+    viewerIsSupporter = resolveSupporterEntitlement({
+      publicSupporter: snap.exists() ? (snap.data() || {}) : null,
+      legacyUser
+    });
   } catch (err) {
     console.warn("Supporter status check failed:", err);
     viewerIsSupporter = false;

@@ -677,6 +677,7 @@
       collection, query, orderBy, limit, getDocs, onSnapshot, where
     } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
     import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-functions.js';
+    import { resolveSupporterEntitlement } from '/assets/js/supporter-entitlement.js';
 
     /* ---- Firebase ---- */
     const firebaseConfig = {
@@ -812,7 +813,7 @@ function renderSupporterStar(isSupporter){
   return idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '';
 }
 
-// Supporter truth comes from supportersPublic/{uid}.active
+// Supporter truth comes from supportersPublic/{uid} via the shared entitlement resolver.
 const supporterCache = new Map();      // uid -> boolean
 const supporterInFlight = new Map();   // uid -> Promise<boolean>
 
@@ -824,7 +825,9 @@ async function fetchSupporterActive(uid){
   const p = (async ()=>{
     try{
       const s = await getDoc(doc(db, 'supportersPublic', uid));
-      const active = s.exists() && (s.data()?.active === true);
+      const active = resolveSupporterEntitlement({
+        publicSupporter: s.exists() ? (s.data() || {}) : null
+      });
       supporterCache.set(uid, active);
       return active;
     }catch{
@@ -1269,7 +1272,9 @@ onAuthStateChanged(auth, async (u)=>{
   let isSupporter = false;
   try{
     const s = await getDoc(doc(db,'supportersPublic', user.uid));
-    isSupporter = s.exists() && (s.data()?.active === true);
+    isSupporter = resolveSupporterEntitlement({
+      publicSupporter: s.exists() ? (s.data() || {}) : null
+    });
   }catch{}
   supporterCache.set(user.uid, isSupporter);
 
@@ -1319,7 +1324,15 @@ async function refreshViewerSupporterStatus(uid){
 
   try {
     const snap = await getDoc(doc(db, "supportersPublic", uid));
-    viewerIsSupporter = !!(snap.exists() && snap.data()?.active === true);
+    let legacyUser = null;
+    if (!snap.exists()) {
+      const legacySnap = await getDoc(doc(db, "users", uid));
+      legacyUser = legacySnap.exists() ? (legacySnap.data() || {}) : null;
+    }
+    viewerIsSupporter = resolveSupporterEntitlement({
+      publicSupporter: snap.exists() ? (snap.data() || {}) : null,
+      legacyUser
+    });
   } catch (err) {
     console.warn("Supporter status check failed:", err);
     viewerIsSupporter = false;
@@ -1366,10 +1379,10 @@ function startLiveLeaderboard(){
           ? ' <span class="text-xs text-emerald-700 font-bold">(jy)</span>'
           : '';
 
-        // Prefer supportersPublic cache once available; fallback to row field
+        // Only the supportersPublic-derived cache determines supporter status.
         const isSupporter = supporterCache.has(v.id)
           ? (supporterCache.get(v.id) === true)
-          : (v?.isSupporter === true);
+          : false;
 
 const rawName = escapeHtml(v.userName || 'Onbekend');
 const safeName = viewerIsSupporter ? rawName : '🔒';

@@ -16,6 +16,9 @@
   <main class="max-w-xl mx-auto bg-white rounded-xl shadow p-4">
     <h1 class="text-xl font-bold mb-2 text-[#1e3a8a]">Admin: Betalende ondersteuners</h1>
     <p id="gate" class="text-sm text-red-700 bg-red-50 rounded p-2 mb-4 hidden">Toegang geweier.</p>
+    <p id="legacyNotice" class="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded p-3 mb-4">
+      Hierdie is 'n verouderde adminblad en is gedeaktiveer: dit skryf ou <code>users.support</code>-velde wat nie meer die kanonieke status is nie. Gebruik <a href="/useradmin.html" class="underline font-bold">User Admin</a> vir Ondersteuner-status.
+    </p>
 
     <div id="panel" class="space-y-5 hidden">
       <div class="flex items-center gap-3 text-sm">
@@ -181,7 +184,8 @@
         gate.classList.remove('hidden');
         return;
       }
-      panel.classList.remove('hidden');
+      // Intentionally quarantined: this page's writers target obsolete users.support fields.
+      panel.classList.add('hidden');
     });
 
     // =========================
