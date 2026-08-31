@@ -43,6 +43,8 @@
   .letter-box { width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; background-color: #374151; color: white;
     font-size: 1.8rem; font-weight: bold; border: 2px solid #1f2937; border-radius: 0.375rem; text-transform: uppercase; box-shadow: inset 0 0 5px rgba(0,0,0,.2); }
   .flipped-k { transform: scaleX(-1); }
+  .shared-result { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .forum-link-card { border-left: 4px solid #1e3a8a; }
   @media (max-width: 640px) { .letter-box { width: 38px; height: 38px; font-size: 1.2rem; } .crossword-grid { gap: 2px; } .logo-container { padding: 0.5rem; } }
 </style>
 </head>
@@ -75,14 +77,14 @@
     <div id="new-post" class="hidden mb-6">
       <h2 class="text-lg font-semibold mb-2">Jou nuwe plasing</h2>
       <input type="text" id="postTitle" maxlength="80" placeholder="Titel" class="w-full p-2 border rounded mb-2">
-      <textarea id="postContent" maxlength="500" rows="4" placeholder="Tik jou boodskap (maks. 500 karakters)" class="w-full p-2 border rounded mb-1"></textarea>
-      <div class="text-sm text-gray-500 mb-2"><span id="charCount">0</span>/500 karakters</div>
+      <textarea id="postContent" maxlength="1000" rows="5" placeholder="Tik jou boodskap (maks. 1 000 karakters)" class="w-full p-2 border rounded mb-1"></textarea>
+      <div class="text-sm text-gray-500 mb-2"><span id="charCount">0</span>/1000 karakters</div>
       <button id="submitBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Stuur</button>
       <p id="formMsg" class="text-sm text-red-600 mt-2"></p>
     </div>
 
     <div id="post-tools" class="mb-6 flex items-center justify-between gap-2">
-      <input type="text" id="searchInput" placeholder="Soek titels of inhoud..." class="w-full p-2 border rounded" />
+      <input type="text" id="searchInput" placeholder="Soek in gelaaide plasings..." aria-label="Soek in gelaaide plasings" class="w-full p-2 border rounded" />
     </div>
 
     <div id="postsList">
@@ -224,21 +226,107 @@
       return days === 1 ? "1 dag gelede" : `${days} dae gelede`;
     }
 
-function escapeHtml(text) {
-  return String(text || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
+    const URL_PATTERN = /https?:\/\/[^\s<>"']+/gi;
+    const KRIPTIEK_GAME_PATHS = {
+      "/dilemmagame.html": "DILEMMA",
+      "/slimstiek.html": "SLIMSTIEK",
+      "/blitstiek.html": "BLITSTIEK",
+      "/speel-ook.html": "SPEEL OOK"
+    };
+    const RESULT_GAME_NAMES = /\b(obsessie|kwartel|watse|wordle|connections|waffle|contexto|worldle|globle|nerdle|dilemma|blitstiek|slimstiek)\b/i;
+    const RESULT_SCORE_PATTERN = /\b\d+\s*\/\s*\d+\b/;
+    const EMOJI_GRID_LINE = /^[\s⬛⬜🟩🟨🟦🟪🟧🟥🟫]+$/u;
 
-function applyFormatting(text) {
-  return escapeHtml(text)
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/_(.*?)_/g, '<em>$1</em>')
-    .replace(/\n/g, "<br>");
-}
+    function escapeHtml(text) {
+      return String(text || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function applyInlineFormatting(escapedText) {
+      return escapedText
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+        .replace(/_([^_]+)_/g, "<em>$1</em>");
+    }
+
+    function parseSafeHttpUrl(value) {
+      try {
+        const url = new URL(value);
+        return (url.protocol === "http:" || url.protocol === "https:") ? url : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function kriptiekGameFromUrl(value) {
+      const url = parseSafeHttpUrl(value);
+      if (!url) return null;
+      const host = url.hostname.toLowerCase();
+      if (host !== "kriptiek.com" && host !== "www.kriptiek.com") return null;
+      const label = KRIPTIEK_GAME_PATHS[url.pathname.toLowerCase()];
+      return label ? { label, href: url.toString() } : null;
+    }
+
+    function shortUrlLabel(url) {
+      const path = `${url.hostname}${url.pathname === "/" ? "" : url.pathname}`;
+      return path.length > 58 ? `${path.slice(0, 55)}…` : path;
+    }
+
+    function renderFormattedText(text) {
+      const source = String(text || "");
+      let output = "";
+      let cursor = 0;
+
+      for (const match of source.matchAll(URL_PATTERN)) {
+        const rawUrl = match[0];
+        const index = match.index || 0;
+        output += applyInlineFormatting(escapeHtml(source.slice(cursor, index)));
+
+        const url = parseSafeHttpUrl(rawUrl);
+        const game = kriptiekGameFromUrl(rawUrl);
+        if (game) {
+          output += `<span class="font-medium text-[#1e3a8a]">${escapeHtml(game.label)}-skakel hieronder</span>`;
+        } else if (url) {
+          output += `<a href="${escapeHtml(url.toString())}" target="_blank" rel="noopener noreferrer" class="font-medium text-blue-700 underline break-all">${escapeHtml(shortUrlLabel(url))}</a>`;
+        } else {
+          output += escapeHtml(rawUrl);
+        }
+        cursor = index + rawUrl.length;
+      }
+
+      output += applyInlineFormatting(escapeHtml(source.slice(cursor)));
+      return output.replace(/\n/g, "<br>");
+    }
+
+    function findKriptiekGameLinks(text) {
+      const games = [];
+      for (const match of String(text || "").matchAll(URL_PATTERN)) {
+        const game = kriptiekGameFromUrl(match[0]);
+        if (game && !games.some((item) => item.href === game.href)) games.push(game);
+      }
+      return games;
+    }
+
+    function renderKriptiekGameCards(text) {
+      return findKriptiekGameLinks(text).map((game) => `
+        <a href="${escapeHtml(game.href)}" class="forum-link-card mt-3 flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-[#1e3a8a] transition hover:bg-blue-100">
+          <span class="font-bold">${escapeHtml(game.label)}</span><span class="font-bold">SPEEL →</span>
+        </a>`).join("");
+    }
+
+    function looksLikeSharedResult(text) {
+      const lines = String(text || "").split(/\r?\n/);
+      const nonEmptyLines = lines.map((line) => line.trim()).filter(Boolean);
+      if (nonEmptyLines.length < 2) return false;
+      const hasKnownGame = RESULT_GAME_NAMES.test(nonEmptyLines[0]);
+      const hasResultScore = RESULT_SCORE_PATTERN.test(nonEmptyLines[0]);
+      const gridLines = nonEmptyLines.filter((line) => EMOJI_GRID_LINE.test(line)).length;
+      if (hasKnownGame && hasResultScore) return gridLines >= 1;
+      return (hasKnownGame || hasResultScore) && gridLines >= 2;
+    }
 
     async function submitPost() {
       const title = document.getElementById('postTitle').value.trim();
@@ -288,7 +376,8 @@ const rs = await getDocs(query(repliesRef, orderBy("createdAt", "asc")));
         }
         const items = [];
         rs.forEach(r => {
-          const rr = r.data();
+          const rr = r.data() || {};
+          rr.userName = escapeHtml(rr.userName || "Anoniem");
 const rTime =
   rr.createdAt?.toDate ? relativeTime(rr.createdAt.toDate()) :
   (typeof rr.createdAt === "string" ? relativeTime(new Date(rr.createdAt)) : "");
@@ -298,7 +387,7 @@ items.push(
      <div class="text-xs text-gray-500 mb-1">
        <span class="font-semibold text-gray-700">${(rr.userName || "Anoniem")}</span>${rTime ? ` • ${rTime}` : ""}
      </div>
-     <div class="text-sm text-gray-800 leading-relaxed">${applyFormatting(rr.content || "")}</div>
+     <div class="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap break-words">${renderFormattedText(rr.content || "")}</div>
    </div>`
 );
         });
@@ -327,10 +416,10 @@ items.push(
         const likeRef = doc(db, "forumPosts", postId, "likes", currentUser.uid);
         const likeDoc = await getDoc(likeRef);
         const already = likeDoc.exists();
-        btn.disabled = already;
-        btn.classList.toggle("opacity-50", already);
-        btn.classList.toggle("cursor-not-allowed", already);
-        btn.title = already ? "Jy het reeds gestem" : "Stem vir hierdie plasing";
+        btn.setAttribute("aria-pressed", String(already));
+        btn.classList.toggle("bg-blue-100", already);
+        btn.classList.toggle("text-blue-800", already);
+        btn.title = already ? "Verwyder jou stem" : "Stem vir hierdie plasing";
       } else {
         btn.title = "Meld aan om te stem";
       }
@@ -380,8 +469,13 @@ items.push(
       if (!snap || snap.empty) {
         loadMoreBtn.classList.add("hidden");
         allLoaded = true;
+        if (!container.children.length) {
+          container.innerHTML = `<p class="forum-empty rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">${searchTerm ? "Geen treffers in die gelaaide plasings nie." : "Nog geen gesprekke nie."}</p>`;
+        }
         return;
       }
+
+      container.querySelector(".forum-empty")?.remove();
 
       lastVisible = snap.docs[snap.docs.length - 1];
       // Only show the button if we likely have more to fetch
@@ -414,6 +508,10 @@ items.push(
 
         const canDelete = (post.authorId && currentUser && post.authorId === currentUser.uid)
                           || (!post.authorId && post.userName === userName);
+        const sharedResult = looksLikeSharedResult(post.content || "");
+        const postContent = renderFormattedText(post.content || "");
+        const gameCards = renderKriptiekGameCards(post.content || "");
+        post.userName = escapeHtml(post.userName || "Anoniem");
 
         div.innerHTML = `
           <div class="flex items-center justify-between mb-2">
@@ -423,18 +521,19 @@ items.push(
             </div>
             ${canDelete ? `<button class="text-red-500 text-xs delete-btn" data-id="${docSnap.id}">Verwyder</button>` : ""}
           </div>
-          <h3 class="text-lg font-bold text-gray-800 mb-1">${post.title || ''}</h3>
-          <p class="text-gray-700 whitespace-pre-line mb-2">${applyFormatting(post.content || '')}</p>
+          <h3 class="text-lg font-bold text-gray-800 mb-2 break-words">${escapeHtml(post.title || "")}</h3>
+          <div class="${sharedResult ? "shared-result rounded-lg border border-violet-200 bg-violet-50 px-3 py-3" : "whitespace-pre-wrap text-gray-700"} mb-3 break-words">${sharedResult ? '<p class="mb-2 text-xs font-bold tracking-wide text-violet-900">GEDEELDE UITSLAG</p>' : ""}${postContent}</div>
+          ${gameCards}
           ${canParticipate() ? `
           <div class="flex items-center gap-4 text-sm text-gray-600 mb-2">
-            <button class="like-btn flex items-center gap-1" data-id="${docSnap.id}">
+            <button class="like-btn flex items-center gap-1 rounded px-1 py-1 transition hover:bg-slate-100" data-id="${docSnap.id}" aria-pressed="false">
               👍 <span class="like-count" id="like-count-${docSnap.id}">0</span>
             </button>
             <button class="reply-toggle" data-id="${docSnap.id}">💬 Reageer</button>
           </div>
           <div class="reply-box hidden mt-2" id="reply-${docSnap.id}">
             <textarea class="w-full p-2 border rounded mb-1 reply-input" rows="2" maxlength="500" placeholder="Jou antwoord..."></textarea>
-            <button class="send-reply bg-blue-600 text-white px-2 py-1 rounded text-sm" data-id="${docSnap.id}">Stuur</button>
+            <div class="flex items-center justify-between gap-2"><span class="reply-char-count text-xs text-gray-500">0/500</span><button class="send-reply bg-blue-600 text-white px-2 py-1 rounded text-sm" data-id="${docSnap.id}">Stuur</button></div>
           </div>` : ""}
 <div class="replies mt-3 space-y-2" id="replies-${docSnap.id}"></div>
         `;
@@ -444,6 +543,10 @@ items.push(
         refreshLikeUI(docSnap.id);
       });
 
+      if (!container.children.length && searchTerm) {
+        container.innerHTML = '<p class="forum-empty rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">Geen treffers in hierdie gelaaide plasings nie. Laai meer om verder te soek.</p>';
+      }
+
       attachPostEvents();
     }
 
@@ -452,6 +555,13 @@ items.push(
         btn.onclick = () => {
           const box = document.getElementById("reply-" + btn.dataset.id);
           box.classList.toggle("hidden");
+        };
+      });
+
+      document.querySelectorAll(".reply-input").forEach(input => {
+        input.oninput = () => {
+          const counter = input.parentElement.querySelector(".reply-char-count");
+          if (counter) counter.textContent = `${input.value.length}/500`;
         };
       });
 
@@ -484,6 +594,8 @@ items.push(
           } catch (_) {}
 
           input.value = "";
+          const counter = input.parentElement.querySelector(".reply-char-count");
+          if (counter) counter.textContent = "0/500";
           loadReplies(id);
         };
       });
@@ -501,7 +613,12 @@ items.push(
           }
           try {
             const likeRef = doc(db, "forumPosts", id, "likes", currentUser.uid);
-            await setDoc(likeRef, { createdAt: serverTimestamp(), userName });
+            const existingLike = await getDoc(likeRef);
+            if (existingLike.exists()) {
+              await deleteDoc(likeRef);
+            } else {
+              await setDoc(likeRef, { createdAt: serverTimestamp(), userName });
+            }
           } finally {
             await refreshLikeUI(id);
           }
