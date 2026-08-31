@@ -140,6 +140,49 @@ service cloud.firestore {
     function canDeleteForumContent() {
       return isOwner(resource.data.authorId) || isAdmin();
     }
+    function isTextWithin(value, minLength, maxLength) {
+      return value is string && value.size() >= minLength && value.size() <= maxLength;
+    }
+    function isValidForumPost(post) {
+      return post.keys().hasOnly(['title', 'content', 'userName', 'authorId', 'timestamp', 'createdAt', 'replyCount']) &&
+             post.keys().hasAll(['title', 'content', 'userName', 'authorId', 'timestamp', 'createdAt']) &&
+             isTextWithin(post.title, 1, 80) &&
+             isTextWithin(post.content, 1, 1000) &&
+             isTextWithin(post.userName, 1, 80) &&
+             post.authorId == request.auth.uid;
+    }
+    function isValidForumReply(reply) {
+      return reply.keys().hasOnly(['authorId', 'userName', 'content', 'createdAt']) &&
+             reply.keys().hasAll(['authorId', 'userName', 'content', 'createdAt']) &&
+             isTextWithin(reply.userName, 1, 80) &&
+             isTextWithin(reply.content, 1, 500) &&
+             reply.authorId == request.auth.uid;
+    }
+    function canCreateCurrentForumPost() {
+      return isAdmin() ||
+             (isActiveSupporter() && isValidForumPost(request.resource.data));
+    }
+    function canUpdateCurrentForumPost() {
+      return isAdmin() ||
+             (isActiveSupporter() && isReplyCountIncrement());
+    }
+    function canCreateCurrentForumReply() {
+      return isAdmin() ||
+             (isActiveSupporter() && isValidForumReply(request.resource.data));
+    }
+    function canUpdateCurrentForumReply() {
+      return isAdmin();
+    }
+    function canCreateCurrentForumLike(uid) {
+      return isAdmin() ||
+             (isActiveSupporter() && isOwner(uid) &&
+              request.resource.data.keys().hasOnly(['createdAt', 'userName']) &&
+              request.resource.data.keys().hasAll(['createdAt', 'userName']) &&
+              isTextWithin(request.resource.data.userName, 1, 80));
+    }
+    function canDeleteCurrentForumLike(uid) {
+      return isAdmin() || (isActiveSupporter() && isOwner(uid));
+    }
 
     match /forum/{postId} {
       allow read: if true;
@@ -191,25 +234,29 @@ service cloud.firestore {
 
     match /forumPosts/{postId} {
       allow read: if true;
-      allow create: if canCreateForumContent();
-      allow update: if canUpdateForumPost();
+      allow create: if canCreateCurrentForumPost();
+      allow update: if canUpdateCurrentForumPost();
       allow delete: if canDeleteForumContent();
 
       match /replies/{replyId} {
         allow read: if true;
-        allow create: if canCreateForumContent();
-        allow update: if canUpdateOwnForumContent();
+        allow create: if canCreateCurrentForumReply();
+        allow update: if canUpdateCurrentForumReply();
         allow delete: if canDeleteForumContent();
 
         match /likes/{uid} {
           allow read: if true;
-          allow write: if canWriteForumLike(uid);
+          allow create: if canCreateCurrentForumLike(uid);
+          allow update: if isAdmin();
+          allow delete: if canDeleteCurrentForumLike(uid);
         }
       }
 
       match /likes/{uid} {
         allow read: if true;
-        allow write: if canWriteForumLike(uid);
+        allow create: if canCreateCurrentForumLike(uid);
+        allow update: if isAdmin();
+        allow delete: if canDeleteCurrentForumLike(uid);
       }
     }
 
