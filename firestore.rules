@@ -284,9 +284,29 @@ service cloud.firestore {
       allow write: if isOwner(uid) || isAdmin();
     }
 
+    function isCompletedDilemmaPlay(play) {
+      return play.keys().hasAll(['finished']) && play.finished == true;
+    }
+    function isValidCompletedDilemmaPlay(play) {
+      return isCompletedDilemmaPlay(play) &&
+             play.keys().hasAll(['result', 'guesses']) &&
+             (play.result == 'win' || play.result == 'loss') &&
+             play.guesses is number &&
+             play.guesses >= 1 && play.guesses <= 6;
+    }
+
     match /userGames/{uid}/plays/{gameId} {
       allow read: if isOwner(uid) || isAdmin();
-      allow write: if isOwner(uid) || isAdmin();
+
+      // A player may write only their final result. Completed plays are
+      // immutable for owners; admins retain recovery access.
+      allow create: if isAdmin() ||
+                    (isOwner(uid) && isValidCompletedDilemmaPlay(request.resource.data));
+      allow update: if isAdmin() ||
+                    (isOwner(uid) &&
+                     !isCompletedDilemmaPlay(resource.data) &&
+                     isValidCompletedDilemmaPlay(request.resource.data));
+      allow delete: if isAdmin();
     }
 
     match /supportersPublic/{uid} {

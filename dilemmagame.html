@@ -402,7 +402,7 @@
 
   <script type="module">
     import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getFirestore, doc, getDoc, collection, setDoc, getDocs, serverTimestamp, query, orderBy, limit, deleteDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, collection, setDoc, getDocs, serverTimestamp, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
     import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-functions.js";
     import {
@@ -434,7 +434,6 @@
 
     const GAME_ID = window.GAME_ID;
     const __QP = new URLSearchParams(location.search);
-    const RESET_REQUESTED = __QP.get('reset') === '1';
     const MEDAL_PREVIEW_ENABLED = __QP.get('medalPreview') === '1';
 
     const gameGrid = document.getElementById("game-grid");
@@ -547,35 +546,6 @@
     function setKeyboardDisabled(disabled) {
       document.querySelectorAll(".key").forEach(k => k.disabled = !!disabled);
     }
-
-    async function selfResetIfRequested() {
-      if (!RESET_REQUESTED) return;
-
-      const todayId = GAME_ID;
-      const plainId = todayId.replace(/^Game/, "");
-      for (const k of Object.keys(localStorage)) {
-        if (
-          k.startsWith(`dilemma-${todayId}-`) ||
-          k.startsWith(`dilemma-Game${plainId}-`) ||
-          k.startsWith(`dilemma-${plainId}-`)
-        ) {
-          localStorage.removeItem(k);
-        }
-      }
-
-      await new Promise(res => onAuthStateChanged(auth, res));
-      const u = auth.currentUser;
-      if (u) {
-        try { await deleteDoc(doc(db, "userGames", u.uid, "plays", GAME_ID)); } catch {}
-      }
-
-      alert("Herstel klaar. Die blad sal herlaai.");
-      const clean = new URL(location.href);
-      clean.searchParams.delete('reset');
-      location.replace(clean.toString());
-    }
-
-    selfResetIfRequested();
 
     function readLocalResult() {
       const v = localStorage.getItem(`${doneKey}-result`);
@@ -1515,8 +1485,6 @@ if (isFutureGame) {
     renderMedalPreviewIfRequested();
 
     onAuthStateChanged(auth, async (user) => {
-      if (RESET_REQUESTED) return;
-
       statusLine.textContent = "";
       statusLine.style.display = "none";
 
