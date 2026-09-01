@@ -6,6 +6,7 @@ const admin = require("firebase-admin");
 const { DateTime } = require("luxon");
 const axios = require("axios");
 const crypto = require("crypto");
+const paystack = require("./paystack-supporter-helpers");
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -587,49 +588,6 @@ exports.blitstiekDailyPointsRunNowV2 = onRequest(
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
 
-const PAYSTACK_MONTH_MS = 31 * 24 * 60 * 60 * 1000;
-const PAYSTACK_YEAR_MS = 366 * 24 * 60 * 60 * 1000;
-
-function planDurationMs(plan) {
-  if (plan === "annual") return PAYSTACK_YEAR_MS;
-  return PAYSTACK_MONTH_MS;
-}
-
-function safeNumber(v, fallback = 0) {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : fallback;
-}
-
-async function activateSupporterFromPaystack(metadata = {}) {
-  const uid = metadata.uid;
-  const plan = metadata.plan;
-
-  if (!uid || !plan) {
-    throw new Error("Missing uid or plan in Paystack metadata.");
-  }
-
-  const supporterRef = db.collection("supportersPublic").doc(String(uid));
-  const snap = await supporterRef.get();
-  const existing = snap.exists ? (snap.data() || {}) : {};
-
-  const nowMs = Date.now();
-  const baseMs = Math.max(safeNumber(existing.untilMs, 0), nowMs);
-  const untilMs = baseMs + planDurationMs(plan);
-
-  await supporterRef.set(
-    {
-      active: true,
-      untilMs,
-      provider: "paystack",
-      plan,
-      updatedAtMs: nowMs
-    },
-    { merge: true }
-  );
-
-  return { uid, plan, untilMs };
-}
-
 const PAYSTACK_PLANS = {
   monthly: {
     code: "PLN_ac15cwgdonvqaa9",
@@ -640,6 +598,170 @@ const PAYSTACK_PLANS = {
     amount: 40000
   }
 };
+
+function redactedPaystackCode(value) {
+  if (!value || typeof value !== "string") return null;
+  return `…${value.slice(-6)}`;
+}
+
+function lifecycleStatus(eventType, subscription) {
+  if (eventType === "subscription.not_renew") return "not_renew";
+  if (eventType === "subscription.disable") return "disabled";
+  if (eventType === "invoice.payment_failed") return "payment_failed";
+  if (eventType === "subscription.create") return subscription.status || "active";
+  return null;
+}
+
+/**
+ * Applies only webhook facts which can be mapped to a Kriptiek user without
+ * email matching. Private collections retain Paystack identifiers; the public
+ * entitlement document intentionally does not.
+ */
+async function processPaystackWebhookEvent(eventType, event) {
+  const data = paystack.paymentData(event);
+  const metadata = paystack.metadataFor(data);
+  const subscription = paystack.subscriptionFor(data);
+  const customerCode = subscription.customerCode || paystack.customerCodeFor(data);
+  const paymentReference = paystack.stablePaymentReference(data);
+  const nowMs = Date.now();
+  const isChargeSuccess = eventType === "charge.success";
+  const isPaidInvoice = eventType === "invoice.update" && paystack.successfulInvoice(data);
+  const isPayment = isChargeSuccess || isPaidInvoice;
+  // Paystack creates a subscription only after its initial charge. Its
+  // next_payment_date is therefore a safe authoritative paid-through boundary.
+  const isSubscriptionBoundary = eventType === "subscription.create" && subscription.nextPaymentMs > nowMs;
+  const updatesPaidBoundary = isPayment || isSubscriptionBoundary;
+
+  if (isPayment && !paymentReference) {
+    const error = new Error("Mapped Paystack payment has no stable reference.");
+    error.code = "missing-payment-reference";
+    throw error;
+  }
+
+  return db.runTransaction(async (tx) => {
+    const customerRef = customerCode
+      ? db.collection("paystackCustomers").doc(String(customerCode))
+      : null;
+    const subscriptionRef = subscription.code
+      ? db.collection("paystackSubscriptions").doc(String(subscription.code))
+      : null;
+    const processedRef = isPayment
+      ? db.collection("paystackProcessedCharges").doc(paymentReference)
+      : null;
+
+    // Keep every transaction read before its writes.
+    const [customerSnap, subscriptionSnap, processedSnap] = await Promise.all([
+      customerRef ? tx.get(customerRef) : Promise.resolve(null),
+      subscriptionRef ? tx.get(subscriptionRef) : Promise.resolve(null),
+      processedRef ? tx.get(processedRef) : Promise.resolve(null),
+    ]);
+    const customerMapping = customerSnap?.exists ? (customerSnap.data() || {}) : null;
+    const subscriptionMapping = subscriptionSnap?.exists ? (subscriptionSnap.data() || {}) : null;
+    const identity = paystack.resolveIdentity({
+      metadata,
+      subscription: { ...subscription, mapping: subscriptionMapping },
+      customer: customerMapping,
+      plans: PAYSTACK_PLANS,
+    });
+
+    if (!identity.uid) {
+      const error = new Error("Unable to safely map Paystack event to a Kriptiek UID.");
+      error.code = "unmapped-paystack-event";
+      error.paystackContext = {
+        eventType,
+        customerCode: redactedPaystackCode(customerCode),
+        subscriptionCode: redactedPaystackCode(subscription.code),
+        reference: redactedPaystackCode(paymentReference),
+      };
+      throw error;
+    }
+
+    const supporterRef = db.collection("supportersPublic").doc(identity.uid);
+    const supporterSnap = updatesPaidBoundary ? await tx.get(supporterRef) : null;
+    const existingSupporter = supporterSnap?.exists ? (supporterSnap.data() || {}) : {};
+    const status = lifecycleStatus(eventType, subscription) || subscriptionMapping?.status || "active";
+    const planCode = identity.planCode || subscriptionMapping?.planCode || customerMapping?.planCode ||
+      (identity.planKey ? PAYSTACK_PLANS[identity.planKey]?.code : null);
+    const planKey = identity.planKey || subscriptionMapping?.planKey || customerMapping?.planKey || null;
+    const mappingBase = {
+      uid: identity.uid,
+      planKey: planKey || null,
+      planCode: planCode || null,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAtMs: nowMs,
+    };
+
+    if (customerRef) {
+      tx.set(customerRef, {
+        ...mappingBase,
+        customerCode,
+        nextPaymentMs: subscription.nextPaymentMs || customerMapping?.nextPaymentMs || null,
+      }, { merge: true });
+    }
+    if (subscriptionRef) {
+      tx.set(subscriptionRef, {
+        ...mappingBase,
+        customerCode: customerCode || subscriptionMapping?.customerCode || null,
+        subscriptionCode: subscription.code,
+        status,
+        nextPaymentMs: subscription.nextPaymentMs || subscriptionMapping?.nextPaymentMs || null,
+      }, { merge: true });
+    }
+
+    if (!updatesPaidBoundary) {
+      // Lifecycle/failure events are diagnostic only: they never revoke paid or manual time.
+      return { status: "recorded", uid: identity.uid, eventType };
+    }
+
+    if (isPayment && processedSnap?.exists) {
+      return { status: "duplicate", uid: identity.uid, eventType };
+    }
+
+    const paidAtMs = paystack.safeMillis(data.paid_at || data.transaction_date || data.created_at) || nowMs;
+    const knownNextPaymentMs = subscription.nextPaymentMs || subscriptionMapping?.nextPaymentMs ||
+      customerMapping?.nextPaymentMs || null;
+    const untilMs = paystack.paidThroughMs({
+      existingUntilMs: existingSupporter.untilMs,
+      paidAtMs,
+      nextPaymentMs: knownNextPaymentMs,
+      planKey,
+      nowMs,
+    });
+    if (untilMs == null) {
+      const error = new Error("Mapped Paystack payment has neither a billing boundary nor a known plan.");
+      error.code = "missing-paid-through-boundary";
+      throw error;
+    }
+
+    const active = paystack.supporterActive({
+      untilMs,
+      manualActive: existingSupporter.manualActive,
+      manualUntilMs: existingSupporter.manualUntilMs,
+      nowMs,
+    });
+    tx.set(supporterRef, {
+      active,
+      untilMs,
+      provider: "paystack",
+      ...(planKey ? { plan: planKey } : {}),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAtMs: nowMs,
+    }, { merge: true });
+    if (isPayment) {
+      tx.set(processedRef, {
+        reference: paymentReference,
+        uid: identity.uid,
+        eventType,
+        planKey: planKey || null,
+        planCode: planCode || null,
+        processedAt: admin.firestore.FieldValue.serverTimestamp(),
+        processedAtMs: nowMs,
+      });
+    }
+
+    return { status: "applied", uid: identity.uid, eventType, untilMs };
+  });
+}
 
 exports.createCheckoutUrl = onCall(
   { region: REGION, cors: true, secrets: ["PAYSTACK_SECRET_KEY"] },
@@ -720,25 +842,41 @@ exports.paystackWebhook = onRequest(
       const eventType = event.event || "";
       const data = event.data || {};
       const metadata = data.metadata || {};
+      const handledEvents = new Set([
+        "charge.success",
+        "subscription.create",
+        "invoice.update",
+        "invoice.payment_failed",
+        "subscription.not_renew",
+        "subscription.disable",
+      ]);
 
       logger.info("Paystack webhook received", {
         event: eventType,
-        reference: data.reference || null,
-        customerEmail: data.customer?.email || data.email || null,
-        uid: metadata.uid || null,
-        plan: metadata.plan || null
+        reference: redactedPaystackCode(paystack.stablePaymentReference(data)),
+        hasMetadataUid: !!metadata.uid,
+        hasMetadataPlan: !!metadata.plan,
       });
 
-      if (eventType === "charge.success") {
-        const out = await activateSupporterFromPaystack(metadata);
-        logger.info("Supporter activated from Paystack", out);
+      if (handledEvents.has(eventType)) {
+        const out = await processPaystackWebhookEvent(eventType, event);
+        logger.info("Paystack supporter event processed", {
+          event: eventType,
+          status: out.status,
+          uidSuffix: redactedPaystackCode(out.uid),
+          untilMs: out.untilMs || null,
+        });
       }
 
       res.status(200).send("OK");
     } catch (e) {
       logger.error("Paystack webhook failed", {
-        error: (e && e.message) || String(e)
+        error: (e && e.message) || String(e),
+        code: e?.code || null,
+        context: e?.paystackContext || null,
       });
+      // A non-2xx response asks Paystack to retry; do not acknowledge an event
+      // that could not be safely mapped or applied.
       res.status(500).send("Webhook error");
     }
   }
