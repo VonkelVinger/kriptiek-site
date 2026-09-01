@@ -8,6 +8,7 @@ const axios = require("axios");
 const crypto = require("crypto");
 const paystack = require("./paystack-supporter-helpers");
 const paystackReconciliation = require("./paystack-reconciliation-helpers");
+const paystackRepair = require("./paystack-repair-helpers");
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -740,6 +741,192 @@ exports.reconcilePaystackSupporters = onCall(
     } catch (error) {
       logger.error("Paystack reconciliation audit failed", { error: error?.message || String(error) });
       throw new HttpsError("internal", "Unable to complete Paystack reconciliation audit.");
+    }
+  }
+);
+
+function selectedPaystackSubscriptionCodes(value, label) {
+  if (!Array.isArray(value) || value.length === 0 || value.length > 100) {
+    throw new HttpsError("invalid-argument", `${label} must contain 1-100 subscription codes.`);
+  }
+  const codes = [...new Set(value.map((code) => typeof code === "string" ? code.trim() : "").filter(Boolean))];
+  if (codes.length === 0 || codes.some((code) => !/^[A-Za-z0-9_-]+$/.test(code))) {
+    throw new HttpsError("invalid-argument", "Subscription codes are invalid.");
+  }
+  return codes;
+}
+
+async function fetchPaystackSubscription(subscriptionCode) {
+  const response = await axios.get(`https://api.paystack.co/subscription/${encodeURIComponent(subscriptionCode)}`, {
+    headers: paystackReadHeaders(),
+  });
+  if (!response.data?.status || !response.data?.data) throw new Error("Paystack subscription fetch response was invalid.");
+  return response.data.data;
+}
+
+async function preparePaystackRepairRow(subscriptionCode, overrideUid, excluded, nowMs) {
+  const raw = await fetchPaystackSubscription(subscriptionCode);
+  const subscription = paystackReconciliation.normalizeSubscription(raw, PAYSTACK_PLANS);
+  if (!subscription.subscriptionCode || subscription.subscriptionCode !== subscriptionCode || !subscription.planKey) {
+    return { subscriptionCode, result: "ERROR", reason: "Paystack subscription is not a configured Kriptiek plan." };
+  }
+  const [subscriptionSnap, customerSnap] = await Promise.all([
+    db.collection("paystackSubscriptions").doc(subscriptionCode).get(),
+    subscription.customerCode ? db.collection("paystackCustomers").doc(subscription.customerCode).get() : Promise.resolve(null),
+  ]);
+  const subscriptionMapping = subscriptionSnap?.exists ? (subscriptionSnap.data() || {}) : null;
+  const customerMapping = customerSnap?.exists ? (customerSnap.data() || {}) : null;
+  const historical = !subscriptionMapping?.uid && !customerMapping?.uid && subscription.customerId
+    ? paystackReconciliation.historicalMetadata(await latestPaystackTransactionForCustomer(subscription.customerId)) : {};
+  const resolvedIdentity = paystackReconciliation.resolveAuditIdentity({ subscriptionMapping, customerMapping, historical });
+  const identity = resolvedIdentity.uid ? resolvedIdentity : { uid: overrideUid || null, source: overrideUid ? "admin_override" : null };
+  let userExists = true;
+  if (identity.uid) userExists = (await db.collection("users").doc(identity.uid).get()).exists;
+  const publicSnap = identity.uid && userExists ? await db.collection("supportersPublic").doc(identity.uid).get() : null;
+  const publicSupporter = publicSnap?.exists ? (publicSnap.data() || {}) : null;
+  const plan = !userExists
+    ? { result: "ERROR", reason: "Approved override UID does not exist as a Kriptiek user." }
+    : paystackRepair.buildRepairPlan({ subscription, identity, publicSupporter, customerMapping, subscriptionMapping, excluded, nowMs });
+  return {
+    subscriptionCode,
+    subscription,
+    identity,
+    mappingSource: identity.source,
+    publicSupporter,
+    customerMapping,
+    subscriptionMapping,
+    ...plan,
+  };
+}
+
+async function safelyPreparePaystackRepairRow(subscriptionCode, overrideUid, excluded, nowMs) {
+  try {
+    return await preparePaystackRepairRow(subscriptionCode, overrideUid, excluded, nowMs);
+  } catch (error) {
+    logger.warn("Paystack supporter repair row could not be prepared", {
+      subscriptionCodeSuffix: redactedPaystackCode(subscriptionCode),
+      error: error?.message || String(error),
+    });
+    return { subscriptionCode, result: "ERROR", reason: "Unable to read and validate the current Paystack subscription." };
+  }
+}
+
+async function applyPaystackRepairRow(row, nowMs) {
+  if (!["WOULD_REPAIR", "WOULD_CREATE_MAPPINGS"].includes(row.result)) return row;
+  const { subscription, identity } = row;
+  return db.runTransaction(async (tx) => {
+    const customerRef = db.collection("paystackCustomers").doc(subscription.customerCode);
+    const subscriptionRef = db.collection("paystackSubscriptions").doc(subscription.subscriptionCode);
+    const supporterRef = db.collection("supportersPublic").doc(identity.uid);
+    const [customerSnap, subscriptionSnap, supporterSnap] = await Promise.all([
+      tx.get(customerRef), tx.get(subscriptionRef), tx.get(supporterRef),
+    ]);
+    const customerMapping = customerSnap.exists ? (customerSnap.data() || {}) : null;
+    const subscriptionMapping = subscriptionSnap.exists ? (subscriptionSnap.data() || {}) : null;
+    const publicSupporter = supporterSnap.exists ? (supporterSnap.data() || {}) : null;
+    const plan = paystackRepair.buildRepairPlan({
+      subscription, identity, publicSupporter, customerMapping, subscriptionMapping, excluded: false, nowMs,
+    });
+    if (!["WOULD_REPAIR", "WOULD_CREATE_MAPPINGS", "NO_CHANGE"].includes(plan.result)) return { ...row, ...plan };
+    if (plan.result === "NO_CHANGE") return { ...row, ...plan, result: "NO_CHANGE" };
+    const mappingBase = {
+      uid: identity.uid, customerCode: subscription.customerCode, planKey: subscription.planKey,
+      planCode: subscription.planCode, nextPaymentMs: plan.paystackPaidThroughMs,
+      mappingSource: row.mappingSource || "reconciliation", updatedAt: admin.firestore.FieldValue.serverTimestamp(), updatedAtMs: nowMs,
+    };
+    tx.set(customerRef, mappingBase, { merge: true });
+    tx.set(subscriptionRef, {
+      ...mappingBase, subscriptionCode: subscription.subscriptionCode, status: subscription.status,
+    }, { merge: true });
+    const active = paystack.supporterActive({
+      untilMs: plan.finalUntilMs, manualActive: publicSupporter?.manualActive,
+      manualUntilMs: publicSupporter?.manualUntilMs, nowMs,
+    });
+    // merge intentionally preserves manualActive/manualUntilMs and unrelated fields.
+    tx.set(supporterRef, {
+      active, untilMs: plan.finalUntilMs, provider: "paystack", plan: subscription.planKey,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(), updatedAtMs: nowMs,
+    }, { merge: true });
+    return { ...row, ...plan, result: "REPAIRED" };
+  });
+}
+
+async function safelyApplyPaystackRepairRow(row, nowMs) {
+  try {
+    return await applyPaystackRepairRow(row, nowMs);
+  } catch (error) {
+    logger.error("Paystack supporter repair transaction failed", {
+      subscriptionCodeSuffix: redactedPaystackCode(row.subscriptionCode),
+      error: error?.message || String(error),
+    });
+    return { ...row, result: "ERROR", reason: "The Firestore repair transaction did not complete." };
+  }
+}
+
+function paystackRepairReportRow(row) {
+  return {
+    subscriptionCode: row.subscriptionCode,
+    uid: row.identity?.uid || row.uid || null,
+    status: row.subscription?.status || null,
+    plan: row.subscription?.planKey || null,
+    currentUntilMs: row.currentUntilMs || null,
+    paystackPaidThroughMs: row.paystackPaidThroughMs || null,
+    finalUntilMs: row.finalUntilMs || null,
+    manualEntitlement: row.manualEntitlement === true,
+    customerMappingAction: row.customerMappingAction || "NO_CHANGE",
+    subscriptionMappingAction: row.subscriptionMappingAction || "NO_CHANGE",
+    supporterEntitlementAction: row.supporterEntitlementAction || "NO_CHANGE",
+    mappingSource: row.mappingSource || null,
+    result: row.result,
+    reason: row.reason,
+  };
+}
+
+exports.repairPaystackSupporters = onCall(
+  { region: REGION, cors: true, secrets: ["PAYSTACK_SECRET_KEY"], timeoutSeconds: 120 },
+  async (req) => {
+    const callerUid = await assertPaystackReconciliationAdmin(req);
+    const dryRun = req.data?.dryRun !== false;
+    if (!dryRun && req.data?.confirm !== true) throw new HttpsError("failed-precondition", "Set confirm: true to apply repairs.");
+    const selectedCodes = selectedPaystackSubscriptionCodes(req.data?.subscriptionCodes, "subscriptionCodes");
+    const excludedValues = req.data?.excludedSubscriptionCodes;
+    if (excludedValues != null && !Array.isArray(excludedValues)) {
+      throw new HttpsError("invalid-argument", "excludedSubscriptionCodes must be an array.");
+    }
+    const exclusions = new Set((excludedValues || []).map((code) => typeof code === "string" ? code.trim() : "").filter(Boolean));
+    if ([...exclusions].some((code) => !selectedCodes.includes(code) || !/^[A-Za-z0-9_-]+$/.test(code))) {
+      throw new HttpsError("invalid-argument", "Exclusions must be selected valid subscription codes only.");
+    }
+    const overrides = req.data?.uidOverrides && typeof req.data.uidOverrides === "object" ? req.data.uidOverrides : {};
+    if (Object.keys(overrides).some((code) => !selectedCodes.includes(code) || typeof overrides[code] !== "string" || !overrides[code].trim())) {
+      throw new HttpsError("invalid-argument", "UID overrides must be non-empty and selected subscription codes only.");
+    }
+    const nowMs = Date.now();
+    try {
+      const preview = await Promise.all(selectedCodes.map((code) => safelyPreparePaystackRepairRow(
+        code, overrides[code]?.trim() || null, exclusions.has(code), nowMs
+      )));
+      if (dryRun) return { dryRun: true, generatedAtMs: nowMs, rows: preview.map(paystackRepairReportRow) };
+      const applied = [];
+      for (const row of preview) {
+        // Re-fetch at the point of application: the preview itself is never a write authority.
+        const freshRow = await safelyPreparePaystackRepairRow(
+          row.subscriptionCode, overrides[row.subscriptionCode]?.trim() || null,
+          exclusions.has(row.subscriptionCode), Date.now()
+        );
+        applied.push(await safelyApplyPaystackRepairRow(freshRow, Date.now()));
+      }
+      const runRef = db.collection("paystackReconciliationRuns").doc();
+      await runRef.set({
+        createdAt: admin.firestore.FieldValue.serverTimestamp(), createdAtMs: nowMs,
+        adminUid: callerUid, selectedSubscriptionCodes: selectedCodes,
+        results: applied.map((row) => ({ subscriptionCode: row.subscriptionCode, uid: row.identity?.uid || null, result: row.result })),
+      });
+      logger.info("Paystack supporter repair completed", { callerUidSuffix: redactedPaystackCode(callerUid), rowCount: applied.length });
+      return { dryRun: false, runId: runRef.id, generatedAtMs: nowMs, rows: applied.map(paystackRepairReportRow) };
+    } catch (error) {
+      logger.error("Paystack supporter repair failed", { error: error?.message || String(error) });
+      throw new HttpsError("internal", "Unable to complete Paystack supporter repair.");
     }
   }
 );

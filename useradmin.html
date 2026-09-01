@@ -129,13 +129,21 @@
             <table class="min-w-full text-xs text-left">
               <thead class="bg-slate-100 text-slate-700">
                 <tr>
-                  <th class="p-2">Gebruiker</th><th class="p-2">E-pos-hint</th><th class="p-2">Plan</th>
+                  <th class="p-2">Kies</th><th class="p-2">Gebruiker</th><th class="p-2">E-pos-hint</th><th class="p-2">Plan</th>
                   <th class="p-2">Paystack</th><th class="p-2">Volgende betaling</th><th class="p-2">Betaal tot</th>
-                  <th class="p-2">Handmatig</th><th class="p-2">Kliëntkaart</th><th class="p-2">Intekenkaart</th><th class="p-2">Diagnose</th>
+                  <th class="p-2">Handmatig</th><th class="p-2">Kliëntkaart</th><th class="p-2">Intekenkaart</th><th class="p-2">Diagnose / herstelbeheer</th>
                 </tr>
               </thead>
               <tbody id="paystackAuditRows"></tbody>
             </table>
+          </div>
+          <div class="mt-4 flex flex-wrap gap-2">
+            <button id="paystackRepairPreviewBtn" type="button" class="kbtn rounded-lg">VOORSKOU HERSTEL</button>
+            <button id="paystackRepairApplyBtn" type="button" class="kbtn rounded-lg bg-red-700 hover:bg-red-800" disabled>PAS HERSTEL TOE</button>
+          </div>
+          <p class="text-xs text-slate-500 mt-2">Die voorskou verander niks. “Pas herstel toe” vereis ’n nuwe bevestiging en verander nooit handmatige toegang nie.</p>
+          <div id="paystackRepairPreview" class="hidden mt-4 overflow-x-auto border rounded-lg">
+            <table class="min-w-full text-xs text-left"><thead class="bg-slate-100"><tr><th class="p-2">Intekening</th><th class="p-2">UID</th><th class="p-2">Huidig</th><th class="p-2">Paystack tot</th><th class="p-2">Voorgestel</th><th class="p-2">Aksies</th><th class="p-2">Resultaat</th></tr></thead><tbody id="paystackRepairPreviewRows"></tbody></table>
           </div>
         </div>
       </section>
@@ -611,7 +619,29 @@ if (hasMeaningfulSupporterEntitlement(publicSupporter)) {
       if (!row.hasSubscriptionMapping) flags.push(auditPill("Intekenkaart ontbreek", "amber"));
       return flags.length ? flags.join(" ") : auditPill("Geen ekstra vlagte", "green");
     }
+    let lastPaystackAudit = null;
+    let repairPreviewSignature = null;
+    function invalidateRepairPreview(){
+      repairPreviewSignature = null;
+      $("paystackRepairApplyBtn").disabled = true;
+      $("paystackRepairPreview").classList.add("hidden");
+    }
+    function repairSelection(){
+      const selected = [...document.querySelectorAll(".paystack-repair-select:checked")];
+      return {
+        subscriptionCodes: selected.map((input)=>input.dataset.subscriptionCode),
+        excludedSubscriptionCodes: selected.filter((input)=>document.querySelector(`.paystack-repair-exclude[data-subscription-code="${CSS.escape(input.dataset.subscriptionCode)}"]`)?.checked)
+          .map((input)=>input.dataset.subscriptionCode),
+        uidOverrides: Object.fromEntries(selected.map((input)=>{
+          const value = document.querySelector(`.paystack-repair-override[data-subscription-code="${CSS.escape(input.dataset.subscriptionCode)}"]`)?.value.trim();
+          return value ? [input.dataset.subscriptionCode, value] : null;
+        }).filter(Boolean)),
+      };
+    }
+    function repairSignature(selection){ return JSON.stringify(selection); }
     function renderPaystackAudit(report){
+      lastPaystackAudit = report;
+      invalidateRepairPreview();
       const counts = report.counts || {};
       $("paystackAuditCounts").innerHTML = Object.entries(counts).sort(([a],[b])=>a.localeCompare(b))
         .map(([kind, count])=>auditPill(`${kind}: ${count}`, kind === "OK" ? "green" : "amber")).join("");
@@ -619,17 +649,38 @@ if (hasMeaningfulSupporterEntitlement(publicSupporter)) {
       $("paystackAuditRows").innerHTML = rows.map((row)=>{
         const problem = row.classification !== "OK";
         const name = row.displayName || row.uid || "Ongekoppel";
+        const statusIsRepairable = ["active", "non-renewing"].includes(String(row.paystackStatus || "").toLowerCase());
+        const defaultSelected = problem && statusIsRepairable && row.classification !== "UNMAPPED_IDENTITY" && !!row.subscriptionCode;
         return `<tr class="border-t align-top ${problem ? "bg-amber-50" : ""}">
+          <td class="p-2"><input type="checkbox" class="paystack-repair-select h-4 w-4" data-subscription-code="${escapeHtml(row.subscriptionCode || "")}" ${defaultSelected ? "checked" : ""} ${row.subscriptionCode ? "" : "disabled"} aria-label="Kies intekening vir herstel"></td>
           <td class="p-2 font-semibold">${escapeHtml(name)}</td><td class="p-2 mono">${escapeHtml(row.emailHint)}</td>
           <td class="p-2">${escapeHtml(row.plan)}</td><td class="p-2">${escapeHtml(row.paystackStatus)}</td>
           <td class="p-2 mono">${auditDate(row.nextPaymentMs)}</td><td class="p-2 mono">${auditDate(row.paidUntilMs)}</td>
           <td class="p-2">${row.manualEntitlement ? auditPill("Ja", "amber") : "Nee"}</td>
           <td class="p-2">${row.hasCustomerMapping ? auditPill("Ja", "green") : auditPill("Nee", "amber")}</td>
           <td class="p-2">${row.hasSubscriptionMapping ? auditPill("Ja", "green") : auditPill("Nee", "amber")}</td>
-          <td class="p-2 min-w-64">${auditPill(row.classification, problem ? "red" : "green")}<div class="mt-1 text-slate-600">${escapeHtml(row.reason)}</div><div class="mt-2 flex flex-wrap gap-1">${auditFlags(row)}</div></td>
+          <td class="p-2 min-w-64">${auditPill(row.classification, problem ? "red" : "green")}<div class="mt-1 text-slate-600">${escapeHtml(row.reason)}</div><div class="mt-2 flex flex-wrap gap-1">${auditFlags(row)}</div>
+            <label class="block mt-2 text-slate-600">UID-oorskrywing vir ongekoppelde gebruiker<input class="paystack-repair-override mt-1 w-full border rounded p-1 mono" data-subscription-code="${escapeHtml(row.subscriptionCode || "")}" placeholder="Slegs admin-goedgekeur"></label>
+            <label class="flex items-center gap-1 mt-2 font-semibold text-slate-700"><input type="checkbox" class="paystack-repair-exclude" data-subscription-code="${escapeHtml(row.subscriptionCode || "")}"> TOETSINTEKENING — SLAAN OOR</label></td>
         </tr>`;
-      }).join("") || `<tr><td colspan="10" class="p-3 text-slate-500">Geen relevante huidige Paystack-intekeninge gevind nie.</td></tr>`;
+      }).join("") || `<tr><td colspan="11" class="p-3 text-slate-500">Geen relevante huidige Paystack-intekeninge gevind nie.</td></tr>`;
       $("paystackAuditResults").classList.remove("hidden");
+      $("paystackAuditRows").querySelectorAll("input").forEach((input)=>input.addEventListener("change", invalidateRepairPreview));
+      $("paystackAuditRows").querySelectorAll(".paystack-repair-exclude").forEach((input)=>input.addEventListener("change", ()=>{
+        if (!input.checked) return;
+        const selection = [...$("paystackAuditRows").querySelectorAll(".paystack-repair-select")]
+          .find((candidate)=>candidate.dataset.subscriptionCode === input.dataset.subscriptionCode);
+        if (selection) selection.checked = true;
+      }));
+    }
+    function renderRepairPreview(rows){
+      $("paystackRepairPreviewRows").innerHTML = rows.map((row)=>`<tr class="border-t ${row.result === "WOULD_REPAIR" ? "bg-amber-50" : ""}">
+        <td class="p-2 mono">${escapeHtml(row.subscriptionCode)}</td><td class="p-2 mono">${escapeHtml(row.uid)}</td>
+        <td class="p-2">${auditDate(row.currentUntilMs)}</td><td class="p-2">${auditDate(row.paystackPaidThroughMs)}</td><td class="p-2 font-bold">${auditDate(row.finalUntilMs)}</td>
+        <td class="p-2">Kliënt: ${escapeHtml(row.customerMappingAction)}<br>Intekening: ${escapeHtml(row.subscriptionMappingAction)}<br>Toegang: ${escapeHtml(row.supporterEntitlementAction)}</td>
+        <td class="p-2">${auditPill(row.result, row.result === "NO_CHANGE" ? "green" : row.result === "EXCLUDED_TEST" ? "slate" : "amber")}<div class="mt-1 text-slate-600">${escapeHtml(row.reason)}</div></td>
+      </tr>`).join("");
+      $("paystackRepairPreview").classList.remove("hidden");
     }
     $("paystackAuditBtn").addEventListener("click", async ()=>{
       if (!currentIsAdmin) { showAlert("Jy het nie admin-regte vir die Paystack-oudit nie.", "error"); return; }
@@ -654,6 +705,40 @@ if (hasMeaningfulSupporterEntitlement(publicSupporter)) {
         button.disabled = false;
         button.textContent = "KONTROLEER BETALENDE ONDERSTEUNERS";
       }
+    });
+    $("paystackRepairPreviewBtn").addEventListener("click", async ()=>{
+      const selection = repairSelection();
+      if (!selection.subscriptionCodes.length) { showAlert("Kies minstens een intekening vir ’n herstelvoorskou.", "error"); return; }
+      const button = $("paystackRepairPreviewBtn");
+      button.disabled = true; button.textContent = "VOORSKOU LAAI…";
+      try{
+        const preview = httpsCallable(functions, "repairPaystackSupporters");
+        const result = await preview({ ...selection, dryRun: true });
+        renderRepairPreview(result.data?.rows || []);
+        repairPreviewSignature = repairSignature(selection);
+        $("paystackRepairApplyBtn").disabled = false;
+      }catch(err){
+        console.error("Paystack repair preview failed", err?.code || err?.message || err);
+        showAlert("Kon nie die herstelvoorskou voltooi nie.", "error");
+        invalidateRepairPreview();
+      }finally{ button.disabled = false; button.textContent = "VOORSKOU HERSTEL"; }
+    });
+    $("paystackRepairApplyBtn").addEventListener("click", async ()=>{
+      const selection = repairSelection();
+      if (!repairPreviewSignature || repairPreviewSignature !== repairSignature(selection)) { showAlert("Skep eers ’n nuwe voorskou vir hierdie keuses.", "error"); return; }
+      if (!window.confirm("Pas die voorgestelde Paystack-herstel toe? Handmatige toegang word nie verwyder nie.")) return;
+      const button = $("paystackRepairApplyBtn");
+      button.disabled = true; button.textContent = "HERSTEL LAAI…";
+      try{
+        const repair = httpsCallable(functions, "repairPaystackSupporters");
+        const result = await repair({ ...selection, dryRun: false, confirm: true });
+        renderRepairPreview(result.data?.rows || []);
+        repairPreviewSignature = null;
+        showAlert("Hersteloproep voltooi. Handmatige toegang is onveranderd gelaat.", "ok");
+      }catch(err){
+        console.error("Paystack repair failed", err?.code || err?.message || err);
+        showAlert("Kon nie die Paystack-herstel toepas nie.", "error");
+      }finally{ button.disabled = true; button.textContent = "PAS HERSTEL TOE"; }
     });
     $("editForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
