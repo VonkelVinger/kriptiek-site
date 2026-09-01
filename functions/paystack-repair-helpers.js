@@ -7,6 +7,10 @@ function eligibleStatus(status) {
   return ["active", "non-renewing"].includes(String(status || "").toLowerCase());
 }
 
+function legitimateKriptiekAccount({ usersExists, registrationExists }) {
+  return usersExists === true || registrationExists === true;
+}
+
 function mappingAction(existing, desired) {
   if (!existing) return "CREATE";
   return ["uid", "customerCode", "subscriptionCode", "planCode", "planKey", "nextPaymentMs", "status"]
@@ -42,4 +46,4 @@ function buildRepairPlan({ subscription, identity, overrideUid, publicSupporter,
   };
 }
 
-module.exports = { eligibleStatus, mappingAction, buildRepairPlan };
+module.exports = { eligibleStatus, legitimateKriptiekAccount, mappingAction, buildRepairPlan };

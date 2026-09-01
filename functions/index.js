@@ -764,6 +764,21 @@ async function fetchPaystackSubscription(subscriptionCode) {
   return response.data.data;
 }
 
+async function kriptiekAccountExists(uid) {
+  const [userSnap, registrationSnap] = await Promise.all([
+    db.collection("users").doc(uid).get(),
+    db.collection("registrations").doc(uid).get(),
+  ]);
+  if (paystackRepair.legitimateKriptiekAccount({
+    usersExists: userSnap.exists,
+    registrationExists: registrationSnap.exists,
+  })) return true;
+  // useradmin.html also recognises registrations whose document ID differs
+  // from their explicit UID field. This is still UID-only validation.
+  const registrationByUid = await db.collection("registrations").where("uid", "==", uid).limit(1).get();
+  return !registrationByUid.empty;
+}
+
 async function preparePaystackRepairRow(subscriptionCode, overrideUid, excluded, nowMs) {
   const raw = await fetchPaystackSubscription(subscriptionCode);
   const subscription = paystackReconciliation.normalizeSubscription(raw, PAYSTACK_PLANS);
@@ -781,7 +796,7 @@ async function preparePaystackRepairRow(subscriptionCode, overrideUid, excluded,
   const resolvedIdentity = paystackReconciliation.resolveAuditIdentity({ subscriptionMapping, customerMapping, historical });
   const identity = resolvedIdentity.uid ? resolvedIdentity : { uid: overrideUid || null, source: overrideUid ? "admin_override" : null };
   let userExists = true;
-  if (identity.uid) userExists = (await db.collection("users").doc(identity.uid).get()).exists;
+  if (identity.uid) userExists = await kriptiekAccountExists(identity.uid);
   const publicSnap = identity.uid && userExists ? await db.collection("supportersPublic").doc(identity.uid).get() : null;
   const publicSupporter = publicSnap?.exists ? (publicSnap.data() || {}) : null;
   const plan = !userExists

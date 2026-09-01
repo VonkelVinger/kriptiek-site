@@ -1,6 +1,6 @@
 "use strict";
 const assert = require("node:assert/strict");
-const { buildRepairPlan } = require("./paystack-repair-helpers");
+const { buildRepairPlan, legitimateKriptiekAccount } = require("./paystack-repair-helpers");
 const now = Date.parse("2026-09-01T00:00:00.000Z");
 const next = Date.parse("2026-10-01T00:00:00.000Z");
 const annualNext = Date.parse("2027-09-01T00:00:00.000Z");
@@ -17,6 +17,7 @@ out = plan({ publicSupporter: { untilMs: now - 1, manualActive: true, manualUnti
 // 4 non-renewing preserves paid boundary; 5 override; 6 unmapped; 7 excluded; 8 disabled.
 assert.equal(plan({ status: "non-renewing" }).result, "WOULD_REPAIR");
 assert.equal(buildRepairPlan({ subscription: base, identity: null, overrideUid: "approved", publicSupporter: {}, nowMs: now }).uid, "approved");
+assert.equal(legitimateKriptiekAccount({ usersExists: false, registrationExists: true }), true, "approved UID may be backed only by registrations/{uid}");
 assert.equal(buildRepairPlan({ subscription: base, identity: null, publicSupporter: {}, nowMs: now }).result, "UNMAPPED");
 assert.equal(plan({ excluded: true }).result, "EXCLUDED_TEST");
 assert.equal(plan({ status: "disabled" }).result, "INELIGIBLE_STATUS");
