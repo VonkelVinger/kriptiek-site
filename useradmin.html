@@ -112,6 +112,33 @@
         </form>
         <p class="text-xs text-slate-500 mt-2">Soek eers in <code>users</code>; as niks gevind word nie, val terug na <code>registrations</code>. E-pos of presiese gebruikersnaam werk.</p>
       </section>
+
+      <!-- Read-only Paystack reconciliation -->
+      <section class="card p-5 md:p-6 mb-6">
+        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 class="text-lg font-bold">PAYSTACK-OUDIT</h2>
+            <p class="text-xs text-slate-500 mt-1">Lees-alleen: vergelyk Paystack se huidige intekeninge met Kriptiek se openbare toegang. Geen herstelwerk word hier gedoen nie.</p>
+          </div>
+          <button id="paystackAuditBtn" type="button" class="kbtn rounded-lg">KONTROLEER BETALENDE ONDERSTEUNERS</button>
+        </div>
+        <p id="paystackAuditStatus" class="hidden text-sm mt-3" aria-live="polite"></p>
+        <div id="paystackAuditResults" class="hidden mt-4">
+          <div id="paystackAuditCounts" class="flex flex-wrap gap-2 mb-4"></div>
+          <div class="overflow-x-auto border rounded-lg">
+            <table class="min-w-full text-xs text-left">
+              <thead class="bg-slate-100 text-slate-700">
+                <tr>
+                  <th class="p-2">Gebruiker</th><th class="p-2">E-pos-hint</th><th class="p-2">Plan</th>
+                  <th class="p-2">Paystack</th><th class="p-2">Volgende betaling</th><th class="p-2">Betaal tot</th>
+                  <th class="p-2">Handmatig</th><th class="p-2">Kliëntkaart</th><th class="p-2">Intekenkaart</th><th class="p-2">Diagnose</th>
+                </tr>
+              </thead>
+              <tbody id="paystackAuditRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
       <!-- Result -->
       <section id="resultCard" class="card p-5 md:p-6 hidden">
 
@@ -211,6 +238,7 @@
     import {
       getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, query, where, getDocs, limit, runTransaction
     } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-functions.js";
     import {
       hasMeaningfulSupporterEntitlement,
       resolveSupporterEntitlement,
@@ -229,6 +257,7 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
+    const functions = getFunctions(app, "europe-west1");
 
     // --- UI helpers ---
     const $ = (id)=>document.getElementById(id);
@@ -260,6 +289,7 @@
       return false;
     }
 
+    let currentIsAdmin = false;
     onAuthStateChanged(auth, async (user)=>{
       if (!user) {
         try {
@@ -272,12 +302,14 @@
 
       const isAdmin = await computeIsAdmin(user);
       if (!isAdmin) {
+        currentIsAdmin = false;
         $("adminPill").classList.remove("hidden");
         showAlert("Jy het nie admin-regte nie. Meld aan met ’n admin-rekening.", "error");
         setTimeout(()=>{ window.location.href="/index.html"; }, 2200);
         return;
       }
 
+      currentIsAdmin = true;
       $("adminPill").classList.add("hidden");
       hideAlert();
     });
@@ -549,6 +581,79 @@ if (hasMeaningfulSupporterEntitlement(publicSupporter)) {
     $("clearUntil").addEventListener('click', ()=> {
       $("supporterUntil").value="";
       manualGrantTouched = true;
+    });
+
+    function escapeHtml(value){
+      return String(value ?? "â€”").replace(/[&<>'"]/g, (char)=>({
+        "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#39;", '"':"&quot;"
+      }[char]));
+    }
+    function auditDate(value){
+      const ms = Number(value);
+      return Number.isFinite(ms) && ms > 0 ? new Date(ms).toLocaleDateString("af-ZA") : "â€”";
+    }
+    function auditPill(text, tone="slate"){
+      const colors = { red:"bg-red-100 text-red-800", amber:"bg-amber-100 text-amber-800", green:"bg-green-100 text-green-800", slate:"bg-slate-100 text-slate-700" };
+      return `<span class="inline-flex rounded-full px-2 py-1 font-bold ${colors[tone] || colors.slate}">${escapeHtml(text)}</span>`;
+    }
+    function auditFlags(row){
+      const now = Date.now();
+      const paidUntil = Number(row.paidUntilMs);
+      const expected = Number(row.expectedPaidThroughMs);
+      const stalePaid = !Number.isFinite(paidUntil) || paidUntil <= now ||
+        (Number.isFinite(expected) && paidUntil + 60 * 60 * 1000 < expected);
+      const flags = [];
+      if (!row.uid) flags.push(auditPill("Geen UID", "red"));
+      if (row.uid && !row.hasPublicRecord) flags.push(auditPill("Geen publieke rekord", "red"));
+      if (stalePaid && row.uid) flags.push(auditPill("Betaalde tyd verouderd", "red"));
+      if (row.manualEntitlement && stalePaid) flags.push(auditPill("Handmatig masker", "amber"));
+      if (!row.hasCustomerMapping) flags.push(auditPill("Kliëntkaart ontbreek", "amber"));
+      if (!row.hasSubscriptionMapping) flags.push(auditPill("Intekenkaart ontbreek", "amber"));
+      return flags.length ? flags.join(" ") : auditPill("Geen ekstra vlagte", "green");
+    }
+    function renderPaystackAudit(report){
+      const counts = report.counts || {};
+      $("paystackAuditCounts").innerHTML = Object.entries(counts).sort(([a],[b])=>a.localeCompare(b))
+        .map(([kind, count])=>auditPill(`${kind}: ${count}`, kind === "OK" ? "green" : "amber")).join("");
+      const rows = Array.isArray(report.subscribers) ? report.subscribers : [];
+      $("paystackAuditRows").innerHTML = rows.map((row)=>{
+        const problem = row.classification !== "OK";
+        const name = row.displayName || row.uid || "Ongekoppel";
+        return `<tr class="border-t align-top ${problem ? "bg-amber-50" : ""}">
+          <td class="p-2 font-semibold">${escapeHtml(name)}</td><td class="p-2 mono">${escapeHtml(row.emailHint)}</td>
+          <td class="p-2">${escapeHtml(row.plan)}</td><td class="p-2">${escapeHtml(row.paystackStatus)}</td>
+          <td class="p-2 mono">${auditDate(row.nextPaymentMs)}</td><td class="p-2 mono">${auditDate(row.paidUntilMs)}</td>
+          <td class="p-2">${row.manualEntitlement ? auditPill("Ja", "amber") : "Nee"}</td>
+          <td class="p-2">${row.hasCustomerMapping ? auditPill("Ja", "green") : auditPill("Nee", "amber")}</td>
+          <td class="p-2">${row.hasSubscriptionMapping ? auditPill("Ja", "green") : auditPill("Nee", "amber")}</td>
+          <td class="p-2 min-w-64">${auditPill(row.classification, problem ? "red" : "green")}<div class="mt-1 text-slate-600">${escapeHtml(row.reason)}</div><div class="mt-2 flex flex-wrap gap-1">${auditFlags(row)}</div></td>
+        </tr>`;
+      }).join("") || `<tr><td colspan="10" class="p-3 text-slate-500">Geen relevante huidige Paystack-intekeninge gevind nie.</td></tr>`;
+      $("paystackAuditResults").classList.remove("hidden");
+    }
+    $("paystackAuditBtn").addEventListener("click", async ()=>{
+      if (!currentIsAdmin) { showAlert("Jy het nie admin-regte vir die Paystack-oudit nie.", "error"); return; }
+      const button = $("paystackAuditBtn");
+      const status = $("paystackAuditStatus");
+      button.disabled = true;
+      button.textContent = "OUDIT LAAI…";
+      status.textContent = "Lees Paystack- en Kriptiek-status. Geen data word verander nie…";
+      status.className = "text-sm mt-3 text-blue-700";
+      status.classList.remove("hidden");
+      try{
+        const callAudit = httpsCallable(functions, "reconcilePaystackSupporters");
+        const result = await callAudit({});
+        renderPaystackAudit(result.data || {});
+        status.textContent = "Oudit voltooi. Geen data is verander nie.";
+        status.className = "text-sm mt-3 text-green-700";
+      }catch(err){
+        console.error("Paystack audit failed", err?.code || err?.message || err);
+        status.textContent = "Kon nie die Paystack-oudit voltooi nie. Bevestig admin-regte en probeer weer.";
+        status.className = "text-sm mt-3 text-red-700";
+      }finally{
+        button.disabled = false;
+        button.textContent = "KONTROLEER BETALENDE ONDERSTEUNERS";
+      }
     });
     $("editForm").addEventListener("submit", async (e)=>{
       e.preventDefault();

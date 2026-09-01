@@ -7,6 +7,7 @@ const { DateTime } = require("luxon");
 const axios = require("axios");
 const crypto = require("crypto");
 const paystack = require("./paystack-supporter-helpers");
+const paystackReconciliation = require("./paystack-reconciliation-helpers");
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -611,6 +612,137 @@ function lifecycleStatus(eventType, subscription) {
   if (eventType === "subscription.create") return subscription.status || "active";
   return null;
 }
+
+const FIXED_ADMIN_UID = "jI7f0Wk4MqfPq7p69vjl8OlJUvS2";
+
+async function assertPaystackReconciliationAdmin(req) {
+  const uid = req.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "Admin authentication is required.");
+  if (uid === FIXED_ADMIN_UID) return uid;
+  const adminSnap = await db.collection("admins").doc(String(uid)).get();
+  if (!adminSnap.exists) throw new HttpsError("permission-denied", "Admin access is required.");
+  return uid;
+}
+
+function paystackReadHeaders() {
+  return { Authorization: `Bearer ${PAYSTACK_SECRET}` };
+}
+
+async function listPaystackSubscriptions() {
+  const subscriptions = [];
+  for (let page = 1; page <= 25; page++) {
+    const response = await axios.get("https://api.paystack.co/subscription", {
+      headers: paystackReadHeaders(),
+      params: { page, perPage: 100 },
+    });
+    const body = response.data || {};
+    if (!body.status || !Array.isArray(body.data)) throw new Error("Paystack subscription list response was invalid.");
+    subscriptions.push(...body.data);
+    const pageCount = Number(body.meta?.pageCount || page);
+    if (page >= pageCount || body.data.length === 0) break;
+    if (page === 25) throw new Error("Paystack subscription list exceeds the reconciliation safety limit.");
+  }
+  return subscriptions;
+}
+
+async function latestPaystackTransactionForCustomer(customerId) {
+  if (!customerId) return null;
+  let latestSuccessful = null;
+  for (let page = 1; page <= 10; page++) {
+    const response = await axios.get("https://api.paystack.co/transaction", {
+      headers: paystackReadHeaders(),
+      params: { customer: customerId, status: "success", page, perPage: 100 },
+    });
+    const transactions = response.data?.status && Array.isArray(response.data?.data) ? response.data.data : [];
+    if (!latestSuccessful) latestSuccessful = transactions.find((transaction) => transaction.status === "success") || null;
+    const metadataTransaction = transactions.find((transaction) => transaction.metadata?.uid);
+    if (metadataTransaction) return metadataTransaction;
+    const pageCount = Number(response.data?.meta?.pageCount || page);
+    if (page >= pageCount || transactions.length === 0) break;
+    if (page === 10) throw new Error("Paystack transaction history exceeds the reconciliation safety limit.");
+  }
+  return latestSuccessful;
+}
+
+/**
+ * Admin-only read-only audit. It deliberately has no Firestore writes and uses
+ * only Paystack GET endpoints. The returned report excludes cards, tokens and
+ * raw payloads; email is a redacted review hint, never an identity key.
+ */
+exports.reconcilePaystackSupporters = onCall(
+  { region: REGION, cors: true, secrets: ["PAYSTACK_SECRET_KEY"], timeoutSeconds: 120 },
+  async (req) => {
+    const callerUid = await assertPaystackReconciliationAdmin(req);
+    const nowMs = Date.now();
+    try {
+      const rawSubscriptions = await listPaystackSubscriptions();
+      const subscriptions = rawSubscriptions
+        .map((raw) => ({ raw, subscription: paystackReconciliation.normalizeSubscription(raw, PAYSTACK_PLANS) }))
+        .filter(({ subscription }) => subscription.planKey && paystackReconciliation.currentSubscription(subscription.status));
+
+      const reports = await Promise.all(subscriptions.map(async ({ raw, subscription }) => {
+        const [subscriptionSnap, customerSnap] = await Promise.all([
+          subscription.subscriptionCode ? db.collection("paystackSubscriptions").doc(subscription.subscriptionCode).get() : Promise.resolve(null),
+          subscription.customerCode ? db.collection("paystackCustomers").doc(subscription.customerCode).get() : Promise.resolve(null),
+        ]);
+        const subscriptionMapping = subscriptionSnap?.exists ? (subscriptionSnap.data() || {}) : null;
+        const customerMapping = customerSnap?.exists ? (customerSnap.data() || {}) : null;
+        let historical = {};
+        if (!subscriptionMapping?.uid && !customerMapping?.uid && subscription.customerId) {
+          historical = paystackReconciliation.historicalMetadata(
+            await latestPaystackTransactionForCustomer(subscription.customerId)
+          );
+        }
+        const identity = paystackReconciliation.resolveAuditIdentity({ subscriptionMapping, customerMapping, historical });
+        const [publicSnap, userSnap] = identity.uid ? await Promise.all([
+          db.collection("supportersPublic").doc(identity.uid).get(),
+          db.collection("users").doc(identity.uid).get(),
+        ]) : [null, null];
+        const publicSupporter = publicSnap?.exists ? (publicSnap.data() || {}) : null;
+        const user = userSnap?.exists ? (userSnap.data() || {}) : {};
+        const outcome = paystackReconciliation.classify({
+          subscription, identity, subscriptionMapping, customerMapping, publicSupporter, historical, nowMs,
+        });
+        return {
+          uid: identity.uid,
+          identitySource: identity.source,
+          displayName: identity.uid ? (user.name || user.displayName || null) : null,
+          emailHint: subscription.emailHint,
+          customerCode: subscription.customerCode,
+          subscriptionCode: subscription.subscriptionCode,
+          plan: subscription.planKey,
+          planCode: subscription.planCode,
+          paystackStatus: subscription.status,
+          nextPaymentMs: subscription.nextPaymentMs,
+          latestSuccessfulPaymentMs: historical.paidAtMs || null,
+          latestPaymentReferenceSuffix: redactedPaystackCode(historical.reference),
+          hasPublicRecord: !!publicSupporter,
+          paidUntilMs: publicSupporter ? paystack.safeMillis(publicSupporter.untilMs) : null,
+          publicActive: publicSupporter?.active === true,
+          manualEntitlement: publicSupporter ? paystackReconciliation.manualEntitlement(publicSupporter, nowMs) : false,
+          provider: publicSupporter?.provider || null,
+          publicPlan: publicSupporter?.plan || null,
+          hasCustomerMapping: !!customerMapping,
+          hasSubscriptionMapping: !!subscriptionMapping,
+          classification: outcome.classification,
+          reason: outcome.reason,
+          expectedPaidThroughMs: outcome.expectedUntilMs || null,
+        };
+      }));
+      const counts = reports.reduce((all, report) => {
+        all[report.classification] = (all[report.classification] || 0) + 1;
+        return all;
+      }, {});
+      logger.info("Paystack reconciliation audit completed", {
+        callerUidSuffix: redactedPaystackCode(callerUid), subscriptionCount: reports.length, counts,
+      });
+      return { generatedAtMs: nowMs, subscriptionCount: reports.length, counts, subscribers: reports };
+    } catch (error) {
+      logger.error("Paystack reconciliation audit failed", { error: error?.message || String(error) });
+      throw new HttpsError("internal", "Unable to complete Paystack reconciliation audit.");
+    }
+  }
+);
 
 /**
  * Applies only webhook facts which can be mapped to a Kriptiek user without
